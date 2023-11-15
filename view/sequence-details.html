@@ -1,0 +1,45 @@
+<html>
+
+<head></head>
+<script type="module" src="./js/sequence-details.mjs"></script>
+<style>
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+</style>
+
+<body>
+    <div>
+        <div>Только с ошибками</div>
+    </div>
+    <div>
+        <table id="message-table">
+            <thead>
+                <tr>
+                    <th style="width: 300px;">Диаграмма</th>
+                    <th style="width: 100px;">Валидация</th>
+                    <th style="width: 100px;">Вызывающая система</th>
+                    <th style="width: 30px;">Код вызывающей системы</th>
+                    <th style="width: 50px;">Метод</th>
+                    <th style="width: 100px;">Система-поставщик</th>
+                    <th style="width: 30px;">Код системы-поставщика</th>
+                    <th style="width: 30px;">интерфейсное соглашение</th>
+                    <th style="width: 30px;">Автор</th>
+                    <th style="width: 30px;">Дата изменения</th>
+                </tr>
+            </thead>
+            <tbody id="data-table-body">
+                <tr>
+                    <td colspan="10">
+                        <div style="text-align: center;">Данные загружаются</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</body>
+</div>
+
+</html>

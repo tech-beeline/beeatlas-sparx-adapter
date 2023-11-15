@@ -1,0 +1,822 @@
+{
+    "components": {
+      "schemas": {
+        "RichMetaDto": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Статус операции: ['OK' or 'ERROR']. В случае успешного ответа status = OK, в случае ошибки ERROR.",
+              "enum": [
+                "OK",
+                "ERROR"
+              ]
+            },
+            "code": {
+              "type": "integer",
+              "description": "Код результата. При успешном ответе равен 0. При неуспешном возвращается Код ошибки согласно справочнику.",
+              "format": "int32"
+            },
+            "message": {
+              "type": "string",
+              "description": "Дополнительное сообщение. При успешном ответе не возвращается."
+            },
+            "traceparent": {
+              "type": "string",
+              "description": "Идентификатор трассировки."
+            }
+          }
+        },
+        "EsiaAuthUrlRequest": {
+          "required": [
+            "redirect_url"
+          ],
+          "type": "object",
+          "properties": {
+            "redirect_url": {
+              "type": "string",
+              "description": "Адрес URL для редиректа Пользователя после того, как даст разрешение на доступ к данным в ЕСИА."
+            },
+            "type": {
+              "type": "string",
+              "description": "Тип операции, для которой требуется авторизация Пользователя в ЕСИА. По-умолчанию запрашивается стандартный набор прав."
+            },
+            "agreements": {
+              "type": "array",
+              "description": "Массив со списком запрашиваемых согласий. Обязательный параметр при запросе согласий в ONLINE-режиме",
+              "items": {
+                "$ref": "#/components/schemas/AgreementDo"
+              }
+            }
+          }
+        },
+        "EsiaAuthUrlResponse": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Адрес URL для редиректа абонента на ЕСИА с целью прохождения авторизации."
+            }
+          }
+        },
+        "EsiaDataResponse": {
+          "type": "object",
+          "properties": {
+            "individual": {
+              "$ref": "#/components/schemas/IndividualDo"
+            }
+          }
+        },
+        "EsiaPermissionsResponse": {
+          "type": "object",
+          "properties": {
+            "individual": {
+              "$ref": "#/components/schemas/IndividualPermissionDo"
+            },
+            "organization": {
+              "$ref": "#/components/schemas/OrganizationDo"
+            },
+            "agreements": {
+              "type": "array",
+              "description": "Массив с контейнерами запрашиваемых согласий",
+              "items": {
+                "$ref": "#/components/schemas/PermissionAgreementDo"
+              }
+            },
+            "pagination_info": {
+              "$ref": "#/components/schemas/PaginationInfo"
+            }
+          }
+        },
+        "AgreementDo": {
+          "required": [
+            "actions",
+            "expire",
+            "purposes",
+            "sysname"
+          ],
+          "type": "object",
+          "properties": {
+            "sysname": {
+              "type": "string",
+              "description": "Мнемоника типа согласия."
+            },
+            "responsible_object": {
+              "type": "string",
+              "description": "Лицо (сотрудник организации) или организация, осуществляющее обработку данных (строка с ФИО или другой информацией, переданная в запросе согласия - на усмотрение организации, запрашивающей согласие)"
+            },
+            "expire": {
+              "type": "integer",
+              "description": "Срок, на который будет выдано согласие после утверждения (в минутах)",
+              "format": "int32"
+            },
+            "scopes": {
+              "type": "array",
+              "description": "Перечень описаний запрашиваемых scope (областей действий в ЕСИА) в рамках типа запрашиваемого согласия. Список возможных значений указан в разделе \"Справочник предоставляемых ЕСИА наборов данных о пользователе (scope)\" в приложенном документе. В формате - [\"fullname\", \"id_doc\", \"snils\"]",
+              "items": {
+                "type": "string"
+              }
+            },
+            "purposes": {
+              "type": "array",
+              "description": "Перечень целей (в виде мнемоник) получения согласия гражданиина. Список возможных значений указан в разделе \"Справочник целей\" в приложенном документе. В формате - [\"BANK_CARD\", \"INF_STATUS\"]",
+              "items": {
+                "type": "string"
+              }
+            },
+            "actions": {
+              "type": "array",
+              "description": "Перечень действий (в виде мнемоник) в рамках запрашиваемого согласия. Список возможных значений указан в разделе \"Справочник действий\" в приложенном документе. В формате - [\"ALL_ACTIONS_TO_DATA\"]",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Массив со списком запрашиваемых согласий. Обязательный параметр при запросе согласий в ONLINE-режиме"
+        },
+        "IndividualDo": {
+          "type": "object",
+          "properties": {
+            "given_name": {
+              "type": "string",
+              "description": "Имя"
+            },
+            "family_name": {
+              "type": "string",
+              "description": "Фамилия"
+            },
+            "middle_name": {
+              "type": "string",
+              "description": "Отчество"
+            },
+            "birth_date": {
+              "type": "string",
+              "description": "Дата рождения в формате «ДД.ММ.ГГГГ»",
+              "format": "date"
+            },
+            "place_of_birth": {
+              "type": "string",
+              "description": "Место рождения"
+            },
+            "gender": {
+              "type": "string",
+              "description": "Пол"
+            },
+            "nationality": {
+              "type": "string",
+              "description": "Гражданство"
+            },
+            "snils": {
+              "type": "string",
+              "description": "Номер СНИЛС"
+            },
+            "inn": {
+              "type": "string",
+              "description": "Номер ИНН"
+            },
+            "identification": {
+              "type": "array",
+              "description": "Массив с контейнерами по документам из ЕСИА",
+              "items": {
+                "$ref": "#/components/schemas/IdentificationDo"
+              }
+            },
+            "other_name": {
+              "type": "array",
+              "description": "Массив с контейнерами альтернативных данных",
+              "items": {
+                "$ref": "#/components/schemas/OtherNameDo"
+              }
+            },
+            "contact_medium": {
+              "type": "array",
+              "description": "Массив с контейнерами по контактной информации",
+              "items": {
+                "$ref": "#/components/schemas/ContactMediumDo"
+              }
+            },
+            "characteristic": {
+              "type": "array",
+              "description": "Массив с контейнерами дополнительных характеристик Пользователя",
+              "items": {
+                "$ref": "#/components/schemas/CharacteristicDo"
+              }
+            },
+            "business_activity": {
+              "type": "string",
+              "description": "Признак бизнес-активности. \\\nЕсли передано значение \"selfEmployed\", то у пользователя в ЕСИА имеется признак самозанятого. \\\nЕсли передано, но значение пустое, то у пользователя в ЕСИА отсутствует признак самозанятого.\n"
+            },
+            "external_reference": {
+              "type": "array",
+              "description": "Массив с контейнерами внешних идентификаторов Пользователя",
+              "items": {
+                "$ref": "#/components/schemas/ExternalReferenceDo"
+              }
+            }
+          },
+          "description": "Контейнер с данными Пользователя из ЕСИА"
+        },
+        "IndividualPermissionDo": {
+          "type": "object",
+          "properties": {
+            "external_reference": {
+              "type": "array",
+              "description": "Массив с контейнерами внешних идентификаторов Пользователя",
+              "items": {
+                "$ref": "#/components/schemas/ExternalReferenceDo"
+              }
+            }
+          },
+          "description": "Контейнер с данными Пользователя из ЕСИА"
+        },
+        "OrganizationDo": {
+          "type": "object",
+          "properties": {
+            "ogrn": {
+              "type": "string",
+              "description": "ОГРН организации. Строка, 13 символов десятичных цифр 0…9"
+            }
+          },
+          "description": "Контейнер с данными организации, получившей согласия"
+        },
+        "PaginationInfo": {
+          "type": "object",
+          "properties": {
+            "page_action": {
+              "type": "string",
+              "description": "Определение активности: F – Первая страница; L – Последняя страница; N – Следующая страница; P - Предыдущая страница.",
+              "enum": [
+                "F",
+                "L",
+                "P",
+                "N"
+              ]
+            },
+            "page_number": {
+              "type": "integer",
+              "description": "Номер страницы для отображения.",
+              "format": "int32"
+            },
+            "page_size": {
+              "type": "integer",
+              "description": "Количество согласий в ответе на страницу. Если он не указан, по умолчанию возвращается максимум 50 элементов на страницу.",
+              "format": "int32"
+            },
+            "result_count": {
+              "type": "integer",
+              "description": "Общее количество согласий, найденных по веденному идентификатору пользователя (oid).",
+              "format": "int32"
+            }
+          },
+          "description": "Используется для постраничного вывода согласий."
+        },
+        "PermissionAgreementDo": {
+          "type": "object",
+          "properties": {
+            "sysname": {
+              "type": "string",
+              "description": "Мнемоника типа выданного согласия"
+            },
+            "agreement_id": {
+              "type": "integer",
+              "description": "Идентификатор типа выданного согласия",
+              "format": "int32"
+            },
+            "name": {
+              "type": "string",
+              "description": "Наименование типа выданного согласия"
+            },
+            "description": {
+              "type": "string",
+              "description": "Описание"
+            },
+            "responsible_object": {
+              "type": "string",
+              "description": "Лицо (сотрудник организации), осуществляющее обработку данных"
+            },
+            "issued": {
+              "type": "string",
+              "description": "Дата/время выдачи (утверждения пользователем - перевода в статус 'А') согласия. Возвращается в ответе только для выданных согласий в статусах A и D (Формат yyyy.MM.dd HH:mm:ss Z)",
+              "format": "date-time"
+            },
+            "expire": {
+              "type": "string",
+              "description": "Дата/время истечения срока действия согласия. Возвращается в ответе только для выданных согласий в статусах A и D (Формат yyyy.MM.dd HH:mm:ss Z).",
+              "format": "date-time"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Идентификатор сессии, предназначенной для добавления дополнительного контента (служебной информации) для последующей обработки согласия"
+            },
+            "status": {
+              "type": "string",
+              "description": "Статус согласия. Принимает значения: A - выданное (утвержденное пользователем) согласие W - запрошенное согласие (ожидающее реакции пользователя) D - отозванное согласие"
+            },
+            "created": {
+              "type": "string",
+              "description": "Дата/время создания (поступления запроса) согласия (Формат yyyy.MM.dd HH:mm:ss Z).",
+              "format": "date-time"
+            },
+            "updated": {
+              "type": "string",
+              "description": "Дата/время изменения согласия (Формат yyyy.MM.dd HH:mm:ss Z).",
+              "format": "date-time"
+            },
+            "external_reference": {
+              "$ref": "#/components/schemas/ExternalReferenceDo"
+            },
+            "actions": {
+              "type": "array",
+              "description": "Массив c перечнем действий (в виде мнемоник) в рамках запрошенного/выданного согласия",
+              "items": {
+                "$ref": "#/components/schemas/ActionDo"
+              }
+            },
+            "scopes": {
+              "type": "array",
+              "description": "Массив c перечнем описаний scope (областей действий в ЕСИА) в рамках согласия",
+              "items": {
+                "$ref": "#/components/schemas/ScopeDo"
+              }
+            },
+            "purposes": {
+              "type": "array",
+              "description": "Массив c перечнем целей (в виде мнемоник) получения согласия гражданина",
+              "items": {
+                "$ref": "#/components/schemas/PurposeDo"
+              }
+            }
+          },
+          "description": "Массив с контейнерами запрашиваемых согласий"
+        },
+        "CharacteristicDo": {
+          "type": "object",
+          "properties": {
+            "value_type": {
+              "type": "string",
+              "description": "Тип характеристики: \\\n\"ESIAStatus\" - Признак подтверждения УЗ пользователя в ЕСИА (boolean)  \\\n\"ActNumber\" - Номер актовой записи (для свидетельства о рождении РФ и СССР) \\\n\"ActDate\" - Дата актовой записи (только для свидетельства о рождении ребенка РФ)\n"
+            },
+            "value": {
+              "type": "string",
+              "description": "Значение характеристики"
+            }
+          },
+          "description": "Массив с контейнерами дополнительных характеристик Пользователя"
+        },
+        "ContactMediumDo": {
+          "type": "object",
+          "properties": {
+            "medium_type": {
+              "type": "string",
+              "description": "Тип контактных данных:  \\\n\"address\" - адрес \\\n\"phone\" - контактный телефон \\\n\"email\" - электронная почта\n",
+              "enum": [
+                "PHONE",
+                "EMAIL",
+                "ADDRESS"
+              ]
+            },
+            "contact_medium_characteristic": {
+              "$ref": "#/components/schemas/ContactMediumCharacteristicDo"
+            },
+            "status_verification": {
+              "type": "boolean",
+              "description": "Признак «подтвержденности» контакта"
+            }
+          },
+          "description": "Массив с контейнерами по контактной информации"
+        },
+        "ExternalReferenceDo": {
+          "type": "object",
+          "properties": {
+            "system": {
+              "type": "string",
+              "description": "Мнемоника внешней системы: \"ESIA\" - ЕСИА"
+            },
+            "type": {
+              "type": "string",
+              "description": "Тип идентификатора: \"Individual\" - индивидуальный"
+            },
+            "value": {
+              "type": "string",
+              "description": "Значение идентификатора"
+            },
+            "key": {
+              "type": "string",
+              "description": "Ключ к значению идентификатора (key=oid)"
+            }
+          },
+          "description": "Массив с контейнерами внешних идентификаторов Пользователя"
+        },
+        "IdentificationDo": {
+          "type": "object",
+          "properties": {
+            "identification_type": {
+              "type": "string",
+              "description": "Тип документа: \\\n\"PasRF\" - паспорт РФ \\\n\"PassIns\" - документ иностранного гражданина \\\n\"VoeBil\" - военный билет \\\n\"PassZag\" - заграничный паспорт \\\n\"SvdRzhd\" - свидетельство о рождении в России \\\n\"SvRzhin\" - свидетельство о рождении в другой стране \\\n\"Others\" - иные типы документов'\n",
+              "enum": [
+                "PAS_RF",
+                "PASS_INS",
+                "VOE_BIL",
+                "PASS_ZAG",
+                "SVD_RZHD",
+                "SV_RZHIN",
+                "OTHERS"
+              ]
+            },
+            "identification_id": {
+              "type": "string",
+              "description": "Серия и номер документа через пробел"
+            },
+            "issuing_authority": {
+              "type": "string",
+              "description": "Кем выдан"
+            },
+            "issuing_date": {
+              "type": "string",
+              "description": "Когда выдан",
+              "format": "date"
+            },
+            "issuer_code": {
+              "type": "string",
+              "description": "Код подразделения"
+            },
+            "status_verification": {
+              "type": "boolean",
+              "description": "Признак «подтвержденности» документа"
+            },
+            "valid_to": {
+              "type": "string",
+              "description": "Срок действия документа",
+              "format": "date"
+            },
+            "fms_verification": {
+              "type": "string",
+              "description": "Валидность документа в ФМС (передается либо значение об актуальности документа, либо статус проверки из ЕСИА). Возможные значения: \\\n\"CONFIRMED\" - документ актуален \\\n\"PERSON_NOT_FOUND\" - по указанному СНИЛС пользователь в БД ИС МВД не найден \\\n\"PASSPORT_NOT_FOUND\" - в случае, если в полученном досье есть паспорт гражданина РФ и он имеет DOC_STATUS = 302 и в досье нет паспорта гражданина РФ с DOC_STATUS = 300 \\\n\"PASSPORT_INVALID\" - в случае, если в полученном досье есть паспорт гражданина РФ, и он имеет DOC_STATUS = 301 и его данные (серия, номер) совпадают с указанными в УЗ пользователя, при этом в досье нет паспорта гражданина РФ с DOC_STATUS = 300  \\\n\"AUTO_UPDATE_SUCCESS\" - в случае успешного завершения автоматического обновления\n"
+            }
+          },
+          "description": "Массив с контейнерами по документам из ЕСИА"
+        },
+        "OtherNameDo": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Тип альтернативных данных: \"Latin\" - для фамилии и имени заграничного паспорта"
+            },
+            "family_name": {
+              "type": "string",
+              "description": "Фамилия (для заграничного паспорта)"
+            },
+            "given_name": {
+              "type": "string",
+              "description": "Имя (для заграничного паспорта)"
+            }
+          },
+          "description": "Массив с контейнерами альтернативных данных"
+        },
+        "ActionDo": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "Мнемоника действия"
+            },
+            "name": {
+              "type": "string",
+              "description": "Наименование действия"
+            }
+          },
+          "description": "Массив c перечнем действий (в виде мнемоник) в рамках запрошенного/выданного согласия"
+        },
+        "PurposeDo": {
+          "type": "object",
+          "properties": {
+            "purpose": {
+              "type": "string",
+              "description": "Мнемоника цели"
+            },
+            "name": {
+              "type": "string",
+              "description": "Наименование цели"
+            }
+          },
+          "description": "Массив c перечнем целей (в виде мнемоник) получения согласия гражданина"
+        },
+        "ScopeDo": {
+          "type": "object",
+          "properties": {
+            "scope": {
+              "type": "string",
+              "description": "Мнемоника scope"
+            },
+            "name": {
+              "type": "string",
+              "description": "Наименование scope"
+            },
+            "description": {
+              "type": "string",
+              "description": "Описание scope"
+            }
+          },
+          "description": "Массив c перечнем описаний scope (областей действий в ЕСИА) в рамках согласия"
+        },
+        "ContactMediumCharacteristicDo": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Адрес в виде строки"
+            },
+            "postal_code": {
+              "type": "string",
+              "description": "Индекс"
+            },
+            "country": {
+              "type": "string",
+              "description": "Идентификатор страны"
+            },
+            "fias_code": {
+              "type": "string",
+              "description": "Код КЛАДР"
+            },
+            "region": {
+              "type": "string",
+              "description": "Регион"
+            },
+            "city": {
+              "type": "string",
+              "description": "Город"
+            },
+            "district": {
+              "type": "string",
+              "description": "Внутригородской район"
+            },
+            "area": {
+              "type": "string",
+              "description": "Район"
+            },
+            "settlement": {
+              "type": "string",
+              "description": "Поселение"
+            },
+            "addition_area": {
+              "type": "string",
+              "description": "Дополнительная территория"
+            },
+            "addition_area_street": {
+              "type": "string",
+              "description": "Улица на дополнительной территории"
+            },
+            "street": {
+              "type": "string",
+              "description": "Улица"
+            },
+            "house_num": {
+              "type": "string",
+              "description": "Дом"
+            },
+            "struc_num": {
+              "type": "string",
+              "description": "Строение"
+            },
+            "build_num": {
+              "type": "string",
+              "description": "Корпус"
+            },
+            "flat_number": {
+              "type": "string",
+              "description": "Квартира"
+            },
+            "contact_type": {
+              "type": "string",
+              "description": "Тип контакта (адрес): \\\n\"registration\" - адрес постоянной регистрации \\\n\"residence\" - адрес проживания \\\n\"temporaryRegistration\" - адрес временной регистрации \\\n Тип контакта (телефон): \\\n\"fixed home\" - телефон по месту жительства \\\n\"mobile\" - мобильный телефон \\\nТип контакта (электронная почта): \\\n\"personal\" - электронная почта'\n",
+              "enum": [
+                "MOBILE",
+                "FIXED_HOME",
+                "PERSONAL",
+                "RESIDENCE",
+                "TEMPORARY_REGISTRATION",
+                "REGISTRATION"
+              ]
+            },
+            "phone_number": {
+              "type": "string",
+              "description": "Номер телефона"
+            },
+            "email_address": {
+              "type": "string",
+              "description": "Адрес электронной почты"
+            }
+          },
+          "description": "Характеристика контактных данных"
+        }
+      }
+    },
+    "servers": [
+      {
+        "url": "https://esia-api.rich-dev-adm.apps.mn-kp01.vimpelcom.ru",
+        "description": "Generated server url"
+      }
+    ],
+    "openapi": "3.0.1",
+    "paths": {
+      "/2.1.0/auth/esia/url": {
+        "post": {
+          "tags": [
+            "esia"
+          ],
+          "summary": "Метод предназначен для получения URL адреса редиректа по авторизации пользователя в ЕСИА (Часть 1).",
+          "operationId": "getEsiaUrl",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EsiaAuthUrlRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Получены URL адреса редиректа по авторизации пользователя в ЕСИА",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "meta": {
+                        "$ref": "#/components/schemas/RichMetaDto"
+                      },
+                      "data": {
+                        "$ref": "#/components/schemas/EsiaAuthUrlResponse"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/2.0.0/auth/esia/data": {
+        "post": {
+          "tags": [
+            "esia"
+          ],
+          "summary": "Метод предназначен для получения данных пользователя из ЕСИА после прохождения авторизации (Часть 2).",
+          "operationId": "getEsiaData",
+          "parameters": [
+            {
+              "name": "code",
+              "in": "query",
+              "description": "Авторизационный код пользователя ЕСИА.",
+              "required": true,
+              "style": "form",
+              "explode": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "state",
+              "in": "query",
+              "description": "Уникальный идентификатор UUID, отправленный ранее для авторизации пользователя в ЕСИА.",
+              "required": true,
+              "style": "form",
+              "explode": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Получены данные пользователя из ЕСИА",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "meta": {
+                        "$ref": "#/components/schemas/RichMetaDto"
+                      },
+                      "data": {
+                        "$ref": "#/components/schemas/EsiaDataResponse"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/2.0.0/esia/permissions": {
+        "get": {
+          "tags": [
+            "esia"
+          ],
+          "summary": "Получение согласий пользователя",
+          "description": "Метод предназначен для получения всех согласий пользователя, выданных организации, по идентификатору пользователя (oid).",
+          "operationId": "getEsiaPermissions",
+          "parameters": [
+            {
+              "name": "code",
+              "in": "query",
+              "description": "Авторизационный код пользователя ЕСИА.",
+              "required": true,
+              "style": "form",
+              "explode": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "state",
+              "in": "query",
+              "description": "Уникальный идентификатор UUID, отправленный ранее для авторизации пользователя в ЕСИА.",
+              "required": true,
+              "style": "form",
+              "explode": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "page_number",
+              "in": "query",
+              "description": "Номер страницы для отображения.",
+              "required": false,
+              "style": "form",
+              "explode": true,
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            {
+              "name": "page_action",
+              "in": "query",
+              "description": "Определение активности: F – Первая страница; L – Последняя страница; N – Следующая страница; P - Предыдущая страница.",
+              "required": false,
+              "style": "form",
+              "explode": true,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "F",
+                  "L",
+                  "P",
+                  "N"
+                ]
+              }
+            },
+            {
+              "name": "page_size",
+              "in": "query",
+              "description": "Количество согласий в ответе на страницу. Если он не указан, по умолчанию возвращается максимум 50 элементов на страницу.",
+              "required": false,
+              "style": "form",
+              "explode": true,
+              "schema": {
+                "type": "integer",
+                "format": "int32",
+                "default": 50
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Получены согласия пользователя, выданных организацией по индентификатору пользователя",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "meta": {
+                        "$ref": "#/components/schemas/RichMetaDto"
+                      },
+                      "data": {
+                        "$ref": "#/components/schemas/EsiaPermissionsResponse"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "info": {
+      "title": "esia",
+      "version": "2.0.0"
+    },
+    "tags": [
+      {
+        "name": "esia",
+        "description": "Интеграции с ЕСИА"
+      }
+    ]
+  }

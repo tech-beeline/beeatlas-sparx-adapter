@@ -1,0 +1,571 @@
+openapi: 3.0.3
+info:
+  title: Swagger Beeline EA Capability - OpenAPI 3.0
+  description: |-
+    Интерфейс для управления моделью возможностей в корпоративном архитектурном репозитории Sparx EA
+  contact:
+    email: ivvoronin@beeline.ru
+  version: 0.0.1
+tags:
+  - name: domain
+    description: Управление доменами возможностей
+  - name: capability
+    description: Управление описанием возможностей
+  - name: interface
+    description: Управление описанием интерфейсов
+  - name: component
+    description: Управление описанием компонентов
+  - name: realization
+    description: Управление описанием вариантов реализации возможности
+paths:
+  /api/domains:
+    get:
+      tags:
+        - domain
+      operationId: getDomains
+      summary: Получение списка доменов
+      description: Получение списка доменов верхнево уровня или всех в виде списка
+      parameters:
+        - name: all
+          description: |-
+            - true - Получить все домены плоским списком
+            - false или отсутствует - Получить список доменов верхнего уровня
+          in: query
+          required: false
+          allowEmptyValue: true
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Domain"
+    post:
+      tags:
+        - domain
+      operationId: createDomain
+      summary: Регистрация нового домена
+      description: |-
+        Добавляет в корпоративный репозиторий описание нового домена\
+        Каждый новый домен добавлется как поддомен, если указан родитель (поле parent). \
+        При добавлении домена сохраняются следующие поля:
+        - name, description, status, author
+        - Если указан parent, то домен добавляется как поддомен уазанного в этом поле домена. В противном случае добавлявется в корень
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Domain"
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Domain"
+        "400":
+          description: Не корректный синтаксис запроса
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Не указан имя домена
+        "424":
+          description: Не верно указан родительский домен
+  /api/domains/{code}:
+    get:
+      tags:
+        - domain
+      summary: Получение описания домена по его коду
+      operationId: getDomainByCode
+      parameters:
+        - name: code
+          in: path
+          description: Код запрашиваемого домена
+          example: BC-0001
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Domain"
+        "404":
+          description: Домен с указанным кодом не найден
+    put:
+      tags:
+        - domain
+      summary: Обновление данных для домена
+      description: |-
+        При добавлении домена сохраняются следующие поля:\
+        - name, description, status
+
+      operationId: updateDomain
+      parameters:
+        - name: code
+          in: path
+          description: Код домена
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Domain"
+      responses:
+        "200":
+          description: |-
+            Обновление прошло успешно\
+            В ответе возвращается обновленное описание домена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Domain"
+        "404":
+          description: Домен с указанным кодом не найден
+  /api/domains/{code}/parent:
+    put:
+      tags:
+        - domain
+      operationId: setDomainParent
+      summary: Изменение перенос поддомена в другой домен
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ObjectRef"
+      responses:
+        "200":
+          description: OK
+  /api/domains/{code}/subdomains:
+    get:
+      tags:
+        - domain
+      summary: Получение описания поддоменов по коду домена
+      parameters:
+        - name: code
+          description: Код домена, для которого запрашивается описание дочерних доменов
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Domain"
+    post:
+      tags:
+        - domain
+      summary: Добавление в домен описание нового поддомена
+      operationId: createSubdomain
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Domain"
+      responses:
+        "200":
+          description: OK
+  /api/domains/{code}/capabilities:
+    get:
+      operationId: getDomainCapabilities
+      summary: Получение списка возможностей в домене
+      tags:
+        - domain
+      parameters:
+        - name: code
+          in: path
+          description: Код домена
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK. В теле ответа описание запрашиваемых возможностей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Capability"
+    post:
+      tags:
+        - domain
+      operationId: createDomainCapability
+      summary: Создание описания новой возможности в домене
+      description: ""
+      parameters:
+        - name: code
+          in: path
+          description: Код домена
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Capability"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Capability"
+  /api/capability:
+    get:
+      tags:
+        - capability
+      operationId: GetCapabilities
+      summary: Получение всех возможностей
+      responses:
+        "200":
+          description: successfull operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Capability"
+    post:
+      tags:
+        - capability
+      operationId: createCapability
+      summary: Создание оприсания новой возможности
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Capability"
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Capability"
+  /api/capability/{code}:
+    get:
+      tags:
+        - capability
+      operationId: getCapabilityByCode
+      summary: Получние информации о возможности по ее коду
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Код возможности для получения информации
+          schema:
+            type: string
+            example: BC-0001
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Capability"
+    put:
+      tags:
+        - capability
+      operationId: updateCapability
+      summary: Обновление описания возможности
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: BC-0001
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: "#/components/schemas/Capability"
+      responses:
+        "200":
+          description: successfull operation
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Capability"
+  /api/capability/{code}/realization:
+    summary: Управление описанием вариантов реализации возможности
+    get:
+      tags:
+        - capability realization
+      summary: Получение вариантов реализации TC
+      parameters:
+        - name: code
+          description: Код возможности
+          in: path
+          required: true
+          schema:
+            type: string
+            example: BC-0001
+      responses:
+        "200":
+          description: successfull operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CapabilityRealization"
+    post:
+      tags:
+        - realization
+      parameters:
+        - name: code
+          description: Код возможности
+          in: path
+          required: true
+          schema:
+            type: string
+            example: BC-0001
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CapabilityRealization"
+  /api/interface:
+    get:
+      tags:
+        - interface
+      description: Поиск и полечение описания интерфейсов
+      parameters:
+        - name: search
+          in: query
+          description: Слово для поиска в названии интерфейса
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Interface"
+    post:
+      tags:
+        - interface
+      description: "ДОбавление нового описания интерфейса"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Interface"
+      responses:
+        "200":
+          description: OK
+  /api/interface/{code}:
+    get:
+      tags:
+        - interface
+      description: ""
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Interface"
+  /api/component:
+    get:
+      tags:
+        - component
+      summary: Поиск и получение описание компонентов и продуктов
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+    post:
+      tags:
+        - component
+      summary: Добавление описания компонента
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/Component"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/Component"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Component"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/Component"
+  /api/component/{code}:
+    get:
+      responses:
+        "200":
+          description: OK
+    put:
+      responses:
+        "200":
+          description: OK
+components:
+  schemas:
+    Object:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ObjectRef"
+      properties:
+        name:
+          type: string
+          example: Управление клиентской инфорацией
+        FQName:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        author:
+          type: string
+    ObjectRef:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "001.001"
+        guid:
+          type: string
+          example: "{DAE09FF4-9980-4ce8-B9F8-B686C98CC60B}"
+        href:
+          type: string
+          format: url
+          example: http://server/api/ref/001.001
+    Domain:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Object"
+      properties:
+        parent:
+          type: object
+          $ref: "#/components/schemas/ObjectRef"
+        subdomains:
+          type: array
+          items:
+            $ref: "#/components/schemas/ObjectRef"
+        capabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Capability"
+    Capability:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Object"
+      properties:
+        unit:
+          type: object
+          $ref: "#/components/schemas/ObjectRef"
+        kpi:
+          type: object
+        domain:
+          type: object
+          $ref: "#/components/schemas/ObjectRef"
+        parent:
+          type: object
+          $ref: "#/components/schemas/ObjectRef"
+        owner:
+          type: object
+          $ref: "#/components/schemas/Employee"
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/Capability"
+        realization:
+          type: array
+          items:
+            $ref: "#/components/schemas/CapabilityRealization"
+    Employee:
+      type: object
+      properties:
+        href:
+          type: string
+        guid:
+          type: string
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+    CapabilityRealization:
+      allOf:
+        - $ref: "#/components/schemas/Object"
+      type: object
+      properties:
+        interfaces:
+          type: array
+          items:
+            $ref: "#/components/schemas/Interface"
+    Component:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ObjectRef"
+        - $ref: "#/components/schemas/Object"
+    Interface:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ObjectRef"
+        - $ref: "#/components/schemas/Object"
+      properties:
+        component:
+          type: object
+          $ref: "#/components/schemas/Component"
+    DomainPostBody:
+      type: object
