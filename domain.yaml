@@ -7,12 +7,13 @@ info:
     email: ivvoronin@beeline.ru
   version: 0.0.1
 tags:
-  - name: domain
-    description: Управление доменами возможностей
-  - name: capability
-    description: Управление описанием возможностей
-  - name: interface
-    description: Управление описанием интерфейсов
+  - name: "Управление доменами"
+    description:
+      Методы для получения, добавления и изменения описаний доменов возможностей
+  - name: Управление возможностями
+    description: Методы полученияЮ добавления и изменения описания возможностей
+  - name: Управление интерфейсами
+    description: Методы полученияЮ добавления и изменения описания интерфейсов
   - name: component
     description: Управление описанием компонентов
   - name: realization
@@ -21,7 +22,7 @@ paths:
   /api/domains:
     get:
       tags:
-        - domain
+        - "Управление доменами"
       operationId: getDomains
       summary: Получение списка доменов
       description: Получение списка доменов верхнево уровня или всех в виде списка
@@ -47,7 +48,7 @@ paths:
                   $ref: "#/components/schemas/Domain"
     post:
       tags:
-        - domain
+        - "Управление доменами"
       operationId: createDomain
       summary: Регистрация нового домена
       description: |-
@@ -81,7 +82,7 @@ paths:
   /api/domains/{code}:
     get:
       tags:
-        - domain
+        - "Управление доменами"
       summary: Получение описания домена по его коду
       operationId: getDomainByCode
       parameters:
@@ -104,7 +105,7 @@ paths:
           description: Домен с указанным кодом не найден
     put:
       tags:
-        - domain
+        - "Управление доменами"
       summary: Обновление данных для домена
       description: |-
         При добавлении домена сохраняются следующие поля:\
@@ -137,7 +138,7 @@ paths:
   /api/domains/{code}/parent:
     put:
       tags:
-        - domain
+        - "Управление доменами"
       operationId: setDomainParent
       summary: Изменение перенос поддомена в другой домен
       parameters:
@@ -157,7 +158,7 @@ paths:
   /api/domains/{code}/subdomains:
     get:
       tags:
-        - domain
+        - "Управление доменами"
       summary: Получение описания поддоменов по коду домена
       parameters:
         - name: code
@@ -177,7 +178,7 @@ paths:
                   $ref: "#/components/schemas/Domain"
     post:
       tags:
-        - domain
+        - "Управление доменами"
       summary: Добавление в домен описание нового поддомена
       operationId: createSubdomain
       requestBody:
@@ -193,7 +194,7 @@ paths:
       operationId: getDomainCapabilities
       summary: Получение списка возможностей в домене
       tags:
-        - domain
+        - "Управление доменами"
       parameters:
         - name: code
           in: path
@@ -212,7 +213,7 @@ paths:
                   $ref: "#/components/schemas/Capability"
     post:
       tags:
-        - domain
+        - "Управление доменами"
       operationId: createDomainCapability
       summary: Создание описания новой возможности в домене
       description: ""
@@ -236,10 +237,10 @@ paths:
               schema:
                 type: object
                 $ref: "#/components/schemas/Capability"
-  /api/capability:
+  /api/capabilities:
     get:
       tags:
-        - capability
+        - Управление возможностями
       operationId: GetCapabilities
       summary: Получение всех возможностей
       responses:
@@ -253,7 +254,7 @@ paths:
                   $ref: "#/components/schemas/Capability"
     post:
       tags:
-        - capability
+        - Управление возможностями
       operationId: createCapability
       summary: Создание оприсания новой возможности
       requestBody:
@@ -269,12 +270,12 @@ paths:
               schema:
                 type: object
                 $ref: "#/components/schemas/Capability"
-  /api/capability/{code}:
+  /api/capabilities/{code}:
     get:
       tags:
-        - capability
+        - Управление возможностями
       operationId: getCapabilityByCode
-      summary: Получние информации о возможности по ее коду
+      summary: Получение информации о возможности по ее коду
       parameters:
         - name: code
           in: path
@@ -293,7 +294,7 @@ paths:
                 $ref: "#/components/schemas/Capability"
     put:
       tags:
-        - capability
+        - Управление возможностями
       operationId: updateCapability
       summary: Обновление описания возможности
       parameters:
@@ -309,6 +310,10 @@ paths:
             schema:
               type: object
               $ref: "#/components/schemas/Capability"
+            example:
+              name: Новое имя
+              description: Новое описание
+              status: Draft
       responses:
         "200":
           description: successfull operation
@@ -317,11 +322,93 @@ paths:
               schema:
                 type: object
                 $ref: "#/components/schemas/Capability"
-  /api/capability/{code}/realization:
+  /api/capabilities/{code}/domain:
+    put:
+      tags:
+        - Управление возможностями
+      summary: Изменение домена, которому принадлежит возможность
+      operationId: changeCapabilityDomain
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Код возможности
+          example: BC-0001
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ObjectRef"
+            example:
+              code: "001.001"        
+      responses:
+        "200": 
+          description: OK.
+  /api/capabilities/{code}/parent:
+    put:
+      tags:
+        - Управление возможностями
+      summary: Установка и изменение родительской возможности
+      operationId: changeCapabilityParent
+      requestBody: 
+        content:
+          application/json:
+            schema:  
+              $ref: "#/components/schemas/ObjectRef"
+            example:
+              code: "BC-0001"
+      responses:
+        "200": 
+          description: OK.
+  /api/capabilities/{code}/children:
     summary: Управление описанием вариантов реализации возможности
     get:
       tags:
-        - capability realization
+        - Управление возможностями
+      summary: Получение вариантов реализации TC
+      parameters:
+        - name: code
+          description: Код возможности
+          in: path
+          required: true
+          schema:
+            type: string
+            example: BC-0001
+      responses:
+        "200":
+          description: successfull operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CapabilityRealization"
+    post:
+      tags:
+        - Управление возможностями
+      parameters:
+        - name: code
+          description: Код возможности
+          in: path
+          required: true
+          schema:
+            type: string
+            example: BC-0001
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CapabilityRealization"
+  /api/capabilities/{code}/realizations:
+    summary: Управление описанием вариантов реализации возможности
+    get:
+      tags:
+        - realization
       summary: Получение вариантов реализации TC
       parameters:
         - name: code
@@ -359,11 +446,12 @@ paths:
               schema:
                 oneOf:
                   - $ref: "#/components/schemas/CapabilityRealization"
-  /api/interface:
+  /api/interfaces:
     get:
       tags:
-        - interface
-      description: Поиск и полечение описания интерфейсов
+        - Управление интерфейсами
+      description: Поиск и получение описания интерфейсов
+      operationId: getInterfaces
       parameters:
         - name: search
           in: query
@@ -382,7 +470,7 @@ paths:
                   $ref: "#/components/schemas/Interface"
     post:
       tags:
-        - interface
+        - Управление интерфейсами
       description: "ДОбавление нового описания интерфейса"
       requestBody:
         content:
@@ -392,10 +480,10 @@ paths:
       responses:
         "200":
           description: OK
-  /api/interface/{code}:
+  /api/interfaces/{code}:
     get:
       tags:
-        - interface
+        - Управление интерфейсами
       description: ""
       parameters:
         - name: code
@@ -410,6 +498,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Interface"
+    post:
+      tags:
+        - Управление интерфейсами
+      summary: Изменение описания интерфейса
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Interface"
+            example:
+              name: INewInterface
+              description: Изменное описание
+              status: Draft
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Interface"
+              example:
+                code: "API-0001"
+                href: https://server/api/interfaces/API-0001
+                name: INewInterface
+                description: Изменное описание
+                status: Draft
+                FQName: Application Catalog.DumpApplication.INewInterface
+                author: VKIT
+  /api/interfaces/{code}/component:
+    post:
+      tags:
+        - Управление интерфейсами
+      summary: Изменение приложения-владельца для интерфейса
+      operationId: changeInterfaceComponent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ObjectRef"
+            example:
+              code: APP.CMDB
+      responses:
+        "200":
+          description: OK.
   /api/component:
     get:
       tags:
@@ -451,13 +583,30 @@ paths:
                       $ref: "#/components/schemas/Component"
   /api/component/{code}:
     get:
+      tags:
+        - component
       responses:
         "200":
           description: OK
     put:
+      tags:
+        - component
       responses:
         "200":
           description: OK
+  /api/component/{code}/interfaces:
+    get:
+      tags:
+        - component
+      responses:
+        200:
+          description: OK.
+    post:
+      tags:
+        - component
+      responses:
+        200:
+          description: OK.
 components:
   schemas:
     Object:
@@ -482,9 +631,9 @@ components:
         code:
           type: string
           example: "001.001"
-        guid:
-          type: string
-          example: "{DAE09FF4-9980-4ce8-B9F8-B686C98CC60B}"
+#        guid:
+#          type: string
+#          example: "{DAE09FF4-9980-4ce8-B9F8-B686C98CC60B}"
         href:
           type: string
           format: url
@@ -497,48 +646,31 @@ components:
         parent:
           type: object
           $ref: "#/components/schemas/ObjectRef"
-        subdomains:
-          type: array
-          items:
-            $ref: "#/components/schemas/ObjectRef"
-        capabilities:
-          type: array
-          items:
-            $ref: "#/components/schemas/Capability"
     Capability:
       type: object
       allOf:
         - $ref: "#/components/schemas/Object"
       properties:
-        unit:
-          type: object
-          $ref: "#/components/schemas/ObjectRef"
-        kpi:
-          type: object
         domain:
           type: object
           $ref: "#/components/schemas/ObjectRef"
         parent:
           type: object
           $ref: "#/components/schemas/ObjectRef"
+        kpi:
+          type: object
         owner:
           type: object
           $ref: "#/components/schemas/Employee"
-        children:
-          type: array
-          items:
-            $ref: "#/components/schemas/Capability"
-        realization:
-          type: array
-          items:
-            $ref: "#/components/schemas/CapabilityRealization"
+        unit:
+          type: object
+          $ref: "#/components/schemas/ObjectRef"
     Employee:
       type: object
       properties:
         href:
           type: string
-        guid:
-          type: string
+          format: url
         email:
           type: string
           format: email
@@ -552,12 +684,16 @@ components:
         interfaces:
           type: array
           items:
-            $ref: "#/components/schemas/Interface"
+            $ref: "#/components/schemas/ObjectRef"
     Component:
       type: object
       allOf:
-        - $ref: "#/components/schemas/ObjectRef"
         - $ref: "#/components/schemas/Object"
+      properties:
+        interfaces:
+          type: array
+          items:
+            $ref: "#/components/schemas/ObjectRef"
     Interface:
       type: object
       allOf:
@@ -566,6 +702,6 @@ components:
       properties:
         component:
           type: object
-          $ref: "#/components/schemas/Component"
+          $ref: "#/components/schemas/ObjectRef"
     DomainPostBody:
       type: object
