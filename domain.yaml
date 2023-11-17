@@ -703,5 +703,3 @@ components:
         component:
           type: object
           $ref: "#/components/schemas/ObjectRef"
-    DomainPostBody:
-      type: object
