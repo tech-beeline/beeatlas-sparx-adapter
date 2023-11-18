@@ -1,0 +1,1 @@
+curl -X POST -D "uid=webea;pwd=12webea)(;" http://ms-seaapp001.bee.vimpelcom.ru:804/pgsparxrepo/oslc/am/login/

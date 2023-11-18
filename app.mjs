@@ -15,7 +15,7 @@ app.get('/', async (req, res) => {
 app.get('/api/messages', processGetSequenceResponse );
 
 
-
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
+

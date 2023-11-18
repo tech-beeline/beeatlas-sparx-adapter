@@ -112,7 +112,6 @@ export async function processGetSequenceResponse(req, res) {
                 Object.assign(m, { comments: await validateMessage(m) });
             }
         }
-        console.log('ret');
         res.json(sql_res.rows);
     } catch (err) {
         console.error(err);

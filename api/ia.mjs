@@ -23,12 +23,14 @@ export class InterfaсeAgreement {
 export class IARepository {
     static CACHE_STATUS_PATH = "./data/ia-cache-status.json";
     static GIT_ARCHIVE = "./data/interface-agreement.zip";
+    static CACHE_REFRESH_MS = 3600000;
     static git_base = "https://git.vimpelcom.ru/common/architecture/interface-agreement/-/blob/main";
     static PREFIX_LIST = [
         "", this.git_base
     ];
     #data;
     #status;
+    #cache_load_time;
     constructor() {
     }
     async #loadData() {
@@ -49,21 +51,21 @@ export class IARepository {
         }
 
         zip.close();
+        this.#cache_load_time = Date.now();
         console.log('Interface Agreement loaded from git zip archive');
     }
     async #downloadFromGit() {
+        console.log (`download interface agreement from gitlab`);
         let p = new Promise((resolve, reject) => {
             try {
-
                 https.get('https://git.vimpelcom.ru/api/v4/projects/common%2Farchitecture%2Finterface-agreement/repository/archive.zip', {
                     headers: {
-                        "PRIVATE-TOKEN": "rLGUxyyR9aGxCkxKpP2W" //TODO Переделать на ТУЗ и перенести в настройки
+                        "PRIVATE-TOKEN": "rLGUxyyR9aGxCkxKpP2W" //[ ] Переделать на ТУЗ и перенести в настройки
                     },
-                    rejectUnauthorized: false //TODO Можно заменить на подстановку сертификата, низкий приоритет
+                    rejectUnauthorized: false //[ ] Можно заменить на подстановку сертификата, низкий приоритет
                 },
                     response => {
                         let file = fs.createWriteStream(IARepository.GIT_ARCHIVE);
-                        console.log(response);
 
                         if (response.statusCode !== 200) {
                             reject(Error(`HTTP ${response.statusCode} : ${response.statusMessage}`));
@@ -108,8 +110,9 @@ export class IARepository {
      * @returns {Promise<InterfaсeAgreement>}
      */
     async byPath(path) {
-        if (!this.#data) {
-            if (!fs.existsSync(IARepository.GIT_ARCHIVE)) {
+        if (!this.#data || (Date.now() - this.#cache_load_time) > IARepository.CACHE_REFRESH_MS) {
+            console.log(Date.now() - fs.statSync( IARepository.GIT_ARCHIVE).mtime);
+            if (!fs.existsSync(IARepository.GIT_ARCHIVE) || (Date.now() - fs.statSync( IARepository.GIT_ARCHIVE).mtime) > IARepository.CACHE_REFRESH_MS  ) {
                 await this.#downloadFromGit();
             }
             await this.#loadData();
