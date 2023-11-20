@@ -18,11 +18,13 @@ const MESSAGE_QUERY = ` WITH RECURSIVE pkgs(parent_id, package_id, ea_guid, pare
      WHERE p.package_id = chld.parent_id
    )
 select d.name as process, d.ea_guid as duid, 
-coalesce(c_app.name || '.' || consumer.name , consumer.name) as consumer
+coalesce(c_app.name || '.' || consumer.name , consumer.name) as consumer,
+coalesce( c_app.ea_guid, consumer.ea_guid) as consumer_uid
 ,c_app.alias as consumer_code
   , coalesce (mth.name,msg.name) as operation, op.value as method
-  ,coalesce( srv_app.name || '.' || srv.name, srv.name) as supplier, 
-  srv_app.alias as supplier_code,
+  ,coalesce( srv_app.name || '.' || srv.name, srv.name) as supplier
+  ,coalesce( srv_app.ea_guid, srv.ea_guid) as supplier_uid
+  ,srv_app.alias as supplier_code,
   tags.value as ia, msg.pdata1 as interactionType
 , d.author, d.modifieddate
 , srv.object_type as srv_type, srv.classifier_guid, i.name as interface_name
