@@ -9,6 +9,11 @@
         border: 1px solid black;
         border-collapse: collapse;
     }
+    .message-table td,th{
+        width: 300px;
+        max-width: 300px;
+        word-wrap: break-word;
+    }
 </style>
 
 <body>
@@ -16,7 +21,7 @@
         <div>Только с ошибками</div>
     </div>
     <div>
-        <table id="message-table">
+        <table id="message-table" class="message-table">
             <thead>
                 <tr>
                     <th style="width: 300px;">Диаграмма</th>

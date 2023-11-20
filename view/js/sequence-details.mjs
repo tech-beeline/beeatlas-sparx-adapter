@@ -49,17 +49,18 @@ async function loadMessages(body) {
         if (response.status !== 200) {
             throw Error(`Ошибка при загрузке данных: HTTP ${response.status} ${await response.text()}`)
         }
-        
+
         let messages = await response.json();
         body.innerHTML = "";
         body.append(...messages.map(m => tr([
             a(m.process, `${WEBEA_BASE}${m.duid}`, { target: '_blank' }),
             m.comments,
-            m.consumer, m.consumer_code, m.operation, m.supplier, m.supplier_code,
+            a(m.consumer, `${WEBEA_BASE}${m.consumer_uid}`, { target: "_blank" }), m.consumer_code, m.operation,
+            a(m.supplier, `${WEBEA_BASE}${m.supplier_uid}`, { target: "_blank" }), m.supplier_code,
             iaTag(m.ia)
             , m.author, m.modifieddate
         ])));
-        
+
     } catch (e) {
         body.querySelectorAll('td').forEach(td => { td.textContent = e.toString() })
     }
