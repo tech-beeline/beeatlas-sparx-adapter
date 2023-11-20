@@ -38,6 +38,7 @@ function iaTag(ia) {
     return ia ? a(ia, ia.startsWith('https://') ? ia : `https://git.vimpelcom.ru/common/architecture/interface-agreement/-/blob/main${ia}`, { target: "_blank" }) : "";
 }
 
+var WEBEA_BASE = "https://ms-seaapp001.bee.vimpelcom.ru:83/index.php?m=1&o=";
 /**
  * 
  * @param {HTMLElement} body 
@@ -52,7 +53,7 @@ async function loadMessages(body) {
         let messages = await response.json();
         body.innerHTML = "";
         body.append(...messages.map(m => tr([
-            a(m.process, 'ya.ru', { target: '_blank' }),
+            a(m.process, `${WEBEA_BASE}${m.duid}`, { target: '_blank' }),
             m.comments,
             m.consumer, m.consumer_code, m.operation, m.supplier, m.supplier_code,
             iaTag(m.ia)

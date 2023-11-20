@@ -72,9 +72,11 @@ const VALIDATION_RULES = [
     }
 ];
 
+
 async function executeValidateRule(msg, rule) {
     return await rule(msg);
 }
+
 async function validateMessage(msg) {
     let ret = [];
     for (const vfn of VALIDATION_RULES) {

@@ -4,11 +4,12 @@ async function downloadFromGit() {
     console.log(`download interface agreement from gitlab`);
     let p = new Promise((resolve, reject) => {
         try {
-            https.request('http://ms-seaapp001.bee.vimpelcom.ru:804/pgsparxrepo/oslc/am/login', {
+            https.request('http://ms-seaapp001.bee.vimpelcom.ru:804/pgsparxrepo/oslc/am/login/', {
                 method: "POST",
                 rejectUnauthorized: false //[ ] Можно заменить на подстановку сертификата, низкий приоритет
             },
                 response => {
+                    let buffer = [];
 
                     if (response.statusCode !== 200) {
                         reject(Error(`HTTP ${response.statusCode} : ${response.statusMessage}`));
@@ -16,13 +17,14 @@ async function downloadFromGit() {
                     }
 
                     response.on('data', (d) => {
+                        buffer.push(d);
                         console.log('data')
                     })
 
 
                     response.on('end', (data) => {
                         console.log('Interface Agreement downloaded from git')
-                        resolve();
+                        resolve( Buffer.concat( buffer).toString() );
                     })
                         .on('error', (err) => {
                             console.error(err);
@@ -37,4 +39,7 @@ async function downloadFromGit() {
     return p;
 }
 
-downloadFromGit();
+downloadFromGit()
+.then(d=>{
+    console.log(d);
+});
