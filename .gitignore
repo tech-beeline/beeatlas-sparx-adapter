@@ -1,3 +1,4 @@
 node_modules
 
-dump/temp.json
+dump
+oslc/test.mjs
