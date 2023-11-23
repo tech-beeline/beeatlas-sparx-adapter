@@ -18,7 +18,7 @@
             "type": "docker",
             "request": "launch",
             "preLaunchTask": "docker-run: debug",
-            "platform": "node"
+            "platform": "node" 
         }
     ]
 }

@@ -1,0 +1,23 @@
+<html>
+
+<head>
+    <script type="module">
+        var EASwaggerBundle = require('swagger-ui/swagger-ui-dist').SwaggerUIBundle;
+
+        const ui = SwaggerUIBundle({
+            url: "api/swagger/domain.yaml",
+            dom_id: 'ea-swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.SwaggerUIStandalonePreset
+            ],
+            layout: "StandaloneLayout"
+        })
+    </script>
+</head>
+
+<body>
+    <div id="ea-swagger-ui"></div>
+</body>
+
+</html>
