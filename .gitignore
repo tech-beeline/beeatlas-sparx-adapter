@@ -3,3 +3,5 @@ node_modules
 dump
 oslc/test.mjs
 mapic/sample.mjs
+mapic/samples
+.vscode/launch.json
