@@ -18,6 +18,9 @@ tags:
     description: Управление описанием компонентов
   - name: Управление реализацией возможностей
     description: Управление описанием вариантов реализации возможности
+servers:
+  - url: ../..
+    description: Server description
 paths:
   /api/domains:
     get:

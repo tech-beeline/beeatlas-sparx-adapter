@@ -1,17 +1,25 @@
 <html>
 
 <head>
+    <link rel="stylesheet" type="text/css" href="/swagger-ui/swagger-ui.css" />
+    <link rel="stylesheet" type="text/css" href="/swagger-ui/index.css" />
+    <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
+
+    <script src="/swagger-ui/swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
+    <script src="/swagger-ui/swagger-ui-bundle.js"></script>
     <script type="module">
-        var EASwaggerBundle = require('swagger-ui/swagger-ui-dist').SwaggerUIBundle;
+        //import { SwaggerUI } from '/swagger-ui/swagger-ui-bundle.js'
+        //var EASwaggerBundle = swagger.SwaggerUIBundle;
 
         const ui = SwaggerUIBundle({
             url: "api/swagger/domain.yaml",
-            dom_id: 'ea-swagger-ui',
+            dom_id: '#ea-swagger-ui',
             presets: [
                 SwaggerUIBundle.presets.apis,
                 SwaggerUIBundle.SwaggerUIStandalonePreset
             ],
-            layout: "StandaloneLayout"
+            //layout: "StandaloneLayout"
         })
     </script>
 </head>
@@ -19,5 +27,4 @@
 <body>
     <div id="ea-swagger-ui"></div>
 </body>
-
 </html>
