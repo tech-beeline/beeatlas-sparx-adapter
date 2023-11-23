@@ -1,0 +1,31 @@
+ WITH RECURSIVE pkgs(parent_id, package_id, ea_guid, parent_guid) AS (
+         SELECT t_package.parent_id,
+            t_package.package_id,
+            t_package.ea_guid,
+            t_package.ea_guid
+           FROM t_package
+	 		where ea_guid ='{CC4EAE49-4A1B-4ef5-9C76-83D629ECF603}'
+        UNION ALL
+         SELECT chld.parent_id,
+            chld.package_id,
+            chld.ea_guid,
+            p.parent_guid
+           FROM t_package chld,
+            pkgs p
+          WHERE p.package_id = chld.parent_id
+        )
+ SELECT 
+ 	dm.alias as code,
+ 	dm.name as name,
+	dm.note as description,
+	dm.status as status,
+	dm.author as author,
+	dm.createddate  as "createdDate",
+	dm.modifiedDate as "modifiedDate"
+ from 
+ 	pkgs, t_object dm
+where pkgs.package_id=dm.package_id
+	and dm.stereotype = 'ArchiMate_Capability'
+
+
+select * from t_object where alias='BC-015366' and stereotype='ArchiMate_Capability'
