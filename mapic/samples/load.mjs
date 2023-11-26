@@ -504,8 +504,8 @@ async function main() {
                 } catch (error) {
                     spec = { info: { title: "not json format"}}
                 }
-
             }
+            
             subscriptions.push(
                 {
                     consumer: product,

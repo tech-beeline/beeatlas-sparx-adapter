@@ -11,9 +11,9 @@ tags:
     description:
       Методы для получения, добавления и изменения описаний доменов возможностей
   - name: Управление возможностями
-    description: Методы полученияЮ добавления и изменения описания возможностей
+    description: Методы получения, добавления и изменения описания возможностей
   - name: Управление интерфейсами
-    description: Методы полученияЮ добавления и изменения описания интерфейсов
+    description: Методы получения, добавления и изменения описания интерфейсов
   - name: Управление компонентами
     description: Управление описанием компонентов
   - name: Управление реализацией возможностей
@@ -92,7 +92,7 @@ paths:
         - name: code
           in: path
           description: Код запрашиваемого домена
-          example: BC-0001
+          example: GRP.010
           required: true
           schema:
             type: string
@@ -148,6 +148,7 @@ paths:
         - name: code
           in: path
           required: true
+          example: GRP.010
           schema:
             type: string
       requestBody:
@@ -166,6 +167,7 @@ paths:
       parameters:
         - name: code
           description: Код домена, для которого запрашивается описание дочерних доменов
+          example: GRP.010
           required: true
           in: path
           schema:
@@ -202,6 +204,7 @@ paths:
         - name: code
           in: path
           description: Код домена
+          example: DMN.042
           required: true
           schema:
             type: string
@@ -286,7 +289,7 @@ paths:
           description: Код возможности для получения информации
           schema:
             type: string
-            example: BC-0001
+            example: BC-000107
       responses:
         "200":
           description: OK.
@@ -295,6 +298,12 @@ paths:
               schema:
                 type: object
                 $ref: "#/components/schemas/Capability"
+        "404":
+          description: Возможность не найдена
+          content:
+            text/plain:
+              schema:
+                type: string
     put:
       tags:
         - Управление возможностями
