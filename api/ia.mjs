@@ -55,7 +55,7 @@ export class IARepository {
         console.log('Interface Agreement loaded from git zip archive');
     }
     async #downloadFromGit() {
-        console.log (`download interface agreement from gitlab`);
+        console.log(`download interface agreement from gitlab`);
         let p = new Promise((resolve, reject) => {
             try {
                 https.get('https://git.vimpelcom.ru/api/v4/projects/common%2Farchitecture%2Finterface-agreement/repository/archive.zip', {
@@ -111,8 +111,10 @@ export class IARepository {
      */
     async byPath(path) {
         if (!this.#data || (Date.now() - this.#cache_load_time) > IARepository.CACHE_REFRESH_MS) {
-            console.log(Date.now() - fs.statSync( IARepository.GIT_ARCHIVE).mtime);
-            if (!fs.existsSync(IARepository.GIT_ARCHIVE) || (Date.now() - fs.statSync( IARepository.GIT_ARCHIVE).mtime) > IARepository.CACHE_REFRESH_MS  ) {
+            if (fs.existsSync(IARepository.GIT_ARCHIVE)) {
+                console.log(Date.now() - fs.statSync(IARepository.GIT_ARCHIVE).mtime);
+            }
+            if (!fs.existsSync(IARepository.GIT_ARCHIVE) || (Date.now() - fs.statSync(IARepository.GIT_ARCHIVE).mtime) > IARepository.CACHE_REFRESH_MS) {
                 await this.#downloadFromGit();
             }
             await this.#loadData();

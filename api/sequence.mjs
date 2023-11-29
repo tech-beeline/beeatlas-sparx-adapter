@@ -44,6 +44,8 @@ coalesce( c_app.ea_guid, consumer.ea_guid) as consumer_uid
       and v.parent_guid='{B441FDC2-21A2-40c3-9645-C9C4C13B01D4}'
       order by d.diagram_id, msg.seqno`;
 
+
+
 const PG_CONFIG = {
     user: 'fdm_user',
     password: '12fdmuser09',

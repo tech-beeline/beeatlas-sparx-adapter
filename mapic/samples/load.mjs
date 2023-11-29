@@ -1,6 +1,81 @@
 import https from "https"
 import fs from 'fs'
+import { SPARXApi } from "../../api/sparx.mjs";
+import xlsx from 'xlsx';
 
+
+
+//#region Работа с Excel
+
+class ColumnDefinition {
+    name;
+    data;
+    wch;
+    style;
+    constructor(c) {
+        this.name = typeof c === 'string' ? c : c.name;
+        const data = c.data ?? this.name;
+        const data_function = typeof data === 'string' ? (d => d[data]) : d => data(d);
+        this.data = c.style ? (d) => {
+            let cell_data = data_function(d);
+            if (cell_data && typeof cell_data === 'object') {
+                return Object.assign({ s: c.style }, cell_data);
+            }
+            return { t: 's', v: cell_data, s: c.style };
+        } : data_function;
+        this.wch = c.w ?? 10;
+    }
+}
+
+
+/**
+ * 
+ * @param {*} data 
+ * @param {Array} columns 
+ * @param {number} rowNum 
+ * @param {number} colNum 
+ * @returns 
+ */
+function rowsFromObject(data, columns, rowNum = 1, colNum = 0) {
+    if (columns.length == 0) {
+        return { rows: [{}], merges: [] }
+    }
+
+    let source = Array.isArray(data) ? data.map(r => ({ val: columns[0].data(r), tail: [r] })) : (Object.entries(data).map(function ([key, val]) {
+        return { val: key, tail: val };
+    }));
+
+    let row_num = rowNum;
+    let ret = { rows: [], merges: [] };
+    //TODO Добавить обработку массивов-значений
+    for (const { val, tail } of source) {
+        let { rows, merges } = rowsFromObject(tail, columns.slice(1), row_num, colNum + 1);
+
+        for (const cell_value of Array.isArray(val) ? val : [val]) {
+
+            ret.rows = ret.rows.concat(rows.map(r => Object.assign({ [columns[0].name]: cell_value }, r)));
+
+            ret.merges = ret.merges.concat(merges);
+            if (rows.length > 1) {
+                ret.merges.push({ s: { c: colNum, r: row_num }, e: { c: colNum, r: row_num + rows.length - 1 } });
+            }
+            row_num += rows.length;
+        }
+    }
+
+    return ret;
+}
+
+export function sheetFromObject(data, columns, options = {}) {
+    let column_defenitions = columns.map(c => new ColumnDefinition(c));
+    let { rows, merges } = rowsFromObject(data, column_defenitions);
+    let ws = xlsx.utils.json_to_sheet(rows, Object.assign({ header: column_defenitions.map(c => c.name) }, options));
+    ws['!cols'] = column_defenitions.map(c => ({ wch: c.wch }));
+    ws["!merges"] = merges;
+    return ws;
+}
+
+//#endregion
 
 //#region HTTP helpers
 async function post(url, body, options) {
@@ -63,7 +138,7 @@ class CollectionCache {
     constructor(localPath, loadFn, invalidatePeriod) {
         this.#path = localPath;
         this.#loadFn = loadFn;
-        this.#invalidatePeriod = invalidatePeriod ?? 3600000;
+        this.#invalidatePeriod = invalidatePeriod ?? 1000 * 60 * 60 * 10;
         this.#loadFile();
     }
     #loadFile() {
@@ -121,7 +196,7 @@ class EntityCache {
      */
     constructor(localPath, loadByIdFn, invalidatePeriod) {
         this.#path = localPath;
-        this.#invalidatePeriod = invalidatePeriod ?? 3600000;
+        this.#invalidatePeriod = invalidatePeriod ?? 1000 * 60 * 60 * 10;
         this.#loadByIdFn = loadByIdFn;
         this.#cacheTime = {};
         this.load();
@@ -173,7 +248,7 @@ class TextFileCache {
     constructor(dataFolder, fileLoadFn, invalidatePeriod) {
         this.#dataFolder = dataFolder;
         this.#fileLoadFn = fileLoadFn;
-        this.#invalidatePeriod = invalidatePeriod ?? 3600000;
+        this.#invalidatePeriod = invalidatePeriod ?? 1000 * 60 * 60 * 10;
     }
     async loadFile(key) {
     }
@@ -502,10 +577,10 @@ async function main() {
                     // [ ] ДОбавить обработку различных форматов спецификаций
                     spec = JSON.parse(spec);
                 } catch (error) {
-                    spec = { info: { title: "not json format"}}
+                    spec = { info: { title: "not json format" } }
                 }
             }
-            
+
             subscriptions.push(
                 {
                     consumer: product,
@@ -519,7 +594,88 @@ async function main() {
         }
     }
 
+    let sequence_interations = (await SPARXApi.getSequenceInteractions()).filter(s => s.consumer_code && s.srv_type === 'ProvidedInterface' && s.operation && s.supplier_code);
+
+    let subscription_map = {}
+
+    for (const subscription of subscriptions) {
+        if (!subscription_map[subscription.consumer.cmdbUnit]) subscription_map[subscription.consumer.cmdbUnit] = { code: subscription.consumer.cmdbUnit, subscribers: {}, mapicConsumer: subscription.consumer };
+        let consumer = subscription_map[subscription.consumer.cmdbUnit];
+        if (!consumer.subscribers[subscription.provider.cmdbUnit]) consumer.subscribers[subscription.provider.cmdbUnit] = { code: subscription.provider.cmdbUnit, mapicApi: [], mapicProvider: subscription.provider };
+        let subscriber = consumer.subscribers[subscription.provider.cmdbUnit];
+        subscriber.mapicApi.push({ id: subscription.api.id, title: subscription.api_title });
+    }
+
+    for (const si of sequence_interations) {
+        if (!subscription_map[si.consumer_code]) subscription_map[si.consumer_code] = { code: si.consumer_code, subscribers: {} };
+        let consumer = subscription_map[si.consumer_code];
+        consumer.eaConsumer = { name: si.consumer, code: si.consumer_code };
+        if (!consumer.subscribers[si.supplier_code]) consumer.subscribers[si.supplier_code] = { code: si.supplier_code };
+        let provider = consumer.subscribers[si.supplier_code];
+        provider.eaProvider = { name: si.supplier, code: si.supplier_code };
+        provider.eaApi = provider.eaApi ?? [];
+        provider.eaApi.push({
+            ia: si.ia, interface: si.interface_name, operation: si.operation
+        });
+    }
+
+    let tmp = {};
+
+    function subscribers(data) {
+        let ret = {}
+        for (const s in data) {
+            ret[s] = {
+                [data[s].mapicProvider?.cmdbUnit ?? ""]: {
+                    [data[s].eaProvider?.code ?? ""]: [{
+                        mapicApi: (data[s].mapicApi ?? []).map(a => `${a.id}: ${a.title}`).join('\r\n')
+                        , eaApi : (data[s].eaApi ?? []).map(a => `${a.interface}: ${a.operation}`).join('\r\n')
+                    }]
+                }
+            }
+        }
+        return ret;
+    }
+    for (const con in subscription_map) {
+        tmp[con] = {
+            [subscription_map[con].mapicConsumer?.cmdbUnit ?? ""]: {
+                [subscription_map[con].eaConsumer?.code ?? ""]: subscribers(subscription_map[con].subscribers)
+            }
+        }
+    }
+
+    let wb = xlsx.utils.book_new();
+
+    xlsx.utils.book_append_sheet(wb, sheetFromObject(
+        tmp, [{
+            name: "Потребитель"
+        },
+        {
+            name: "Потребитель mapic"
+        },
+        {
+            name: "Потребитель ea"
+        },
+        {
+            name: "Поставщик"
+        },
+        {
+            name: "Поставщик mapic"
+        },
+        {
+            name: "Поставщик ea"
+        },
+        {
+            name: "mapic api", data: (r) => r.mapicApi, w: 50, style : { alignment: { wordWrap: true}}
+        },
+        {
+            name: "ea api", data: (r) => r.eaApi, w: 50, style : { alignment: { wordWrap: true}}
+        }
+    ]
+    ))
+    xlsx.writeFile(wb, './dump/integration-map.xlsx');
+
     console.log('!');
+    process.exit();
 }
 
 main();

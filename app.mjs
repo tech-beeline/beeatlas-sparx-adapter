@@ -68,10 +68,20 @@ function capabilityDTO(request, capability) {
             code: capability.domainAlias,
             href: formatHREF(request, `/api/domains/${capability.domainAlias}`)
         } : {},
-        owner: capability.ownerName ? {
-            fullName: capability.ownerName
+        owner: capability.owner ? {
+            fullName: capability.owner
         } : {}
     };
+}
+
+function componentDTO( request, component ){
+    return {
+        name: component.name,
+        code: component.code,
+        status: component.status, author: component.author,
+        description: component.description,
+        href: formatHREF(request, `/api/components/${component.code}`)
+    }
 }
 
 
@@ -112,14 +122,77 @@ app.get('/api/capabilities', async (request, response) => {
 app.get('/api/capabilities/:code', async (request, response) => {
     try {
         let capability = await SPARXApi.getCapaiblity(request.params.code);
-        if( capability.length == 0){
-            return response.status(404).send( `Capability with code ${code} not found`);
+        if (capability.length == 0) {
+            return response.status(404).send(`Capability with code ${request.params.code} not found`);
         }
-        response.json( capabilityDTO( request, capability[0]));
+        response.json(capabilityDTO(request, capability[0]));
     } catch (err) {
+        console.error(err);
         response.status(500).send(err.message);
     }
 });
+
+
+app.get('/api/capabilities/:code/children', async (request, response) => {
+    try {
+        let capabilities = await SPARXApi.getChildCapabilities(request.params.code);
+        response.json(capabilities.map(cap => capabilityDTO(request, cap)));
+    } catch (err) {
+        console.error(err);
+        response.status(500).send(err.message);
+    }
+});
+
+app.get('/api/capabilities/:code/realizations', async (request, response) => {
+    try {
+        let capabilities = await SPARXApi.getCapabilityRealizations(request.params.code);
+        response.json(capabilities);
+    } catch (err) {
+        console.error(err);
+        response.status(500).send(err.message);
+    }
+});
+
+app.get('/api/components/:code', async (request, response) => {
+    try {
+        let components = await SPARXApi.getComponentByCode(request.params.code);
+        if (components.length === 0) {
+            return response.status(404).send(`Component with code ${request.params.code} not found`);
+        }
+        let interfaces = await SPARXApi.getComponentInterfaces(request.params.code);
+        let component = componentDTO(request, components[0]);
+        component.interfaces = interfaces.map(i => ({
+            name: i.name,
+            component: {
+                code: request.params.code,
+                href: formatHREF(request, `/api/components/${request.params.code}`)
+            }
+        }));
+        response.json(component);
+    } catch (err) {
+        console.error(err);
+        response.status(500).send(err.message);
+    }
+});
+
+app.get('/api/components/:code/interfaces', async (request, response) => {
+    try {
+        let interfaces = await SPARXApi.getComponentInterfaces(request.params.code);
+        response.json(interfaces.map(i => ({
+            name: i.name,
+            component: {
+                code: request.params.code,
+                href: formatHREF(request, `/api/components/${request.params.code}`)
+            }
+        })));
+    } catch (err) {
+        console.error(err);
+        response.status(500).send(err.message);
+    }
+});
+
+
+
 
 let server = app.listen(PORT, () => {
     console.log(`Example app listening on port ${PORT}`)

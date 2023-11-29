@@ -70,53 +70,156 @@ where po.alias=$1`, values: [code]
          and c.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')`, values: [code]
     }),
     capabilities: () => `select 
-	ob.name, 
-	ob.ea_guid,
-	ob.stereotype,
-	ob.object_id,
-	ob.author,
-	ob.modifieddate as "modifiedDate",
-	ob.createdDate as "createdDate",
-	ob.note as description,
-	ob.alias as code,
-	ob.status,
-	 coalesce((select obe.name 
+	cap.name, 
+	cap.alias as code, 
+	cap.note as description,
+	coalesce((select obe.name 
 	 from t_connector co,  t_object obe 
-	 where co.end_object_id = ob.object_id
+	 where co.end_object_id = cap.object_id
 	 and obe.object_id = co.start_object_id
 	 and co.stereotype = 'Responsibility'
 	 and obe.stereotype = 'ArchiMate_BusinessActor' limit 1 ) ,'')
-	   as owner,
-	(select tob.alias from t_object tob where tob.ea_guid = d.ea_guid ) as "domainAlias"
-from 	t_object ob , v_domains d
-where d.id=ob.package_id
-	and ob.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')
+	   as "ownerName",
+	 d.alias as "domainAlias",
+	( select p.alias 
+	from t_diagramlinks dl, t_connector r, t_object p
+	where d.id=sc.package_id and sc.diagram_id=dl.diagramid and r.connector_id=dl.connectorid
+		and r.stereotype='ArchiMate_Aggregation' and r.start_object_id=p.object_id and r.end_object_id=cap.object_id 
+	 	and p.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')
+	 limit 1) as "parentAlias"
+	from 
+		v_domains d
+	join t_diagram sc on d.id=sc.package_id
+	join t_diagramobjects od on od.diagram_id=sc.diagram_id
+	join t_object cap on cap.object_id=od.object_id and cap.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')
 `,
     capability: (code) => ({
         text: `select 
-ob.name, 
-ob.ea_guid,
-ob.stereotype,
-ob.object_id,
-ob.author,
-ob.modifieddate as "modifiedDate",
-ob.createdDate as "createdDate",
-ob.note as description,
-ob.alias as code,
-ob.status,
- coalesce((select obe.name 
- from t_connector co,  t_object obe 
- where co.end_object_id = ob.object_id
- and obe.object_id = co.start_object_id
- and co.stereotype = 'Responsibility'
- and obe.stereotype = 'ArchiMate_BusinessActor' limit 1 ) ,'')
-   as "ownerName",
-(select tob.alias from t_object tob where tob.ea_guid = d.ea_guid ) as "domainAlias"
-from 	t_object ob , v_domains d
-where d.id=ob.package_id
-and ob.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')
-and ob.alias=$1`, values: [code]
-    })
+        cap.name, 
+        cap.alias as code, 
+        cap.note as description,
+        coalesce((select obe.name 
+         from t_connector co,  t_object obe 
+         where co.end_object_id = cap.object_id
+         and obe.object_id = co.start_object_id
+         and co.stereotype = 'Responsibility'
+         and obe.stereotype = 'ArchiMate_BusinessActor' limit 1 ) ,'')
+           as "ownerName",
+         d.alias as "domainAlias",
+        ( select p.alias 
+        from t_diagramlinks dl, t_connector r, t_object p, t_object ch
+        where sc.diagram_id=dl.diagramid and r.connector_id=dl.connectorid
+            and r.stereotype='ArchiMate_Aggregation' and r.start_object_id=p.object_id and r.end_object_id=ch.object_id 
+             and p.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')
+         limit 1) as "parentAlias"
+        from 
+            v_domains d
+        join t_diagram sc on d.id=sc.package_id
+        join t_diagramobjects od on od.diagram_id=sc.diagram_id
+        join t_object cap on cap.object_id=od.object_id and cap.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')
+        where cap.alias=$1
+    `, values: [code]
+    }),
+    childCapability: (code) => ({
+        text: `select 
+        cap.name, 
+        cap.alias as code, 
+        cap.note as description,
+        coalesce((select obe.name 
+         from t_connector co,  t_object obe 
+         where co.end_object_id = cap.object_id
+         and obe.object_id = co.start_object_id
+         and co.stereotype = 'Responsibility'
+         and obe.stereotype = 'ArchiMate_BusinessActor' limit 1 ) ,'')
+           as owner,
+         d.alias as "domainAlias",
+         p.alias as "parentAlias"
+        from 
+            v_domains d
+        join t_diagram sc on d.id=sc.package_id
+        join t_diagramobjects od on od.diagram_id=sc.diagram_id
+        join t_object cap on cap.object_id=od.object_id and cap.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')
+        join t_diagramlinks dl on dl.diagramid=sc.diagram_id
+        join t_connector c on c.connector_id=dl.connectorid and c.end_object_id=cap.object_id
+        join t_object p on c.start_object_id=p.object_id
+        where p.alias = $1`, values: [code]
+    }),
+    capabilityRealizations: (code) => ({
+        text: `select 
+        service.name as service, service.ea_guid as code, 
+        cmp.ea_guid as cuid,
+        cmp.name as component, 
+        cmp.alias as componentCode,
+        cmp.object_type, 
+        cmp.stereotype
+        from 
+            t_object cap
+            join t_xref dx on dx.name='DefaultDiagram' and cap.ea_guid=dx.client
+            join t_diagram rd on rd.ea_guid=dx.supplier
+            join t_connector cr on cr.end_object_id=cap.object_id and cr.stereotype='ArchiMate_Realization'
+            join t_diagramlinks cl on cl.diagramid=rd.diagram_id and cr.connector_id=cl.connectorid
+            join t_object service on service.object_id=start_object_id
+            left join t_connector cc 
+                on cc.end_object_id=service.object_id and cc.stereotype='ArchiMate_Realization' and cc.connector_id in (
+                select connectorid from t_diagramlinks where diagramid=rd.diagram_id)
+            left join t_object cmp on cmp.object_id=cc.start_object_id
+        where cap.alias=$1`, values: [code]
+    }),
+    componentByCode: (code) => ({
+        text: `select cmp.name, cmp.note as description, cmp.alias as code, cmp.status, cmp.author, cmp.createddate as "createdDate", cmp.modifieddate as "modifiedDate"
+        from t_object cmp
+        where cmp.alias=$1
+            and cmp.object_type='Component'`, values: [code]
+    }),
+    componentInterfaces: (code) => ({
+        text: `select cmp.object_id, api.name, api.alias
+        from t_object cmp
+        join t_object api on api.parentid=cmp.object_id and api.object_type='Interface'
+        where cmp.alias=$1 and cmp.object_type='Component'`, values: [code]
+    }),
+    sequenceInteractions: () => `WITH RECURSIVE pkgs(parent_id, package_id, ea_guid, parent_guid) AS (
+        SELECT t_package.parent_id,
+           t_package.package_id,
+           t_package.ea_guid,
+           t_package.ea_guid
+          FROM t_package
+       UNION ALL
+        SELECT chld.parent_id,
+           chld.package_id,
+           chld.ea_guid,
+           p.parent_guid
+          FROM t_package chld,
+           pkgs p
+         WHERE p.package_id = chld.parent_id
+       )
+    select 
+    --d.name as process, d.ea_guid as duid, 
+    coalesce(c_app.name || '.' || consumer.name , consumer.name) as consumer,
+    coalesce( c_app.ea_guid, consumer.ea_guid) as consumer_uid
+    , srv.object_type as srv_type
+    ,coalesce(c_app.alias, consumer.alias) as consumer_code
+      , coalesce (mth.name,msg.name) as operation, op.value as method
+      ,coalesce( srv_app.name || '.' || srv.name, srv.name) as supplier
+      ,coalesce( srv_app.ea_guid, srv.ea_guid) as supplier_uid
+      ,coalesce( srv_app.alias, srv.alias ) as supplier_code,
+      tags.value as ia, msg.pdata1 as interactionType
+    --, d.author, d.modifieddate
+    , srv.classifier_guid, i.name as interface_name
+    , (select count(*) from t_operation io where io.object_id=i.object_id ) as method_count
+          from pkgs v
+          join  t_diagram d on d.package_id=v.package_id
+              join t_connector msg on d.diagram_id=msg.diagramid and msg.connector_type='Sequence' and msg.pdata4 <> '1'
+              join t_object consumer on consumer.object_id=msg.start_object_id and consumer.object_type <> 'Actor'
+              join t_object srv on srv.object_id=msg.end_object_id
+              left join t_object c_app on c_app.object_id=consumer.parentid
+              left join t_object srv_app on srv_app.object_id=srv.parentid
+              left join t_connectortag tags on tags.elementid=msg.connector_id and tags.property='InterfaceAgreement'
+              left join t_connectortag op on op.elementid=msg.connector_id and op.property='operation_guid'
+              left join t_operation mth on mth.ea_guid=op.value
+              left join t_object i on i.ea_guid=srv.classifier_guid 
+          where d.diagram_type='Sequence' 
+          and v.parent_guid='{B441FDC2-21A2-40c3-9645-C9C4C13B01D4}'
+          order by d.diagram_id, msg.seqno`
 }
 
 const DEFAULT_PG_CONFIG = {
@@ -238,5 +341,34 @@ export class SPARXApi {
      */
     static async getCapaiblity(code) {
         return SPARXApi.queryRows(QUERY_BUILDER.capability(code));
+    }
+
+    static async getChildCapabilities(code) {
+        return SPARXApi.queryRows(QUERY_BUILDER.childCapability(code));
+    }
+
+    static async getCapabilityRealizations(code) {
+        const rows = await SPARXApi.queryRows(QUERY_BUILDER.capabilityRealizations(code));
+        let realizations = {};
+        for (let r of rows) {
+            if (!realizations[r.code]) realizations[r.code] = { code: r.code, name: r.service, interfaces: [] };
+            if (!r.object_type)
+                continue;
+            realizations[r.code].interfaces.push({
+                type: r.object_type,
+                code: r.componentcode,
+                name: r.component
+            })
+        }
+        return Object.values(realizations);
+    }
+    static async getComponentByCode(code) {
+        return SPARXApi.queryRows(QUERY_BUILDER.componentByCode(code));
+    }
+    static async getComponentInterfaces(code) {
+        return SPARXApi.queryRows(QUERY_BUILDER.componentInterfaces(code));
+    }
+    static async getSequenceInteractions() {
+        return SPARXApi.queryRows(QUERY_BUILDER.sequenceInteractions());
     }
 }

@@ -5,7 +5,7 @@ info:
     Интерфейс для управления моделью возможностей в корпоративном архитектурном репозитории Sparx EA
   contact:
     email: ivvoronin@beeline.ru
-  version: 0.0.1
+  version: 0.0.2
 tags:
   - name: "Управление доменами"
     description:
@@ -20,7 +20,7 @@ tags:
     description: Управление описанием вариантов реализации возможности
 servers:
   - url: ../..
-    description: Server description
+    description: Локальный сервер
 paths:
   /api/domains:
     get:
@@ -387,7 +387,7 @@ paths:
           required: true
           schema:
             type: string
-            example: BC-0001
+            example: BC-000137
       responses:
         "200":
           description: successfull operation
@@ -429,7 +429,7 @@ paths:
           required: true
           schema:
             type: string
-            example: BC-0001
+            example: BC-014540
       responses:
         "200":
           description: successfull operation
@@ -556,7 +556,7 @@ paths:
       responses:
         "200":
           description: OK.
-  /api/component:
+  /api/components:
     get:
       tags:
         - Управление компонентами
@@ -606,7 +606,7 @@ paths:
                 description: Описание нового компонента
                 status: Draft
                 author: Ivanov
-  /api/component/{code}:
+  /api/components/{code}:
     get:
       tags:
         - Управление компонентами
@@ -618,7 +618,7 @@ paths:
           required: true
           schema:
             type: string
-            example: APP.CMDB
+            example: RICH
       responses:
         "200":
           description: OK
@@ -655,7 +655,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Component"
-  /api/component/{code}/interfaces:
+  /api/components/{code}/interfaces:
     get:
       tags:
         - Управление компонентами
@@ -667,7 +667,7 @@ paths:
           required: true
           schema:
             type: string
-          example: APP.CMDB
+          example: RICH
       responses:
         200:
           description: OK.
