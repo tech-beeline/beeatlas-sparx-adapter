@@ -198,7 +198,6 @@ let server = app.listen(PORT, () => {
     console.log(`Example app listening on port ${PORT}`)
 })
 
-
 process.on('SIGINT', () => {
     console.log(`Stop listen and exit`);
     server.close();
