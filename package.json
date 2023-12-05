@@ -1,14 +1,16 @@
 {
   "name": "dashboard",
-  "version": "1.0.0",
-  "description": "Витрина для различныхпредставлений из EA",
+  "version": "1.0.2",
+  "description": "Витрина для различных представлений из EA",
   "main": "app.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "SET NODE_ENV=test&& mocha -r ./src/env.mjs ./test/*.test.mjs"
   },
   "author": "Воронин Игорь",
   "license": "ISC",
   "devDependencies": {
+    "mocha": "^10.2.0",
+    "supertest": "^6.3.3",
     "typescript": "^5.2.2"
   },
   "dependencies": {
@@ -17,6 +19,7 @@
     "pg": "^8.11.3",
     "swagger-ui-dist": "^5.10.3",
     "xlsx": "^0.18.5",
+    "xml-js": "^1.6.11",
     "yaml": "^2.3.4"
   }
 }

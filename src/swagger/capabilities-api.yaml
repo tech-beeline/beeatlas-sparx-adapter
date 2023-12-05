@@ -65,6 +65,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/Domain"
+            example:
+              name: New Domain
+              code: GRP.TEST.001
+              description: Новый домен
+              status: Тестовый
+              author: OSLC
       responses:
         "200":
           description: successful operation

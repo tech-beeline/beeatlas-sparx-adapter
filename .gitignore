@@ -1,8 +1,9 @@
 node_modules
 
 dump
-oslc/test.mjs
 .vscode/launch.json
-data/interface-agreement.zip
 data
-
+.fake
+.env.test
+.vscode
+src/archive

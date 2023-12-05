@@ -11,14 +11,26 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\app.mjs"
+            "program": "${workspaceFolder}\\src\\app.mjs",
+            "env": {
+                "DB_EA_USER": "",
+                "DB_EA_PASSWORD": "",
+                "DB_EA_URL": "",
+                "DB_EA_DATABASE": "",
+                "API_PORT": "3000",
+                "OSLC_HOST" : "",
+                "OSLC_USER" : "",
+                "OSLC_PASSWORD" : ""
+            }
         },
         {
-            "name": "Docker Node.js Launch",
-            "type": "docker",
+            "type": "node",
             "request": "launch",
-            "preLaunchTask": "docker-run: debug",
-            "platform": "node" 
+            "name": "Запуск пилота",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}\\pilot.mjs"
         }
     ]
 }

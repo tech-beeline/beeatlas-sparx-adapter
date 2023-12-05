@@ -1,17 +1,22 @@
-import express, { response } from 'express'
-import { processGetSequenceResponse } from './api/sequence.mjs'
+import express from 'express'
+import { processGetSequenceResponse } from '../api/sequence.mjs'
 import swagger from 'swagger-ui-dist'
-import { SPARXApi } from './api/sparx.mjs'
+import { SPARXApi } from '../api/sparx.mjs'
+import { Router } from './routes/index.mjs'
 
 
-const app = express();
-const PORT = 3000;
+export const app = express();
+
+
+//const process.env.API_PORT = process.env.API_PORT??3004;
 
 const pathToSwaggerUi = swagger.absolutePath();
 
+app.use('/api', Router)
+
 
 app.use('/messages', express.static('./view/sequence-details.html'))
-app.use('/swagger', express.static('./view/ea-board-swagger.html'))
+//app.use('/swagger', express.static('./view/ea-board-swagger.html'))
 app.use('/js', express.static('./view/js'))
 app.use('/swagger-ui', express.static(pathToSwaggerUi));
 app.use('/api/swagger/domain.yaml', express.static('./domain.yaml'));
@@ -27,12 +32,20 @@ app.get('/', async (req, res) => {
  * @returns 
  */
 function formatHREF(request, path) {
-    return `${request.protocol}://${request.hostname}:${PORT}${path}`
+    return `${request.protocol}://${request.hostname}:${process.env.API_PORT}${path}`
 }
 
 app.get('/api/messages', processGetSequenceResponse);
 
 
+/**
+ * 
+ * @param {Express.Request} request 
+ * @param {{
+ *  createdDate: Date
+ * }} domain 
+ * @returns 
+ */
 function domainTDO(request, domain) {
     return {
         code: domain.code,
@@ -74,7 +87,7 @@ function capabilityDTO(request, capability) {
     };
 }
 
-function componentDTO( request, component ){
+function componentDTO(request, component) {
     return {
         name: component.name,
         code: component.code,
@@ -193,12 +206,14 @@ app.get('/api/components/:code/interfaces', async (request, response) => {
 
 
 
+if (process.env.NODE_ENV !== 'test') {
+    let server = app.listen(process.env.API_PORT, () => {
+        console.log(`Example app listening on port ${process.env.API_PORT}`)
+    })
 
-let server = app.listen(PORT, () => {
-    console.log(`Example app listening on port ${PORT}`)
-})
 
-process.on('SIGINT', () => {
-    console.log(`Stop listen and exit`);
-    server.close();
-})
+    process.on('SIGINT', () => {
+        console.log(`Stop listen and exit`);
+        server.close();
+    })
+}
