@@ -2,19 +2,19 @@
 
 <head>
     <title>Swagger Beeline EA Capability</title>
-    <link rel="stylesheet" type="text/css" href="/api/swagger-ui/swagger-ui.css" />
-    <link rel="stylesheet" type="text/css" href="/api/swagger-ui/index.css" />
+    <link rel="stylesheet" type="text/css" href="/swagger-ui/swagger-ui.css" />
+    <link rel="stylesheet" type="text/css" href="/swagger-ui/index.css" />
     <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
 
-    <script src="/api/swagger-ui/swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
-    <script src="/api/swagger-ui/swagger-ui-bundle.js"></script>
+    <script src="/swagger-ui/swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
+    <script src="/swagger-ui/swagger-ui-bundle.js"></script>
     <script type="module">
         //import { SwaggerUI } from '/swagger-ui/swagger-ui-bundle.js'
         //var EASwaggerBundle = swagger.SwaggerUIBundle;
 
         const ui = SwaggerUIBundle({
-            url: "/api/swagger/capabilities-api.yaml",
+            url: "/swagger/capabilities-api.json",
             dom_id: '#ea-swagger-ui',
             presets: [
                 SwaggerUIBundle.presets.apis,

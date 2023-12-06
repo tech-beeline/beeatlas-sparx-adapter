@@ -31,34 +31,12 @@ class DomainsService {
         }
         return Repository.queryRows(
             {
-                text: `WITH RECURSIVE pkgs(parent_id, package_id, ea_guid, parent_guid) AS (
-                SELECT t_package.parent_id,
-                   t_package.package_id,
-                   t_package.ea_guid,
-                   t_package.ea_guid
-                  FROM t_package
-                    where ea_guid =$1
-               UNION ALL
-                SELECT chld.parent_id,
-                   chld.package_id,
-                   chld.ea_guid,
-                   p.parent_guid
-                  FROM t_package chld,
-                   pkgs p
-                 WHERE p.package_id = chld.parent_id
-               )
-        SELECT 
-            dm.alias as code,
-            dm.name as name,
-           dm.note as description,
-           dm.status as status,
-           dm.author as author,
-           dm.createddate  as "createdDate",
-           dm.modifiedDate as "modifiedDate"
-        from 
-            pkgs, t_object dm
-       where pkgs.package_id=dm.package_id
-           and dm.stereotype = 'ArchiMate_Capability'`, values: [ROOT_DOMAIN_UID]
+                text: `select
+                d.alias as code,d.name as name, d.descr as description,po.alias as "parentAlias", p.author, p.status, p.createddate as "createdDate", p.modifieddate as "modifiedDate"
+            from v_domains d
+            inner join t_object p on p.ea_guid=d.ea_guid
+            left join  t_package parent on parent.package_id=d.parent_id
+            left join  t_object po on po.ea_guid=parent.ea_guid`, values: []
             }
         );
     }
@@ -93,7 +71,7 @@ class DomainsService {
      * @param {Domain} domain 
      */
     async createDomain(domain) {
-        console.log(domain);
+
         let current = (await this.getDomainByCode(domain.code));
         if( current){
             throw new DomainAlreadyExistException();
@@ -104,7 +82,7 @@ class DomainsService {
         let result = await OSLC.createResource({
             alias: domain.code, name: domain.name, type: "Package", resourceType: "Package", parentPackageGUID: parent_domain_uid
         });
-        console.log(result);
+        return this.getDomainByCode( domain.code);
     }
 }
 

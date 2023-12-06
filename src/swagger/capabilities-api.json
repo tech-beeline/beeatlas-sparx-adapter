@@ -1,0 +1,1296 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Swagger Beeline EA Capability - OpenAPI 3.0",
+    "description": "Интерфейс для управления моделью возможностей в корпоративном архитектурном репозитории Sparx EA",
+    "contact": {
+      "email": "ivvoronin@beeline.ru"
+    },
+    "version": "0.0.2"
+  },
+  "tags": [
+    {
+      "name": "Управление доменами",
+      "description": "Методы для получения, добавления и изменения описаний доменов возможностей"
+    },
+    {
+      "name": "Управление возможностями",
+      "description": "Методы получения, добавления и изменения описания возможностей"
+    },
+    {
+      "name": "Управление интерфейсами",
+      "description": "Методы получения, добавления и изменения описания интерфейсов"
+    },
+    {
+      "name": "Управление компонентами",
+      "description": "Управление описанием компонентов"
+    },
+    {
+      "name": "Управление реализацией возможностей",
+      "description": "Управление описанием вариантов реализации возможности"
+    }
+  ],
+  "servers": [
+    {
+      "url": "../..",
+      "description": "Локальный сервер"
+    }
+  ],
+  "paths": {
+    "/api/domains": {
+      "get": {
+        "tags": [
+          "Управление доменами"
+        ],
+        "x-swagger-router-controller": "DomainsController",
+        "operationId": "getDomains",
+        "summary": "Получение списка доменов",
+        "description": "Получение списка доменов верхнево уровня или всех в виде списка",
+        "parameters": [
+          {
+            "name": "all",
+            "description": "- true - Получить все домены плоским списком\n- false или отсутствует - Получить список доменов верхнего уровня",
+            "in": "query",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "example": "false"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Domain"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление доменами"
+        ],
+        "x-swagger-router-controller": "DomainsController",
+        "operationId": "createDomain",
+        "summary": "Регистрация нового домена",
+        "description": "Добавляет в корпоративный репозиторий описание нового домена\\\nКаждый новый домен добавлется как поддомен, если указан родитель (поле parent). \\\nПри добавлении домена сохраняются следующие поля:\n- code, name, description, status, author\n- Если указан parent, то домен добавляется как поддомен указанного в этом поле домена. В противном случае добавлявется в корень",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Domain"
+              },
+              "examples": {
+                "PostDomain": {
+                  "$ref": "#/components/examples/PostDomain"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Domain"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не корректный синтаксис запроса",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "PostDomainCodeNotSetResponse": {
+                    "$ref": "#/components/examples/PostDomainCodeNotSetResponse"
+                  }
+                }
+              }
+            }
+          },
+          "424": {
+            "description": "Не верно указан родительский домен"
+          }
+        }
+      }
+    },
+    "/api/domains/{code}": {
+      "get": {
+        "x-swagger-router-controller": "DomainsController",
+        "tags": [
+          "Управление доменами"
+        ],
+        "summary": "Получение описания домена по его коду",
+        "operationId": "getDomainByCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Код запрашиваемого домена",
+            "example": "GRP.010",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Domain"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Домен с указанным кодом не найден",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "WrongDomainResponse": {
+                    "$ref": "#/components/examples/WrongDomainResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Управление доменами"
+        ],
+        "summary": "Обновление данных для домена",
+        "description": "При добавлении домена сохраняются следующие поля:\\\n- name, description, status",
+        "x-swagger-router-controller": "DomainsController",
+        "operationId": "updateDomain",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Код домена",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Domain"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновление прошло успешно\\\nВ ответе возвращается обновленное описание домена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Domain"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Домен с указанным кодом не найден"
+          }
+        }
+      }
+    },
+    "/api/domains/{code}/parent": {
+      "put": {
+        "tags": [
+          "Управление доменами"
+        ],
+        "x-swagger-router-controller": "DomainsController",
+        "operationId": "setDomainParent",
+        "summary": "Изменение перенос поддомена в другой домен",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "example": "GRP.010",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectRef"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/domains/{code}/subdomains": {
+      "get": {
+        "tags": [
+          "Управление доменами"
+        ],
+        "summary": "Получение описания поддоменов по коду домена",
+        "x-swagger-router-controller": "DomainsController",
+        "parameters": [
+          {
+            "name": "code",
+            "description": "Код домена, для которого запрашивается описание дочерних доменов",
+            "example": "GRP.010",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Domain"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление доменами"
+        ],
+        "summary": "Добавление в домен описание нового поддомена",
+        "x-swagger-router-controller": "DomainsController",
+        "operationId": "createSubdomain",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Domain"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/domains/{code}/capabilities": {
+      "get": {
+        "operationId": "getDomainCapabilities",
+        "x-swagger-router-controller": "DomainsController",
+        "summary": "Получение списка возможностей в домене",
+        "tags": [
+          "Управление доменами"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Код домена",
+            "example": "DMN.042",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK. В теле ответа описание запрашиваемых возможностей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Capability"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление доменами"
+        ],
+        "operationId": "createDomainCapability",
+        "x-swagger-router-controller": "DomainsController",
+        "summary": "Создание описания новой возможности в домене",
+        "description": "",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Код домена",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Capability"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Capability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/capabilities": {
+      "get": {
+        "tags": [
+          "Управление возможностями"
+        ],
+        "operationId": "getCapabilities",
+        "x-swagger-router-controller": "CapabilitiesController",
+        "summary": "Получение всех возможностей",
+        "responses": {
+          "200": {
+            "description": "successfull operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Capability"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление возможностями"
+        ],
+        "operationId": "createCapability",
+        "x-swagger-router-controller": "CapabilitiesController",
+        "summary": "Создание оприсания новой возможности",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Capability"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Capability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/capabilities/{code}": {
+      "get": {
+        "tags": [
+          "Управление возможностями"
+        ],
+        "operationId": "getCapabilityByCode",
+        "x-swagger-router-controller": "CapabilitiesController",
+        "summary": "Получение информации о возможности по ее коду",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "description": "Код возможности для получения информации",
+            "schema": {
+              "type": "string",
+              "example": "BC-000107"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Capability"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Возможность не найдена",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Управление возможностями"
+        ],
+        "operationId": "updateCapability",
+        "x-swagger-router-controller": "CapabilitiesController",
+        "summary": "Обновление описания возможности",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "BC-0001"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "$ref": "#/components/schemas/Capability"
+              },
+              "example": {
+                "name": "Новое имя",
+                "description": "Новое описание",
+                "status": "Draft"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successfull operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Capability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/capabilities/{code}/domain": {
+      "put": {
+        "tags": [
+          "Управление возможностями"
+        ],
+        "summary": "Изменение домена, которому принадлежит возможность",
+        "operationId": "setCapabilityDomain",
+        "x-swagger-router-controller": "CapabilitiesController",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "description": "Код возможности",
+            "example": "BC-0001",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectRef"
+              },
+              "example": {
+                "code": "001.001"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK."
+          }
+        }
+      }
+    },
+    "/api/capabilities/{code}/parent": {
+      "put": {
+        "tags": [
+          "Управление возможностями"
+        ],
+        "summary": "Установка и изменение родительской возможности",
+        "operationId": "setCapabilityParent",
+        "x-swagger-router-controller": "CapabilitiesController",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectRef"
+              },
+              "example": {
+                "code": "BC-0001"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK."
+          }
+        }
+      }
+    },
+    "/api/capabilities/{code}/children": {
+      "get": {
+        "tags": [
+          "Управление возможностями"
+        ],
+        "x-swagger-router-controller": "CapabilitiesController",
+        "operationId": "getCapabilityChildren",
+        "summary": "Получение дочерниых возможностей",
+        "parameters": [
+          {
+            "name": "code",
+            "description": "Код возможности",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "BC-000137"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successfull operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CapabilityRealization"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление возможностями"
+        ],
+        "x-swagger-router-controller": "CapabilitiesController",
+        "parameters": [
+          {
+            "name": "code",
+            "description": "Код возможности",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "BC-0001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CapabilityRealization"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/capabilities/{code}/realizations": {
+      "get": {
+        "tags": [
+          "Управление реализацией возможностей"
+        ],
+        "summary": "Получение вариантов реализации TC",
+        "parameters": [
+          {
+            "name": "code",
+            "description": "Код возможности",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "BC-014540"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successfull operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CapabilityRealization"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление реализацией возможностей"
+        ],
+        "summary": "Добавление нового варианта реализации возможности",
+        "operationId": "createCapabilityRealization",
+        "parameters": [
+          {
+            "name": "code",
+            "description": "Код возможности",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "BC-0001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CapabilityRealization"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interfaces": {
+      "get": {
+        "tags": [
+          "Управление интерфейсами"
+        ],
+        "description": "Поиск и получение описания интерфейсов",
+        "operationId": "getInterfaces",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Слово для поиска в названии интерфейса",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Interface"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление интерфейсами"
+        ],
+        "description": "ДОбавление нового описания интерфейса",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Interface"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/interfaces/{code}": {
+      "get": {
+        "tags": [
+          "Управление интерфейсами"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Interface"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление интерфейсами"
+        ],
+        "summary": "Изменение описания интерфейса",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Interface"
+              },
+              "example": {
+                "name": "INewInterface",
+                "description": "Изменное описание",
+                "status": "Draft"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Interface"
+                },
+                "example": {
+                  "code": "API-0001",
+                  "href": "https://server/api/interfaces/API-0001",
+                  "name": "INewInterface",
+                  "description": "Изменное описание",
+                  "status": "Draft",
+                  "FQName": "Application Catalog.DumpApplication.INewInterface",
+                  "author": "VKIT"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interfaces/{code}/component": {
+      "post": {
+        "tags": [
+          "Управление интерфейсами"
+        ],
+        "summary": "Изменение приложения-владельца для интерфейса",
+        "operationId": "changeInterfaceComponent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectRef"
+              },
+              "example": {
+                "code": "APP.CMDB"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK."
+          }
+        }
+      }
+    },
+    "/api/components": {
+      "get": {
+        "tags": [
+          "Управление компонентами"
+        ],
+        "summary": "Поиск и получение описание компонентов и продуктов",
+        "operationId": "getComponents",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Component"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление компонентами"
+        ],
+        "summary": "Добавление описания компонента",
+        "operationId": "createComponent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Component"
+              },
+              "example": {
+                "code": "APP.CMDB",
+                "name": "NewComponentName",
+                "description": "Описание нового компонента",
+                "status": "Draft",
+                "author": "Ivanov"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Component"
+                },
+                "example": {
+                  "code": "APP.CMDB",
+                  "href": "https://server/api/components/APP.CMDB",
+                  "name": "NewComponentName",
+                  "description": "Описание нового компонента",
+                  "status": "Draft",
+                  "author": "Ivanov"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/components/{code}": {
+      "get": {
+        "tags": [
+          "Управление компонентами"
+        ],
+        "summary": "Получение компонента по его коду",
+        "operationId": "getComponentByCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "RICH"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Component"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Управление компонентами"
+        ],
+        "summary": "Изменение описание компонента",
+        "operationId": "updateComponent",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "APP.CMDB"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Component"
+              },
+              "example": {
+                "name": "NewComponentName",
+                "description": "Описание нового компонента",
+                "status": "Draft",
+                "author": "Ivanov"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Component"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/components/{code}/interfaces": {
+      "get": {
+        "tags": [
+          "Управление компонентами"
+        ],
+        "summary": "Получение интерфейсов, принадлежащих компоненту",
+        "operationId": "getComponentInterfaces",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "RICH"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Interface"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Управление компонентами"
+        ],
+        "summary": "Добавление нового интерфейса в компонент",
+        "operationId": "createComponentInterface",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "APP.CMDB"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Interface"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Object": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ObjectRef"
+          }
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Управление клиентской инфорацией"
+          },
+          "FQName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          }
+        }
+      },
+      "ObjectRef": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "001.001"
+          },
+          "href": {
+            "type": "string",
+            "format": "url",
+            "example": "http://server/api/ref/001.001"
+          }
+        }
+      },
+      "Domain": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Object"
+          }
+        ],
+        "properties": {
+          "parent": {
+            "type": "object",
+            "$ref": "#/components/schemas/ObjectRef"
+          }
+        }
+      },
+      "Capability": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Object"
+          }
+        ],
+        "properties": {
+          "domain": {
+            "type": "object",
+            "$ref": "#/components/schemas/ObjectRef"
+          },
+          "parent": {
+            "type": "object",
+            "$ref": "#/components/schemas/ObjectRef"
+          },
+          "kpi": {
+            "type": "object"
+          },
+          "owner": {
+            "type": "object",
+            "$ref": "#/components/schemas/Employee"
+          },
+          "unit": {
+            "type": "object",
+            "$ref": "#/components/schemas/ObjectRef"
+          }
+        }
+      },
+      "Employee": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string",
+            "format": "url"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "fullName": {
+            "type": "string"
+          }
+        }
+      },
+      "CapabilityRealization": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Object"
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObjectRef"
+            }
+          }
+        }
+      },
+      "Component": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Object"
+          }
+        ],
+        "properties": {
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObjectRef"
+            }
+          }
+        }
+      },
+      "Interface": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ObjectRef"
+          },
+          {
+            "$ref": "#/components/schemas/Object"
+          }
+        ],
+        "properties": {
+          "component": {
+            "type": "object",
+            "$ref": "#/components/schemas/ObjectRef"
+          }
+        }
+      }
+    },
+    "examples": {
+      "PostDomain": {
+        "summary": "Пример тела сообщения на создание домена",
+        "value": {
+          "name": "Тестовая группа в корне",
+          "code": "GRP.TEST.001",
+          "description": "Домен для теста создания группы доменов",
+          "status": "Тестовый",
+          "author": "Автор"
+        }
+      },
+      "WrongDomainResponse": {
+        "summary": "Пример ответа при отсутствии домена с указанным кодом",
+        "value": {
+          "message": "domain with code GRP.010-wrong not found"
+        }
+      },
+      "PostDomainCodeNotSetResponse": {
+        "summary": "Не верно указан создаваемого домена",
+        "value": {
+          "message": "Отстсвует код создаваемого домена (domain.code)"
+        }
+      }
+    }
+  }
+}

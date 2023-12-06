@@ -41,9 +41,12 @@ class DomainsController {
     }
     async getDomainByCode(request, response) {
         try {
+            if (!request.params.code)
+                response.status(400).json({ message: "Отсутстует code" });
+
             let domain = await DomainsService.getDomainByCode(request.params.code);
             if (!domain) {
-                return response.status(404).send(`domain with code ${request.params.code} not found`);
+                return response.status(404).send({ message: `domain with code ${request.params.code} not found` });
             }
             response.json(domainTDO(request, domain));
         } catch (err) {
@@ -71,11 +74,28 @@ class DomainsController {
      */
     async createDomain(request, response) {
         try {
-            response.json(await DomainsService.createDomain(request.body));
+            if (!request.body || request.body == "")
+                return response.status(400).json({ message: "Отсутстует тело сообщения" });
+            if (Array.isArray(request.body)) {
+                return response.status(400).json({ message: "Тело сообщение не должно быть массивом" });
+            }
+            if (!request.body.code) {
+                return response.status(400).json({ message: "Отстсвует код создаваемого домена (domain.code)" });
+            }
+
+            if (!request.body.code.startsWith("GRP.") && !request.body.code.startsWith("DMN.")) {
+                return response.status(400).json({ message: "Код домена должен быть вида GRP.* или DMN.*" });
+            }
+
+            if (!request.body.name) {
+                return response.status(400).json({ message: "Отстсвует имя создаваемого домена (domain.name)" });
+            }
+
+            response.json(domainTDO(request, await DomainsService.createDomain(request.body)));
             //throw Error('not implemented');
         } catch (error) {
             if (error instanceof DomainAlreadyExistException) {
-                return response.status(409).send(`Domain ${request.body.code} already exists`);
+                return response.status(409).json({ message: `Domain ${request.body.code} already exists` });
             }
             console.error(error);
             response.status(500).send(error.message);

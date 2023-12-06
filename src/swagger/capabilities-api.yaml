@@ -8,8 +8,7 @@ info:
   version: 0.0.2
 tags:
   - name: "Управление доменами"
-    description:
-      Методы для получения, добавления и изменения описаний доменов возможностей
+    description: Методы для получения, добавления и изменения описаний доменов возможностей
   - name: Управление возможностями
     description: Методы получения, добавления и изменения описания возможностей
   - name: Управление интерфейсами
@@ -27,6 +26,7 @@ paths:
       tags:
         - "Управление доменами"
       operationId: getDomains
+      deprecated: true
       summary: Получение списка доменов
       description: Получение списка доменов верхнево уровня или всех в виде списка
       parameters:
@@ -58,19 +58,16 @@ paths:
         Добавляет в корпоративный репозиторий описание нового домена\
         Каждый новый домен добавлется как поддомен, если указан родитель (поле parent). \
         При добавлении домена сохраняются следующие поля:
-        - name, description, status, author
-        - Если указан parent, то домен добавляется как поддомен уазанного в этом поле домена. В противном случае добавлявется в корень
+        - code, name, description, status, author
+        - Если указан parent, то домен добавляется как поддомен указанного в этом поле домена. В противном случае добавлявется в корень
       requestBody:
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/Domain"
-            example:
-              name: New Domain
-              code: GRP.TEST.001
-              description: Новый домен
-              status: Тестовый
-              author: OSLC
+            examples:
+              PostDomain:
+                $ref: "#/components/examples/PostDomain"
       responses:
         "200":
           description: successful operation
@@ -82,10 +79,12 @@ paths:
         "400":
           description: Не корректный синтаксис запроса
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
-                example: Не указан имя домена
+              examples:
+                PostDomainCodeNotSetResponse:
+                  $ref: "#/components/examples/PostDomainCodeNotSetResponse"
         "424":
           description: Не верно указан родительский домен
   /api/domains/{code}:
@@ -112,6 +111,11 @@ paths:
                 $ref: "#/components/schemas/Domain"
         "404":
           description: Домен с указанным кодом не найден
+          content:
+            application/json:
+              examples:
+                WrongDomainResponse: 
+                  $ref: "#/components/examples/WrongDomainResponse"
     put:
       tags:
         - "Управление доменами"
@@ -360,9 +364,9 @@ paths:
             schema:
               $ref: "#/components/schemas/ObjectRef"
             example:
-              code: "001.001"        
+              code: "001.001"
       responses:
-        "200": 
+        "200":
           description: OK.
   /api/capabilities/{code}/parent:
     put:
@@ -370,15 +374,15 @@ paths:
         - Управление возможностями
       summary: Установка и изменение родительской возможности
       operationId: changeCapabilityParent
-      requestBody: 
+      requestBody:
         content:
           application/json:
-            schema:  
+            schema:
               $ref: "#/components/schemas/ObjectRef"
             example:
               code: "BC-0001"
       responses:
-        "200": 
+        "200":
           description: OK.
   /api/capabilities/{code}/children:
     summary: Управление описанием вариантов реализации возможности
@@ -620,7 +624,7 @@ paths:
       operationId: getComponentByCode
       parameters:
         - name: code
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -727,9 +731,9 @@ components:
         code:
           type: string
           example: "001.001"
-#        guid:
-#          type: string
-#          example: "{DAE09FF4-9980-4ce8-B9F8-B686C98CC60B}"
+        #        guid:
+        #          type: string
+        #          example: "{DAE09FF4-9980-4ce8-B9F8-B686C98CC60B}"
         href:
           type: string
           format: url
@@ -799,3 +803,20 @@ components:
         component:
           type: object
           $ref: "#/components/schemas/ObjectRef"
+  examples:
+    PostDomain:
+      summary: Пример тела сообщения на создание домена
+      value:
+        name: Тестовая группа в корне
+        code: GRP.TEST.001
+        description: Домен для теста создания группы доменов
+        status: Тестовый
+        author: Автор
+    WrongDomainResponse:
+      summary: Пример ответа при отсутствии домена с указанным кодом
+      value:
+        message: domain with code GRP.010-wrong not found
+    PostDomainCodeNotSetResponse:
+      summary: Не верно указан создаваемого домена
+      value:
+        message: Отстсвует код создаваемого домена (domain.code)

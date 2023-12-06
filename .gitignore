@@ -2,8 +2,9 @@ node_modules
 
 dump
 .vscode/launch.json
-data
+./data
 .fake
 .env.test
 .vscode
 src/archive
+data/interface-agreement.zip

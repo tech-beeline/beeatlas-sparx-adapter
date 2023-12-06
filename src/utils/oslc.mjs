@@ -18,7 +18,7 @@ async function request(url, options, body) {
                 response => {
                     let chunks = [];
                     if (response.statusCode !== 200 && response.statusCode !== 201) {
-                        reject(Error(`HTTP ${response.statusCode} : ${response.statusMessage}`));
+                        reject(Error(`OSLC RESPONSE ${response.statusCode} : ${response.statusMessage}`));
                         return;
                     }
 
