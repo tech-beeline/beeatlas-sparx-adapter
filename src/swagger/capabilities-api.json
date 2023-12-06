@@ -141,7 +141,14 @@
             "name": "code",
             "in": "path",
             "description": "Код запрашиваемого домена",
-            "example": "GRP.010",
+            "examples": {
+              "200": {
+                "value" : "GRP.010"
+              },
+              "404" : {
+                "value" : "WRONG"
+              }
+            },
             "required": true,
             "schema": {
               "type": "string"
