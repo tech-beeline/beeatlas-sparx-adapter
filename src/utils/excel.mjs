@@ -41,8 +41,6 @@ function rowsFromObject(data, columns, rowNum = 1, colNum = 0) {
         return { rows: [{}], merges: [] }
     }
 
-    //let dont_merge = current_column.option('dontMerge')
-
     let source = Array.isArray(data) ?
         data.map(r => ({ val: current_column.data(r), tail: [r] })) :
         current_column.option('dontMerge') ?

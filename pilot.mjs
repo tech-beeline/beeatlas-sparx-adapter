@@ -163,6 +163,7 @@ class ProcessOperation {
     get name() {
         return this.#row.operation;
     }
+
 }
 
 function saveAsExcel(data, columns, fileName) {
@@ -212,26 +213,34 @@ async function dashBoardStatus() {
                 row => row.operations?.length??""
         },
         {
+            name: "Из них интеграций",
+            dontMerge: true,
+            data:
+                row => row.operations?.filter( o=>o.serverCode && o.clientCode && o.name.toLowerCase() !== 'use').length??""
+        },
+        {
             name: "Количество участников",
             dontMerge: true,
             data:
                 row => row.participiants?.length??""
+        },
+        {
+            name: "ИЗ них систем",
+            dontMerge: true,
+            data:
+                row => row.participiants?.filter( p=>p.code).length??""
         }
     ];
 
     let test = {
         "group" : {
             "base" :{
-                "key" : {
-                    process: {
-                        operations: [ "asdasd"]
-                    }
-                }
+                "key" : process_status["[SUPPORT] Обслуживание"]["[TARIF] Смена тарифного плана"]["[MOBILE] Я, как клиент, хочу сменить мобильный тарифный план"]
             }
         }
     }
 
-    saveAsExcel(process_status, COLUMN_DEFINITIONS, './data/dashboard-new.xlsx');
+    saveAsExcel(test, COLUMN_DEFINITIONS, './data/dashboard-new.xlsx');
 
     console.log(process_status);
 }
