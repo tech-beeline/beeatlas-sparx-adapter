@@ -114,7 +114,7 @@ paths:
           content:
             application/json:
               examples:
-                WrongDomainResponse: 
+                WrongDomainResponse:
                   $ref: "#/components/examples/WrongDomainResponse"
     put:
       tags:

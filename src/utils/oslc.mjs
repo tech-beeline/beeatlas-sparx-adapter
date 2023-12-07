@@ -104,10 +104,13 @@ class OSLCResource {
         this["oslc_am:Resource"]["dcterms:type"] = value;
     }
     set parentPackageGUID(value) {
-        this["oslc_am:Resource"]["ss:parentresourceidentifier"] = `pk_${value}`;
+        this.parentresourceidentifier = `pk_${value}`;
     }
     set parentElementGUID(value) {
-        this["oslc_am:Resource"]["ss:parentresourceidentifier"] = `el_${value}`;
+        this.parentresourceidentifier = `el_${value}`;
+    }
+    set parentresourceidentifier(value){
+        this["oslc_am:Resource"]["ss:parentresourceidentifier"] =  value;
     }
     set alias(value) {
         this["oslc_am:Resource"]["ss:alias"] = value;
@@ -190,6 +193,10 @@ class OSLC {
         console.log(request_body.toString());
 
         let response = await request(`${this.#host}${RESOURCE_FACTORY_PATH}`, { method: "POST", headers: { "Content-Type": "text/xml" } }, request_body.toString());
+        return response.toString();
+    }
+    async readResource( url ){
+        let response = await request(`${url}?useridentifier=${this.#userIdentifier}`, { method: "GET", headers: { "Content-Type": "text/xml" } });
         return response.toString();
     }
 }

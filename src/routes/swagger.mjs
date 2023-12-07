@@ -1,5 +1,6 @@
 import fs from 'fs'
 
+
 class SwaggerDefinition {
     static load(examples) {
         let swaggerApi = JSON.parse(fs.readFileSync('./src/swagger/capabilities-api.json'));

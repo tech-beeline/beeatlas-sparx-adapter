@@ -8,3 +8,5 @@ dump
 .vscode
 src/archive
 data/interface-agreement.zip
+data/Справочник процессов.xlsx
+dashboard.code-workspace
