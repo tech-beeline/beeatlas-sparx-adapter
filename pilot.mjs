@@ -240,7 +240,7 @@ async function dashBoardStatus() {
         }
     }
 
-    saveAsExcel(test, COLUMN_DEFINITIONS, './data/dashboard-new.xlsx');
+    saveAsExcel(process_status, COLUMN_DEFINITIONS, './data/dashboard-new.xlsx');
 
     console.log(process_status);
 }
