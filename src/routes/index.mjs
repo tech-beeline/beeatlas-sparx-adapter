@@ -1,11 +1,11 @@
 import express from 'express'
-
 import DomainRoutes from "./domains-routes.mjs"
 import CapabilitiesRoutes from './capabilities-routes.mjs'
 import ComponentRoutes from './component-router.mjs';
 import InterfaceRoutes from './interface-routes.mjs';
 import domainsController from '../controllers/domains-controller.mjs';
 import capabilitiesController from '../controllers/capabilities-controller.mjs';
+import componentsController from '../controllers/components-controller.mjs';
 
 export const Routes = express.Router();
 
@@ -42,7 +42,8 @@ export function routeControllers(swagger, options) {
 
     const controllers = {
         DomainsController: domainsController,
-        CapabilitiesController: capabilitiesController
+        CapabilitiesController: capabilitiesController,
+        ComponentsController: componentsController
     }
 
     let swagger_routes = express.Router();

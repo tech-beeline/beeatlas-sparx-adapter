@@ -1,8 +1,9 @@
 import express from "express";
 import capabilitiesService from "../services/capabilities-service.mjs";
-import DomainsService, { DomainAlreadyExistException } from "../services/domains-service.mjs";
+import DomainsService, { DomainAlreadyExistException, DomainNotFoundException as DomainNotFoundException } from "../services/domains-service.mjs";
 import { formatHREF } from "../utils/href.mjs"
 import { capabilityDTO } from "./capabilities-controller.mjs";
+import { OSLCException } from "../utils/oslc.mjs";
 
 /**
  * 
@@ -98,6 +99,21 @@ class DomainsController {
                 return response.status(409).json({ message: `Domain ${request.body.code} already exists` });
             }
             console.error(error);
+            response.status(500).send(error.message);
+        }
+    }
+    async updateDomain(request, response) {
+        try {
+            let domainDTO = await request.body;
+            response.json(domainTDO(request, await DomainsService.updateDomain(request.params.code, domainDTO)));
+        } catch (error) {
+            console.error(error);
+            if (error instanceof DomainNotFoundException) {
+                return response.status(error.status).send(error.message);
+            }
+            if (error instanceof OSLCException) {
+                return response.status(error.status).send(error.message);
+            }
             response.status(500).send(error.message);
         }
     }

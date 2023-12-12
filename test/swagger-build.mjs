@@ -1,3 +1,4 @@
+import { request } from "express";
 import SwaggerDefinition from "../src/routes/swagger.mjs";
 
 
@@ -11,22 +12,32 @@ class TagTestSpecifiction {
     }
 }
 
+
+
 class APITest {
     constructor(path, method, responses) {
         this.path = path;
         this.method = method;
-        this.addResponsesUsecases(responses)
+        this.addResponsesUsecases(responses);
     }
     addResponsesUsecases(responses) {
         for (const responseStatus in responses) {
-            for( const contentType in  responses[responseStatus] ){
-                
+            for (const contentType in responses[responseStatus].content) {
+                const resonse_content = responses[responseStatus].content[contentType]
+                if (resonse_content.example) {
+                    if (resonse_content.example) {
+                        console.log(resonse_content.example);
+                        this.usecases.push( new TagTestSpecifiction( this ))
+                    }
+                    continue;
+                }
             }
         }
     }
+
     path;
     method;
-    uasecases = [];
+    usecases = [];
 }
 
 class OPENAPITag {
@@ -50,8 +61,6 @@ OPENAPI_DEFINITION.tags.forEach(element => {
     tagsSamples[element.name] = new OPENAPITag(element.name);
 });
 
-
-
 for (const path in OPENAPI_DEFINITION.paths) {
     for (const method in OPENAPI_DEFINITION.paths[path]) {
         const tags = OPENAPI_DEFINITION.paths[path][method].tags ?? ["default"];
@@ -62,7 +71,6 @@ for (const path in OPENAPI_DEFINITION.paths) {
         }
     }
 }
-
 
 /**
  * @type {OPENAPITag[]}
