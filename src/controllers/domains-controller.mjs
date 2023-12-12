@@ -5,6 +5,14 @@ import { formatHREF } from "../utils/href.mjs"
 import { capabilityDTO } from "./capabilities-controller.mjs";
 import { OSLCException } from "../utils/oslc.mjs";
 
+
+
+class ValidationException extends Error {
+    status = 400;
+    constructor(message) {
+        super(message);
+    }
+}
 /**
  * 
  * @param {Express.Request} request 
@@ -68,6 +76,32 @@ class DomainsController {
             response.status(500).send(err.message);
         }
     }
+
+
+
+    /**
+     * 
+     * @param {Express.Request} request 
+     * @returns 
+     */
+    validateCreateDomainRequest(request) {
+        if (!request.body || request.body == "")
+            throw new ValidationException("Отсутстует тело сообщения");
+        if (Array.isArray(request.body)) {
+            throw new ValidationException("Тело сообщение не должно быть массивом");
+        }
+        if (!request.body.code) {
+            throw new ValidationException("Отстсвует код создаваемого домена (domain.code)");
+        }
+
+        if (!request.body.code.startsWith("GRP.") && !request.body.code.startsWith("DMN.")) {
+            throw new ValidationException("Код домена должен быть вида GRP.* или DMN.*");
+        }
+
+        if (!request.body.name) {
+            throw new ValidationException("Отстсвует имя создаваемого домена (domain.name)");
+        }
+    }
     /**
      * 
      * @param {express.Request} request 
@@ -75,22 +109,7 @@ class DomainsController {
      */
     async createDomain(request, response) {
         try {
-            if (!request.body || request.body == "")
-                return response.status(400).json({ message: "Отсутстует тело сообщения" });
-            if (Array.isArray(request.body)) {
-                return response.status(400).json({ message: "Тело сообщение не должно быть массивом" });
-            }
-            if (!request.body.code) {
-                return response.status(400).json({ message: "Отстсвует код создаваемого домена (domain.code)" });
-            }
-
-            if (!request.body.code.startsWith("GRP.") && !request.body.code.startsWith("DMN.")) {
-                return response.status(400).json({ message: "Код домена должен быть вида GRP.* или DMN.*" });
-            }
-
-            if (!request.body.name) {
-                return response.status(400).json({ message: "Отстсвует имя создаваемого домена (domain.name)" });
-            }
+            validateCreateDomainRequest(request)
 
             response.json(domainTDO(request, await DomainsService.createDomain(request.body)));
             //throw Error('not implemented');
@@ -98,7 +117,30 @@ class DomainsController {
             if (error instanceof DomainAlreadyExistException) {
                 return response.status(409).json({ message: `Domain ${request.body.code} already exists` });
             }
+            if (error.status) {
+                return response.status(error.status).json({ message: errormessage });
+            }
             console.error(error);
+            response.status(500).send(error.message);
+        }
+    }
+    async createSubDomain(request, response) {
+        try {
+            validateCreateDomainRequest(request);
+            let domainDTO = request.body;
+            domainDTO.parent = { code: request.params.code };
+            DomainsService.createDomain()
+        } catch (error) {
+            console.error(error);
+            if (error instanceof DomainNotFoundException) {
+                return response.status(error.status).send(error.message);
+            }
+            if (error instanceof OSLCException) {
+                return response.status(error.status).send(error.message);
+            }
+            if (error.status) {
+                return response.status(error.status).json({ message: errormessage });
+            }
             response.status(500).send(error.message);
         }
     }

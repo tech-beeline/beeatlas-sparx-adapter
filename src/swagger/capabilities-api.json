@@ -93,6 +93,9 @@
               "examples": {
                 "PostDomain": {
                   "$ref": "#/components/examples/PostDomain"
+                },
+                "PostDomain2": {
+                  "$ref": "#/components/examples/PostDomain2"
                 }
               }
             }
@@ -212,7 +215,7 @@
             "schema": {
               "type": "string"
             },
-            "example" : "GRP.TEST.001"
+            "example": "GRP.TEST.001"
           }
         ],
         "requestBody": {
@@ -224,9 +227,9 @@
               "examples": {
                 "success": {
                   "value": {
-                    "name" : "Новое имя",
-                    "description" : "Добавленное описание",
-                    "status" : "Approved"
+                    "name": "Новое имя",
+                    "description": "Добавленное описание",
+                    "status": "Approved"
                   }
                 }
               }
@@ -327,12 +330,17 @@
         ],
         "summary": "Добавление в домен описание нового поддомена",
         "x-swagger-router-controller": "DomainsController",
-        "operationId": "createSubdomain",
+        "operationId": "createSubDomain",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Domain"
+              },
+              "examples": {
+                "SubDomain" : {
+                  "$ref" : "#/components/examples/PostSubDomain"
+                }
               }
             }
           }
@@ -1338,6 +1346,29 @@
         "value": {
           "name": "Тестовая группа в корне",
           "code": "GRP.TEST.001",
+          "description": "Домен для теста создания группы доменов",
+          "status": "Тестовый",
+          "author": "Автор"
+        }
+      },
+      "PostDomain2": {
+        "summary": "Пример тела сообщения на создание домена",
+        "value": {
+          "name": "Тестовая группа в корне",
+          "code": "GRP.TEST.001",
+          "description": "Домен для теста создания группы доменов",
+          "status": "Тестовый",
+          "author": "Автор",
+          "parent" : {
+            "code" : "GRP.TEST.000"
+          }
+        }
+      },
+      "PostSubDomain": {
+        "summary": "Пример тела сообщения на создание домена",
+        "value": {
+          "name": "Тестовая группа в корне",
+          "code": "DMN.TEST.001",
           "description": "Домен для теста создания группы доменов",
           "status": "Тестовый",
           "author": "Автор"
