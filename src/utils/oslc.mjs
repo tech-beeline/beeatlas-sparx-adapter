@@ -35,10 +35,6 @@ async function request(url, options, body) {
             http.request(url, options,
                 response => {
                     let chunks = [];
-                    if (response.statusCode !== 200 && response.statusCode !== 201) {
-                        //reject(Error(`OSLC RESPONSE ${response.statusCode} : ${response.statusMessage}`));
-                        //return;
-                    }
 
                     response.on('data', (chunk) => {
                         chunks.push(chunk);
@@ -48,7 +44,7 @@ async function request(url, options, body) {
                         if (chunk) {
                             chunks.push(chunk);
                         }
-                        if (response.statusCode !== 200 && response.statusCode !== 201) {
+                        if (response.statusCode !== 200 && response.statusCode !== 201 && response.statusCode !== 202) {
                             reject(new OSLCException(response.statusCode, `OSLC RESPONSE ${response.statusCode} : ${Buffer.concat(chunks).toString()}`))
                         }
                         resolve(Buffer.concat(chunks));
@@ -241,7 +237,6 @@ class OSLC {
         }
         current_resource["rdf:RDF"]["oslc_am:Resource"]["ss:useridentifier"] = this.#userIdentifier
 
-
         let request_body = new RDFMessage(
             new OSLCResource(
                 Object.assign({
@@ -253,6 +248,13 @@ class OSLC {
         let response = await request(`${this.#host}${RESOURCE_UPDATE_PATH}`, { method: "POST", headers: { "Content-Type": "text/xml" } }, request_body.toString());
         //throw Error('Not implemented');
         return response;
+    }
+    async deleteResource(uid) {
+        await this.login();
+        return request(`${this.#host}${RESOURCE_PATH}${uid}/?useridentifier=${this.#userIdentifier}`, { method: "DELETE" });
+    }
+    async createLink(){
+        throw Error('Not implemented exception');
     }
 }
 

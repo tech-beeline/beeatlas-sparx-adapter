@@ -15,14 +15,14 @@ export function capabilityDTO(request, capability) {
         parent: capability.parentAlias ? {
             code: capability.parentAlias,
             href: formatHREF(request, `/api/capabilities/${capability.parentAlias}`)
-        } : {},
+        } : undefined,
         domain: capability.domainAlias ? {
             code: capability.domainAlias,
             href: formatHREF(request, `/api/domains/${capability.domainAlias}`)
-        } : {},
+        } : undefined,
         owner: capability.owner ? {
             fullName: capability.owner
-        } : {}
+        } : undefined
     };
 }
 
@@ -41,7 +41,7 @@ class CapabilitiesController {
      */
     async getCapabilityByCode(request, response) {
         try {
-            let cap = await capabilitiesService.getCapaibilitByCode(request.params.code);
+            let cap = await capabilitiesService.getCapaibilityByCode(request.params.code);
             if (!cap) {
                 return response.status(404).send(`Capability with code ${request.params.code} not found`);
             }

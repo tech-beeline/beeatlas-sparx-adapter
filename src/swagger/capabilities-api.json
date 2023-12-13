@@ -251,6 +251,34 @@
             "description": "Домен с указанным кодом не найден"
           }
         }
+      },
+      "delete" : {
+        "tags": [
+          "Управление доменами"
+        ],
+        "x-swagger-router-controller": "DomainsController",
+        "operationId": "deleteDomain",
+        "summary": "Удаление домена",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Код удаляемого домена",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "GRP.TEST.001"
+          }
+        ],
+        "responses": {
+          "202" :{
+            "description": "Accepted"
+          },
+          "404" :{
+            "description": "Domain not found"
+          }
+        }
       }
     },
     "/api/domains/{code}/parent": {
@@ -331,6 +359,18 @@
         "summary": "Добавление в домен описание нового поддомена",
         "x-swagger-router-controller": "DomainsController",
         "operationId": "createSubDomain",
+        "parameters": [
+          {
+            "name": "code",
+            "description": "Код домена, для которого запрашивается описание дочерних доменов",
+            "example": "GRP.TEST.000",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -338,8 +378,8 @@
                 "$ref": "#/components/schemas/Domain"
               },
               "examples": {
-                "SubDomain" : {
-                  "$ref" : "#/components/examples/PostSubDomain"
+                "SubDomain": {
+                  "$ref": "#/components/examples/PostSubDomain"
                 }
               }
             }
@@ -404,7 +444,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example" : "DMN.TEST.000"
           }
         ],
         "requestBody": {
@@ -1359,17 +1400,17 @@
           "description": "Домен для теста создания группы доменов",
           "status": "Тестовый",
           "author": "Автор",
-          "parent" : {
-            "code" : "GRP.TEST.000"
+          "parent": {
+            "code": "GRP.TEST.000"
           }
         }
       },
       "PostSubDomain": {
         "summary": "Пример тела сообщения на создание домена",
         "value": {
-          "name": "Тестовая группа в корне",
+          "name": "Тестовый домен в группе доменов",
           "code": "DMN.TEST.001",
-          "description": "Домен для теста создания группы доменов",
+          "description": "Домен для теста создания в группе доменов",
           "status": "Тестовый",
           "author": "Автор"
         }

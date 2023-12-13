@@ -5,6 +5,7 @@ import { NotImplementedRoute } from "../utils/href.mjs";
 export const ROOT_DOMAIN_UID = process.env.ROOT_DOMAIN_UID ?? "{CC4EAE49-4A1B-4ef5-9C76-83D629ECF603}";
 
 class Domain {
+    ea_guid;
     code;
     name;
     description;
@@ -16,6 +17,11 @@ class Domain {
 }
 
 export class DomainAlreadyExistException extends Error {
+    code;
+    constructor(code){
+        super( `Domain with code [${code}] already exists`);
+        this.code = code;
+    }
 
 }
 
@@ -47,6 +53,11 @@ class DomainsService {
             }
         );
     }
+    /**
+     * 
+     * @param {string} code 
+     * @returns {Promise<Domain?>}
+     */
     async getDomainByCode(code) {
         const domains = await Repository.queryRows({
             text: `select d.ea_guid,
@@ -81,7 +92,7 @@ class DomainsService {
 
         let current = (await this.getDomainByCode(domain.code));
         if (current) {
-            throw new DomainAlreadyExistException();
+            throw new DomainAlreadyExistException( domain.code);
         }
 
         const parent_domain_uid = domain.parent ? (await this.getDomainByCode(domain.parent.code)).ea_guid : ROOT_DOMAIN_UID;
@@ -101,6 +112,13 @@ class DomainsService {
         }
         let update_result = await OSLC.updateResource({ name: domain.name, status: domain.status, description: domain.description, identifier: `pk_${current.ea_guid}` });
         return this.getDomainByCode(code);
+    }
+    async deleteDomain( code ){
+        let domain = await this.getDomainByCode(code);
+        if( !domain ){
+            throw new DomainNotFoundException( code );
+        }
+        await OSLC.deleteResource(`pk_${domain.ea_guid}`);
     }
 }
 

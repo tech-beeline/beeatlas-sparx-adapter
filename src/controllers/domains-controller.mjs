@@ -39,6 +39,15 @@ function domainTDO(request, domain) {
 }
 
 class DomainsController {
+    constructor() {
+        this.validateCreateDomainRequest = this.validateCreateDomainRequest.bind(this);
+        this.createSubDomain = this.createSubDomain.bind(this);
+        this.createDomain = this.createDomain.bind(this);
+        this.processException = this.processException.bind(this);
+        this.updateDomain = this.updateDomain.bind(this);
+        this.deleteDomain = this.deleteDomain.bind(this);
+        this.createDomainCapability = this.createDomainCapability.bind(this);
+    }
     async getDomains(request, response) {
         try {
             response.json((await DomainsService.getDomains())
@@ -102,6 +111,25 @@ class DomainsController {
             throw new ValidationException("Отстсвует имя создаваемого домена (domain.name)");
         }
     }
+    processException(error, response) {
+        console.error(error);
+
+        if (error instanceof DomainAlreadyExistException) {
+            return response.status(409).json({ message: error.message });
+        }
+        if (error.status) {
+            return response.status(error.status).json({ message: error.message });
+        }
+        if (error instanceof DomainNotFoundException) {
+            return response.status(error.status).send(error.message);
+        }
+        if (error instanceof OSLCException) {
+            return response.status(error.status).send(error.message);
+        }
+
+        response.status(500).send(error.message);
+
+    }
     /**
      * 
      * @param {express.Request} request 
@@ -109,39 +137,22 @@ class DomainsController {
      */
     async createDomain(request, response) {
         try {
-            validateCreateDomainRequest(request)
+            this.validateCreateDomainRequest(request)
 
             response.json(domainTDO(request, await DomainsService.createDomain(request.body)));
             //throw Error('not implemented');
         } catch (error) {
-            if (error instanceof DomainAlreadyExistException) {
-                return response.status(409).json({ message: `Domain ${request.body.code} already exists` });
-            }
-            if (error.status) {
-                return response.status(error.status).json({ message: errormessage });
-            }
-            console.error(error);
-            response.status(500).send(error.message);
+            this.processException(error, response);
         }
     }
     async createSubDomain(request, response) {
         try {
-            validateCreateDomainRequest(request);
-            let domainDTO = request.body;
-            domainDTO.parent = { code: request.params.code };
-            DomainsService.createDomain()
+            this.validateCreateDomainRequest(request);
+            let new_domain = request.body;
+            new_domain.parent = { code: request.params.code };
+            return response.json(domainTDO(await DomainsService.createDomain(new_domain)));
         } catch (error) {
-            console.error(error);
-            if (error instanceof DomainNotFoundException) {
-                return response.status(error.status).send(error.message);
-            }
-            if (error instanceof OSLCException) {
-                return response.status(error.status).send(error.message);
-            }
-            if (error.status) {
-                return response.status(error.status).json({ message: errormessage });
-            }
-            response.status(500).send(error.message);
+            this.processException(error, response)
         }
     }
     async updateDomain(request, response) {
@@ -149,16 +160,32 @@ class DomainsController {
             let domainDTO = await request.body;
             response.json(domainTDO(request, await DomainsService.updateDomain(request.params.code, domainDTO)));
         } catch (error) {
-            console.error(error);
-            if (error instanceof DomainNotFoundException) {
-                return response.status(error.status).send(error.message);
-            }
-            if (error instanceof OSLCException) {
-                return response.status(error.status).send(error.message);
-            }
-            response.status(500).send(error.message);
+            this.processException(error, response)
         }
     }
+    async deleteDomain(request, response) {
+        try {
+            if (!request.params.code) {
+                response.status(400).json({ message: "Параметр [code] не указан" });
+            }
+            await DomainsService.deleteDomain(request.params.code);
+            response.status(200).send();
+        } catch (error) {
+            this.processException(error, response);
+        }
+    }
+
+    async createDomainCapability(request, response) {
+        try {
+            if (!request.params.code) {
+                response.status(400).json({ message: "Параметр [code] не указан" });
+            }
+            response.json(capabilityDTO(request, await capabilitiesService.createCapability({ ...request.body, domain: { code: request.params.code } })));
+        } catch (error) {
+            this.processException(error, response);
+        }
+    }
+
 }
 
 export default new DomainsController();
