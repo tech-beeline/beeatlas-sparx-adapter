@@ -1,4 +1,6 @@
 import Repository from "../utils/ea-repo.mjs";
+import OSLC from "../utils/oslc.mjs";
+import domainsService, { DomainNotFoundException } from "./domains-service.mjs";
 
 export class Capability {
     code;
@@ -15,14 +17,20 @@ export class Capability {
 class CapabiliiesService {
     async getCapabilityByDomainCode(code) {
         return Repository.queryRows({
-            text: `select c.alias as code, c.name, c.author, c.status, c.note as description, d.alias as "domainAlias", p.alias as "parentAlias", ow.name as "ownerName"
-            from v_domains d
-             join t_object c on c.package_id=d.id
-             left join t_object p on p.object_id=c.parentid
-             left join t_connector oc on oc.end_object_id=c.object_id and oc.connector_type='Responsibility'
-             left join t_object ow on ow.object_id=oc.start_object_id and ow.stereotype='ArchiMate_BusinessActor'
-             where d.alias=$1
-             and c.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')`, values: [code]
+            text:
+                `select
+    d.alias as "domainAlias",
+        cap.alias as code, cap.name as name, cap.stereotype,
+        cap.author as author, cap.note as description,
+        cap.status, cap.createddate as "createdDate", cap.modifieddate as "modifiedDate",
+        ow.name as "owner"
+    from v_domains d
+        join t_object dmn on dmn.ea_guid=d.ea_guid
+        join t_connector dmn_aggr on dmn_aggr.start_object_id=dmn.object_id and dmn_aggr.stereotype='ArchiMate_Aggregation'
+        join t_object cap on cap.object_id=dmn_aggr.end_object_id
+        left join t_connector oc on oc.end_object_id=cap.object_id and oc.connector_type='Responsibility'
+        left join t_object ow on ow.object_id=oc.start_object_id and ow.stereotype='ArchiMate_BusinessActor'
+    where d.alias=$1`, values: [code]
         });
     }
     async getCapabilities() {
@@ -56,7 +64,7 @@ class CapabiliiesService {
      * @param {string} code 
      * @returns {Promise<Capability>}
      */
-    async getCapaibilitByCode(code) {
+    async getCapaibilityByCode(code) {
         const caps = await Repository.queryRows({
             text: `select 
             cap.name, 
@@ -118,6 +126,27 @@ class CapabiliiesService {
             join t_object p on c.start_object_id=p.object_id
             where p.alias = $1`, values: [code]
         });
+    }
+    async createCapability(capability) {
+        if (!capability.code) {
+            throw { ...Error(`Не указан код возможности`), status: 400 }
+        }
+        let current_capability = await this.getCapaibilityByCode(capability.code);
+        if (current_capability)
+            throw { ...Error(`Capability ${capability.code} already exists`), status: 409 };
+
+        if (!capability.domain?.code) {
+            throw Error(`Ну казан код домена`);
+        }
+        let domain = await domainsService.getDomainByCode(capability.domain?.code);
+        if (!domain) {
+            throw new DomainNotFoundException(capability.domain.code);
+        }
+        await OSLC.createResource({
+            alias: capability.code, name: capability.name, description: capability.description ?? undefined, status: capability.status ?? undefined,
+            author: capability.author ?? undefined, resourceType: "Element", type: "Class", stereotype: "ArchiMate3::ArchiMate_TechnicalCapability"
+        }, { parentPackageGUID: domain.ea_guid });
+        return this.getCapaibilityByCode(capability.code);
     }
 }
 

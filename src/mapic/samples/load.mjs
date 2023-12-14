@@ -152,7 +152,7 @@ class CollectionCache {
         let collection = await this.#loadFn();
         this.#data = {};
         for (let item of collection) {
-            this.#data[item.id] = item; // [ ] Можно будет добавить возможность указывать полу/функцию для ключа
+            this.#data[item.id] = item; // [ ] Можно будет добавить возможность указывать функцию для ключа
         }
         fs.writeFileSync(this.#path, JSON.stringify(this.#data));
         this.#cacheTime = fs.statSync(this.#path).mtime;
@@ -669,6 +669,9 @@ async function main() {
         },
         {
             name: "ea api", data: (r) => r.eaApi, w: 50, style : { alignment: { wordWrap: true}}
+        },
+        {
+            name: "sequence", data: (r) => r.eaApi, w: 50, style : { alignment: { wordWrap: true}}
         }
     ]
     ))

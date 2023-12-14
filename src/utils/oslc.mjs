@@ -4,6 +4,24 @@ import XMLJS from 'xml-js'
 const AUTH_PATH = "/am/login/";
 const RESOURCE_SHAPE_PATH = "/am/rs/resource/";
 const RESOURCE_FACTORY_PATH = "/am/cf/resource/";
+const RESOURCE_UPDATE_PATH = "/am/pu/resource/"
+const RESOURCE_PATH = "/am/resource/"
+const RESOURCE_PROPERTY_MAP = {
+    "identifier": "dcterms:identifier",
+    status: "ss:status",
+    description: "dcterms:description",
+    name: "dcterms:title",
+    title: "dcterms:title"
+}
+
+
+export class OSLCException extends Error {
+    status;
+    constructor(status, message) {
+        super(message);
+        this.status = status
+    }
+}
 /**
  * 
  * @param {string} url 
@@ -17,10 +35,6 @@ async function request(url, options, body) {
             http.request(url, options,
                 response => {
                     let chunks = [];
-                    if (response.statusCode !== 200 && response.statusCode !== 201) {
-                        reject(Error(`OSLC RESPONSE ${response.statusCode} : ${response.statusMessage}`));
-                        return;
-                    }
 
                     response.on('data', (chunk) => {
                         chunks.push(chunk);
@@ -29,6 +43,9 @@ async function request(url, options, body) {
                     response.on('end', (chunk) => {
                         if (chunk) {
                             chunks.push(chunk);
+                        }
+                        if (response.statusCode !== 200 && response.statusCode !== 201 && response.statusCode !== 202) {
+                            reject(new OSLCException(response.statusCode, `OSLC RESPONSE ${response.statusCode} : ${Buffer.concat(chunks).toString()}`))
                         }
                         resolve(Buffer.concat(chunks));
                     })
@@ -82,6 +99,9 @@ class OSLCResource {
     set name(value) {
         this.title = value;
     }
+    set identifier(value) {
+        this["oslc_am:Resource"]["dcterms:identifier"] = value;
+    }
     set title(value) {
         this["oslc_am:Resource"]["dcterms:title"] = value;
     }
@@ -109,8 +129,8 @@ class OSLCResource {
     set parentElementGUID(value) {
         this.parentresourceidentifier = `el_${value}`;
     }
-    set parentresourceidentifier(value){
-        this["oslc_am:Resource"]["ss:parentresourceidentifier"] =  value;
+    set parentresourceidentifier(value) {
+        this["oslc_am:Resource"]["ss:parentresourceidentifier"] = value;
     }
     set alias(value) {
         this["oslc_am:Resource"]["ss:alias"] = value;
@@ -156,6 +176,7 @@ class OSLC {
             throw Error('enviroment variable "OSLC_USER" not set');
         if (!process.env.OSLC_PASSWORD)
             throw Error('enviroment variable "OSLC_PASSWORD" not set');
+
         this.#host = process.env.OSLC_HOST;
 
         let auth_result = await request(`${this.#host}${AUTH_PATH}`, { method: "POST" }, `uid=${process.env.OSLC_USER};pwd=${process.env.OSLC_PASSWORD};`)
@@ -195,9 +216,45 @@ class OSLC {
         let response = await request(`${this.#host}${RESOURCE_FACTORY_PATH}`, { method: "POST", headers: { "Content-Type": "text/xml" } }, request_body.toString());
         return response.toString();
     }
-    async readResource( url ){
+    async readResource(url) {
+        await this.login();
+
         let response = await request(`${url}?useridentifier=${this.#userIdentifier}`, { method: "GET", headers: { "Content-Type": "text/xml" } });
         return response.toString();
+    }
+    async readResourceById(uid) {
+        await this.login();
+
+        return this.readResource(`${this.#host}${RESOURCE_PATH}${uid}/`);
+    }
+
+    async updateResource(resource) {
+        let current_resource = await this.readResourceById(resource.identifier);
+        current_resource = XMLJS.xml2js(current_resource, { compact: true })
+
+        for (const prop in resource) {
+            current_resource["rdf:RDF"]["oslc_am:Resource"][RESOURCE_PROPERTY_MAP[prop]] = resource[prop]
+        }
+        current_resource["rdf:RDF"]["oslc_am:Resource"]["ss:useridentifier"] = this.#userIdentifier
+
+        let request_body = new RDFMessage(
+            new OSLCResource(
+                Object.assign({
+                    token: this.#userIdentifier
+                }, resource))
+        );
+
+        //console.log(XMLJS.json2xml(current_resource, { compact: true }));
+        let response = await request(`${this.#host}${RESOURCE_UPDATE_PATH}`, { method: "POST", headers: { "Content-Type": "text/xml" } }, request_body.toString());
+        //throw Error('Not implemented');
+        return response;
+    }
+    async deleteResource(uid) {
+        await this.login();
+        return request(`${this.#host}${RESOURCE_PATH}${uid}/?useridentifier=${this.#userIdentifier}`, { method: "DELETE" });
+    }
+    async createLink(){
+        throw Error('Not implemented exception');
     }
 }
 

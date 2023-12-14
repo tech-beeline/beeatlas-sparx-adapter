@@ -93,6 +93,9 @@
               "examples": {
                 "PostDomain": {
                   "$ref": "#/components/examples/PostDomain"
+                },
+                "PostDomain2": {
+                  "$ref": "#/components/examples/PostDomain2"
                 }
               }
             }
@@ -143,10 +146,10 @@
             "description": "Код запрашиваемого домена",
             "examples": {
               "200": {
-                "value" : "GRP.010"
+                "value": "GRP.010"
               },
-              "404" : {
-                "value" : "WRONG"
+              "404": {
+                "value": "WRONG"
               }
             },
             "required": true,
@@ -163,6 +166,20 @@
                 "schema": {
                   "type": "object",
                   "$ref": "#/components/schemas/Domain"
+                },
+                "example": {
+                  "code": "GRP.010",
+                  "href": "/api/domains/GRP.010",
+                  "name": "Управление ИТ",
+                  "description": null,
+                  "createdDate": "2021-04-16T00:00:00.000Z",
+                  "modifiedDate": "2022-10-17T14:52:03.000Z",
+                  "author": "vkit",
+                  "status": "Proposed",
+                  "parent": {
+                    "code": "GRP.000",
+                    "href": "/api/domains/GRP.000"
+                  }
                 }
               }
             }
@@ -197,7 +214,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "GRP.TEST.001"
           }
         ],
         "requestBody": {
@@ -205,6 +223,15 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Domain"
+              },
+              "examples": {
+                "success": {
+                  "value": {
+                    "name": "Новое имя",
+                    "description": "Добавленное описание",
+                    "status": "Approved"
+                  }
+                }
               }
             }
           }
@@ -222,6 +249,34 @@
           },
           "404": {
             "description": "Домен с указанным кодом не найден"
+          }
+        }
+      },
+      "delete" : {
+        "tags": [
+          "Управление доменами"
+        ],
+        "x-swagger-router-controller": "DomainsController",
+        "operationId": "deleteDomain",
+        "summary": "Удаление домена",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Код удаляемого домена",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "GRP.TEST.001"
+          }
+        ],
+        "responses": {
+          "202" :{
+            "description": "Accepted"
+          },
+          "404" :{
+            "description": "Domain not found"
           }
         }
       }
@@ -268,6 +323,7 @@
         ],
         "summary": "Получение описания поддоменов по коду домена",
         "x-swagger-router-controller": "DomainsController",
+        "operationId": "getSubdomains",
         "parameters": [
           {
             "name": "code",
@@ -302,12 +358,29 @@
         ],
         "summary": "Добавление в домен описание нового поддомена",
         "x-swagger-router-controller": "DomainsController",
-        "operationId": "createSubdomain",
+        "operationId": "createSubDomain",
+        "parameters": [
+          {
+            "name": "code",
+            "description": "Код домена, для которого запрашивается описание дочерних доменов",
+            "example": "GRP.TEST.000",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Domain"
+              },
+              "examples": {
+                "SubDomain": {
+                  "$ref": "#/components/examples/PostSubDomain"
+                }
               }
             }
           }
@@ -371,7 +444,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example" : "DMN.TEST.000"
           }
         ],
         "requestBody": {
@@ -481,6 +555,20 @@
                 "schema": {
                   "type": "object",
                   "$ref": "#/components/schemas/Capability"
+                },
+                "example": {
+                  "code": "GRP.010",
+                  "href": "/api/domains/GRP.010",
+                  "name": "Управление ИТ",
+                  "description": null,
+                  "createdDate": "2021-04-16T00:00:00.000Z",
+                  "modifiedDate": "2022-10-17T14:52:03.000Z",
+                  "author": "vkit",
+                  "status": "Proposed",
+                  "parent": {
+                    "code": "GRP.000",
+                    "href": "/api/domains/GRP.000"
+                  }
                 }
               }
             }
@@ -910,6 +998,7 @@
           "Управление компонентами"
         ],
         "summary": "Поиск и получение описание компонентов и продуктов",
+        "x-swagger-router-controller": "ComponentsController",
         "operationId": "getComponents",
         "parameters": [
           {
@@ -1276,12 +1365,52 @@
       }
     },
     "examples": {
+      "GetDomainByCodeResponse": {
+        "summary": "Пример успешного ответа  при запросе домена по",
+        "value": {
+          "code": "GRP.010",
+          "href": "/api/domains/GRP.010",
+          "name": "Управление ИТ",
+          "description": null,
+          "createdDate": "2021-04-16T00:00:00.000Z",
+          "modifiedDate": "2022-10-17T14:52:03.000Z",
+          "author": "vkit",
+          "status": "Proposed",
+          "parent": {
+            "code": "GRP.000",
+            "href": "/api/domains/GRP.000"
+          }
+        }
+      },
       "PostDomain": {
         "summary": "Пример тела сообщения на создание домена",
         "value": {
           "name": "Тестовая группа в корне",
           "code": "GRP.TEST.001",
           "description": "Домен для теста создания группы доменов",
+          "status": "Тестовый",
+          "author": "Автор"
+        }
+      },
+      "PostDomain2": {
+        "summary": "Пример тела сообщения на создание домена",
+        "value": {
+          "name": "Тестовая группа в корне",
+          "code": "GRP.TEST.001",
+          "description": "Домен для теста создания группы доменов",
+          "status": "Тестовый",
+          "author": "Автор",
+          "parent": {
+            "code": "GRP.TEST.000"
+          }
+        }
+      },
+      "PostSubDomain": {
+        "summary": "Пример тела сообщения на создание домена",
+        "value": {
+          "name": "Тестовый домен в группе доменов",
+          "code": "DMN.TEST.001",
+          "description": "Домен для теста создания в группе доменов",
           "status": "Тестовый",
           "author": "Автор"
         }

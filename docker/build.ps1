@@ -1,1 +1,1 @@
-docker build . -f ./docker/Dockerfile -t harbor.vimpelcom.ru/eafdmmart/ea-board:v0.09
+docker build . -f ./docker/Dockerfile -t harbor.vimpelcom.ru/eafdmmart/ea-board:v0.10

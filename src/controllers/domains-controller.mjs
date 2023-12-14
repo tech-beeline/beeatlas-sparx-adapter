@@ -1,9 +1,18 @@
 import express from "express";
 import capabilitiesService from "../services/capabilities-service.mjs";
-import DomainsService, { DomainAlreadyExistException } from "../services/domains-service.mjs";
+import DomainsService, { DomainAlreadyExistException, DomainNotFoundException as DomainNotFoundException } from "../services/domains-service.mjs";
 import { formatHREF } from "../utils/href.mjs"
 import { capabilityDTO } from "./capabilities-controller.mjs";
+import { OSLCException } from "../utils/oslc.mjs";
 
+
+
+class ValidationException extends Error {
+    status = 400;
+    constructor(message) {
+        super(message);
+    }
+}
 /**
  * 
  * @param {Express.Request} request 
@@ -30,6 +39,15 @@ function domainTDO(request, domain) {
 }
 
 class DomainsController {
+    constructor() {
+        this.validateCreateDomainRequest = this.validateCreateDomainRequest.bind(this);
+        this.createSubDomain = this.createSubDomain.bind(this);
+        this.createDomain = this.createDomain.bind(this);
+        this.processException = this.processException.bind(this);
+        this.updateDomain = this.updateDomain.bind(this);
+        this.deleteDomain = this.deleteDomain.bind(this);
+        this.createDomainCapability = this.createDomainCapability.bind(this);
+    }
     async getDomains(request, response) {
         try {
             response.json((await DomainsService.getDomains())
@@ -67,6 +85,51 @@ class DomainsController {
             response.status(500).send(err.message);
         }
     }
+
+
+
+    /**
+     * 
+     * @param {Express.Request} request 
+     * @returns 
+     */
+    validateCreateDomainRequest(request) {
+        if (!request.body || request.body == "")
+            throw new ValidationException("Отсутстует тело сообщения");
+        if (Array.isArray(request.body)) {
+            throw new ValidationException("Тело сообщение не должно быть массивом");
+        }
+        if (!request.body.code) {
+            throw new ValidationException("Отстсвует код создаваемого домена (domain.code)");
+        }
+
+        if (!request.body.code.startsWith("GRP.") && !request.body.code.startsWith("DMN.")) {
+            throw new ValidationException("Код домена должен быть вида GRP.* или DMN.*");
+        }
+
+        if (!request.body.name) {
+            throw new ValidationException("Отстсвует имя создаваемого домена (domain.name)");
+        }
+    }
+    processException(error, response) {
+        console.error(error);
+
+        if (error instanceof DomainAlreadyExistException) {
+            return response.status(409).json({ message: error.message });
+        }
+        if (error.status) {
+            return response.status(error.status).json({ message: error.message });
+        }
+        if (error instanceof DomainNotFoundException) {
+            return response.status(error.status).send(error.message);
+        }
+        if (error instanceof OSLCException) {
+            return response.status(error.status).send(error.message);
+        }
+
+        response.status(500).send(error.message);
+
+    }
     /**
      * 
      * @param {express.Request} request 
@@ -74,33 +137,55 @@ class DomainsController {
      */
     async createDomain(request, response) {
         try {
-            if (!request.body || request.body == "")
-                return response.status(400).json({ message: "Отсутстует тело сообщения" });
-            if (Array.isArray(request.body)) {
-                return response.status(400).json({ message: "Тело сообщение не должно быть массивом" });
-            }
-            if (!request.body.code) {
-                return response.status(400).json({ message: "Отстсвует код создаваемого домена (domain.code)" });
-            }
-
-            if (!request.body.code.startsWith("GRP.") && !request.body.code.startsWith("DMN.")) {
-                return response.status(400).json({ message: "Код домена должен быть вида GRP.* или DMN.*" });
-            }
-
-            if (!request.body.name) {
-                return response.status(400).json({ message: "Отстсвует имя создаваемого домена (domain.name)" });
-            }
+            this.validateCreateDomainRequest(request)
 
             response.json(domainTDO(request, await DomainsService.createDomain(request.body)));
             //throw Error('not implemented');
         } catch (error) {
-            if (error instanceof DomainAlreadyExistException) {
-                return response.status(409).json({ message: `Domain ${request.body.code} already exists` });
-            }
-            console.error(error);
-            response.status(500).send(error.message);
+            this.processException(error, response);
         }
     }
+    async createSubDomain(request, response) {
+        try {
+            this.validateCreateDomainRequest(request);
+            let new_domain = request.body;
+            new_domain.parent = { code: request.params.code };
+            return response.json(domainTDO(await DomainsService.createDomain(new_domain)));
+        } catch (error) {
+            this.processException(error, response)
+        }
+    }
+    async updateDomain(request, response) {
+        try {
+            let domainDTO = await request.body;
+            response.json(domainTDO(request, await DomainsService.updateDomain(request.params.code, domainDTO)));
+        } catch (error) {
+            this.processException(error, response)
+        }
+    }
+    async deleteDomain(request, response) {
+        try {
+            if (!request.params.code) {
+                response.status(400).json({ message: "Параметр [code] не указан" });
+            }
+            await DomainsService.deleteDomain(request.params.code);
+            response.status(200).send();
+        } catch (error) {
+            this.processException(error, response);
+        }
+    }
+
+    async createDomainCapability(request, response) {
+        try {
+            if (!request.params.code) {
+                response.status(400).json({ message: "Параметр [code] не указан" });
+            }
+            response.json(capabilityDTO(request, await capabilitiesService.createCapability({ ...request.body, domain: { code: request.params.code } })));
+        } catch (error) {
+            this.processException(error, response);
+        }
+    }
+
 }
 
 export default new DomainsController();
