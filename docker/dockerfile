@@ -5,7 +5,6 @@ RUN npm config set registry https://nexus.vimpelcom.ru/repository/proxy__npm__ce
 RUN npm config set @beeline:registry https://nexus.vimpelcom.ru/repository/npm-internal/
 RUN npm config set strict-ssl false
 
-
 RUN npm install --omit=dev && mv node_modules ../
 COPY . .
 EXPOSE 3001

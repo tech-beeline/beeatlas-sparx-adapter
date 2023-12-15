@@ -1,3 +1,4 @@
+import { xml2js } from "xml-js";
 import Repository from "../utils/ea-repo.mjs";
 import OSLC from "../utils/oslc.mjs";
 import domainsService, { DomainNotFoundException } from "./domains-service.mjs";
@@ -66,29 +67,18 @@ class CapabiliiesService {
      */
     async getCapaibilityByCode(code) {
         const caps = await Repository.queryRows({
-            text: `select 
-            cap.name, 
-            cap.alias as code, 
-            cap.note as description,
-            coalesce((select obe.name 
-             from t_connector co,  t_object obe 
-             where co.end_object_id = cap.object_id
-             and obe.object_id = co.start_object_id
-             and co.stereotype = 'Responsibility'
-             and obe.stereotype = 'ArchiMate_BusinessActor' limit 1 ) ,'')
-               as "ownerName",
-             d.alias as "domainAlias",
-            ( select p.alias 
-            from t_diagramlinks dl, t_connector r, t_object p, t_object ch
-            where sc.diagram_id=dl.diagramid and r.connector_id=dl.connectorid
-                and r.stereotype='ArchiMate_Aggregation' and r.start_object_id=p.object_id and r.end_object_id=ch.object_id 
-                 and p.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')
-             limit 1) as "parentAlias"
-            from 
-                v_domains d
-            join t_diagram sc on d.id=sc.package_id
-            join t_diagramobjects od on od.diagram_id=sc.diagram_id
-            join t_object cap on cap.object_id=od.object_id and cap.stereotype in ('ArchiMate_Capability','ArchiMate_TechnicalCapability')
+            text: `select
+            d.alias as "domainAlias",
+                cap.alias as code, cap.name as name, cap.stereotype,
+                cap.author as author, cap.note as description,
+                cap.status, cap.createddate as "createdDate", cap.modifieddate as "modifiedDate",
+                ow.name as "owner"
+            from v_domains d
+                join t_object dmn on dmn.ea_guid=d.ea_guid
+                join t_connector dmn_aggr on dmn_aggr.start_object_id=dmn.object_id and dmn_aggr.stereotype='ArchiMate_Aggregation'
+                join t_object cap on cap.object_id=dmn_aggr.end_object_id
+                left join t_connector oc on oc.end_object_id=cap.object_id and oc.connector_type='Responsibility'
+                left join t_object ow on ow.object_id=oc.start_object_id and ow.stereotype='ArchiMate_BusinessActor'
             where cap.alias=$1
         `, values: [code]
         });
@@ -129,11 +119,14 @@ class CapabiliiesService {
     }
     async createCapability(capability) {
         if (!capability.code) {
-            throw { ...Error(`Не указан код возможности`), status: 400 }
+            throw Object.assign(Error(`Не указан код возможности`), { status: 400 });
         }
         let current_capability = await this.getCapaibilityByCode(capability.code);
-        if (current_capability)
-            throw { ...Error(`Capability ${capability.code} already exists`), status: 409 };
+        if (current_capability) {
+            let error = Error(`Capability ${capability.code} already exists`);
+            //   error.status = 409
+            throw Object.assign(Error(`Capability ${capability.code} already exists`), { status: 409 });
+        }
 
         if (!capability.domain?.code) {
             throw Error(`Ну казан код домена`);
@@ -142,10 +135,18 @@ class CapabiliiesService {
         if (!domain) {
             throw new DomainNotFoundException(capability.domain.code);
         }
-        await OSLC.createResource({
+        // Создаем Capability
+        let res = await OSLC.createResource({
             alias: capability.code, name: capability.name, description: capability.description ?? undefined, status: capability.status ?? undefined,
-            author: capability.author ?? undefined, resourceType: "Element", type: "Class", stereotype: "ArchiMate3::ArchiMate_TechnicalCapability"
+            author: capability.author ?? undefined, resourceType: "Element", type: "Class", stereotype: "ArchiMate3::ArchiMate_Capability"
         }, { parentPackageGUID: domain.ea_guid });
+
+        let dom = xml2js(res, { compact: true });
+        res = await OSLC.readResource(dom["rdf:RDF"]["oslc_am:Resource"]._attributes["rdf:about"]);
+        dom = xml2js(res, { compact: true });
+        await OSLC.createLink(`el_${domain.ea_guid}`, dom["rdf:RDF"]["oslc_am:Resource"]["dcterms:identifier"]._text);
+        //[ ] Сделать откат создания ресурса, если линк не создался
+
         return this.getCapaibilityByCode(capability.code);
     }
 }

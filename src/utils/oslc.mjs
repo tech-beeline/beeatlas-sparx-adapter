@@ -4,6 +4,7 @@ import XMLJS from 'xml-js'
 const AUTH_PATH = "/am/login/";
 const RESOURCE_SHAPE_PATH = "/am/rs/resource/";
 const RESOURCE_FACTORY_PATH = "/am/cf/resource/";
+const RESOURCELINK_FACTORY_PATH = "/am/cf/resourcelink/";
 const RESOURCE_UPDATE_PATH = "/am/pu/resource/"
 const RESOURCE_PATH = "/am/resource/"
 const RESOURCE_PROPERTY_MAP = {
@@ -211,7 +212,7 @@ class OSLC {
                     token: this.#userIdentifier
                 }, resource))
         );
-        console.log(request_body.toString());
+        //        console.log(request_body.toString());
 
         let response = await request(`${this.#host}${RESOURCE_FACTORY_PATH}`, { method: "POST", headers: { "Content-Type": "text/xml" } }, request_body.toString());
         return response.toString();
@@ -253,8 +254,41 @@ class OSLC {
         await this.login();
         return request(`${this.#host}${RESOURCE_PATH}${uid}/?useridentifier=${this.#userIdentifier}`, { method: "DELETE" });
     }
-    async createLink(){
-        throw Error('Not implemented exception');
+    async createLink(from, to) {
+        await this.login();
+        let xml = {
+            "rdf:RDF": {
+                _attributes: {
+                    "xmlns:oslc_am": "http://open-services.net/ns/am#",
+                    "xmlns:rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    "xmlns:ss": "http://www.sparxsystems.com.au/oslc_am#",
+                    "xmlns:foaf": "http://xmlns.com/foaf/0.1/",
+                    "xmlns:dcterms": "http://purl.org/dc/terms/"
+                },
+                "oslc_am:Resource": {
+                    "dcterms:identifier": from,
+                    "ss:Association": {
+                        _attributes: {
+                            "rdf:ID": "ID",
+                            "rdf:resource": `${this.#host}${RESOURCE_PATH}${to}`
+                        }
+                    }
+                },
+                "rdf:Description": {
+                    _attributes: {
+                        "rdf:about" : "#ID"
+                    },
+                    "dcterms:type": "ArchiMate3::ArchiMate_Aggregation(UML::Association)",
+                    "ss:useridentifier": this.#userIdentifier
+                }
+            }
+        }
+        console.log(XMLJS.js2xml(xml, { compact: true }));
+        let response = await request(`${this.#host}${RESOURCELINK_FACTORY_PATH}`, { method: "POST", headers: { "Content-Type": "text/xml" } }, XMLJS.js2xml(xml, { compact: true }));
+
+        
+        console.log(response.toString());
+        //throw Error('Not implemented exception');
     }
 }
 

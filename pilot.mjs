@@ -378,4 +378,4 @@ async function mapic() {
 }
 //dashBoardStatus();
 
-mapic();
+//mapic();

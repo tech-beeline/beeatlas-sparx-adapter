@@ -22,6 +22,13 @@ class Repository {
         client.end();
         return rows;
     }
+    async getObjectsByAlias( alias ){
+        let client = new pg.Client(this.#config);
+        await client.connect();
+        let rows = (await client.query({text:"select * from t_object where alias=$1", values: [alias] })).rows;
+        client.end();
+        return rows;
+    }
 }
 
 export default new Repository();
