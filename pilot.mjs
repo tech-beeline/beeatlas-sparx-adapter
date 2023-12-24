@@ -7,6 +7,9 @@ import processDashboardService, { ProcessStatusRow } from './src/services/proces
 import { sheetFromObject } from './src/utils/excel.mjs';
 import MAPIC from './src/utils/mapic.mjs';
 import { mapFromArray } from './src/utils/helpers.mjs';
+import Capability from './src/model/capability.mjs';
+import CAPABILITY_EXAMPLES from './src/swagger/examples/capability-examples.mjs';
+import SwaggerDefinition from './src/routes/swagger.mjs';
 
 
 const COLUMNS = {
@@ -178,6 +181,7 @@ function saveAsExcel(data, columns, fileName) {
 
 async function dashBoardStatus() {
     let status_rows = await processDashboardService.getProcessStatusRows();
+
     let process_status = {}
     for (let row of status_rows) {
         process_status[row.groupName] = process_status[row.groupName] ?? {};//{ name: row.groupName }
@@ -234,14 +238,6 @@ async function dashBoardStatus() {
                 row => row.participiants?.filter(p => p.code).length ?? ""
         }
     ];
-
-    let test = {
-        "group": {
-            "base": {
-                "key": process_status["[SUPPORT] Обслуживание"]["[TARIF] Смена тарифного плана"]["[MOBILE] Я, как клиент, хочу сменить мобильный тарифный план"]
-            }
-        }
-    }
 
     saveAsExcel(process_status, COLUMN_DEFINITIONS, './data/dashboard-new.xlsx');
 
@@ -354,7 +350,7 @@ async function mapic() {
             for (const method_name in provider.methods) {
                 provider_row[method_name] = provider_row[method_name] ?? {};
                 for (const process in provider.methods[method_name].sequences ?? []) {
-                    provider_row[method_name][process] = { [provider.methods[method_name].sequences[process].ia??""]: {} };
+                    provider_row[method_name][process] = { [provider.methods[method_name].sequences[process].ia ?? ""]: {} };
                 }
             }
         }
@@ -372,10 +368,12 @@ async function mapic() {
 
     xlsx.writeFile(wb, './dump/integration-map.xlsx');
 
-
-
     console.log('!');
 }
-//dashBoardStatus();
 
+
+
+let test = SwaggerDefinition.load()
+
+console.log('!')
 //mapic();

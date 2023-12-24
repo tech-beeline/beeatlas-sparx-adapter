@@ -1,11 +1,6 @@
 import express from 'express'
-import DomainRoutes from "./domains-routes.mjs"
-import CapabilitiesRoutes from './capabilities-routes.mjs'
-import ComponentRoutes from './component-router.mjs';
-import InterfaceRoutes from './interface-routes.mjs';
-import domainsController from '../controllers/domains-controller.mjs';
-import capabilitiesController from '../controllers/capabilities-controller.mjs';
-import componentsController from '../controllers/components-controller.mjs';
+
+import CAPABILITY_METHODS from './capabilities-routes.mjs';
 
 export const Routes = express.Router();
 
@@ -30,7 +25,6 @@ class LoadRouteOptions {
     ifErrorRemove;
 }
 
-
 /**
  * 
  * @param {*} swagger 
@@ -40,67 +34,29 @@ class LoadRouteOptions {
 export function routeControllers(swagger, options) {
 
 
-    const controllers = {
-        DomainsController: domainsController,
-        CapabilitiesController: capabilitiesController,
-        ComponentsController: componentsController
+    const controller_methods = {
+        CapabilitiesMethods: CAPABILITY_METHODS
     }
 
     let swagger_routes = express.Router();
 
-    for (const path in swagger.paths) {
-        let pathProperty = swagger.paths[path];
-        for (const method in pathProperty) {
+    for (const methods in controller_methods) {
+        for (let path in controller_methods[methods].paths ?? []) {
+            const path_methods = controller_methods[methods].paths[path];
 
-            function onFailedAddController(message) {
-                if (options?.logConsole) {
-                    console.log(message);
-                }
-                if (options?.ifErrorRemove) {
-                    delete pathProperty[method];
-                } else {
-                    if (options?.logSwaggerDescription) {
-                        pathProperty[method].description = pathProperty[method].description ? message + '\r\n' + pathProperty[method].description : message;
-                    }
-                    if (options?.ifErrorMarkDepricated) {
-                        pathProperty[method].deprecated = "true";
-                    }
-                }
+            for (let method in path_methods) {
+                let operation = path_methods[method].operation;
+                swagger_routes[method](preparePath(path), operation);
             }
-
-            const controller_name = pathProperty[method]["x-swagger-router-controller"]
-            if (!controller_name) {
-                onFailedAddController(`Swagger: ${method} ${path} - не указан контроллер (x-swagger-router-controller)`);
-                continue;
-            }
-            const controller = controllers[controller_name];
-            if (!controller) {
-                onFailedAddController(`Не найден контроллер с именем ${controller_name}`)
-                continue;
-            }
-            if (!pathProperty[method].operationId) {
-                onFailedAddController(`Swagger: ${method} ${path} - не указан operationId`)
-                continue;
-            }
-            const controller_operation = controller[pathProperty[method].operationId];
-            if (!controller_operation) {
-                onFailedAddController(`В контролере ${controller_name} не найден метод ${pathProperty[method].operationId}`)
-                continue;
-            }
-            if (typeof controller_operation !== "function") {
-                onFailedAddController(`В контролере ${controller_name} ${controller_operation} не явлется функцией`)
-                continue;
-            }
-
-
-            swagger_routes[method](preparePath(path), controller_operation);
         }
     }
+    
     return swagger_routes;
 }
 
 
-Routes.route('/domains', DomainRoutes);
+
+//Routes.route('/domains', DomainRoutes);
 
 
 

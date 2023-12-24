@@ -23,6 +23,7 @@ app.use('/swagger/capabilities-api.json', (request, response) => response.json(S
 let routes = routeControllers(SWAGGER_DEFINITION, { ifErrorMarkDepricated: true, logSwaggerDescription: true });
 
 app.use('/', routes);
+
 app.use((err, req, res, next) => {
     res.status(500).send(err.message);
 })

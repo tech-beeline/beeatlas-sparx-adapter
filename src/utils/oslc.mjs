@@ -288,7 +288,6 @@ class OSLC {
 
         
         console.log(response.toString());
-        //throw Error('Not implemented exception');
     }
 }
 
