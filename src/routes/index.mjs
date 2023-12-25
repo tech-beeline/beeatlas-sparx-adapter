@@ -1,6 +1,7 @@
 import express from 'express'
 
 import CAPABILITY_METHODS from './capabilities-routes.mjs';
+import COMPONENTS_METHODS from './components-routes.mjs';
 
 export const Routes = express.Router();
 
@@ -35,7 +36,8 @@ export function routeControllers(swagger, options) {
 
 
     const controller_methods = {
-        CapabilitiesMethods: CAPABILITY_METHODS
+        CapabilitiesMethods: CAPABILITY_METHODS,
+        ComponentsMethods: COMPONENTS_METHODS
     }
 
     let swagger_routes = express.Router();

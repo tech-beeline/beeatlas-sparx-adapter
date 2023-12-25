@@ -1,6 +1,6 @@
 {
   "name": "ea-board",
-  "version": "1.0.12",
+  "version": "1.0.14",
   "description": "Витрина для различных представлений из EA",
   "main": "app.mjs",
   "scripts": {

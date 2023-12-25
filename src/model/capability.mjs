@@ -1,6 +1,7 @@
 export class CapabilityRef {
     domainCode;
     capabilitCode;
+    href;
     constructor({ domainCode, capabilityCode }) {
         this.domainCode = domainCode ?? undefined;
         this.capabilitCode = capabilityCode ?? undefined;

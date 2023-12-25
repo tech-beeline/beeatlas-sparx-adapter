@@ -3,19 +3,26 @@ import DATA from './test-data'
 
 const e = React.createElement;
 
-
+class TreeTableColumn extends React.Component{
+    constructor(props) {
+        super(props);
+    }
+    render(){
+        return <th></th>
+    }
+}
 class TreeTableHeader extends React.Component {
     constructor(props) {
         super(props);
     }
     render() {
         return <thead><tr>
-            </tr></thead>
+        </tr></thead>
     }
 }
 
-class TreeTableBody extends React.Component{
-    constructor(props){
+class TreeTableBody extends React.Component {
+    constructor(props) {
         super(props);
     }
 }
@@ -27,14 +34,18 @@ class TreeTable extends React.Component {
 
     render() {
         return <table >
-            <TreeTableHeader/>
-            <TreeTableBody/>
+            <TreeTableHeader />
+            <TreeTableBody />
         </table>
     }
 }
 
 const tableContainer = document.querySelector('#table-id');
 const root = ReactDOM.createRoot(tableContainer);
-root.render(<TreeTable data={DATA}/>);
+
+const COLUMNS_DEFINITION = [
+    "groupName"
+]
+root.render(<TreeTable data={DATA} columns={COLUMNS_DEFINITION} />);
 
 console.log(DATA);

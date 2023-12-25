@@ -1,7 +1,8 @@
 import fs from 'fs'
 import CAPABILITY_SWAGGER from '../swagger/capability-api.mjs';
 import CAPABILITY_METHODS from './capabilities-routes.mjs';
-import CAPABILITY_EXAMPLES from '../swagger/examples/capability-examples.mjs';
+import COMPONENTS_METHODS from './components-routes.mjs';
+
 
 function joinSchemas(target, source) {
     for (const ref in source) {
@@ -94,7 +95,8 @@ class SwaggerDefinition {
     static load() {
         let swaggerApi = CAPABILITY_SWAGGER;
         let tag_methods = [
-            CAPABILITY_METHODS
+            CAPABILITY_METHODS,
+            COMPONENTS_METHODS
         ]
 
         swaggerApi.tags = swaggerApi.tags ?? []
