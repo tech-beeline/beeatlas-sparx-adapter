@@ -2,6 +2,7 @@ import express from 'express'
 
 import CAPABILITY_METHODS from './capabilities-routes.mjs';
 import COMPONENTS_METHODS from './components-routes.mjs';
+import { CONTROLLERS } from './swagger.mjs';
 
 export const Routes = express.Router();
 
@@ -35,16 +36,12 @@ class LoadRouteOptions {
 export function routeControllers(swagger, options) {
 
 
-    const controller_methods = {
-        CapabilitiesMethods: CAPABILITY_METHODS,
-        ComponentsMethods: COMPONENTS_METHODS
-    }
-
+ 
     let swagger_routes = express.Router();
 
-    for (const methods in controller_methods) {
-        for (let path in controller_methods[methods].paths ?? []) {
-            const path_methods = controller_methods[methods].paths[path];
+    for (const methods in CONTROLLERS) {
+        for (let path in CONTROLLERS[methods].paths ?? []) {
+            const path_methods = CONTROLLERS[methods].paths[path];
 
             for (let method in path_methods) {
                 let operation = path_methods[method].operation;

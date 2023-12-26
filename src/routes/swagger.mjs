@@ -2,7 +2,14 @@ import fs from 'fs'
 import CAPABILITY_SWAGGER from '../swagger/capability-api.mjs';
 import CAPABILITY_METHODS from './capabilities-routes.mjs';
 import COMPONENTS_METHODS from './components-routes.mjs';
+import TC_METHODS from './technical-capabilities-routes.mjs';
 
+
+export const CONTROLLERS = [
+    CAPABILITY_METHODS,
+    COMPONENTS_METHODS,
+    TC_METHODS
+]
 
 function joinSchemas(target, source) {
     for (const ref in source) {
@@ -69,16 +76,18 @@ function schemaFromObject(o) {
             properties[prop] = schema;
         }
         if (entity_name) {
+            joinSchemas(orefs, {
+                [entity_name]: {
+                    type: "object",
+                    properties: properties
+                }
+            })
+
             return {
                 schema: {
                     "$ref": `#/components/schemas/${entity_name}`
                 },
-                refs: {
-                    [entity_name]: {
-                        type: "object",
-                        properties: properties
-                    }, ...orefs
-                }
+                refs: orefs
             }
         }
         return {
@@ -94,16 +103,13 @@ function schemaFromObject(o) {
 class SwaggerDefinition {
     static load() {
         let swaggerApi = CAPABILITY_SWAGGER;
-        let tag_methods = [
-            CAPABILITY_METHODS,
-            COMPONENTS_METHODS
-        ]
+        
 
         swaggerApi.tags = swaggerApi.tags ?? []
         swaggerApi.paths = swaggerApi.paths ?? {};
         swaggerApi.components = swaggerApi.components ?? { schemas: {}, examples: {} }
 
-        for (let tag of tag_methods) {
+        for (let tag of CONTROLLERS) {
             swaggerApi.tags[tag.tag] = swaggerApi.tags[tag.tag] ?? { name: tag.tag, description: tag.description }
             for (const path in tag.paths) {
                 swaggerApi.paths[path] = swaggerApi.paths[path] ?? {};

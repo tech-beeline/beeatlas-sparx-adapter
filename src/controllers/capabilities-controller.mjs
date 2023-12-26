@@ -35,12 +35,15 @@ function processError(error, response) {
 }
 
 class CapabilitiesController {
+    constructor() {
+        this.getCapabilityByCode = this.getCapabilityByCode.bind(this);
+    }
 
     async getCapabilities(request, response) {
         try {
             response.json((await capabilitiesService.getCapabitiesAsFlatList()));
         } catch (err) {
-            console.error( err );
+            console.error(err);
             response.status(500).send(err.message);
         }
     }
@@ -48,7 +51,7 @@ class CapabilitiesController {
         try {
             response.json((await capabilitiesService.getCapabilitiesTree()));
         } catch (err) {
-            console.error( err );
+            console.error(err);
             response.status(500).send(err.message);
         }
     }
@@ -59,18 +62,22 @@ class CapabilitiesController {
      */
     async getCapabilityByCode(request, response) {
         try {
+            if (request.params.code.toLowerCase() === "tree") {
+                return this.getCapabilitiesTree(request, response);
+            }
             let cap = await capabilitiesService.getCapabilityByCode(request.params.code);
             if (!cap) {
                 return response.status(404).send(`Capability with code ${request.params.code} not found`);
             }
-            response.json(capabilityDTO(request, cap));
+            response.json(cap);
         } catch (err) {
+            console.error(err);
             response.status(500).send(err.message);
         }
     }
     async getCapabilityChildren(request, response) {
         try {
-            response.json((await capabilitiesService.getCapabilityChildren(request.params.code)).map(c => capabilityDTO(request, c)));
+            response.json((await capabilitiesService.getCapabilityChildren(request.params.code)));
         } catch (err) {
             response.status(500).send(err.message);
         }

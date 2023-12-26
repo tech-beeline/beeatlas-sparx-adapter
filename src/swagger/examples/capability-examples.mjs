@@ -20,9 +20,7 @@ const CAPABILITY_EXAMPLES = {
         "status": "Proposed",
         "createdDate": "2021-04-15T21:00:00.000Z",
         "owner": "",
-        "parent": new CapabilityRef({
-            "domainCode": "GRP.000"
-        })
+        "parentCode": "GRP.000"
     }),
     Capability: new Capability({
         "code": "BC-000134",
@@ -33,9 +31,7 @@ const CAPABILITY_EXAMPLES = {
         "status": "Identified",
         "createdDate": "2021-06-30T13:18:02.000Z",
         "owner": "Хайдаров И.Н.",
-        "parent": new CapabilityRef({
-            "domainCode": "DMN.103"
-        })
+        "parentCode": "DMN.103"
     }),
     ChildCapability: new Capability({
         "code": "BC-014056",
@@ -46,9 +42,30 @@ const CAPABILITY_EXAMPLES = {
         "status": "Proposed",
         "createdDate": "2023-09-05T11:00:24.000Z",
         "owner": "",
-        "parent": new CapabilityRef({
-            "capabilityCode": "BC-014055"
-        })
+        "parentCode": "BC-014055"
+    }),
+    DomainWithChildren: new Capability({
+        "code": "GRP.000",
+        "isDomain": true,
+        "name": "Каталог Возможностей (Capability Catalog)",
+        "description": "Общий каталог возможностей. Включает группы доменов и домены L2 ДМВ.",
+        "author": "vkit",
+        "status": "Proposed",
+        "createdDate": "2021-04-15T21:00:00.000Z",
+        "owner": "",
+        children: [
+            new Capability({
+                "code": "GRP.010",
+                "isDomain": true,
+                "name": "Управление ИТ",
+                "description": null,
+                "author": "vkit",
+                "status": "Proposed",
+                "createdDate": "2021-04-15T21:00:00.000Z",
+                "owner": "",
+                "parentCode": "GRP.000"
+            })
+        ]
     })
 }
 

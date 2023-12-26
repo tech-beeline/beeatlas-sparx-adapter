@@ -19,7 +19,9 @@ class Capability {
     createdDate;
     modifiedDate;
     status;
-    parent;
+    parentCode;
+    owner;
+    children;
     constructor(cap) {
         for( const prop in this){
             this[prop] = cap[prop]??undefined;
