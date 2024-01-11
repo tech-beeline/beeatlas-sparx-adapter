@@ -1,6 +1,13 @@
 <html>
     <head>
-
+<style>
+    table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+</style>
     </head>
     <body>
         <div>
@@ -9,8 +16,7 @@
         <div id="table-id"></div>
         <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
         <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-        <script src="https://unpkg.com/babel-standalone@6/babel.min.js" crossorigin></script>
-        <script data-plugins="transform-es2015-modules-umd" src="./js/test-data.js" type="text/babel"></script>
-        <script data-plugins="transform-es2015-modules-umd" src="./js/table.js" type="text/babel"></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+        <script  src="./js/table.js" type="text/babel" data-type="module"></script>
     </body>
 </html>

@@ -562,5 +562,3 @@ const DATA = [
 ]
 
 export default DATA;
-
-module.exports = DATA;

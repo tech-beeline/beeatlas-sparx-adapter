@@ -3,12 +3,14 @@ import CAPABILITY_SWAGGER from '../swagger/capability-api.mjs';
 import CAPABILITY_METHODS from './capabilities-routes.mjs';
 import COMPONENTS_METHODS from './components-routes.mjs';
 import TC_METHODS from './technical-capabilities-routes.mjs';
+import DASHBOARD_METHODS from './dashboard-routes.mjs';
 
 
 export const CONTROLLERS = [
     CAPABILITY_METHODS,
     COMPONENTS_METHODS,
-    TC_METHODS
+    TC_METHODS,
+    DASHBOARD_METHODS
 ]
 
 function joinSchemas(target, source) {
@@ -103,7 +105,6 @@ function schemaFromObject(o) {
 class SwaggerDefinition {
     static load() {
         let swaggerApi = CAPABILITY_SWAGGER;
-        
 
         swaggerApi.tags = swaggerApi.tags ?? []
         swaggerApi.paths = swaggerApi.paths ?? {};

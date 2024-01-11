@@ -17,6 +17,8 @@ app.use('/swagger-ui', express.static(pathToSwaggerUi));
 //#endregion
 
 const SWAGGER_DEFINITION = SwaggerDefinition.load();
+app.use( '/dashboard', express.static('./src/view/process-reference.html'))
+app.use( '/js', express.static('./src/view/js'))
 
 app.use('/swagger/capabilities-api.json', (request, response) => response.json(SWAGGER_DEFINITION))//express.static('./src/swagger/capabilities-api.yaml'))
 

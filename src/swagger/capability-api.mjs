@@ -7,7 +7,7 @@ const CAPABILITY_SWAGGER = {
     contact: {
       "email": "ivvoronin@beeline.ru"
     },
-    version: "1.0.13"
+    version: "1.0.15"
   },
   components: {
     schemas: {
@@ -16,6 +16,5 @@ const CAPABILITY_SWAGGER = {
     }
   }
 };
-
 
 export default CAPABILITY_SWAGGER;
