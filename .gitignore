@@ -11,3 +11,4 @@ data/interface-agreement.zip
 data/Справочник процессов.xlsx
 dashboard.code-workspace
 .env
+.env copy
