@@ -235,13 +235,6 @@ async function dashBoardStatus() {
         }
     ];
 
-    let test = {
-        "group": {
-            "base": {
-                "key": process_status["[SUPPORT] Обслуживание"]["[TARIF] Смена тарифного плана"]["[MOBILE] Я, как клиент, хочу сменить мобильный тарифный план"]
-            }
-        }
-    }
 
     saveAsExcel(process_status, COLUMN_DEFINITIONS, './data/dashboard-new.xlsx');
 
@@ -376,6 +369,6 @@ async function mapic() {
 
     console.log('!');
 }
-//dashBoardStatus();
+dashBoardStatus();
 
 //mapic();

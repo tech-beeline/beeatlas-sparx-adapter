@@ -41,7 +41,7 @@ select
 	left join t_object client_owner on client_owner.object_id=client.parentid
 	left join t_object srv on srv.object_id=msg.end_object_id
 	left join t_object srv_owner on srv.parentid=srv_owner.object_id
-where root.ea_guid ='{44673B34-2358-4da0-887E-06311EAB7CA2}'`;
+where root.ea_guid ='{F486A191-8D01-471b-AD9B-271B6AD388EB}'`;
 
 
 export class ProcessStatusRow {
