@@ -1,0 +1,8 @@
+env:
+  DB_EA_URL: "vault:eafdmmart/data/dev/ea#url"
+  DB_EA_USER: "vault:eafdmmart/data/dev/ea#username"
+  DB_EA_PASSWORD: "vault:eafdmmart/data/dev/ea#password"
+  DB_EA_DATABASE : "ea_repository"
+  SPRING_EA_DATASOURCE_DRIVER_CLASS_NAME: "vault:eafdmmart/data/dev/ea#driver"
+  JWKS: "vault:eafdmmart/data/dev/fdm#jwks"
+  GWURL: "vault:eafdmmart/data/prod/fdm#mapicurl"
