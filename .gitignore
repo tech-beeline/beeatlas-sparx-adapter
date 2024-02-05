@@ -12,3 +12,4 @@ data/Справочник процессов.xlsx
 dashboard.code-workspace
 .env
 .env copy
+show.ps1
