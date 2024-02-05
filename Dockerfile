@@ -7,6 +7,6 @@ RUN npm config set strict-ssl false
 
 RUN npm install --omit=dev && mv node_modules ../
 COPY . .
-EXPOSE 3001
+EXPOSE 8080
 
 CMD ["node", "src/app.mjs"]
