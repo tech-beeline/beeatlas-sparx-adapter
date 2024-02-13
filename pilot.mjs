@@ -370,10 +370,7 @@ async function mapic() {
 
     console.log('!');
 }
-
-
-
-let test = SwaggerDefinition.load()
+//dashBoardStatus();
 
 console.log('!')
 //mapic();
