@@ -28,6 +28,9 @@
     {
       "name": "Управление реализацией возможностей",
       "description": "Управление описанием вариантов реализации возможности"
+    },
+    {
+      "name": "E2E Scenario"
     }
   ],
   "servers": [
@@ -763,8 +766,8 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items":{
-                    "$ref" : "#/components/schemas/ObjectRef"
+                  "items": {
+                    "$ref": "#/components/schemas/ObjectRef"
                   }
                 }
               }
@@ -1309,6 +1312,24 @@
             "description": "OK."
           }
         }
+      }
+    },
+    "/api/e2e/{code}/interaction": {
+      "get": {
+        "tags": [
+          "E2E Scenario"
+        ],
+        "x-swagger-router-controller": "E2EProcessController",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     }
   },
