@@ -211,9 +211,9 @@ class ProcessDashboardService {
 				[i, ...j]))], [])
 		}
 		let ret = business_interactions.map(bi => ({
-			businessIneraction: bi.name, integrations: bi.integrations.reduce((ret,v)=>[...ret,...format_chain(v)],[])
-		}))
-
+			businessIneraction: bi.name, integrations: bi.integrations.reduce((ret,v)=>[...ret,...format_chain(v).map( chain=>
+				chain.map( i=>`${i.message}->${i.supplier?.name}`) )],[])
+		}));
 		return ret;// Object.values(scenarios).filter(sc => sc.uid === sc.parent_uid);
 	}
 }
