@@ -25,6 +25,14 @@ class DashboardController {
             response.status(500).send(error.message);
         }
     }
+    async getE2EFillingStatus(request, response) {
+        try {
+            response.json((await processDashboardService.getE2EFillingStatus()).map(a => Object.assign(a, { href: `/${a.uid}/details` })));
+        } catch (error) {
+            console.error(error)
+            response.status(500).send(error.message);
+        }
+    }
 }
 
 export default new DashboardController()

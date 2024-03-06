@@ -1,5 +1,5 @@
 import Repository from "../utils/ea-repo.mjs";
-
+import QUERIES from './sql/process-dashboard.mjs'
 
 const PROCESS_STATUS =
 	`with  recursive using_hierarchy as ( 
@@ -83,6 +83,7 @@ from process_bi
 where process_uid=$1
 order by msg.seqno`;
 
+
 export class ProcessStatusRow {
 	serverName;
 	serverType;
@@ -149,6 +150,18 @@ class Application {
 
 }
 
+class E2EFillingStatusRow{
+	sequence;
+	sequence_uid;
+	id;
+	total_messages;
+	operations_from_interface;
+	operation_has_ia;
+	diagram_note_off;
+	total_apps;
+	apps_from_catalog;
+}
+
 export class Process {
 	businessInteractions
 }
@@ -207,14 +220,30 @@ class ProcessDashboardService {
 		 */
 		let format_chain = (i) => {
 			if (!i.scenario) return [[i]];
-			return i.scenario.integrations.reduce((r, ii) => [...r, ...(format_chain(ii).map(j => 
+			return i.scenario.integrations.reduce((r, ii) => [...r, ...(format_chain(ii).map(j =>
 				[i, ...j]))], [])
 		}
 		let ret = business_interactions.map(bi => ({
-			businessIneraction: bi.name, integrations: bi.integrations.reduce((ret,v)=>[...ret,...format_chain(v).map( chain=>
-				chain.map( i=>`${i.message}->${i.supplier?.name}`) )],[])
+			businessIneraction: bi.name, integrations: bi.integrations.reduce((ret, v) => [...ret, ...format_chain(v).map(chain =>
+				chain.map(i => `${i.message}->${i.supplier?.name}`))], [])
 		}));
 		return ret;// Object.values(scenarios).filter(sc => sc.uid === sc.parent_uid);
+	}
+	async getE2EFillingStatus() {
+		/**
+		 * @type {Array<E2EFillingStatusRow>}
+		 */
+		let rows = await Repository.queryRows(QUERIES.E2E_FILLING_STATUS_QUERY);
+		return rows.map( r=>new Object({
+			sequence: r.sequence,
+			uid : r.sequence_uid,
+			total_interaction : r.total_messages,
+			operations_without_ia: r.total_messages - r.operation_has_ia,
+			operations_not_specified : r.total_messages -  r.operations_from_interface,
+			diagrams_notes_off: r.diagram_note_off,
+			total_components: r.total_apps,
+			components_not_from_catalog : r.total_apps - r.apps_from_catalog
+		}))
 	}
 }
 

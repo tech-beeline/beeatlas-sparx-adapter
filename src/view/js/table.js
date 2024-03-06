@@ -22,7 +22,7 @@ class TreeTableHeader extends React.Component {
         return this.props.columns;
     }
     render() {
-        return <thead><tr>{this.columnsDefinition.map(c => <th>{c.name}</th>)}
+        return <thead><tr>{this.columnsDefinition.map(c => <th>{c.title??c.name}</th>)}
         </tr></thead>
     }
 }
@@ -41,13 +41,19 @@ class TreeTableBody extends React.Component {
     constructor(props) {
         super(props);
     }
+    renderCell( data, column ){
+        if( column.render){
+            return <td>{column.render(data)}</td>
+        }
+        return <td>{data[column.name]}</td>
+    }
     renderCategoryItems(items, columns) {
         if (columns.length === 0) return [];
         if (columns[0] instanceof CategoryColumn) {
             return this.renderCategory(items, columns);
         }
         return items.map(i => {
-            return columns.map(c => <td>{i[c.name]}</td>);
+            return columns.map(c => this.renderCell(i,c));
         })
     }
     /**
@@ -79,11 +85,12 @@ class TreeTableBody extends React.Component {
             return <tbody>{this.renderCategory(this.props.data, columns).map(r => <tr>{r}</tr>)}</tbody>
         }
         return <tbody>
+            {this.props.data.map(r => <tr>{this.renderCategoryItems([r], columns)}</tr>)}
         </tbody>
     }
 }
 
-class TreeTable extends React.Component {
+export class TreeTable extends React.Component {
     constructor(props) {
         super(props);
     }
@@ -101,7 +108,7 @@ class TreeTable extends React.Component {
     }
 }
 
-class CategoryColumn {
+export class CategoryColumn {
     selector;
     name;
     #defaultSelector(data) {
@@ -119,6 +126,9 @@ class CategoryColumn {
     }
 }
 
+window.TreeTable = TreeTable;
+window.CategoryColumn = CategoryColumn;
+/*
 const tableContainer = document.querySelector('#table-id');
 const root = ReactDOM.createRoot(tableContainer);
 
@@ -135,3 +145,4 @@ fetch('/api/process-status').then(async res => {
     root.render(<TreeTable data={data} columns={COLUMNS_DEFINITION} />);
 })
 
+*/

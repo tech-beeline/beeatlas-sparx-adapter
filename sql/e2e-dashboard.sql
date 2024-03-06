@@ -22,7 +22,7 @@ where mep.object_type='MessageEndpoint'
 	join d_tree d on d.child_diagram_id=r.diagram_id
 )
 select s.diagram_id, s.name as sequence, -- d.name, 
-	count( position( 'ShowSN=1' in coalesce(d.pdata, '') ) = 0) as note_on
+	count( position( 'ShowSN=1' in coalesce(d.pdata, '') ) = 0) as note_off
 from d_tree
  join t_diagram d on d_tree.child_diagram_id = d.diagram_id
  join t_diagram s on s.diagram_id=d_tree.diagram_id

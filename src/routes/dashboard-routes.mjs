@@ -87,6 +87,25 @@ const DASHBOARD_METHODS = {
                     }
                 }
             }
+        },
+        "/api/process-filling": {
+            get: {
+                operation: dashboardController.getE2EFillingStatus,
+                summary: "Получение информации о статусе заполнение",
+                description: "Получение информации о том, на сколько описание Е2Е процесса завершено",
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: {
+                                    "OK": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
