@@ -1,10 +1,9 @@
-const E2E_CTE = `
 with recursive d_refs as
 (
 	select od.diagram_id,o.object_id, d.diagram_id as child_diagram_id
 	from t_xref x
 		join t_object o on o.ea_guid=x.client
-		join t_diagram d on d.ea_guid=x.supplier and d.diagram_type='Sequence'
+		join t_diagram d on d.ea_guid=x.supplier
 		join t_diagramobjects od on od.object_id=o.object_id and od.diagram_id <> d.diagram_id
 	where x.name='DefaultDiagram'
 	union distinct
@@ -34,9 +33,7 @@ with recursive d_refs as
 		from app_catalog
 		join t_object app on app.package_id=app_catalog.package_id and app.object_type='Component'
 		left join t_object i_provided on i_provided.parentid=app.object_id
-)
-`
-const E2E_FILLING_STATUS_QUERY = `${E2E_CTE},  cnt_wrong_spec as (
+),  cnt_wrong_spec as (
 	select d_tree.diagram_id, count(*) as total, count(op_uid.value) as has_op, count(ia_tag.value) as has_ia
 	from d_tree
 	join t_connector msg on  msg.diagramid=d_tree.child_diagram_id and msg.pdata4='0'
@@ -67,14 +64,4 @@ left join cnt_wrong_spec on s.diagram_id=cnt_wrong_spec.diagram_id
 left join note_off on s.diagram_id=note_off.diagram_id
 left join app_stat on app_stat.diagram_id=s.diagram_id
 where s.stereotype='e2e_diagram'
-`;
-
-const E2E_FILLING_DETAILS = `${E2E_CTE}
-select 
-	s.name as sequence,s.ea_guid as sequence_uid, d.name as diagram, d.ea_guid as diagram_uid, position( 'ShowSN=1' in coalesce(d.pdata, '') ) = 0 as note_off
-from d_tree
-join t_diagram s on s.diagram_id=d_tree.diagram_id
-join t_diagram d on d.diagram_id=d_tree.child_diagram_id
-where s.ea_guid=$1`
-
-export default { E2E_FILLING_STATUS_QUERY, E2E_FILLING_DETAILS }
+	--and d_tree.diagram_id=13770 

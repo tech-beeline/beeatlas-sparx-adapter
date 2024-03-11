@@ -3,7 +3,7 @@ with recursive d_refs as
 	select od.diagram_id,o.object_id, d.diagram_id as child_diagram_id
 	from t_xref x
 		join t_object o on o.ea_guid=x.client
-		join t_diagram d on d.ea_guid=x.supplier
+		join t_diagram d on d.ea_guid=x.supplier and d.diagram_type='Sequence'
 		join t_diagramobjects od on od.object_id=o.object_id and od.diagram_id <> d.diagram_id
 	where x.name='DefaultDiagram'
 	union distinct
@@ -15,7 +15,7 @@ with recursive d_refs as
 ), d_tree as
 (
 	select diagram_id, diagram_id as child_diagram_id
-	from t_diagram where diagram_type='Sequence'--ea_guid='{AD0F73D8-87B1-41ed-AD5A-61DC188466D7}'
+	from t_diagram where diagram_type='Sequence'
 	and stereotype='e2e_diagram' --!!!!!
 	union distinct
 	select d.diagram_id, r.child_diagram_id
@@ -56,9 +56,9 @@ with recursive d_refs as
 	group by d_tree.diagram_id
 	)
 select 
-	s.name as sequence, s.ea_guid, s.diagram_id as id, 
-	cnt_wrong_spec.total,cnt_wrong_spec.has_op,cnt_wrong_spec.has_ia, note_off.cnt,
-	app_stat.total as total_app, app_stat.app_cnt
+	s.name as sequence, s.ea_guid as sequence_uid, s.diagram_id as id, 
+	cnt_wrong_spec.total as total_messages,cnt_wrong_spec.has_op as operations_from_interface,cnt_wrong_spec.has_ia as operation_has_ia, note_off.cnt as diagram_note_off,
+	app_stat.total as total_apps, app_stat.app_cnt as apps_from_catalog
 from t_diagram s
 left join cnt_wrong_spec on s.diagram_id=cnt_wrong_spec.diagram_id
 left join note_off on s.diagram_id=note_off.diagram_id

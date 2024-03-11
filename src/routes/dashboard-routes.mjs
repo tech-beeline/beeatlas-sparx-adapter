@@ -106,6 +106,38 @@ const DASHBOARD_METHODS = {
                     }
                 }
             }
+        },
+        "/api/process-filling/{code}/details": {
+            get: {
+                operation: dashboardController.getE2EFillingDetails,
+                summary: "Получение информации о статусе заполнение",
+                description: "Получение детальной информации о том, на сколько описание Е2Е процесса завершено",
+                parameters: [
+                    {
+                        name: "code",
+                        in: "path",
+                        description: "Код процесса",
+                        required: true,
+                        examples: {
+                            "Смена ТП в ЕЛК": {
+                                value: "{AD0F73D8-87B1-41ed-AD5A-61DC188466D7}"
+                            }
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: {
+                                    "OK": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

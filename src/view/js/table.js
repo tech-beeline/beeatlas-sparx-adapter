@@ -22,7 +22,7 @@ class TreeTableHeader extends React.Component {
         return this.props.columns;
     }
     render() {
-        return <thead><tr>{this.columnsDefinition.map(c => <th>{c.title??c.name}</th>)}
+        return <thead><tr>{this.columnsDefinition.map(c => <th>{c.title ?? c.name}</th>)}
         </tr></thead>
     }
 }
@@ -36,13 +36,15 @@ class TreeTableRow extends React.Component {
             this.props.columns.map(c => <td>{this.props.data[c.props.def.name]}</td>)
         }</tr>
     }
+
+    //setState()
 }
 class TreeTableBody extends React.Component {
     constructor(props) {
         super(props);
     }
-    renderCell( data, column ){
-        if( column.render){
+    renderCell(data, column) {
+        if (column.render) {
             return <td>{column.render(data)}</td>
         }
         return <td>{data[column.name]}</td>
@@ -53,7 +55,7 @@ class TreeTableBody extends React.Component {
             return this.renderCategory(items, columns);
         }
         return items.map(i => {
-            return columns.map(c => this.renderCell(i,c));
+            return columns.map(c => this.renderCell(i, c));
         })
     }
     /**
@@ -93,6 +95,10 @@ class TreeTableBody extends React.Component {
 export class TreeTable extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            data : props.data
+        }
+        this.setData = this.setData.bind(this)
     }
     get columnsDefinition() {
         return this.props.columns.map(
@@ -105,6 +111,9 @@ export class TreeTable extends React.Component {
             <TreeTableHeader columns={this.columnsDefinition} />
             <TreeTableBody data={this.props.data} columns={this.columnsDefinition} />
         </table>
+    }
+    setData(data) {
+        this.setState({ data: data })
     }
 }
 

@@ -150,7 +150,7 @@ class Application {
 
 }
 
-class E2EFillingStatusRow{
+class E2EFillingStatusRow {
 	sequence;
 	sequence_uid;
 	id;
@@ -234,15 +234,36 @@ class ProcessDashboardService {
 		 * @type {Array<E2EFillingStatusRow>}
 		 */
 		let rows = await Repository.queryRows(QUERIES.E2E_FILLING_STATUS_QUERY);
-		return rows.map( r=>new Object({
+		
+		return rows.map(r => new Object({
 			sequence: r.sequence,
-			uid : r.sequence_uid,
-			total_interaction : r.total_messages,
+			uid: r.sequence_uid,
+			total_interaction: r.total_messages,
 			operations_without_ia: r.total_messages - r.operation_has_ia,
-			operations_not_specified : r.total_messages -  r.operations_from_interface,
+			operations_not_specified: r.total_messages - r.operations_from_interface,
 			diagrams_notes_off: r.diagram_note_off,
 			total_components: r.total_apps,
-			components_not_from_catalog : r.total_apps - r.apps_from_catalog
+			components_not_from_catalog: r.total_apps - r.apps_from_catalog
+		}))
+	}
+	async getE2EFillingDetails(code) {
+		/**
+		 * @type {Array<E2EFillingStatusRow>}
+		 */
+		if (!code) throw Object.assign(Error(`Не указан код процесса`), { status: 400 });
+
+		let rows = await Repository.queryRows({ text: QUERIES.E2E_FILLING_DETAILS, values: [code] });
+		return rows;
+		
+		return rows.map(r => new Object({
+			sequence: r.sequence,
+			uid: r.sequence_uid,
+			total_interaction: r.total_messages,
+			operations_without_ia: r.total_messages - r.operation_has_ia,
+			operations_not_specified: r.total_messages - r.operations_from_interface,
+			diagrams_notes_off: r.diagram_note_off,
+			total_components: r.total_apps,
+			components_not_from_catalog: r.total_apps - r.apps_from_catalog
 		}))
 	}
 }
