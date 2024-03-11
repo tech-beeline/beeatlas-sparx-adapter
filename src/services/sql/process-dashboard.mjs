@@ -45,7 +45,7 @@ const E2E_FILLING_STATUS_QUERY = `${E2E_CTE},  cnt_wrong_spec as (
 	left join t_connectortag ia_tag on ia_tag.elementid=msg.connector_id and ia_tag.property='InterfaceAgreement'
 	group by d_tree.diagram_id
 ), note_off as (
-	select d_tree.diagram_id, count( position( 'ShowSN=1' in coalesce(d.pdata, '') ) = 0) as cnt
+	select d_tree.diagram_id, count( case when position( 'ShowSN=1' in coalesce(d.pdata, '') ) = 0 then 1 else null end) as cnt
 	from d_tree
 	join t_diagram d on d_tree.child_diagram_id = d.diagram_id
 	group by d_tree.diagram_id
