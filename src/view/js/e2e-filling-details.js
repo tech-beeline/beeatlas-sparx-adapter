@@ -22,6 +22,6 @@ root.render(<div><div>Детальная информация о включен�
 
 fetch(`/api/process-filling/${location.pathname.split('/').at(-2)}/details`).then(async res => {
     let data = await res.json();
-    note_off_details.setData({ data: data });
+    root.render(<TreeTable data={data} columns={COLUMNS_DEFINITION} />);
 })
 
