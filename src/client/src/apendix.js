@@ -1,34 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
 import App2 from './App2';
-import E2EFillingStatus from './Components/e2e-filling-status';
 import reportWebVitals from './reportWebVitals';
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-
-root.render(
-  <Router>
-    <Routes>
-      <Route path="/" element={<App />} />
-      <Route path="/app2" element={<App2 />} />
-      <Route path="/e2e-filling-status" element={<E2EFillingStatus />} />
-    </Routes>
-  </Router>,
-  document.getElementById("root")
-)
-/*
 root.render(
   <React.StrictMode>
-    <App />
+    <App2 />
   </React.StrictMode>
 );
-*/
+
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
-

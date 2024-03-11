@@ -1,5 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
+import { NavLink } from "react-router-dom";
+
 
 function App() {
   function clickFn(msg){
@@ -12,6 +14,7 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
+        <NavLink to="/app2" target='_blank'>asd asd asd asd asddd</NavLink>
         <button onClick={clickFn}>Press me</button>
         <a
           className="App-link"
