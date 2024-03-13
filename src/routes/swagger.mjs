@@ -103,6 +103,23 @@ function schemaFromObject(o) {
 }
 
 class SwaggerDefinition {
+    static prepareContent(content, context) {
+        let examples = {}, schemas = {};
+        for (const content_type in content) {
+            const content_examples = content[content_type].examples;
+            for (const example_name in content_examples) {
+                let full_name = `${context}${example_name}Example`;
+                examples[full_name] = { value: content_examples[example_name] };
+                const { schema, refs } = schemaFromObject(content_examples[example_name]);
+                joinSchemas(schemas, refs);
+                // TODO поддержать несколько вариантов для разнотиповых примеров
+                content[content_type].schema = schema;
+                //set ref instead of value
+                content_examples[example_name] = { "$ref": `#/components/examples/${full_name}` };
+            }
+        }
+        return { examples, schemas };
+    }
     static load() {
         let swaggerApi = CAPABILITY_SWAGGER;
 
@@ -119,9 +136,20 @@ class SwaggerDefinition {
                 for (const method in methods) {
                     swaggerApi.paths[path][method] = methods[method];
                     swaggerApi.paths[path][method].tags = [tag.tag];
+                    if (methods[method].requestBody) {
+                        const { examples, schemas } = this.prepareContent(methods[method].requestBody.content, methods[method].operation.name + "Body")
+                        Object.assign(swaggerApi.components.examples, examples);
+                        Object.assign(swaggerApi.components.schemas, schemas);
+                    }
+
 
                     for (const response in methods[method].responses) {
                         for (const content_type in methods[method].responses[response].content) {
+                            const { examples, schemas } = this.prepareContent(methods[method].responses[response].content, methods[method].operation.name)
+                            Object.assign(swaggerApi.components.examples, examples);
+                            Object.assign(swaggerApi.components.schemas, schemas);
+                            /*
+                            
                             const response_examples = methods[method].responses[response].content[content_type].examples;
                             for (const example_name in response_examples) {
                                 let full_name = `${methods[method].operation.name}${example_name}Example`;
@@ -134,6 +162,7 @@ class SwaggerDefinition {
 
                                 response_examples[example_name] = { "$ref": `#/components/examples/${full_name}` }
                             }
+                            */
                         }
                     }
 

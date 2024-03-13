@@ -2,7 +2,12 @@ import express from 'express'
 import ApiRouter, { routeControllers } from './routes/index.mjs'
 import SwaggerDefinition from './routes/swagger.mjs';
 import SwaggerUI from 'swagger-ui-dist'
+import path from 'path'
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 export const app = express();
 
 const pathToSwaggerUi = SwaggerUI.absolutePath();
@@ -26,15 +31,18 @@ app.use('/swagger/capabilities-api.json', (request, response) => response.json(S
 
 let routes = routeControllers(SWAGGER_DEFINITION, { ifErrorMarkDepricated: true, logSwaggerDescription: true });
 
-const react = (req, res, next) => {
-    res.render('react', {
-        title: 'React Application',
-        layout: false
-    });
-};
+//app.use(express.static(path.join(__dirname, 'client/build')));
 
-app.get('/app', react);
-app.get('/app*', react);
+//app.use('/app', express.static('./src/client/build'));
+/*app.use('/*', (req, res) =>
+    res.sendFile(path.join(__dirname, 'client/build/index.html')));
+//app.use(express.static(path.join(__dirname, 'client/build')));
+/*app.get('/*', function (req, res) {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  });
+  */
+
+///app.get('/app*', react);
 
 app.use('/', routes);
 

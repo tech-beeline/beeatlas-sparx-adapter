@@ -4,12 +4,20 @@ import React, { useEffect, useState } from 'react';
 
 
 function E2EFillingStatus() {
-    const [e2eStatus, setE2eStatus] = useState({});
+    const [e2eStatus, setE2eStatus] = useState([]);
+    const update = async () => {
+        setE2eStatus([1, 2, 3]);
+        console.log('!!!!');
+    }
+
+    useEffect(() => {
+        update();
+    }, [])
 
 
     return (
         <div className="E2EFillingStatus">
-            <div>Идет загрузка данных</div>
+            data count = {e2eStatus.length}
         </div>
     );
 }
