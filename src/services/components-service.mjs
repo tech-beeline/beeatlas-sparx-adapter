@@ -70,7 +70,10 @@ class ComponentsService {
 			if (ea_container) {
 				//TODO Добавить обновление полей
 			} else
-				ea_container = await Repository.createObject({ package_id: container_package.package_id, name: "container", object_type: "Component", author: "FDM API", alias: container_to_set.code, version: container_to_set.version });
+				ea_container = await Repository.createObject({
+					package_id: container_package.package_id, name: "container", object_type: "Component", author: "FDM API", alias: container_to_set.code, version: container_to_set.version,
+					backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
+				});
 
 			if (!ea_container) {
 				throw Error(`faild whne update container [${container_to_set.code}]${container_to_set.name}`);
@@ -78,11 +81,14 @@ class ComponentsService {
 			await Repository.putConnector(ea_system.object_id, ea_container.object_id, 'Realisation');
 			//TODO Добавить обновление контейнера в выходных данных
 			for (let i_to_set of container_to_set.interfaces) {
-				let ea_interface = (await Repository.find(t_object, { package_id: interface_package.package_id, alias: i_to_set.code, object_type: 'Interface' })).find( r=>r);
+				let ea_interface = (await Repository.find(t_object, { package_id: interface_package.package_id, alias: i_to_set.code, object_type: 'Interface' })).find(r => r);
 				if (!ea_interface) {
-					ea_interface = await Repository.createObject({ package_id: interface_package.package_id, version: i_to_set.version, name: i_to_set.name, object_type: 'Interface', author: "FDM API", alias: i_to_set.code });
+					ea_interface = await Repository.createObject({
+						package_id: interface_package.package_id, version: i_to_set.version, name: i_to_set.name, object_type: 'Interface', author: "FDM API", alias: i_to_set.code,
+						backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
+					});
 				}
-				await Repository.putConnector( ea_container.object_id, ea_interface.object_id, 'Realisation');
+				await Repository.putConnector(ea_container.object_id, ea_interface.object_id, 'Realisation');
 			}
 		}
 		return;// TODO Подумать, надо ли возвращать обновленные данные, например, для передачи идентификаторов (ea_guid)
