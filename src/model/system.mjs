@@ -5,14 +5,14 @@ export class APIInterface {
     version;
     type;
     specification;
-    capability;
-    constructor({ name, code, version, type, specification, capability }) {
+    capabilityCode;
+    constructor({ name, code, version, type, specification, capabilityCode }) {
         this.name = name;
         this.code = code;
         this.version = version;
         this.type = type;
         this.specification = specification;
-        this.capability = capability;
+        this.capabilityCode = capabilityCode;
     }
 }
 export class Container {

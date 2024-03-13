@@ -89,6 +89,12 @@ class ComponentsService {
 					});
 				}
 				await Repository.putConnector(ea_container.object_id, ea_interface.object_id, 'Realisation');
+				console.log(i_to_set.capabilityCode);
+				let ea_tc = await Repository.objectByAlias(i_to_set.capabilityCode)
+				if (!ea_tc) {
+					throw Object.assign(Error(`TC с кодом ${i_to_set.capabilityCode} не найден`), { status: 406 });
+				}
+				await Repository.putConnector(ea_interface.object_id, ea_tc.object_id , 'Realisation');
 			}
 		}
 		return;// TODO Подумать, надо ли возвращать обновленные данные, например, для передачи идентификаторов (ea_guid)
