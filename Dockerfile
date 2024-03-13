@@ -4,6 +4,7 @@ COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
 RUN npm config set registry https://nexus.vimpelcom.ru/repository/proxy__npm__central/
 RUN npm config set @beeline:registry https://nexus.vimpelcom.ru/repository/npm-internal/
 RUN npm config set strict-ssl false
+RUN npm update
 
 RUN npm install --omit=dev && mv node_modules ../
 COPY . .
