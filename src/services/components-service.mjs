@@ -58,7 +58,7 @@ class ComponentsService {
 		/**
 		 * @type {t_object}
 		 */
-		let ea_system = await Repository.getObjectsByAlias(code).then(rows => rows.find(r => r));
+		let ea_system = await Repository.find(t_object, { alias: code, object_type: 'Component' }).then(rows => rows.find(r => r));
 		if (!ea_system) Object.assign(Error(`system with code ${code} not found`, { status: 404 }));
 
 		const system_package_id = ea_system.package_id;
@@ -71,12 +71,12 @@ class ComponentsService {
 				//TODO Добавить обновление полей
 			} else
 				ea_container = await Repository.createObject({
-					package_id: container_package.package_id, name: "container", object_type: "Component", author: "FDM API", alias: container_to_set.code, version: container_to_set.version,
+					package_id: container_package.package_id, name: container_to_set.name, object_type: "Component", author: "FDM API", alias: container_to_set.code, version: container_to_set.version,
 					backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 				});
 
 			if (!ea_container) {
-				throw Error(`faild whne update container [${container_to_set.code}]${container_to_set.name}`);
+				throw Error(`failed when update container [${container_to_set.code}]${container_to_set.name}`);
 			}
 			await Repository.putConnector(ea_system.object_id, ea_container.object_id, 'Realisation');
 			//TODO Добавить обновление контейнера в выходных данных
@@ -94,7 +94,7 @@ class ComponentsService {
 				if (!ea_tc) {
 					throw Object.assign(Error(`TC с кодом ${i_to_set.capabilityCode} не найден`), { status: 406 });
 				}
-				await Repository.putConnector(ea_interface.object_id, ea_tc.object_id , 'Realisation');
+				await Repository.putConnector(ea_interface.object_id, ea_tc.object_id, 'Realisation');
 			}
 		}
 		return;// TODO Подумать, надо ли возвращать обновленные данные, например, для передачи идентификаторов (ea_guid)

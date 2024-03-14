@@ -11,10 +11,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <NavLink to="/app2" target='_blank'>asd asd asd asd asddd</NavLink>
+        <NavLink to="/e2e-filling-status" target='_blank'>Статус заполнения Е2Е процессов</NavLink>
         <button onClick={clickFn}>Press me</button>
         <a
           className="App-link"

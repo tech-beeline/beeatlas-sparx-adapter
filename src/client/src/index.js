@@ -6,6 +6,7 @@ import App2 from './App2';
 import E2EFillingStatus from './Components/e2e-filling-status';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import E2EFillingDetails from './Components/e2e-filling-details.mjs';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -16,6 +17,7 @@ root.render(
       <Route path="/" element={<App />} />
       <Route path="/app2" element={<App2 />} />
       <Route path="/e2e-filling-status" element={<E2EFillingStatus />} />
+      <Route path="/e2e-filling-status/:code/details" element={<E2EFillingDetails />} />
     </Routes>
   </Router>,
   document.getElementById("root")

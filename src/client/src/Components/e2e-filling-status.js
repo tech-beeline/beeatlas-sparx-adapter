@@ -6,8 +6,9 @@ import React, { useEffect, useState } from 'react';
 function E2EFillingStatus() {
     const [e2eStatus, setE2eStatus] = useState([]);
     const update = async () => {
-        setE2eStatus([1, 2, 3]);
-        console.log('!!!!');
+        let response = await fetch('/api/process-filling')
+        let data = await response.json();
+        setE2eStatus(data);
     }
 
     useEffect(() => {
@@ -17,7 +18,23 @@ function E2EFillingStatus() {
 
     return (
         <div className="E2EFillingStatus">
-            data count = {e2eStatus.length}
+            <table>
+                <thead>
+                    <tr><th>№</th><th>Процесс</th><th>Выключены заметки</th><th>Всего компонент</th><th>Компоненты не из справочника</th><th>Всего взаимодействий</th>
+                    <th>Методы не из спецификации</th><th>Без IA</th>
+                    </tr>
+                </thead>
+                {e2eStatus.map((row,i) => <tr>
+                    <td>{i+1}</td>
+                    <td><NavLink to={row.uid + '/details'} target="_blank">{row.sequence}</NavLink></td>
+                    <td>{row.diagrams_notes_off}</td>
+                    <td>{row.total_components}</td>
+                    <td>{row.components_not_from_catalog}</td>
+                    <td>{row.total_interaction}</td>
+                    <td>{row.operations_not_specified}</td>
+                    <td>{row.operations_without_ia}</td>
+                </tr>)}
+            </table>
         </div>
     );
 }
