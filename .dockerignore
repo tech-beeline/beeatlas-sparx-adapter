@@ -27,3 +27,7 @@ data
 diagrams
 docker
 test
+sql
+pilot.mjs
+command
+show.ps1
