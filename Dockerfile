@@ -7,11 +7,10 @@ RUN npm config set strict-ssl false
 RUN npm update
 
 COPY package.json /usr/src/app
-RUN ls -a -lh *
 WORKDIR /usr/src/app/src/client
 COPY ./src/client/package.json  /usr/src/app/src/client
-COPY ./src/client/package-lock.json  /usr/src/app/src/client
 RUN npm install
+
 COPY ./src/client/src /usr/src/app/src/client/src
 COPY ./src/client/public /usr/src/app/src/client/public
 
