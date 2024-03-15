@@ -234,7 +234,7 @@ class ProcessDashboardService {
 		 * @type {Array<E2EFillingStatusRow>}
 		 */
 		let rows = await Repository.queryRows(QUERIES.E2E_FILLING_STATUS_QUERY);
-		
+
 		return rows.map(r => new Object({
 			sequence: r.sequence,
 			uid: r.sequence_uid,
@@ -253,8 +253,6 @@ class ProcessDashboardService {
 		if (!code) throw Object.assign(Error(`Не указан код процесса`), { status: 400 });
 
 		let rows = await Repository.queryRows({ text: QUERIES.E2E_FILLING_DETAILS, values: [code] });
-		return rows;
-		
 		return rows.map(r => new Object({
 			sequence: r.sequence,
 			uid: r.sequence_uid,
@@ -264,7 +262,10 @@ class ProcessDashboardService {
 			diagrams_notes_off: r.diagram_note_off,
 			total_components: r.total_apps,
 			components_not_from_catalog: r.total_apps - r.apps_from_catalog
-		}))
+		}));
+	}
+	async getDiagramComponentStatus(guid) {
+		return Repository.queryRows({ text: QUERIES.E2E_DIAGRAM_COMPONENT_STATUS, values: [guid] });
 	}
 }
 

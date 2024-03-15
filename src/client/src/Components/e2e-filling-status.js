@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 
 function E2EFillingStatus() {
-    const [e2eStatus, setE2eStatus] = useState([]);
+    const [e2eStatus, setE2eStatus] = useState(null);
     const update = async () => {
         let response = await fetch('/api/process-filling')
         let data = await response.json();
@@ -17,16 +17,16 @@ function E2EFillingStatus() {
 
 
     return (
-        <div className="E2EFillingStatus">
+        e2eStatus ? <div className="E2EFillingStatus">
             <table>
                 <thead>
                     <tr><th>№</th><th>Процесс</th><th>Выключены заметки</th><th>Всего компонент</th><th>Компоненты не из справочника</th><th>Всего взаимодействий</th>
-                    <th>Методы не из спецификации</th><th>Без IA</th>
+                        <th>Методы не из спецификации</th><th>Без IA</th>
                     </tr>
                 </thead>
-                {e2eStatus.map((row,i) => <tr>
-                    <td>{i+1}</td>
-                    <td><NavLink to={row.uid + '/details'} target="_blank">{row.sequence}</NavLink></td>
+                {e2eStatus.map((row, i) => <tr>
+                    <td>{i + 1}</td>
+                    <td><NavLink to={row.uid + '/details'}>{row.sequence}</NavLink></td>
                     <td>{row.diagrams_notes_off}</td>
                     <td>{row.total_components}</td>
                     <td>{row.components_not_from_catalog}</td>
@@ -35,7 +35,9 @@ function E2EFillingStatus() {
                     <td>{row.operations_without_ia}</td>
                 </tr>)}
             </table>
-        </div>
+        </div> : <div><dialog open>
+            <p style={{ fontSize: 30 }}>Загрузка данных</p>
+        </dialog></div>
     );
 }
 

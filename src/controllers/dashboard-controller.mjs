@@ -35,7 +35,15 @@ class DashboardController {
     }
     async getE2EFillingDetails(request, response) {
         try {
-            response.json(await processDashboardService.getE2EFillingDetails( request.params.code));
+            response.json(await processDashboardService.getE2EFillingDetails(request.params.code));
+        } catch (error) {
+            console.error(error)
+            response.status(500).send(error.message);
+        }
+    }
+    async getE2EDiagramComponentStatus(request, response) {
+        try {
+            response.json(await processDashboardService.getDiagramComponentStatus(request.params.code));
         } catch (error) {
             console.error(error)
             response.status(500).send(error.message);
