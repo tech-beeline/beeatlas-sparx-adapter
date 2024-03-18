@@ -1,19 +1,17 @@
 import { NavLink } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
 
-function LoadStatusDialog() {
-    const [loadStatus, setLoadStatus] = useState('Загрузка данных');
-    return <dialog open>
-        <p style={{ fontSize: 30 }}>{loadStatus}</p>
-    </dialog>;
-}
 
 function E2EFillingStatus() {
     const [e2eStatus, setE2eStatus] = useState(null);
+    const [loadStatus, setLoadStatus] = useState('Загрузка данных');
+
     const update = async () => {
         let response = await fetch('/api/process-filling');
         if (response.status !== 200) {
-
+            let body = await response.text();
+            setLoadStatus(`Ошибка при загрузке данных ${response.status} ${body}`)
+            return;
         }
         let data = await response.json();
         setE2eStatus(data);
@@ -22,7 +20,6 @@ function E2EFillingStatus() {
     useEffect(() => {
         update();
     }, [])
-
 
     return (
         e2eStatus ? <div className="E2EFillingStatus">
@@ -43,7 +40,9 @@ function E2EFillingStatus() {
                     <td>{row.operations_without_ia}</td>
                 </tr>)}
             </table>
-        </div> : <div><LoadStatusDialog></LoadStatusDialog></div>
+        </div> : <div><dialog open>
+            <p style={{ fontSize: 30 }}>{loadStatus}</p>
+        </dialog></div>
     );
 }
 
