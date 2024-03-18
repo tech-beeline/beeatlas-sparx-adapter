@@ -224,14 +224,14 @@ class Repository {
         await client.connect();
         try {
             await client.query('BEGIN');
-            for (const m of methods) {
+            for (const p of parameters) {
                 await client.query({
                     text:
                         `UPDATE t_operationparams SET
                             name = $2, type=$3, notes=$4, pos = $5
                         WHERE operationid=$1
                         `,
-                    values: [m.operationid, m.name, m.type, m.description, m.pos]
+                    values: [p.operationid, p.name, p.type, p.description, p.pos]
                 });
             }
             await client.query('COMMIT');

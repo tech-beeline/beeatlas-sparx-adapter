@@ -126,7 +126,8 @@ class InterfacesService {
             operationid: p.tobe.operationid,
             name: p.tobe.name,
             type: p.tobe.type,
-            description: p.tobe.description
+            description: p.tobe.description,
+            pos: p.tobe.pos
         })));
 
         //TODO Добавить удаление параметров у методов
