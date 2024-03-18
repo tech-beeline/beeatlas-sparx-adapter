@@ -4,13 +4,15 @@ import CAPABILITY_METHODS from './capabilities-routes.mjs';
 import COMPONENTS_METHODS from './components-routes.mjs';
 import TC_METHODS from './technical-capabilities-routes.mjs';
 import DASHBOARD_METHODS from './dashboard-routes.mjs';
+import INTERFACES_ROUTES from './interface-routes.mjs';
 
 
 export const CONTROLLERS = [
     CAPABILITY_METHODS,
     COMPONENTS_METHODS,
     TC_METHODS,
-    DASHBOARD_METHODS
+    DASHBOARD_METHODS,
+    INTERFACES_ROUTES
 ]
 
 function joinSchemas(target, source) {
@@ -145,6 +147,9 @@ class SwaggerDefinition {
 
                     for (const response in methods[method].responses) {
                         for (const content_type in methods[method].responses[response].content) {
+                            if( !methods[method].operation ){
+                                continue;
+                            }
                             const { examples, schemas } = this.prepareContent(methods[method].responses[response].content, methods[method].operation.name)
                             Object.assign(swaggerApi.components.examples, examples);
                             Object.assign(swaggerApi.components.schemas, schemas);

@@ -1,3 +1,29 @@
+export class APIMethodParameter {
+    name;
+    type;
+    description;
+    constructor({ name, type, description }) {
+        this.name = name;
+        this.type = type;
+        this.description = description;
+    }
+}
+
+export class APIMethod {
+    name;
+    returnType;
+    desciption;
+    /**
+     * @type {Array<APIMethodParameter>}
+     */
+    parameters = [];
+    constructor({ name, returnType, description, parameters }) {
+        this.name = name;
+        this.returnType = returnType;
+        this.desciption = description;
+        this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
+    }
+}
 
 export class APIInterface {
     name;
