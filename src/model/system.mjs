@@ -2,7 +2,7 @@ export class APIMethodParameter {
     name;
     type;
     description;
-    constructor({ name, type, description }) {
+    constructor({ name, type, description } = {}) {
         this.name = name;
         this.type = type;
         this.description = description;
@@ -17,7 +17,8 @@ export class APIMethod {
      * @type {Array<APIMethodParameter>}
      */
     parameters = [];
-    constructor({ name, returnType, description, parameters }) {
+
+    constructor({ name, returnType, description, parameters } = {}) {
         this.name = name;
         this.returnType = returnType;
         this.desciption = description;
@@ -32,13 +33,18 @@ export class APIInterface {
     type;
     specification;
     capabilityCode;
-    constructor({ name, code, version, type, specification, capabilityCode }) {
+    /**
+     * @type {APIMethod[]}
+     */
+    methods = [];
+    constructor({ name, code, version, type, specification, capabilityCode, methods } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
         this.type = type;
         this.specification = specification;
         this.capabilityCode = capabilityCode;
+        this.methods = methods ?? [];
     }
 }
 export class Container {
@@ -50,7 +56,7 @@ export class Container {
      * @type {APIInterface}
      */
     interfaces;
-    constructor({ name, code, version, tags, interfaces }) {
+    constructor({ name, code, version, tags, interfaces } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
@@ -76,7 +82,7 @@ export default class System {
      * @type {Container[]}
      */
     containers = [];
-    constructor({ name, code, version, tags, containers }) {
+    constructor({ name, code, version, tags, containers } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;

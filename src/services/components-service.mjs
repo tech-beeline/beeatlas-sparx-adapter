@@ -3,6 +3,7 @@ import t_connector from "../utils/ea-model/t_connector.mjs";
 import t_object from "../utils/ea-model/t_object.mjs";
 import t_package from "../utils/ea-model/t_package.mjs";
 import Repository from "../utils/ea-repo.mjs";
+import interfacesService from "./interfaces-service.mjs";
 import SYSTEM_QUERY from "./sql/systems-queries.mjs";
 
 
@@ -88,8 +89,10 @@ class ComponentsService {
 						backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 					});
 				}
+				console.info(`put methods`, i_to_set.methods)
+				await interfacesService.putMethods(i_to_set.code, i_to_set.methods);
+
 				await Repository.putConnector(ea_container.object_id, ea_interface.object_id, 'Realisation');
-				console.log(i_to_set.capabilityCode);
 				let ea_tc = await Repository.objectByAlias(i_to_set.capabilityCode)
 				if (!ea_tc) {
 					throw Object.assign(Error(`TC с кодом ${i_to_set.capabilityCode} не найден`), { status: 406 });
