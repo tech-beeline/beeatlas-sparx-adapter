@@ -85,10 +85,11 @@ function E2EFillingDiagramStatus() {
                 <table>
                     <caption><h4>Статус по вызовам на диаграмме (только для компонентов из каталога приложений)</h4></caption>
                     <thead>
-                        <tr> <th>Вызывающий компонент</th><th>Вызов</th><th>Вызываемый компонент</th><th>Метод из интерфейса</th><th>Ссылка на IA</th><th>Длительность</th></tr>
+                        <tr><th>№ </th> <th>Вызывающий компонент</th><th>Вызов</th><th>Вызываемый компонент</th><th>Метод из интерфейса</th><th>Ссылка на IA</th><th>Длительность</th></tr>
                     </thead>
                     <tbody>
-                        {messages.map(row => <tr className="hl-row">
+                        {messages.map((row,i) => <tr className="hl-row">
+                            <td>{i+1}</td>
                             <td>{row.client}</td>
                             <td>{row.message}</td>
                             <td>{row.server}</td>

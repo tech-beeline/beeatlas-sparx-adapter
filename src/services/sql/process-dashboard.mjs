@@ -35,7 +35,13 @@ with recursive d_refs as
 		from app_catalog
 		join t_object app on app.package_id=app_catalog.package_id and app.object_type='Component'
 		left join t_object i_provided on i_provided.parentid=app.object_id
-)
+), msg as ( select distinct connector.connector_id, connector.diagramid as diagram_id, connector.seqno, cl.name as client, connector.name as message, srv.name as server, op_tag.value as operation_guid, ia_tag.value as ia_path, connector.styleex
+	from t_connector connector
+		join app srv on srv.interface_id=connector.end_object_id or srv.component_id=connector.end_object_id
+		left join t_object cl on cl.object_id=connector.start_object_id
+		left join t_connectortag op_tag on op_tag.elementid=connector.connector_id and op_tag.property='operation_guid' 
+		left join t_connectortag ia_tag on ia_tag.elementid=connector.connector_id and op_tag.property='InterfaceAgreement' 
+	where connector.pdata4='0')
 `
 const TOTAL_CTE = `${COMMON_CTE}, app_party as (
 	select
@@ -61,14 +67,15 @@ const SEQUENCE_CTE = `${COMMON_CTE}, app_party as (
 		left join app on app.interface_id=p.object_id or app.component_id = p.object_id
 )
 `
-const E2E_FILLING_STATUS_QUERY = `${TOTAL_CTE},  cnt_wrong_spec as (
-	select d_tree.diagram_id, count(*) as total, count(op_uid.value) as has_op, count(ia_tag.value) as has_ia
-	from d_tree
-	join t_connector msg on  msg.diagramid=d_tree.child_diagram_id and msg.pdata4='0'
-	join app srv on srv.interface_id=msg.end_object_id
-	left join t_connectortag op_uid on op_uid.elementid=msg.connector_id and op_uid.property='operation_guid' 
-	left join t_connectortag ia_tag on ia_tag.elementid=msg.connector_id and ia_tag.property='InterfaceAgreement'
-	group by d_tree.diagram_id
+const E2E_FILLING_STATUS_QUERY = `${TOTAL_CTE}, msg_seq as (
+	select distinct 
+		connector_id, d_tree.diagram_id as diagram_id, seqno, client,  message,server, operation_guid,  ia_path, styleex 
+	from msg join d_tree on d_tree.child_diagram_id=msg.diagram_id
+),
+	cnt_wrong_spec as (
+	select msg_seq.diagram_id as diagram_id, count(*) as total, count(msg_seq.operation_guid) as has_op, count(msg_seq.ia_path) as has_ia
+	from msg_seq
+	group by msg_seq.diagram_id
 ), note_off as (
 	select d_tree.diagram_id, count( case when position( 'ShowSN=1' in coalesce(d.pdata, '') ) = 0 then 1 else null end) as cnt
 	from d_tree
@@ -92,13 +99,9 @@ where s.stereotype='e2e_diagram'
 
 const E2E_FILLING_DETAILS = `${SEQUENCE_CTE},
 cnt_wrong_spec as (
-	select d_tree.child_diagram_id as diagram_id, count(*) as total, count(op_uid.value) as has_op, count(ia_tag.value) as has_ia
-	from d_tree
-	join t_connector msg on  msg.diagramid=d_tree.child_diagram_id and msg.pdata4='0'
-	join app srv on srv.interface_id=msg.end_object_id
-	left join t_connectortag op_uid on op_uid.elementid=msg.connector_id and op_uid.property='operation_guid' 
-	left join t_connectortag ia_tag on ia_tag.elementid=msg.connector_id and ia_tag.property='InterfaceAgreement'
-	group by d_tree.child_diagram_id
+	select msg.diagram_id as diagram_id, count(*) as total, count(msg.operation_guid) as has_op, count(msg.ia_path) as has_ia
+	from msg
+	group by msg.diagram_id
 ), note_off as (
 	select d.diagram_id, position( 'ShowSN=1' in coalesce(d.pdata, '') ) = 0 as cnt
 	from  t_diagram d
@@ -124,9 +127,9 @@ from app_party
 	 where app_party.diagram_id in ( select diagram_id from t_diagram where ea_guid =$1) `;
 
 const E2E_DIAGRAM_MESSAGES = `${SEQUENCE_CTE}
-select msg.seqno, cl.name as client, msg.name as message, srv.name as server, op_tag.value as operation_guid, ia_tag.value as ip_path, msg.styleex
+select distinct msg.diagramid, msg.seqno, cl.name as client, msg.name as message, srv.name as server, op_tag.value as operation_guid, ia_tag.value as ip_path, msg.styleex
 	from t_connector msg
-		join app srv on srv.interface_id=msg.end_object_id
+		join app srv on srv.interface_id=msg.end_object_id or srv.component_id=msg.end_object_id
 		left join t_object cl on cl.object_id=msg.start_object_id
 		left join t_connectortag op_tag on op_tag.elementid=msg.connector_id and op_tag.property='operation_guid' 
 		left join t_connectortag ia_tag on ia_tag.elementid=msg.connector_id and op_tag.property='InterfaceAgreement' 
