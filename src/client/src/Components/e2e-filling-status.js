@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
+import './table.css'
 
 
 function E2EFillingStatus() {
@@ -29,7 +30,7 @@ function E2EFillingStatus() {
                         <th>Методы не из спецификации</th><th>Без IA</th>
                     </tr>
                 </thead>
-                {e2eStatus.map((row, i) => <tr>
+                {e2eStatus.map((row, i) => <tr className="hl-row">
                     <td>{i + 1}</td>
                     <td><NavLink to={row.uid + '/details'}>{row.sequence}</NavLink></td>
                     <td>{row.diagrams_notes_off}</td>

@@ -56,6 +56,7 @@ class ComponentsService {
 	async putSystem(code, system) {
 		if (!code) throw Object.assign(Error(`code is null`, { status: 406 }));
 		if (!system) throw Object.assign(Error(`System is null`, { status: 406 }));
+		if (system.code !== code) throw Object.assign(Error(`System code ${system.code} != ${code}`, { status: 406 }));
 		/**
 		 * @type {t_object}
 		 */

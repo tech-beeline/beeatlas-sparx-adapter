@@ -1,0 +1,7 @@
+.hl-row {
+    background-color: white;
+}
+
+.hl-row:hover {
+    background-color: lightgray;
+}

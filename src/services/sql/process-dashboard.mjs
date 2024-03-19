@@ -1,4 +1,4 @@
-const E2E_CTE = `
+const COMMON_CTE = `
 with recursive d_refs as
 (
 	select od.diagram_id,o.object_id, d.diagram_id as child_diagram_id
@@ -35,9 +35,11 @@ with recursive d_refs as
 		from app_catalog
 		join t_object app on app.package_id=app_catalog.package_id and app.object_type='Component'
 		left join t_object i_provided on i_provided.parentid=app.object_id
-), app_party as (
+)
+`
+const TOTAL_CTE = `${COMMON_CTE}, app_party as (
 	select
-		distinct d.name as diagram, d_tree.diagram_id as sequence_id, d_tree.child_diagram_id as diagram_id, coalesce(app.name,p.name ) as name, 
+		distinct d.name as diagram, d_tree.diagram_id as sequence_id, coalesce(app.name,p.name ) as name, 
 		app.name as app_name, coalesce( app.component_id, p.object_id) as object_id,
 		app.cmdb
 		from d_tree
@@ -47,7 +49,19 @@ with recursive d_refs as
 		left join app on app.interface_id=p.object_id or app.component_id = p.object_id
 )
 `
-const E2E_FILLING_STATUS_QUERY = `${E2E_CTE},  cnt_wrong_spec as (
+const SEQUENCE_CTE = `${COMMON_CTE}, app_party as (
+	select
+		distinct d.name as diagram, d_tree.child_diagram_id as diagram_id, coalesce(app.name,p.name ) as name, 
+		app.name as app_name, coalesce( app.component_id, p.object_id) as object_id,
+		app.cmdb
+		from d_tree
+		join t_diagram d on d.diagram_id=d_tree.child_diagram_id
+		join t_diagramobjects od on od.diagram_id= d_tree.child_diagram_id
+		join t_object p on p.object_id=od.object_id and object_type not in ( 'Note','Actor', 'MessageEndpoint' , 'InteractionOccurrence' ,'InteractionFragment', 'Object', 'Entity')
+		left join app on app.interface_id=p.object_id or app.component_id = p.object_id
+)
+`
+const E2E_FILLING_STATUS_QUERY = `${TOTAL_CTE},  cnt_wrong_spec as (
 	select d_tree.diagram_id, count(*) as total, count(op_uid.value) as has_op, count(ia_tag.value) as has_ia
 	from d_tree
 	join t_connector msg on  msg.diagramid=d_tree.child_diagram_id and msg.pdata4='0'
@@ -76,7 +90,7 @@ left join app_stat on app_stat.diagram_id=s.diagram_id
 where s.stereotype='e2e_diagram'
 `;
 
-const E2E_FILLING_DETAILS = `${E2E_CTE},
+const E2E_FILLING_DETAILS = `${SEQUENCE_CTE},
 cnt_wrong_spec as (
 	select d_tree.child_diagram_id as diagram_id, count(*) as total, count(op_uid.value) as has_op, count(ia_tag.value) as has_ia
 	from d_tree
@@ -103,10 +117,21 @@ left join cnt_wrong_spec on s.diagram_id=cnt_wrong_spec.diagram_id
 left join note_off on s.diagram_id=note_off.diagram_id
 left join app_stat on app_stat.diagram_id=s.diagram_id
 where d_tree.diagram_id in ( select diagram_id from t_diagram where ea_guid=$1)`;
-const E2E_DIAGRAM_COMPONENT_STATUS = `${E2E_CTE}
+const E2E_DIAGRAM_COMPONENT_STATUS = `${SEQUENCE_CTE}
 select app_party.app_name, p.object_type , p.ea_guid, app_party.cmdb, p.name
 from app_party 
 	join t_object p on p.object_id=app_party.object_id
-	 where app_party.diagram_id in ( select diagram_id from t_diagram where ea_guid =$1) `
+	 where app_party.diagram_id in ( select diagram_id from t_diagram where ea_guid =$1) `;
 
-export default { E2E_FILLING_STATUS_QUERY, E2E_FILLING_DETAILS, E2E_DIAGRAM_COMPONENT_STATUS }
+const E2E_DIAGRAM_MESSAGES = `${SEQUENCE_CTE}
+select msg.seqno, cl.name as client, msg.name as message, srv.name as server, op_tag.value as operation_guid, ia_tag.value as ip_path, msg.styleex
+	from t_connector msg
+		join app srv on srv.interface_id=msg.end_object_id
+		left join t_object cl on cl.object_id=msg.start_object_id
+		left join t_connectortag op_tag on op_tag.elementid=msg.connector_id and op_tag.property='operation_guid' 
+		left join t_connectortag ia_tag on ia_tag.elementid=msg.connector_id and op_tag.property='InterfaceAgreement' 
+	where msg.diagramid in ( select diagram_id from t_diagram where ea_guid =$1)
+	and msg.pdata4='0'
+order by msg.seqno`
+
+export default { E2E_FILLING_STATUS_QUERY, E2E_FILLING_DETAILS, E2E_DIAGRAM_COMPONENT_STATUS, E2E_DIAGRAM_MESSAGES }

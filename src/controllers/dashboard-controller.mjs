@@ -41,9 +41,25 @@ class DashboardController {
             response.status(500).send(error.message);
         }
     }
+    async getDiagramInfo(request, response) {
+        try {
+            response.json(await processDashboardService.getDiagramInfo(request.params.code));
+        } catch (error) {
+            console.error(error)
+            response.status(500).send(error.message);
+        }
+    }
     async getE2EDiagramComponentStatus(request, response) {
         try {
             response.json(await processDashboardService.getDiagramComponentStatus(request.params.code));
+        } catch (error) {
+            console.error(error)
+            response.status(500).send(error.message);
+        }
+    }
+    async getE2EDiagramMessagesStatus(request, response) {
+        try {
+            response.json(await processDashboardService.getDiagramMessagesStatus(request.params.code));
         } catch (error) {
             console.error(error)
             response.status(500).send(error.message);

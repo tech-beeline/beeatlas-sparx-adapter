@@ -264,8 +264,14 @@ class ProcessDashboardService {
 			components_not_from_catalog: r.total_apps - r.apps_from_catalog
 		}));
 	}
+	async getDiagramInfo(guid) {
+		return Repository.queryRows({ text: 'select name, notes as description, ea_guid from t_diagram where ea_guid=$1', values: [guid] }).then( rows=>rows.find( row=>row) );
+	}
 	async getDiagramComponentStatus(guid) {
 		return Repository.queryRows({ text: QUERIES.E2E_DIAGRAM_COMPONENT_STATUS, values: [guid] });
+	}
+	async getDiagramMessagesStatus(guid) {
+		return Repository.queryRows({ text: QUERIES.E2E_DIAGRAM_MESSAGES, values: [guid] });
 	}
 }
 

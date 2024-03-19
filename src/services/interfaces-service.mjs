@@ -47,7 +47,7 @@ class InterfacesService {
      * @param {string} code 
      * @param {Array<APIMethod>} methods 
      */
-    async putMethods(code, methods) {
+    async putMethods(code, methods, apiInterface = { code: code }) {
         let methods_map = {};
         const i = await this.#interfaceByAlias(code);
 
