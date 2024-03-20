@@ -38,7 +38,7 @@ const COMPONENTS_METHODS = {
                         content: {
                             "application/json": {
                                 examples: {
-                                    "OK": []
+                                    "OK": SYSTEM_EXAMPLES.LIST_SAMPLE
                                 }
                             }
                         }

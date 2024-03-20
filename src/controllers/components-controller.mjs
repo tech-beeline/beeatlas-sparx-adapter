@@ -20,7 +20,7 @@ class ComponentsController {
     }
     async getSystemList(request, response) {
         try {
-            throw Error('not imlemented');
+            response.json(await componentsService.getSystemList())
         } catch (error) {
             processError(error, response);
         }

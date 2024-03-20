@@ -1,15 +1,31 @@
-const QUERIES = {
-    QUERY_SYSTEM_REALIZATION : `select sys.name as system, sys.alias as system_cmdb,  sys.version as sys_version,
-    container.name as container, container.alias as container_code, container.version as container_version,
-    i.name as interface,i.alias as interface_code, i.version as interface_version,
-    tc.name as capability, tc.alias as tc_code
-    from t_object sys
-        left join t_connector s2c on s2c.start_object_id = sys.object_id and connector_type='Realisation'
-        left join t_object container on container.object_id=s2c.end_object_id
-        left join t_connector c2i on c2i.start_object_id=container.object_id
-        left join t_object i on i.object_id=c2i.end_object_id
-        left join t_connector i2tc on i2tc.start_object_id=i.object_id
-        left join t_object tc on tc.object_id=i2tc.end_object_id
-    where sys.alias=$1 and sys.object_type='Component'`
-}
-export default QUERIES;
+import applicationCatalog from "./application-catalog.mjs";
+
+
+
+const SYSTEM_REALIZATION_LIST = `with recursive app_catalog as (
+        select package_id, package_id as parent_id, name , name::text as "fullName", ea_guid
+            from t_package where ea_guid='${applicationCatalog.APP_CATALOG_ROOT}'
+        union distinct
+        select c.package_id, p.parent_id, c.name, p."fullName"::text || '/' || c.name, c.ea_guid
+            from app_catalog p
+            join t_package c on c.parent_id=p.package_id
+    ), rel as ( select * from t_connector r where r.connector_type='Realisation')
+    select 
+    cat.ea_guid as pguid, cat.name as package, cat."fullName" || '/' || app.name as "fullName", app.author,
+    app.name as system, app.alias as cmdb, app.version as sys_version, app.note as sys_description, app.ea_guid,
+    container.name as container, container.alias as container_code, container.version as container_version, container.note as container_description,
+    i.name as interface, i.alias as interface_code, i.version as interface_version, i.note as interface_description, api_url.value as api_url
+    from app_catalog cat
+    join t_object app on app.package_id=cat.package_id and object_type='Component' and alias is not null
+    left join rel on rel.start_object_id=app.object_id
+        left join t_object container on rel.end_object_id=container.object_id and container.object_type='Component' and container.alias is not null and container.stereotype='${applicationCatalog.CONTAINER_STEREOTYPE}'
+        left join rel irel on irel.start_object_id=rel.end_object_id
+        left join t_object i on i.object_id=irel.end_object_id and i.object_type='Interface' and i.alias is not null and i.alias <> ''
+        left join t_objectproperties api_url on api_url.object_id=i.object_id and api_url.property='${applicationCatalog.API_SPECIFICATION_URL_TAG}'
+    `;
+const SYSTEM_REALIZATION_BY_CODE = `${SYSTEM_REALIZATION_LIST}
+    where app.alias=$1
+    `
+
+
+export default { SYSTEM_REALIZATION_LIST, SYSTEM_REALIZATION_BY_CODE };

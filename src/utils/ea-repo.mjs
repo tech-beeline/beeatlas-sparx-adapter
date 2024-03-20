@@ -63,7 +63,7 @@ class Repository {
     async objectByAlias(alias) {
         return this.getObjectsByAlias(alias).then(rows => rows.find(v => true));
     }
-    async create(type, value) {
+    async insert(type, value) {
         if (!(value instanceof type)) value = new type(value);
         if (value.beforeCreate) value.beforeCreate();
 
@@ -77,6 +77,18 @@ class Repository {
         if (res.rowCount)
             return new type(res.rows[0]);
     }
+    async update(type, value, condition) {
+        if (!condition) throw Error('update condition is null ');
+        let field_values = Object.entries(value).filter(([k, v]) => v);
+        let condition_list = Object.entries(condition);
+        const text = `UPDATE ${type.name} SET ${field_values.map(([k, v], i) => `${k} = $${i + 1}`).join(', ')} WHERE ${Object.entries(condition).map(([k, v], i) => `${k} = $${i + 1 + field_values.length}`).join(' AND ')}`;
+        return this.queryRows({ text: text, values: [...field_values.map(([k, v]) => v), ...condition_list.map(([k, v]) => v)] });
+    }
+
+    async delete(type, condition) {
+        throw Error('delete from ea repo is not imlemented');
+    }
+
     async find(type, condition) {
         const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r)));
@@ -86,7 +98,7 @@ class Repository {
      * @param {t_object} obj 
      */
     async createObject(obj) {
-        return this.create(t_object, obj);
+        return this.insert(t_object, obj);
     }
     /**
      * 
@@ -114,7 +126,7 @@ class Repository {
                 rouestyle: 3
             }, additionalProperties ?? {}, connector_properties)
 
-            return await this.create(t_connector, connector_properties);
+            return await this.insert(t_connector, connector_properties);
         }
         return connector;
     }
@@ -122,7 +134,7 @@ class Repository {
         /**
          * @type {t_package}
          */
-        let new_pkg = await this.create(t_package, pkg);
+        let new_pkg = await this.insert(t_package, pkg);
         const obj = this.createObject({ name: new_pkg.name, ea_guid: new_pkg.ea_guid, object_type: 'Package', package_id: pkg.parent_id, author: 'FDM API', version: '1.0', pdata1: new_pkg.package_id })
         return new_pkg;
     }
@@ -134,6 +146,30 @@ class Repository {
         await client.connect();
         try {
             await client.query('BEGIN');
+            await client.query(
+                {
+                    text: `UPDATE t_connector SET name='[REMOVED] ' || name
+                    where connector_id in ( 
+                        select ot.elementid
+                        from  t_connectortag ot 
+                        join t_operation m on m.ea_guid=ot.value and ot.property='operation_guid' 
+                        where m.operationid in (${Array.from({ length: methodIds.length }, (_, i) => `$${i + 1}`)}))`,
+                    values: methodIds
+                });
+
+            await client.query(
+                {
+                    text: `
+                    DELETE from t_connectortag 
+                        where t_connectortag.elementid in ( 
+                        select ot.elementid
+                        from  t_connectortag ot 
+                        join t_operation m on m.ea_guid=ot.value and ot.property='operation_guid' 
+                        where m.operationid in (${Array.from({ length: methodIds.length }, (_, i) => `$${i + 1}`)}) ) 
+                            and t_connectortag.property='operation_guid'`,
+                    values: methodIds
+                });
+
             await client.query(
                 {
                     text: `DELETE FROM t_operationparams where operationid in (${Array.from({ length: methodIds.length }, (_, i) => `$${i + 1}`)})`,

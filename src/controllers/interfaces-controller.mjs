@@ -37,7 +37,7 @@ class InterfacesController {
     }
     async getMethods(req, res, next) {
         try {
-            res.json(await interfacesService.getMethods(req.params.code));
+            res.json(await interfacesService.getMethodsByInterfaceCode(req.params.code));
         } catch (error) {
             processError(error, res);
         }

@@ -18,23 +18,24 @@ class InterfacesService {
             throw Object.assign(Error(`Интефрейс с кодом ${alias} не найден`), { status: 404 });
         return i;
     }
-    async #rawMethodsByInterfaceCode(code) {
-        const i = await this.#interfaceByAlias(code);
-        const raw = await Repository.find(t_operation, { object_id: i.object_id });
-
-        let methods = (await Repository.find(t_operation, { object_id: i.object_id })).reduce((acc, v) => Object.assign(acc, { [v.operationid]: v }), {});
-        (await Repository.queryRows({ text: INTERFACES_QUERIES.METHOD_PARAMTER_QUERY, values: [i.object_id] })).forEach(p => {
+    async #rawMethodsByInterfaceId(id) {
+        let methods = (await Repository.find(t_operation, { object_id: id })).reduce((acc, v) => Object.assign(acc, { [v.operationid]: v }), {});
+        (await Repository.queryRows({ text: INTERFACES_QUERIES.METHOD_PARAMTER_QUERY, values: [id] })).forEach(p => {
             methods[p.operationid].parameters = methods[p.operationid].parameters ?? [];
             methods[p.operationid].parameters.push(p);
         });
         return Object.values(methods);
+    }
+    async #rawMethodsByInterfaceCode(code) {
+        const i = await this.#interfaceByAlias(code);
+        return this.#rawMethodsByInterfaceId(i.object_id);
     }
     /**
      * 
      * @param {string} code 
      * @returns {Promise<Array<APIMethod>}
      */
-    async getMethods(code) {
+    async getMethodsByInterfaceCode(code) {
         return (await this.#rawMethodsByInterfaceCode(code))
             .map(m => new APIMethod({
                 name: m.name, returnType: m.type, description: m.notes, parameters:
@@ -65,10 +66,13 @@ class InterfacesService {
             methods_map[m.name].tobe = m;
         }
 
+        // TODO Подумать, что делать с удалением методов
+        
         let methods_to_remove = Object.values(methods_map).filter(v => !v.tobe);
         if (methods_to_remove.length > 0) {
             await Repository.deleteMethods(methods_to_remove.map(m => m.asis.operationid))
         }
+        //*/
 
         let methods_to_update = Object.values(methods_map)
             .filter(v => v.asis && v.tobe);
