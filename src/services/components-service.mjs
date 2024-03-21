@@ -131,7 +131,7 @@ class ComponentsService {
 					 * @type {t_objectproperties}
 					 */
 					const ea_api_url = await Repository.find(t_objectproperties, { object_id: ea_interface.object_id, property: applicationCatalog.API_SPECIFICATION_URL_TAG }).then(rows => rows.find(v => v));
-					if (!ea_api_url) {
+					if (ea_api_url) {
 						if (ea_api_url.value !== i_to_set.api_url) {
 							if (i_to_set.api_url)
 								await Repository.update(t_objectproperties, { value: i_to_set.api_url }, { object_id: ea_interface.object_id, property: applicationCatalog.API_SPECIFICATION_URL_TAG })
