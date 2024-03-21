@@ -39,6 +39,9 @@ class ComponentsService {
 	#addContainerFromRow(system, row) {
 		if (!row.container_code)
 			return;
+		/**
+		 * @type {Container}
+		 */
 		let container = system.containerByCode(row.container_code) ?? system.addContainer({
 			name: row.container,
 			code: row.container_code.split('.').find(v => v), version: row.container_version
@@ -47,7 +50,7 @@ class ComponentsService {
 			return;
 		let api = container.interfaceByCode(row.i_code) ?? container.addInterface({
 			name: row.interface,
-			code: row.interface_code.split('.').find(v => v), version: row.interface_version, api_url: row.api_url
+			code: row.interface_code.split('.').find(v => v), version: row.interface_version, ...row
 		});
 	}
 	async getSystemList() {

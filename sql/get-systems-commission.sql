@@ -12,14 +12,14 @@ with recursive app_catalog as (
         where r.connector_type='Realisation'
 )
     select 
-    cat.ea_guid as pguid, cat.name as package, cat."fullName" || '/' || app.name as "fullName", app.author,
+    cat.ea_guid as pguid, cat.name as package, cat."fullName" || '/' || app.name as "fullName", app.author, app.modifiedDate as "modifiedDate",  app.status,
     app.name as system, app.alias as cmdb, app.version as sys_version, app.note as sys_description, app.ea_guid,
     container.name as container, container.alias as container_code, container.version as container_version, container.note as container_description,
     i.name as interface, i.alias as interface_code, i.version as interface_version, i.note as interface_description, 
-    (select api_url.value from t_objectproperties api_url where api_url.object_id=i.object_id and api_url.property='api_url' limit 1) as api_url
+    (select api_url.value from t_objectproperties api_url where api_url.object_id=i.object_id and api_url.property='api_url' limit 1) as api_url,
+	(select alias from rel tc where tc.start_object_id=i.object_id and tc.stereotype='ArchiMate_TechnicalCapability' limit 1) as "capabilityCode"
     from app_catalog cat
     join t_object app on app.package_id=cat.package_id and object_type='Component' and alias is not null and stereotype is null
-    left join rel container on container.start_object_id=app.object_id and container.object_type='Component' and container.alias is not null and container.stereotype='${applicationCatalog.CONTAINER_STEREOTYPE}'
+    left join rel container on container.start_object_id=app.object_id and container.object_type='Component' and container.alias is not null and container.stereotype='C2'
         left join rel i on i.start_object_id=container.object_id and i.object_type='Interface' and i.alias is not null and i.alias <> ''
-        left join t_objectproperties api_url on api_url.object_id=i.object_id and api_url.property='api_url'
-		where app.alias='COMMISSION'
+		where app.alias='CMDB_B'
