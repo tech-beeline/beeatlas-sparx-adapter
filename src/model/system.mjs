@@ -33,17 +33,19 @@ export class APIInterface {
     type;
     api_url;
     capabilityCode;
+    description;
     /**
      * @type {APIMethod[]}
      */
     methods = [];
-    constructor({ name, code, version, type, api_url, capabilityCode, methods } = {}) {
+    constructor({ name, code, version, type, api_url, capabilityCode, methods, description } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
         this.type = type;
         this.api_url = api_url;
         this.capabilityCode = capabilityCode;
+        this.description = description;
         this.methods = methods ?? [];
     }
 }
@@ -52,16 +54,18 @@ export class Container {
     code;
     version;
     tags;
+    description;
     /**
-     * @type {APIInterface}
+     * @type {APIInterface[]}
      */
     interfaces;
-    constructor({ name, code, version, tags, interfaces } = {}) {
+    constructor({ name, code, version, tags, interfaces, description } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
         this.tags = tags;
         this.interfaces = interfaces;
+        this.description = description;
     }
     addInterface(i) {
         if (!(i instanceof APIInterface)) i = new APIInterface(i)
@@ -93,7 +97,7 @@ export default class System {
         this.tags = tags;
         this.containers = containers ?? this.containers;
         this.author = author;
-        this.description =  description;
+        this.description = description;
         this.ea_guid = ea_guid;
         this.fullName = fullName
     }

@@ -45,6 +45,12 @@ class InterfacesService {
 
     /**
      * 
+     * @param {APIMethod[]} methods 
+     */
+    async insertMethods( methods ) {
+    }
+    /**
+     * 
      * @param {string} code 
      * @param {Array<APIMethod>} methods 
      */
@@ -66,13 +72,12 @@ class InterfacesService {
             methods_map[m.name].tobe = m;
         }
 
-        // TODO Подумать, что делать с удалением методов
+        // [ ] Подумать, что делать с удалением методов
         
         let methods_to_remove = Object.values(methods_map).filter(v => !v.tobe);
         if (methods_to_remove.length > 0) {
             await Repository.deleteMethods(methods_to_remove.map(m => m.asis.operationid))
         }
-        //*/
 
         let methods_to_update = Object.values(methods_map)
             .filter(v => v.asis && v.tobe);
@@ -85,7 +90,6 @@ class InterfacesService {
             operationid: m.asis.operationid,
             name: m.tobe.name, type: m.tobe.returnType, description: m.tobe.description, pos: m.tobe.pos
         })));
-
 
         let methods_to_insert = Object.values(methods_map).filter(v => !v.asis);
         let inserted_methods = await Repository.insertMethods(methods_to_insert.map(m => ({
@@ -135,7 +139,7 @@ class InterfacesService {
             pos: p.tobe.pos
         })));
 
-        //TODO Добавить удаление параметров у методов
+        //[ ] Добавить удаление параметров у методов
 
     }
 }

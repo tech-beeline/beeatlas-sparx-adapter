@@ -96,7 +96,7 @@ const COMPONENTS_METHODS = {
                     content: {
                         "application/json": {
                             examples: {
-                                "OK": SYSTEM_EXAMPLES.SIMPLE_SYSTEM
+                                "OK": SYSTEM_EXAMPLES.OTHER_SIMPLE_SAMPLE
                             }
                         }
                     }

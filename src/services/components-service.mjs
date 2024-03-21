@@ -97,11 +97,15 @@ class ComponentsService {
 			let ea_container = await Repository.objectByAlias(container_to_set.code);
 			if (ea_container) {
 				if (ea_container.name !== container_to_set.name)
-					await Repository.update(t_object, { name: container_to_set.name, stereotype: applicationCatalog.CONTAINER_STEREOTYPE }, { object_id: ea_container.object_id })
-				//TODO Добавить обновление других полей
+					await Repository.update(t_object, {
+						name: container_to_set.name, stereotype: applicationCatalog.CONTAINER_STEREOTYPE,
+						note: container_to_set.description
+					}, { object_id: ea_container.object_id })
+				//[x] Добавить обновление других полей
 			} else
 				ea_container = await Repository.createObject({
 					package_id: container_package.package_id, name: container_to_set.name, object_type: "Component", author: "FDM API", alias: container_to_set.code, version: container_to_set.version,
+					note: container_to_set.description,
 					stereotype: applicationCatalog.CONTAINER_STEREOTYPE,
 					backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 				});
@@ -111,13 +115,14 @@ class ComponentsService {
 			}
 			await Repository.putConnector(ea_system.object_id, ea_container.object_id, 'Realisation');
 
-			//TODO Добавить обновление контейнера в выходных данных
+			//[ ] Добавить обновление контейнера в выходных данных
 
 			for (let i_to_set of container_to_set.interfaces) {
 				let ea_interface = (await Repository.find(t_object, { package_id: interface_package.package_id, alias: i_to_set.code, object_type: 'Interface' })).find(r => r);
 				if (!ea_interface) {
 					ea_interface = await Repository.createObject({
 						package_id: interface_package.package_id, version: i_to_set.version, name: i_to_set.name, object_type: 'Interface', author: "FDM API", alias: i_to_set.code,
+						note: i_to_set.description,
 						backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 					});
 					if (i_to_set.api_url) {
@@ -125,7 +130,9 @@ class ComponentsService {
 					}
 				} else {
 					if (ea_interface.name !== i_to_set.name || ea_interface.version !== i_to_set.version) {
-						await Repository.update(t_object, { name: i_to_set.name, version: i_to_set.version }, { object_id: ea_interface.object_id })
+						await Repository.update(t_object, {
+							name: i_to_set.name, version: i_to_set.version, note : i_to_set.description
+						}, { object_id: ea_interface.object_id })
 					}
 					/**
 					 * @type {t_objectproperties}
@@ -153,7 +160,7 @@ class ComponentsService {
 				await Repository.putConnector(ea_interface.object_id, ea_tc.object_id, 'Realisation');
 			}
 		}
-		return;// TODO Подумать, надо ли возвращать обновленные данные, например, для передачи идентификаторов (ea_guid)
+		return;// [ ] Подумать, надо ли возвращать обновленные данные, например, для передачи идентификаторов (ea_guid)
 	}
 }
 

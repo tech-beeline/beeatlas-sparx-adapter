@@ -114,7 +114,7 @@ class SwaggerDefinition {
                 examples[full_name] = { value: content_examples[example_name] };
                 const { schema, refs } = schemaFromObject(content_examples[example_name]);
                 joinSchemas(schemas, refs);
-                // TODO поддержать несколько вариантов для разнотиповых примеров
+                // [ ] поддержать несколько вариантов для разнотиповых примеров
                 content[content_type].schema = schema;
                 //set ref instead of value
                 content_examples[example_name] = { "$ref": `#/components/examples/${full_name}` };
