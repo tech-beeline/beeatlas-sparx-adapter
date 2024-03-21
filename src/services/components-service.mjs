@@ -37,10 +37,18 @@ class ComponentsService {
 		return Repository.queryRows(ALL_COMPONENTS_QUERY);
 	}
 	#addContainerFromRow(system, row) {
-		let container = system.containerByCode(row.container_code) ?? system.addContainer({ name: row.container, code: row.container_code, version: row.container_version });
+		if (!row.container_code)
+			return;
+		let container = system.containerByCode(row.container_code) ?? system.addContainer({
+			name: row.container,
+			code: row.container_code.split('.').find(v => v), version: row.container_version
+		});
 		if (!row.interface_code)
 			return;
-		let api = container.interfaceByCode(row.i_code) ?? container.addInterface({ name: row.interface, code: row.interface_code, version: row.interface_version, api_url: row.api_url });
+		let api = container.interfaceByCode(row.i_code) ?? container.addInterface({
+			name: row.interface,
+			code: row.interface_code.split('.').find(v => v), version: row.interface_version, api_url: row.api_url
+		});
 	}
 	async getSystemList() {
 		let systems = {}
@@ -48,9 +56,11 @@ class ComponentsService {
 			/**
 			 * @type {System}
 			 */
-			let system = systems[row.cmdb] = systems[row.cmdb] ?? new System(Object.assign({ name: row.system, code: row.cmdb }, row));
-			if (!row.container_code)
-				continue;
+			let system = systems[row.cmdb] = systems[row.cmdb] ?? new System(Object.assign({
+				name: row.system, code: row.cmdb,
+				description: row.sys_description
+			}, row));
+
 			this.#addContainerFromRow(system, row);
 		}
 		return Object.values(systems);
@@ -63,7 +73,7 @@ class ComponentsService {
 		 */
 		let system = null;
 		for (const row of await Repository.queryRows({ text: SYSTEM_QUERY.SYSTEM_REALIZATION_BY_CODE, values: [code] })) {
-			system = system ?? new System({ name: row.system, code: row.cmdb, version: row.sys_version, ...row });
+			system = system ?? new System({ name: row.system, code: row.cmdb, version: row.sys_version, description: row.sys_description, ...row });
 			/**
 			 * @type {Container}
 			 */
@@ -131,7 +141,7 @@ class ComponentsService {
 				} else {
 					if (ea_interface.name !== i_to_set.name || ea_interface.version !== i_to_set.version) {
 						await Repository.update(t_object, {
-							name: i_to_set.name, version: i_to_set.version, note : i_to_set.description
+							name: i_to_set.name, version: i_to_set.version, note: i_to_set.description
 						}, { object_id: ea_interface.object_id })
 					}
 					/**

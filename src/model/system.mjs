@@ -81,16 +81,19 @@ export default class System {
     name;
     code;
     version;
+    package;
     tags;
     author;
     description;
     ea_guid;
     fullName;
+    status;
+    modifiedDate;
     /**
      * @type {Container[]}
      */
     containers = [];
-    constructor({ name, code, version, tags, containers, author, description, ea_guid, fullName } = {}) {
+    constructor({ name, code, version, tags, containers, author, description, ea_guid, fullName, packageName, status, modifiedDate } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
@@ -99,7 +102,10 @@ export default class System {
         this.author = author;
         this.description = description;
         this.ea_guid = ea_guid;
-        this.fullName = fullName
+        this.fullName = fullName;
+        this.package = packageName;
+        this.status = status;
+        this.modifiedDate = modifiedDate;
     }
     /**
      * 

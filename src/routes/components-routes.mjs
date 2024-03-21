@@ -85,8 +85,8 @@ const COMPONENTS_METHODS = {
                         description: "Код системы",
                         required: true,
                         examples: {
-                            "SYSTEM A": {
-                                value: "CMDB_A"
+                            "SYSTEM B": {
+                                value: "CMDB_B"
                             }
                         }
                     }

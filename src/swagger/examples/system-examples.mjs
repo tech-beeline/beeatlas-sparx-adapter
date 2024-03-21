@@ -10,7 +10,17 @@ const SIMPLE_SYSTEM = new System({
                 new APIInterface({
                     name: "IMyRestAPI", code: "IMYAPI.CONTAINER.CMDB_A", version: '1.0', capabilityCode: 'BC-ХХХХХ',
                     api_url: "https://dashboard-dev-eafdmmart.apps.yd-m6-kt22.vimpelcom.ru/swagger/capabilities-api.json", methods: [
-                        new APIMethod({ name: 'GET /api/v1/systems/{code}', description: 'ПОлучение системы по коду', returnType: 'System', parameters: [{ name: 'code', type: 'string' }] })
+                        {
+                            name: 'GET /api/v1/systems/{code}',
+                            description: 'ПОлучение системы по коду',
+                            returnType: 'System', parameters: [{ name: 'code', type: 'string' }]
+                        },
+                        {
+                            name: 'GET /api/v1/systems/{code}/interfaces',
+                            description: 'ПОлучение системы по коду',
+                            returnType: 'System', parameters: [
+                                { name: 'code', type: 'string' }]
+                        }
                     ]
                 })
             ]
@@ -21,11 +31,21 @@ const OTHER_SIMPLE_SAMPLE = new System({
     description: "this is description",
     containers: [
         new Container({
-            name: "Контейнер Системы А", code: 'CONTAINER.CMDB_B', version: '1.0', interfaces: [
+            name: "Контейнер Системы B", code: 'CONTAINER.CMDB_B', version: '1.0', interfaces: [
                 new APIInterface({
                     name: "IMyRestAPI", code: "IMYAPI.CONTAINER.CMDB_B", version: '1.0', capabilityCode: 'BC-ХХХХХ',
                     api_url: "https://dashboard-dev-eafdmmart.apps.yd-m6-kt22.vimpelcom.ru/swagger/capabilities-api.json", methods: [
-                        new APIMethod({ name: 'GET /api/v1/systems/{code}', description: 'ПОлучение системы по коду', returnType: 'System', parameters: [{ name: 'code', type: 'string' }] })
+                        {
+                            name: 'GET /api/v1/systems/{code}',
+                            description: 'ПОлучение системы по коду',
+                            returnType: 'System', parameters: [{ name: 'code', type: 'string' }]
+                        },
+                        {
+                            name: 'GET /api/v1/systems/{code}/interfaces',
+                            description: 'ПОлучение системы по коду',
+                            returnType: 'System', parameters: [
+                                { name: 'code', type: 'string' }]
+                        }
                     ]
                 })
             ]
