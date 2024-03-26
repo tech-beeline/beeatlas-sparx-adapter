@@ -40,7 +40,7 @@ with recursive d_refs as
 		join app srv on srv.interface_id=connector.end_object_id or srv.component_id=connector.end_object_id
 		left join t_object cl on cl.object_id=connector.start_object_id
 		left join t_connectortag op_tag on op_tag.elementid=connector.connector_id and op_tag.property='operation_guid' 
-		left join t_connectortag ia_tag on ia_tag.elementid=connector.connector_id and op_tag.property='InterfaceAgreement' 
+		left join t_connectortag ia_tag on ia_tag.elementid=connector.connector_id and ia_tag.property='InterfaceAgreement' 
 	where connector.pdata4='0')
 `
 const TOTAL_CTE = `${COMMON_CTE}, app_party as (
