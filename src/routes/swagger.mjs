@@ -5,6 +5,7 @@ import COMPONENTS_METHODS from './components-routes.mjs';
 import TC_METHODS from './technical-capabilities-routes.mjs';
 import DASHBOARD_METHODS from './dashboard-routes.mjs';
 import INTERFACES_ROUTES from './interface-routes.mjs';
+import E2E_PROCESS_ROUTES from './e2e-process-routes.mjs';
 
 
 export const CONTROLLERS = [
@@ -12,7 +13,8 @@ export const CONTROLLERS = [
     COMPONENTS_METHODS,
     TC_METHODS,
     DASHBOARD_METHODS,
-    INTERFACES_ROUTES
+    INTERFACES_ROUTES,
+    E2E_PROCESS_ROUTES
 ]
 
 function joinSchemas(target, source) {

@@ -41,11 +41,16 @@ class Repository {
     }
 
     async queryRows(sql) {
-        let client = new pg.Client(this.config);
-        await client.connect();
-        let rows = (await client.query(sql)).rows;
-        client.end();
-        return rows;
+        try {
+            let client = new pg.Client(this.config);
+            await client.connect();
+            let rows = (await client.query(sql)).rows;
+            client.end();
+            return rows;
+        } catch (error) {
+            console.log( sql?.text??sql );
+            throw error;
+        }
     }
     /**
      * 
