@@ -132,7 +132,7 @@ select distinct msg.diagramid, msg.seqno, cl.name as client, msg.name as message
 		join app srv on srv.interface_id=msg.end_object_id or srv.component_id=msg.end_object_id
 		left join t_object cl on cl.object_id=msg.start_object_id
 		left join t_connectortag op_tag on op_tag.elementid=msg.connector_id and op_tag.property='operation_guid' 
-		left join t_connectortag ia_tag on ia_tag.elementid=msg.connector_id and op_tag.property='InterfaceAgreement' 
+		left join t_connectortag ia_tag on ia_tag.elementid=msg.connector_id and ia_tag.property='InterfaceAgreement' 
 	where msg.diagramid in ( select diagram_id from t_diagram where ea_guid =$1)
 	and msg.pdata4='0'
 order by msg.seqno`

@@ -4,6 +4,7 @@ export class ProvidedInterface {
 export class Application {
     name;
     cmdb;
+    component_id;
     constructor(obj = {}) {
         for (const k in this) {
             this[k] = obj[k] ?? this[k];

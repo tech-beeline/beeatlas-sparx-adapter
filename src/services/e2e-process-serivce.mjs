@@ -19,7 +19,8 @@ class E2EProcessService {
                 }));
     }
 
-    buildMessageTree(messages) {
+
+    buildMessageTree(messages, diagram_map) {
         function searchContext(context, client_id) {
             while (context && context.server_id !== client_id) {
                 context = context.parent ? context.parent() : null;
@@ -27,21 +28,34 @@ class E2EProcessService {
             return context;
         }
         messages = messages.filter(m => m.message != 'use' && m.message != 'use()').sort((a, b) => a.seqno - b.seqno);
+
         let context = { client_id: 0, server_id: messages[0].client_id, messages: [] };
         let root = context;
         for (let msg of messages) {
+
+
+            let parent_context = searchContext(context, msg.client_id);
+
             if (msg.client_id === msg.server_id && !msg.operation_guid) {
                 context.messages.push({ type: "internalCall", message: msg.message })
                 continue;
             }
-            let parent_context = searchContext(context, msg.client_id);
+
             if (!parent_context) {
                 (context.failedMessages = context.failedMessages ?? []).push(msg);
                 continue;
             }
 
             if (parent_context.server_id === msg.client_id) {
-                let new_context = { ...msg, messages: [], parent: () => parent_context }
+                let child_diagram = msg.child_diagram_uid && msg.child_diagram_uid != msg.diagram_uid ? diagram_map[msg.child_diagram_uid] : null;
+
+                let new_context = { ...msg, messages: [], parent: () => parent_context, child_diagram_uid: msg.child_diagram_uid ?? undefined }
+
+                if (child_diagram) {
+                    child_diagram.parentMessages = child_diagram.parentMessages ?? [];
+                    child_diagram.parentMessages.push(new_context)
+                }
+
                 parent_context.messages.push(new_context);
                 if (msg.client_id !== msg.server_id)
                     context = new_context;
@@ -50,6 +64,9 @@ class E2EProcessService {
             throw Error('not implemented');
 
         }
+
+        //mergeCallInsideApplication( root.messages);
+
         return root.messages;
     }
     /**
@@ -68,10 +85,22 @@ class E2EProcessService {
         let application_map = {}
 
         for (const row of rows) {
+            row.validationError = [];
             const server = app_catalog.byObjectId(row.server_id);
-            if( server ){
-                if( !application_map[server.cmdb]) application_map[server.cmdb] = server;
-                row.server = { "$ref": `#/applications/${server.cmdb}`}
+            if (server) {
+                if (!application_map[server.cmdb]) application_map[server.cmdb] = server;
+                row.server = { "$ref": `#/applications/${server.cmdb}` }
+                row.server_id = server.component_id;
+            }
+            const client = app_catalog.byObjectId(row.client_id);
+            if (client) {
+                if (!application_map[client.cmdb]) application_map[client.cmdb] = client;
+                row.client = { "$ref": `#/applications/${client.cmdb}` };
+                row.client_id = client.component_id
+            }
+
+            if (server && !row.operation_guid) {
+                row.validationError.push(`Сообщение не связано с методом интерфейса`)
             }
 
             (diagram_map[row.diagram_uid] = diagram_map[row.diagram_uid] ?? { name: row.diagram, messages: [] }).messages.push(row);
@@ -80,14 +109,37 @@ class E2EProcessService {
         for (const uid in diagram_map) {
             if (uid === processUID) continue;
 
-            diagram_map[uid].messages = this.buildMessageTree(diagram_map[uid].messages)
+            diagram_map[uid].messages = this.buildMessageTree(diagram_map[uid].messages, diagram_map)
+        }
+
+        for (const uid in diagram_map) {
+            if (uid === processUID) continue;
+
+            for (const parent_message of diagram_map[uid].parentMessages ?? []) {
+                const income_operations = diagram_map[uid].messages.filter(m => m.operation_guid === parent_message.operation_guid);
+                try {
+                    if (income_operations.length === 1) {
+                        const parent_context = parent_message.parent();
+                        if (parent_context.operation_guid === parent_message.operation_guid) {
+                            parent_context.messages = income_operations[0].messages;
+                            continue;
+                        }
+                        parent_message.messages = [...income_operations[0].messages, ...parent_message.messages];
+                        continue;
+                    }
+                    throw Error(`Нельзя однозначно определить как связать ${JSON.stringify(parent_message.message)}() operation_guid=${parent_message.operation_guid} с дочерней диаграммой : сообщения в дочерней диаграмме диаграмме: ${JSON.stringify(diagram_map[uid].messages)}`);
+                } catch (error) {
+                    parent_message.validationError = parent_message.validationError ?? [];
+                    parent_message.validationError.push(error.message)
+                }
+            }
         }
 
         let root_scenario = diagram_map[processUID];
         return {
             applications: application_map,
             businessInteractions: this.buildBusinessInterations(root_scenario.messages, diagram_map),
-            
+
         }
     }
 }
