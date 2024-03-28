@@ -30,7 +30,7 @@ const E2E_MESSAGES_QUERY = `with recursive ${DIAGRAM_TREE_CTE},
 ${applicationCatalog.APPLICATION_CATALOG_CTE}, msg as ( select distinct connector.connector_id, connector.diagramid as diagram_id, connector.seqno, 
 	connector.ea_guid as message_uid,
 	cl.name as client, connector.name as message, cl.object_id as client_id,
-	connector.end_object_id as server_id, srv.name as server, d_refs.child_diagram_uid, srv.object_type as server_type
+	connector.end_object_id as server_id, srv.name as server, d_refs.child_diagram_uid, srv.object_type as server_type, srv.ea_guid as server_uid
 	from t_connector connector
 		join t_object srv on srv.object_id=connector.end_object_id
 		join t_object cl on cl.object_id=connector.start_object_id
@@ -39,7 +39,7 @@ ${applicationCatalog.APPLICATION_CATALOG_CTE}, msg as ( select distinct connecto
 )
 select 
 	msg.message, msg.message_uid,  msg.seqno,msg.client_id, msg.server_id, msg.child_diagram_uid, 
-	msg.server_type, msg.server,
+	msg.server_type, msg.server, msg.server_uid,
 	d.name as diagram, d_tree.*,
 	op.value as operation_guid
 from d_tree

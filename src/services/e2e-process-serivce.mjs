@@ -100,7 +100,7 @@ class E2EProcessService {
             }
 
             if (server && !row.operation_guid) {
-                row.validationError.push(`Сообщение не связано с методом интерфейса`)
+                row.validationError.push(`Сообщение не связано с методом интерфейса (operation_guid = null)`)
             }
 
             (diagram_map[row.diagram_uid] = diagram_map[row.diagram_uid] ?? { name: row.diagram, messages: [] }).messages.push(row);
@@ -116,10 +116,26 @@ class E2EProcessService {
             if (uid === processUID) continue;
 
             for (const parent_message of diagram_map[uid].parentMessages ?? []) {
-                const income_operations = diagram_map[uid].messages.filter(m => m.operation_guid === parent_message.operation_guid);
                 try {
+                    if (parent_message.server_type === 'MessageEndpoint') {
+                        throw Error('Ссылки на ref обьекты не поддерживаются')
+                    }
+                    if( !parent_message.operation_guid){
+                        throw Error(`Нельзя корректно подключить диаграмму [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${uid}">${diagram_map[uid].name}</a>]: 
+                        отсутствует ссылка на метод из интерфейса для объекта [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${parent_message.server_uid}">${parent_message.server??'Unnamed object'}</a>] в сообщении  ${
+                            parent_message.message
+                        }`)
+                    }
+                    const parent_context = parent_message.parent();
+                    const operation_guid = parent_message.operation_guid ?
+                        parent_message.operation_guid === parent_context.operation_guid ? parent_context.operation_guid : parent_message.operation_guid
+                        : parent_context.operation_guid;
+
+
+
+                    const income_operations = diagram_map[uid].messages.filter(m => m.operation_guid === operation_guid);
+
                     if (income_operations.length === 1) {
-                        const parent_context = parent_message.parent();
                         if (parent_context.operation_guid === parent_message.operation_guid) {
                             parent_context.messages = income_operations[0].messages;
                             continue;
@@ -127,7 +143,8 @@ class E2EProcessService {
                         parent_message.messages = [...income_operations[0].messages, ...parent_message.messages];
                         continue;
                     }
-                    throw Error(`Нельзя однозначно определить как связать ${JSON.stringify(parent_message.message)}() operation_guid=${parent_message.operation_guid} с дочерней диаграммой : сообщения в дочерней диаграмме диаграмме: ${JSON.stringify(diagram_map[uid].messages)}`);
+                    throw Error(`Нельзя связать ${JSON.stringify(parent_message.message)}() operation_guid=${operation_guid} с диаграммой ${diagram_map[uid].name}:
+                     ${diagram_map[uid].messages.map( m=>`[${m.operation_guid}]${m.message}`).join('\r')}`);
                 } catch (error) {
                     parent_message.validationError = parent_message.validationError ?? [];
                     parent_message.validationError.push(error.message)

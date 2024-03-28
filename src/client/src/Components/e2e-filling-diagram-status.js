@@ -1,6 +1,6 @@
 import { NavLink, useParams } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
-import './table.css'
+import './css/table.css'
 
 
 function E2EFillingDiagramStatus() {

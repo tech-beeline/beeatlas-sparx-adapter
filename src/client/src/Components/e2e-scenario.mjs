@@ -1,6 +1,7 @@
 import { NavLink, useParams } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
-
+import refresh from './refresh.png'
+import './css/e2e-scenario.css'
 
 
 export default function E2EScenario() {
@@ -41,25 +42,50 @@ export default function E2EScenario() {
         }
         return { cmdb: "", name: '' }
     }
-    function buildMessageTree(messages, level = 0) {
-        return messages ? <ul>{messages.filter(m => m.type !== 'internalCall').map(m =>
-            <li>[{getApp(m.client?.$ref)?.name ?? ''}]-&gt;[{getApp(m.server?.$ref)?.name ?? ''}] : {m.message} <font color='green'>{m.diagram}</font> {
-                m.validationError?.length ? <div style={{ color: 'red' }}><b>Ошибки в описании:</b>
-                <ul>
-                {m.validationError.map( err=><li>{err}</li>)}
-                </ul>
-                </div> : ''}
-                
-                <div>
-                    {buildMessageTree(m.messages, level + 1)}
-                </div>
-            </li>)}</ul> : ''
+
+    function showHideChild(e) {
+        /**
+         * @type {HTMLElement}
+         */
+        const span = e.target;
+        span.classList.toggle('caret-down')
+        
+        span.parentElement.querySelectorAll('.child-messages').forEach(d => {
+            d.style.display = d.style.display == 'none' ? '' : 'none';
+        })
+        
     }
 
-    function showValidationError(message) {
-        setValidationError(message.validationError);
-        document.getElementById('validation-error')?.showModal();
+    function buildMessageTree(messages, level = 0) {
+        messages = messages ? messages.filter(m => m.type !== 'internalCall') : [];
+
+        if (!messages.length) return;
+        return <><ul>
+            {messages.map(m => {
+                const has_child = m.messages?.filter(m => m.type !== 'internalCall').length;
+                const message_caption = <>[{getApp(m.client?.$ref)?.name ?? ''}]-&gt;[{getApp(m.server?.$ref)?.name ?? ''}] : {m.message}</>
+
+                return <li><div className={"message-caption"}>
+                    {message_caption} <font color='green'>
+                        <a href={"https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=" + m.diagram_uid} target="_blank">{m.diagram}</a></font>
+                </div>
+                    {
+                        m.validationError?.length ? <div style={{ color: 'red' }}><b>Ошибки в описании:</b>
+                            <ul>
+                                {m.validationError.map(err => <li><div className="message-caption" dangerouslySetInnerHTML={{ __html: err }}></div></li>)}
+                            </ul>
+                        </div> : ''}
+                    {has_child ? <div>
+                        <span className="caret" onClick={showHideChild}>Дочерние сообщения</span>
+                        <div className="child-messages">
+                            {buildMessageTree(m.messages, level + 1)}
+                        </div>
+                    </div>
+                        : ''}
+                </li>
+            })}</ul></>
     }
+
     return <div>
         {e2eScenario?.error ? <div><h3>Ошибка при загрузке данных<br />{e2eScenario?.error}</h3><p>{e2eScenario.errorBody}</p></div> : ''}
         {e2eScenario?.scenario ?
@@ -74,7 +100,7 @@ export default function E2EScenario() {
                     </div>
                 </div>
                 <div>
-                    <h2 style={{ backgroundColor: "gray", cursor: "pointer" }}>Business Interactions</h2>
+                    <h2 style={{ backgroundColor: "gray", cursor: "pointer" }}><img src={refresh}></img> Business Interactions</h2>
                     <div>
                         {(e2eScenario.scenario.businessInteractions ?? []).map(bi => <div>
                             <h4>{bi.name}</h4>
@@ -86,19 +112,5 @@ export default function E2EScenario() {
                 </div>
             </div>
             : 'Идет загрузка данных'}
-        {validationError ?
-            <dialog open id="validation-error" style={{
-                position: 'absolute',
-                float: "left",
-                background: 'green',
-                left: '50%',
-                top: '50%',
-                transform: "translate(-50%, -50%)"
-            }}><div>
-                    {validationError.join(', ')}
-                </div><div>
-                    <button onClick={()=>{ document.getElementById('validation-error')?.close()}}>Close</button></div>
-            </dialog>
-            : ''}
     </div>
 }
