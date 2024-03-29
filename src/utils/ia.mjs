@@ -28,6 +28,7 @@ export class IARepository {
     static PREFIX_LIST = [
         "", this.git_base
     ];
+    static IA_GIT_TOKEN = process.env.IA_GIT_TOKEN;
     #data;
     #status;
     #cache_load_time;
@@ -60,7 +61,7 @@ export class IARepository {
             try {
                 https.get('https://git.vimpelcom.ru/api/v4/projects/common%2Farchitecture%2Finterface-agreement/repository/archive.zip', {
                     headers: {
-                        "PRIVATE-TOKEN": "rLGUxyyR9aGxCkxKpP2W" //[ ] Переделать на ТУЗ и перенести в настройки
+                        "PRIVATE-TOKEN": IARepository.IA_GIT_TOKEN //[ ] Переделать на ТУЗ и перенести в настройки
                     },
                     rejectUnauthorized: false //[ ] Можно заменить на подстановку сертификата, низкий приоритет
                 },
@@ -126,9 +127,15 @@ export class IARepository {
      * @returns {IARepository}
      */
     static get Instance() {
+        if( !this.IA_GIT_TOKEN ){
+            throw Error( 'IA_GIT_TOKEN not set')
+        }
         if (this.#instance)
             return this.#instance;
         this.#instance = new IARepository();
         return this.#instance;
     }
 }
+
+
+export default IARepository;
