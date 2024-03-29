@@ -27,3 +27,13 @@ ul {
 .caret-down::before {
     transform: rotate(0deg);
 }
+
+#show-hide-application{
+    color: blue;
+    cursor: pointer;
+}
+
+.application{
+    /*color: blue;*/
+    font-weight: bold;
+}

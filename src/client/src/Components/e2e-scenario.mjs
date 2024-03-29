@@ -28,6 +28,12 @@ export default function E2EScenario() {
         const app_container = document.getElementById('applications-container')
         if (app_container) {
             app_container.style.display = app_container.style.display === 'none' ? '' : 'none'
+            const show_span = document.getElementById('show-hide-application');
+
+            if (show_span) {
+                show_span.innerText = app_container.style.display === ''?'[Скрыть]': '[Показать]'
+            }
+
         }
         console.log('show/hide')
     }
@@ -40,7 +46,7 @@ export default function E2EScenario() {
         if (ref && ref.startsWith('#') && e2eScenario?.scenario) {
             return ref.split('/').slice(1).reduce((acc, v) => acc ? acc[v] ?? null : null, e2eScenario.scenario);
         }
-        return { cmdb: "", name: '' }
+        return null;
     }
 
     function showHideChild(e) {
@@ -49,26 +55,27 @@ export default function E2EScenario() {
          */
         const span = e.target;
         span.classList.toggle('caret-down')
-        
+
         span.parentElement.querySelectorAll('.child-messages').forEach(d => {
             d.style.display = d.style.display == 'none' ? '' : 'none';
         })
-        
+
     }
 
-    function buildMessageTree(messages, level = 0) {
+    function buildMessageTree(messages) {
         messages = messages ? messages.filter(m => m.type !== 'internalCall') : [];
 
         if (!messages.length) return;
         return <><ul>
             {messages.map(m => {
                 const has_child = m.messages?.filter(m => m.type !== 'internalCall').length;
-                const message_caption = <>[{getApp(m.client?.$ref)?.name ?? ''}]-&gt;[{getApp(m.server?.$ref)?.name ?? ''}] : {m.message}</>
+                const message_caption = <><span className="application">[{getApp(m.server?.$ref)?.name ?? m.server_name}]</span> : {m.message}</>
 
                 return <li><div className={"message-caption"}>
                     {message_caption} <font color='green'>
                         <a href={"https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=" + m.diagram_uid} target="_blank">{m.diagram}</a></font>
                 </div>
+
                     {
                         m.validationError?.length ? <div style={{ color: 'red' }}><b>Ошибки в описании:</b>
                             <ul>
@@ -78,7 +85,7 @@ export default function E2EScenario() {
                     {has_child ? <div>
                         <span className="caret" onClick={showHideChild}>Дочерние сообщения</span>
                         <div className="child-messages">
-                            {buildMessageTree(m.messages, level + 1)}
+                            {buildMessageTree(m.messages)}
                         </div>
                     </div>
                         : ''}
@@ -91,8 +98,8 @@ export default function E2EScenario() {
         {e2eScenario?.scenario ?
             <div>
                 <div>
-                    <h2 onClick={showHideApplication} style={{ backgroundColor: "gray", cursor: "pointer" }}>Приложения</h2>
-                    <div id="applications-container" style={{ display: 'table' }}>
+                    <h2 style={{ backgroundColor: "gray" }}>Приложения <span onClick={showHideApplication} id='show-hide-application'>[Показать]</span></h2>
+                    <div id="applications-container" style={{ display: 'none' }}>
                         <div style={{ display: 'table-row-group' }}><div style={{ display: 'table-row' }}><div style={{ display: 'table-cell', fontWeight: 'bold' }}>cmdbMnemonic</div><div style={{ display: 'table-cell', fontWeight: 'bold' }}>Приложение</div></div></div>
                         <div style={{ display: 'table-row-group' }}>
                             {Object.values(e2eScenario.scenario.applications).map(v => <div style={{ display: 'table-row' }}><div style={{ display: 'table-cell' }}>{v.cmdb}</div><div style={{ display: 'table-cell' }}>{v.name}</div></div>)}
@@ -100,7 +107,7 @@ export default function E2EScenario() {
                     </div>
                 </div>
                 <div>
-                    <h2 style={{ backgroundColor: "gray", cursor: "pointer" }}><img src={refresh}></img> Business Interactions</h2>
+                    <h2 style={{ backgroundColor: "gray" }}>Business Interactions</h2>
                     <div>
                         {(e2eScenario.scenario.businessInteractions ?? []).map(bi => <div>
                             <h4>{bi.name}</h4>

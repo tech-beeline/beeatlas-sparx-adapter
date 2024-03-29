@@ -39,7 +39,7 @@ ${applicationCatalog.APPLICATION_CATALOG_CTE}, msg as ( select distinct connecto
 )
 select 
 	msg.message, msg.message_uid,  msg.seqno,msg.client_id, msg.server_id, msg.child_diagram_uid, 
-	msg.server_type, msg.server, msg.server_uid,
+	msg.server_type, msg.server as server_name, msg.server_uid,
 	d.name as diagram, d_tree.*,
 	op.value as operation_guid
 from d_tree

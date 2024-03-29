@@ -127,7 +127,7 @@ from app_party
 	 where app_party.diagram_id in ( select diagram_id from t_diagram where ea_guid =$1) `;
 
 const E2E_DIAGRAM_MESSAGES = `${SEQUENCE_CTE}
-select distinct msg.diagramid, msg.seqno, cl.name as client, msg.name as message, srv.name as server, op_tag.value as operation_guid, ia_tag.value as ip_path, msg.styleex
+select distinct msg.diagramid, msg.seqno, cl.name as client, msg.name as message, srv.name as server, op_tag.value as operation_guid, ia_tag.value as ia_path, msg.styleex
 	from t_connector msg
 		join app srv on srv.interface_id=msg.end_object_id or srv.component_id=msg.end_object_id
 		left join t_object cl on cl.object_id=msg.start_object_id

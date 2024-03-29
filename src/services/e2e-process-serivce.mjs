@@ -33,7 +33,6 @@ class E2EProcessService {
         let root = context;
         for (let msg of messages) {
 
-
             let parent_context = searchContext(context, msg.client_id);
 
             if (msg.client_id === msg.server_id && !msg.operation_guid) {
@@ -122,7 +121,7 @@ class E2EProcessService {
                     }
                     if( !parent_message.operation_guid){
                         throw Error(`Нельзя корректно подключить диаграмму [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${uid}">${diagram_map[uid].name}</a>]: 
-                        отсутствует ссылка на метод из интерфейса для объекта [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${parent_message.server_uid}">${parent_message.server??'Unnamed object'}</a>] в сообщении  ${
+                        отсутствует ссылка на метод из интерфейса для объекта [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${parent_message.server_uid}">${parent_message.server_name??'Unnamed object'}</a>] в сообщении  ${
                             parent_message.message
                         }`)
                     }
