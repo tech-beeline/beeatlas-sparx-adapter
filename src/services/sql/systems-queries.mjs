@@ -1,7 +1,5 @@
 import applicationCatalog from "./application-catalog.mjs";
 
-
-
 const SYSTEM_REALIZATION_LIST = `with recursive app_catalog as (
         select package_id, package_id as parent_id, name , name::text as "fullName", ea_guid
             from t_package where ea_guid='${applicationCatalog.APP_CATALOG_ROOT}'
@@ -30,6 +28,5 @@ const SYSTEM_REALIZATION_LIST = `with recursive app_catalog as (
 const SYSTEM_REALIZATION_BY_CODE = `${SYSTEM_REALIZATION_LIST}
     where app.alias=$1
     `
-
 
 export default { SYSTEM_REALIZATION_LIST, SYSTEM_REALIZATION_BY_CODE };

@@ -72,7 +72,7 @@ class CapabiliiesService {
             if (ret[cap.code]) {
                 Object.assign(ret[cap.code], cap);
             } else ret[cap.code] = cap;
-            const parentCode = cap.parent?.capabilityCode ?? cap.parent?.domainCode;
+            const parentCode = cap.parentCode;
             if (parentCode) {
                 let parent = ret[parentCode] = ret[parentCode] ?? { code: parentCode };
                 parent.children = parent.children ?? [];

@@ -5,24 +5,23 @@ RUN npm config set registry https://nexus.vimpelcom.ru/repository/proxy__npm__ce
 RUN npm config set @beeline:registry https://nexus.vimpelcom.ru/repository/npm-internal/
 RUN npm config set strict-ssl false
 
-
 #build react application
-WORKDIR /usr/src/app/src/client
+#WORKDIR /usr/src/app/src/client
 
-COPY ./src/client/package.json  /usr/src/app/src/client
+#COPY ./src/client/package.json  /usr/src/app/src/client
 #COPY ./src/client/package-lock.json  /usr/src/app/src/client
 #COPY ["package.json",  "./"]
 
-COPY ./src/client/src /usr/src/app/src/client/src
-COPY ./src/client/public /usr/src/app/src/client/public
+#COPY ./src/client/src /usr/src/app/src/client/src
+#COPY ./src/client/public /usr/src/app/src/client/public
 
-RUN npm install && \
-    npm run build && \
-    rm -r node_modules && \
-    rm -rf /var/cache/apk/* && \
-    rm -fr /tmp/* && \
-    rm -fr /root/.cache/pip* && \
-    npm cache clean --force
+#RUN npm install --omit=dev && \
+    #npm run build && \
+    #rm -r node_modules && \
+    #rm -rf /var/cache/apk/* && \
+    #rm -fr /tmp/* && \
+    #rm -fr /root/.cache/pip* && \
+    #npm cache clean --force
 
 #build express 
 

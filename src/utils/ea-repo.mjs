@@ -40,6 +40,11 @@ class Repository {
         return this.#config
     }
 
+    /**
+     * 
+     * @param {String|{text : String, values : []}} sql 
+     * @returns {Promise<Array>}
+     */
     async queryRows(sql) {
         try {
             let client = new pg.Client(this.config);

@@ -23,6 +23,38 @@ const TC_METHODS = {
                     }
                 }
             }
+        },
+        "/api/tech-capabilities/{code}": {
+            get: {
+                operation: TechnicalCapabilitiesController.getTechnicalCapability,
+                summary: "Получение списка технических возможностей",
+                description: "Получение списка технических возможностей",
+                parameters: [
+                    {
+                        name: "code",
+                        in: "path",
+                        description: "CMDB мнемоника технической возможности",
+                        "required": true,
+                        examples: {
+                            'Поддержка сессии потребления и ее квотирование и тарификация(онлайн тарификация)': {
+                                value: 'BC-013404'
+                            }
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: {
+                                    "OK": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

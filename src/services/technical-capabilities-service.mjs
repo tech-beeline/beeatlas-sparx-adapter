@@ -1,25 +1,30 @@
+import TechnicalCapability from "../model/technical-capability.mjs";
 import Repository from "../utils/ea-repo.mjs";
+import TECH_CAPABILITY_QUERY from './sql/tech-capabilities.mjs'
 
-const ALL_TC_QUERY =
-`with recursive packages as 
-(
-	select package_id as id, ea_guid, name, name::text as "fullName"
-		from t_package 
-		where ea_guid='{7889FE97-8783-4311-B229-3A88F8EFA8E3}'
-	union
-	select cp.package_id, cp.ea_guid, cp.name, p."fullName"::text || '/' || cp.name::text
-		from packages p
-		join t_package cp on cp.parent_id=p.id
-)
-select p.ea_guid as pguid, c.ea_guid, p.name as package, c.name, p."fullName" || '/' || c.name as "fullName",
-	c.alias as "code", c.note as description, c.author, c.modifieddate as "modifiedDate", c.status
-	from packages p
-	join t_object c on c.package_id=p.id and c.object_type='Component'`;
-    
-class TechnicalCapabilityService{
-    async getTechnicalCapabilities(){
-        return Repository.queryRows( ALL_COMPONENTS_QUERY);
-    }
+
+const STEREOTYPE_MAP = {
+	ArchiMate_Capability: 'BC',
+	ArchiMate_TechnicalCapability: ' TC',
+	type: (s) => STEREOTYPE_MAP[s] ?? 'Unknown'
+}
+class TechnicalCapabilityService {
+	async getTechnicalCapabilities() {
+		const tc_map = (await Repository.queryRows(TECH_CAPABILITY_QUERY.ALL_TECH_CAPABILITITES_QUERY))
+			.reduce((acc, v) =>
+			(acc[v.code] = acc[v.code] ?? new TechnicalCapability(v), acc[v.code].parents.push(
+				{ code: v.bc_code, type: STEREOTYPE_MAP.type(v.parent_stereotype) }), acc), {})
+
+		return Object.values(tc_map);
+
+	}
+	async getTechnicalCapability({ code } = {}) {
+		const tc_map = (await Repository.queryRows({ text: TECH_CAPABILITY_QUERY.TECH_CAPABILITITY_QUERY, values: [code] }))
+			.reduce((acc, v) =>
+			(acc[v.code] = acc[v.code] ?? new TechnicalCapability(v), acc[v.code].parents.push(
+				{ code: v.bc_code, type: STEREOTYPE_MAP.type(v.parent_stereotype) }), acc), {})
+		return tc_map[code];
+	}
 }
 
 export default new TechnicalCapabilityService();
