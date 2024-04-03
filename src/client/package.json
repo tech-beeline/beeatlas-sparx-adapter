@@ -14,9 +14,12 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-scripts build && npm run build-rename",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "build-rename": "npm run build-rename-js && npm run build-rename-css",
+    "build-rename-js": "renamer --find 'main\\.[^\\.]+\\.js' --replace 'main.js' build/static/js/*.js",
+    "build-rename-css": "renamer --find 'main\\.[^\\.]+\\.css' --replace 'main.css' build/static/css/*.css"
   },
   "eslintConfig": {
     "extends": [
@@ -36,5 +39,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:3005"
+  "proxy": "http://localhost:3005",
+  "devDependencies": {
+    "renamer": "^5.0.0"
+  }
 }
