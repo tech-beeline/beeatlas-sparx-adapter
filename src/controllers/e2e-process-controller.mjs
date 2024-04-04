@@ -20,6 +20,13 @@ class E2EProcessController {
             processError(error, response);
         }
     }
+    async getProcesses(request, response, next) {
+        try {
+            response.json( await e2eProcessSerivce.getE2EProcesses());
+        } catch (error) {
+            processError(error, response);
+        }
+    }
 }
 
 export default new E2EProcessController();

@@ -8,5 +8,10 @@ with recursive app_catalog as (
 		from app_catalog p
 		join t_package c on c.parent_id=p.package_id
 		join t_object o on c.ea_guid=o.ea_guid
+), tc as (
+	select  cat.alias as "targetCode" ,c.alias, c.stereotype, c.ea_guid, c.author, c.status, c.name, c.modifieddate
+	from app_catalog cat
+	join t_object c on c.package_id=cat.package_id and c.stereotype='ArchiMate_TechnicalCapability' and c.alias is not null
 )
-select * from app_catalog cat
+select * 
+from tc

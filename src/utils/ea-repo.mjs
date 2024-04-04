@@ -53,7 +53,24 @@ class Repository {
             client.end();
             return rows;
         } catch (error) {
-            console.log( sql?.text??sql );
+            console.log(sql?.text ?? sql);
+            throw error;
+        }
+    }
+    /**
+   * 
+   * @param {String|{text : String, values : []}} sql 
+   * @returns {Promise}
+   */
+    async queryOne(sql) {
+        try {
+            let client = new pg.Client(this.config);
+            await client.connect();
+            let rows = (await client.query(sql)).rows;
+            client.end();
+            return rows.find(a => a);
+        } catch (error) {
+            console.log(sql?.text ?? sql);
             throw error;
         }
     }
@@ -73,14 +90,17 @@ class Repository {
     async objectByAlias(alias) {
         return this.getObjectsByAlias(alias).then(rows => rows.find(v => true));
     }
-    async insert(type, value) {
+    async insert(type, value, client) {
         if (!(value instanceof type)) value = new type(value);
         if (value.beforeCreate) value.beforeCreate();
 
         let field_values = Object.entries(value).filter(([k, v]) => v);
         const text = `INSERT INTO ${type.name}(${field_values.map(([k, v]) => `${k}`).join(',')}) VALUES(${field_values.map((v, i) => `$${i + 1}`)}) RETURNING *`;
 
-        let client = new pg.Client(this.config);
+        if (client) return await client.query({ text: text, values: field_values.map(([_, v]) => v) }).then(
+            v => v.rows.find(a => a));
+
+        client = new pg.Client(this.config);
         await client.connect();
         let res = await client.query({ text: text, values: field_values.map(([_, v]) => v) });
         client.end();
@@ -103,11 +123,61 @@ class Repository {
         const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r)));
     }
+    async first(type, condition) {
+        const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
+        return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r))).then(v => v.find(a => a));
+    }
     /**
      * 
      * @param {t_object} obj 
+     * @returns {Promise<t_object>}
      */
     async createObject(obj) {
+        if (!obj.alias) {
+            /**
+             * @type {pg.Client}
+             */
+            let client = new pg.Client(this.config);
+            await client.connect();
+            try {
+                await client.query('BEGIN');
+
+                let autocount = obj.stereotype ? await this.queryOne({
+                    text: `select * 
+                from t_trxtypes
+                where description = 'AutocountEx' and trx = $1`, values: [obj.stereotype]
+                }) : null;
+                if (!autocount) {
+                    autocount = await this.queryOne({ text: `select * from t_trxtypes where description = 'Autocount' and trx = $1`, values: [obj.object_type] })
+                }
+
+                if (autocount) {
+                    let trx = autocount.notes.split(';').filter(a => a.length)
+                        .map(v => v.split('='))
+                        .reduce((acc, [k, v]) => Object.assign(acc, { [k]: v }), {});
+                    if (trx.active == '1') {
+                        throw Error('not implemented')
+                    }
+                    if (trx.active_a == '1') {
+                        trx.counter_a = String(Number(trx.counter_a) + 1).padStart(trx.counter_a.length, '0');
+                        obj.alias = `${trx.prefix_a}${trx.counter_a}`;
+                    }
+                    await client.query({
+                        text: 'UPDATE t_trxtypes SET notes=$1 where trx_id=$2',
+                        values: [Object.entries(trx).map(([k, v]) => `${k}=${v};`).join(''), autocount.trx_id]
+                    });
+                    obj = await this.insert(t_object, obj, client);
+                }
+                await client.query('COMMIT');
+                return obj;
+            } catch (error) {
+                await client.query('ROLLBACK');
+                throw error;
+            } finally {
+                await client.end();
+            }
+
+        }
         return this.insert(t_object, obj);
     }
     /**

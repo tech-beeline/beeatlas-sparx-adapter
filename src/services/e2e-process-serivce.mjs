@@ -119,11 +119,10 @@ class E2EProcessService {
                     if (parent_message.server_type === 'MessageEndpoint') {
                         throw Error('Ссылки на ref обьекты не поддерживаются')
                     }
-                    if( !parent_message.operation_guid){
+                    if (!parent_message.operation_guid) {
                         throw Error(`Нельзя корректно подключить диаграмму [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${uid}">${diagram_map[uid].name}</a>]: 
-                        отсутствует ссылка на метод из интерфейса для объекта [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${parent_message.server_uid}">${parent_message.server_name??'Unnamed object'}</a>] в сообщении  ${
-                            parent_message.message
-                        }`)
+                        отсутствует ссылка на метод из интерфейса для объекта [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${parent_message.server_uid}">${parent_message.server_name ?? 'Unnamed object'}</a>] в сообщении  ${parent_message.message
+                            }`)
                     }
                     const parent_context = parent_message.parent();
                     const operation_guid = parent_message.operation_guid ?
@@ -143,7 +142,7 @@ class E2EProcessService {
                         continue;
                     }
                     throw Error(`Нельзя связать ${JSON.stringify(parent_message.message)}() operation_guid=${operation_guid} с диаграммой ${diagram_map[uid].name}:
-                     ${diagram_map[uid].messages.map( m=>`[${m.operation_guid}]${m.message}`).join('\r')}`);
+                     ${diagram_map[uid].messages.map(m => `[${m.operation_guid}]${m.message}`).join('\r')}`);
                 } catch (error) {
                     parent_message.validationError = parent_message.validationError ?? [];
                     parent_message.validationError.push(error.message)
@@ -157,6 +156,28 @@ class E2EProcessService {
             businessInteractions: this.buildBusinessInterations(root_scenario.messages, diagram_map),
 
         }
+    }
+    async getE2EProcesses() {
+        /**
+         * @type {{ group_name, group_uid}}
+         */
+        const rows = await Repository.queryRows(QUERIES.E2E_PROCESSES_QUERY);
+        let tree = rows.reduce((acc, v) => (
+            acc[v.group_name] = acc[v.group_name] ?? { name: v.group_name, uid: v.group_uid, base_processes: {} },
+            acc[v.group_name].base_processes[v.base_process] = acc[v.group_name].base_processes[v.base_process] ?? { name: v.base_process, uid: v.base_uid, key_processes: {} },
+            (acc[v.group_name].base_processes[v.base_process].key_processes[v.key_process] =
+                acc[v.group_name].base_processes[v.base_process].key_processes[v.key_process] ?? { name: v.key_process, uid: v.key_uid, scenarios: [] })
+                .scenarios.push({ name: v.diagram, uid: v.ea_guid }),
+            acc), {})
+
+        return Object.values(tree).map(g => ({
+            name: g.name, uid: g.uid,
+            base_processes: Object.values(g.base_processes).map(b => ({
+                name: b.name, uid: b.uid,
+                key_processes: Object.values(b.key_processes)
+            }))
+        }))
+        throw Error('not implemented');
     }
 }
 export default new E2EProcessService();

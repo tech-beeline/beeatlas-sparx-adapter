@@ -4,6 +4,24 @@ const E2EProcessRoutes = {
     tag: "Справочник процессов",
     description: "Получение информации о статусах Е2Е процессов",
     paths: {
+        "/api/v1/e2e-processes": {
+            get: {
+                operation: e2eProcessController.getProcesses,
+                summary: "Получение списка сквозных Е2Е процессов",
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: {
+                                    "OK": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/e2e-process-messages/{code}": {
             get: {
                 operation: e2eProcessController.getProcessMessages,

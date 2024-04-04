@@ -1,5 +1,5 @@
 import TechnicalCapabilitiesController from "../controllers/technical-capabilitiyes-controller.mjs";
-import TechnicalCapability from "../model/technical-capability.mjs";
+import TC_SAMPLES from "../swagger/examples/technical-capability.mjs";
 
 const TC_METHODS = {
     tag: "Управление техническими возможностями",
@@ -18,6 +18,30 @@ const TC_METHODS = {
                                 examples: {
                                     "OK": []
                                 }
+                            }
+                        }
+                    }
+                }
+            },
+            post: {
+                operation: TechnicalCapabilitiesController.postTechnicalCapability,
+                summary: "Создание новой технической возможности",
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                "OK": []
+                            }
+                        }
+                    }
+                },
+                requestBody : {
+                    required: true,
+                    content: {
+                        "application/json" : {
+                            examples : {
+                                "TC" : TC_SAMPLES.POST_SMAPLE
                             }
                         }
                     }
