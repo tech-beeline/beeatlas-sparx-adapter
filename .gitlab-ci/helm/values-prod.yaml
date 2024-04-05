@@ -1,6 +1,6 @@
 env:
   DB_EA_URL: "vault:eafdmmart/data/prod/ea#url"
-  DB_EA_USER: "vault:eafdmmart/data/prod/ea#username"
-  DB_EA_PASSWORD: "vault:eafdmmart/data/prod/ea#password"
+  DB_EA_USER: "vault:eafdmmart/data/prod/ea_api#user"
+  DB_EA_PASSWORD: "vault:eafdmmart/data/prod/ea_api#password"
   DB_EA_DATABASE : "ea_repository"
 
