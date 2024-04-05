@@ -21,7 +21,15 @@ function E2EProcesses() {
         update();
     }, [])
 
-    return e2eProcess ? (typeof (e2eProcess) === "String" ? <div>{e2eProcess}</div> :
+    /**
+     * 
+     * @param {Array} scenarios 
+     */
+    const scenarioRows = (scenarios) => scenarios.map(s => <td><a target="_blank" href={`/e2e-scenarios/${encodeURIComponent(s.uid)}`}>{s.name}</a></td>);
+    
+
+
+    return e2eProcess ? (typeof (e2eProcess) === "string" ? <div>{e2eProcess}</div> :
         <div>
             <ul>
                 {e2eProcess.map(g => <li>{g.name}
