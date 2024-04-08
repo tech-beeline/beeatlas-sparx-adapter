@@ -1,4 +1,6 @@
 import TechnicalCapability from "../model/technical-capability.mjs";
+import t_diagram from "../utils/ea-model/t_diagram.mjs";
+import t_diagramobjects from "../utils/ea-model/t_diagramobjects.mjs";
 import t_object from "../utils/ea-model/t_object.mjs";
 import t_package from "../utils/ea-model/t_package.mjs";
 import Repository from "../utils/ea-repo.mjs";
@@ -44,8 +46,8 @@ class TechnicalCapabilityService {
 		let parents_bc = (await Repository.queryRows('select * from t_object where alias = ANY($1)', [capability.parents]));
 		parents_bc = parents_bc.reduce((acc, v) => (acc[v.alias] = v, acc), {});
 
-		capability.parents.forEach( code=>{
-			if( !parents_bc[code]) throw NotFound( `BC with code ${code} not found`);
+		capability.parents.forEach(code => {
+			if (!parents_bc[code]) throw NotFound(`BC with code ${code} not found`);
 		});
 
 		let tc_package = await Repository.putPackage({ parent_id: system_package.package_id, name: TC_QUERY.TC_PACKAGE_NAME });
@@ -63,7 +65,42 @@ class TechnicalCapabilityService {
 		tc.modifiedDate = tc.modifieddate;
 		tc.description = tc.note;
 
+		for (let bc of Object.values(parents_bc)) {
+			await this.addParent(tc, bc);
+		}
+
 		return new TechnicalCapability(tc);
+	}
+
+	async addParent(capability, parent) {
+		const parent_id = parent.object_id;
+		if (!parent_id) throw Error('not implemented');
+		const capability_id = capability.object_id;
+		if (!capability_id) throw Error('not implemented');
+		const bc_package = await Repository.queryOne(TC_QUERY.BC_PACKAGE_QUERY_BY_ID, [parent_id]);
+		/** @type {t_diagram} */
+		const diagram = await Repository.putDiagram({ package_id: bc_package.package_id, name: TC_QUERY.BC_TC_DIAGRAM_NAME, diagram_type: 'Component', author: 'FDM API' });
+		let parent_do = await Repository.first(t_diagramobjects, { diagram_id: diagram.diagram_id, object_id: parent_id });
+
+		const max_r = (await Repository.queryOne(' select max(rectright) as max_r from t_diagramobjects where diagram_id=$1', [diagram.diagram_id])).max_r ?? 0;
+
+		if (!parent_do) {
+			parent_do = await Repository.insert(t_diagramobjects,
+				{
+					diagram_id: diagram.diagram_id, object_id: parent_id,
+					recttop: -35, rectleft: max_r + 50, rectbottom: -105, rectright: max_r + 150
+				})
+		};
+		let tc_do = await Repository.first(t_diagramobjects, { diagram_id: diagram.diagram_id, object_id: capability_id });
+
+		if (!tc_do) {
+			tc_do = await Repository.insert(t_diagramobjects,
+				{
+					diagram_id: diagram.diagram_id, object_id: capability_id,
+					recttop: -275, rectleft: max_r + 50, rectbottom: -350, rectright: max_r + 150
+				});
+		}
+		Repository.putConnector( parent_id, capability_id, 'Realisation')
 	}
 }
 

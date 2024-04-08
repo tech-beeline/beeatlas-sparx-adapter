@@ -52,7 +52,7 @@ class Repository {
             let client = new pg.Client(this.config);
             await client.connect();
             let rows = (await client.query(sql, values)).rows;
-            client.end();
+            await client.end();
             return rows;
         } catch (error) {
             console.log(sql?.text ?? sql);
@@ -62,14 +62,15 @@ class Repository {
     /**
    * 
    * @param {String|{text : String, values : []}} sql 
+   * @param {Array} values 
    * @returns {Promise}
    */
-    async queryOne(sql) {
+    async queryOne(sql, values) {
         try {
             let client = new pg.Client(this.config);
             await client.connect();
-            let rows = (await client.query(sql)).rows;
-            client.end();
+            let rows = (await client.query(sql, values)).rows;
+            await client.end();
             return rows.find(a => a);
         } catch (error) {
             console.log(sql?.text ?? sql);
@@ -104,10 +105,21 @@ class Repository {
 
         client = new pg.Client(this.config);
         await client.connect();
-        let res = await client.query({ text: text, values: field_values.map(([_, v]) => v) });
-        client.end();
-        if (res.rowCount)
-            return new type(res.rows[0]);
+
+        try {
+            await client.query('BEGIN');
+            let res = await client.query({ text: text, values: field_values.map(([_, v]) => v) });
+            await client.query('COMMIT');
+
+            if (res.rowCount)
+                return new type(res.rows[0]);
+
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            await client.end();
+        }
     }
     async update(type, value, condition) {
         if (!condition) throw Error('update condition is null ');
@@ -189,11 +201,19 @@ class Repository {
     async putPackage(pkg) {
         return (await this.find(t_package, { parent_id: pkg.parent_id, name: pkg.name }).then(rows => rows.find(r => r))) ?? (await this.createPackage({ parent_id: pkg.parent_id, name: pkg.name }));
     }
-    async putDiagram(d){
-        return (await this.find(t_diagram, { parent_id: pkg.parent_id, name: pkg.name }).then(rows => rows.find(r => r))) ?? (await this.createPackage({ parent_id: pkg.parent_id, name: pkg.name }));
-
-        throw Error('not implemented');
+    buildDiagram(d) {
+        return Object.assign({
+            package_id: 17888,
+            version: '1.0',
+            attpub: '1', attpri: '1', attpro: '1', orientation: 'P', cx: '795', cy: '1138', scale: '100',
+            showforeign: '1', showborder: '1', showpackagecontents: '1'
+        }, d);
     }
+    async putDiagram(d) {
+        return (await this.first(t_diagram, { package_id: d.package_id, name: d.name })) ??
+            (await this.insert(t_diagram, this.buildDiagram(d)));
+    }
+
     async putConnector(start_object_id, end_object_id, connector_type, additionalProperties) {
         let connector_properties = { start_object_id: start_object_id, end_object_id: end_object_id, connector_type: connector_type };
         let connector = await this.find(t_connector, connector_properties).then(rows => rows.find(r => r));

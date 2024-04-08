@@ -16,5 +16,6 @@ with recursive bc_catalog as (
 		join t_diagramobjects oo on oo.diagram_id=d.diagram_id
 		join t_object c on c.object_id=oo.object_id and c.stereotype in ('ArchiMate_Capability', 'ArchiMate_TechnicalCapability')
 )
-select p.name, p.object_id as package_id, btc.* from btc
+select p.name, pp.package_id as package_id, btc.* from btc
 join t_object p on p.alias=btc.p_code and p.object_type='Package'
+join t_package pp on pp.ea_guid=p.ea_guid
