@@ -3,6 +3,10 @@ import React, { useEffect, useState } from 'react';
 import refresh from './refresh.png'
 import './css/e2e-scenario.css'
 
+const IA_CAPTION_TEXT = {
+    none: 'Показать профиль нагрузки',
+    show: 'Скрыть профиль нагрузки'
+}
 
 export default function E2EScenario() {
     const [e2eScenario, setE2EScenario] = useState(null);
@@ -31,7 +35,7 @@ export default function E2EScenario() {
             const show_span = document.getElementById('show-hide-application');
 
             if (show_span) {
-                show_span.innerText = app_container.style.display === ''?'[Скрыть]': '[Показать]'
+                show_span.innerText = app_container.style.display === '' ? '[Скрыть]' : '[Показать]'
             }
 
         }
@@ -59,7 +63,14 @@ export default function E2EScenario() {
         span.parentElement.querySelectorAll('.child-messages').forEach(d => {
             d.style.display = d.style.display == 'none' ? '' : 'none';
         })
+    }
 
+    function showHideIA(e) {
+        const div_caption = e.target;
+        div_caption.parentElement.querySelectorAll('.ia-content').forEach(d => {
+            d.style.display = d.style.display == 'none' ? '' : 'none';
+            div_caption.innerText = d.style.display === 'none'? IA_CAPTION_TEXT.none:IA_CAPTION_TEXT.show
+        })
     }
 
     function buildMessageTree(messages) {
@@ -75,7 +86,15 @@ export default function E2EScenario() {
                     {message_caption} <font color='green'>
                         <a href={"https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=" + m.diagram_uid} target="_blank">{m.diagram}</a></font>
                 </div>
-
+                    {m.duration ? <div>Длительность : {m.duration}</div> : ''}
+                    {m.interfaceAgreement?.yaml?.loadProfile ? <div>
+                        <div onClick={showHideIA} className="ia-caption">{IA_CAPTION_TEXT.none}</div>
+                        <div className="ia-content" style={{ display: 'none' }}>
+                            <div>rps : {m.interfaceAgreement?.yaml?.loadProfile.requests?.value} / {m.interfaceAgreement?.yaml?.loadProfile.requests?.dimension}
+                            </div>
+                            <div>Максимальная задержка (95 перцентиль) : {m.interfaceAgreement?.yaml?.loadProfile?.responseDelayMax?.value} {m.interfaceAgreement?.yaml?.loadProfile?.responseDelayMax?.dimension}</div>
+                        </div>
+                    </div> : ''}
                     {
                         m.validationError?.length ? <div style={{ color: 'red' }}><b>Ошибки в описании:</b>
                             <ul>

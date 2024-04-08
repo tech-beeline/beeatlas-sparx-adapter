@@ -53,7 +53,7 @@ function schemaFromObject(o) {
             if (item_schema.$ref && (item_schema.$ref == schema.$ref)) {
                 continue;
             }
-            throw Error('not implemented')
+            //throw Error('not implemented')
         }
         return {
             schema: {

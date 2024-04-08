@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid'
 import t_package from './ea-model/t_package.mjs';
 import t_connector from './ea-model/t_connector.mjs';
 import t_operation from './ea-model/t_operation.mjs';
+import t_diagram from './ea-model/t_diagram.mjs';
 
 const ENVIROMENT_VARIABLE = {
     user: "DB_EA_USER", password: "DB_EA_PASSWORD", host: "DB_EA_URL", database: "DB_EA_DATABASE"
@@ -43,13 +44,14 @@ class Repository {
     /**
      * 
      * @param {String|{text : String, values : []}} sql 
+     * @param {Array} values
      * @returns {Promise<Array>}
      */
-    async queryRows(sql) {
+    async queryRows(sql, values) {
         try {
             let client = new pg.Client(this.config);
             await client.connect();
-            let rows = (await client.query(sql)).rows;
+            let rows = (await client.query(sql, values)).rows;
             client.end();
             return rows;
         } catch (error) {
@@ -186,6 +188,11 @@ class Repository {
      */
     async putPackage(pkg) {
         return (await this.find(t_package, { parent_id: pkg.parent_id, name: pkg.name }).then(rows => rows.find(r => r))) ?? (await this.createPackage({ parent_id: pkg.parent_id, name: pkg.name }));
+    }
+    async putDiagram(d){
+        return (await this.find(t_diagram, { parent_id: pkg.parent_id, name: pkg.name }).then(rows => rows.find(r => r))) ?? (await this.createPackage({ parent_id: pkg.parent_id, name: pkg.name }));
+
+        throw Error('not implemented');
     }
     async putConnector(start_object_id, end_object_id, connector_type, additionalProperties) {
         let connector_properties = { start_object_id: start_object_id, end_object_id: end_object_id, connector_type: connector_type };

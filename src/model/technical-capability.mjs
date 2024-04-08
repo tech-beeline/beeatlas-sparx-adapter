@@ -24,6 +24,12 @@ class TechnicalCapability {
             this[prop] = cap[prop] ?? undefined;
         }
     }
+    addParent(s) {
+        /*if (s === null)
+            return;
+            */
+        (this.parents = this.parents ?? []).push(s);
+    }
 }
 
 

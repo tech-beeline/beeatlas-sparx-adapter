@@ -28,12 +28,29 @@ ul {
     transform: rotate(0deg);
 }
 
-#show-hide-application{
+#show-hide-application {
     color: blue;
     cursor: pointer;
 }
 
-.application{
+.application {
     /*color: blue;*/
     font-weight: bold;
+}
+
+.ia-caption {
+    background-color: lightblue;
+    cursor: pointer;
+    user-select: none;
+    width: 530px;
+    text-align: center;
+}
+
+.ia-content {
+    width: 480px;
+    position: relative;
+    left: 20px;
+    border: solid 1px;
+    margin: 3px;
+    padding: 3px;
 }

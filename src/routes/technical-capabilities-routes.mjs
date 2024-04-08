@@ -16,7 +16,7 @@ const TC_METHODS = {
                         content: {
                             "application/json": {
                                 examples: {
-                                    "OK": []
+                                    "OK": [ TC_SAMPLES.POST_SMAPLE]
                                 }
                             }
                         }
@@ -72,7 +72,7 @@ const TC_METHODS = {
                         content: {
                             "application/json": {
                                 examples: {
-                                    "OK": []
+                                    "OK": TC_SAMPLES.POST_SMAPLE
                                 }
                             }
                         }

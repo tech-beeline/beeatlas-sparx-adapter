@@ -1,5 +1,6 @@
 import { BusinessInteraction } from '../model/e2e-process.mjs';
 import Repository from '../utils/ea-repo.mjs'
+import IARepository from '../utils/ia.mjs';
 import applicationService from './application-service.mjs';
 import QUERIES from './sql/e2e-process-queries.mjs'
 
@@ -68,6 +69,13 @@ class E2EProcessService {
 
         return root.messages;
     }
+
+    #formatValidationError(msg, ia, client, server) {
+        const validation_rule = [
+            (msg, ia, client, server) => ia.provider?.cmdbMnemonic !== client.code ? `Провайдер в IA не соответствует вызову в сценарии` : undefined
+        ];
+    }
+
     /**
      * 
      * @param {String} processUID 
@@ -101,6 +109,33 @@ class E2EProcessService {
             if (server && !row.operation_guid) {
                 row.validationError.push(`Сообщение не связано с методом интерфейса (operation_guid = null)`)
             }
+
+            if (server && row.ia_path) {
+                const ia = await IARepository.Instance.byPath(decodeURIComponent(row.ia_path))
+                row.interfaceAgreement = ia ? {
+                    path: row.ia_path,
+                    parseError: ia.parseError ?? undefined,
+                    raw: ia.yaml ? undefined : ia.raw,
+                    yaml: ia.yaml ?? undefined,
+                    validationError: this.#formatValidationError(row, ia, client, server)
+                } : {
+                    path: row.ia_path,
+                    validationError: [`Не удалось найти интерфейсное соглашение по пути ${row.ia_path}`]
+                }
+            }
+            row.ia_path = undefined;
+
+            if (row.styleex) {
+                const styleex_map = row.styleex?.split(';').filter(v => v.length).reduce((acc, v) => {
+                    const kv = v.split('=');
+                    return kv.length > 0 ? Object.assign(acc, { [kv[0]]: kv.slice(1).join('') }) : acc;
+                }, {})
+                if( styleex_map.DCBM){
+                    row.duration = styleex_map.DCBM;
+                }
+            }
+            row.styleex = undefined;
+
 
             (diagram_map[row.diagram_uid] = diagram_map[row.diagram_uid] ?? { name: row.diagram, messages: [] }).messages.push(row);
         }
@@ -152,9 +187,8 @@ class E2EProcessService {
 
         let root_scenario = diagram_map[processUID];
         return {
-            applications: application_map,
             businessInteractions: this.buildBusinessInterations(root_scenario.messages, diagram_map),
-
+            applications: application_map
         }
     }
     async getE2EProcesses() {
