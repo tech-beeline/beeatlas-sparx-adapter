@@ -5,9 +5,28 @@ import t_package from './ea-model/t_package.mjs';
 import t_connector from './ea-model/t_connector.mjs';
 import t_operation from './ea-model/t_operation.mjs';
 import t_diagram from './ea-model/t_diagram.mjs';
+import t_xref from './ea-model/t_xref.mjs';
 
 const ENVIROMENT_VARIABLE = {
     user: "DB_EA_USER", password: "DB_EA_PASSWORD", host: "DB_EA_URL", database: "DB_EA_DATABASE"
+}
+
+export const CONNECTOR_STEREOTYPES = {
+    ARCHIMATE_AGGREGATION: 'ArchiMate3::ArchiMate_Aggregation'
+}
+const CONNECTOR_STEREOTYPE = {
+    [CONNECTOR_STEREOTYPES.ARCHIMATE_AGGREGATION]: {
+        connector_type: 'Association', stereotype: 'ArchiMate_Aggregation',
+        properties: {
+            direction: 'Unspecified',
+            destaccess: 'Public',
+            sourceisaggregate: 1
+        },
+        t_xref: {
+            name: 'Stereotypes', type: 'connector property',
+            description: '@STEREO;Name=ArchiMate_Aggregation;FQName=ArchiMate3::ArchiMate_Aggregation;@ENDSTEREO;', supplier: '<none'
+        }
+    }
 }
 
 class Repository {
@@ -141,6 +160,7 @@ class Repository {
         const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r))).then(v => v.find(a => a));
     }
+
     /**
      * 
      * @param {t_object} obj 
@@ -180,8 +200,8 @@ class Repository {
                         text: 'UPDATE t_trxtypes SET notes=$1 where trx_id=$2',
                         values: [Object.entries(trx).map(([k, v]) => `${k}=${v};`).join(''), autocount.trx_id]
                     });
-                    obj = await this.insert(t_object, obj, client);
                 }
+                obj = await this.insert(t_object, obj, client);
                 await client.query('COMMIT');
                 return obj;
             } catch (error) {
@@ -199,7 +219,8 @@ class Repository {
      * @param {t_package} pkg 
      */
     async putPackage(pkg) {
-        return (await this.find(t_package, { parent_id: pkg.parent_id, name: pkg.name }).then(rows => rows.find(r => r))) ?? (await this.createPackage({ parent_id: pkg.parent_id, name: pkg.name }));
+        return (await this.first(t_package, { parent_id: pkg.parent_id, name: pkg.name })) ??
+            (await this.createPackage({ parent_id: pkg.parent_id, name: pkg.name }));
     }
     buildDiagram(d) {
         return Object.assign({
@@ -215,7 +236,16 @@ class Repository {
     }
 
     async putConnector(start_object_id, end_object_id, connector_type, additionalProperties) {
-        let connector_properties = { start_object_id: start_object_id, end_object_id: end_object_id, connector_type: connector_type };
+        const stereotype_prop = CONNECTOR_STEREOTYPE[connector_type];
+
+        let connector_properties = {
+            start_object_id: start_object_id, end_object_id: end_object_id,
+            connector_type: stereotype_prop?.connector_type ?? connector_type
+        };
+        if (stereotype_prop?.stereotype) {
+            connector_properties.stereotype = stereotype_prop.stereotype;
+        }
+
         let connector = await this.find(t_connector, connector_properties).then(rows => rows.find(r => r));
 
         if (!connector) {
@@ -231,9 +261,13 @@ class Repository {
                 destisordered: 0,
                 linecolor: -1,
                 rouestyle: 3
-            }, additionalProperties ?? {}, connector_properties)
+            }, additionalProperties ?? {}, connector_properties, stereotype_prop.properties ?? {})
 
-            return await this.insert(t_connector, connector_properties);
+            connector = await this.insert(t_connector, connector_properties);
+            if (stereotype_prop.t_xref) {
+                await this.insert(t_xref, Object.assign({ client: connector.ea_guid }, stereotype_prop.t_xref));
+            }
+            return connector;
         }
         return connector;
     }
@@ -242,7 +276,11 @@ class Repository {
          * @type {t_package}
          */
         let new_pkg = await this.insert(t_package, pkg);
-        const obj = this.createObject({ name: new_pkg.name, ea_guid: new_pkg.ea_guid, object_type: 'Package', package_id: pkg.parent_id, author: 'FDM API', version: '1.0', pdata1: new_pkg.package_id })
+
+        const obj = await this.createObject({
+            name: new_pkg.name, ea_guid: new_pkg.ea_guid, object_type: 'Package',
+            package_id: pkg.parent_id, author: 'FDM API', version: '1.0', pdata1: new_pkg.package_id, status: 'Proposed'
+        })
         return new_pkg;
     }
 

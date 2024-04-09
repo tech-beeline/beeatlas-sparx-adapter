@@ -7,7 +7,7 @@ process.env.API_PORT = process.env.API_PORT ?? 8080;
 
 
 async function queryOnStart() {
-    let tt = await Repository.queryRows("select * from t_diagramobjects limit 10");
+    let tt = await Repository.queryRows("select * from t_diagramlinks limit 10");
     /*
     console.log(
         Object.entries(tt[0]).filter(([k, v]) => v)
@@ -15,8 +15,7 @@ async function queryOnStart() {
     )
     */
     
-    console.log(`class t_diagramobjects {
-        ${Object.keys(tt[0]).map(k=>`\n\t${k};`).join('')}
+    console.log(`class t_diagramlinks {${Object.keys(tt[0]).map(k=>`\n\t${k};`).join('')}
     }`)
     //*/
 }
