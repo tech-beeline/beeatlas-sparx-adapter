@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid'
 import t_package from './ea-model/t_package.mjs';
 import t_connector from './ea-model/t_connector.mjs';
 import t_operation from './ea-model/t_operation.mjs';
+import t_diagram from './ea-model/t_diagram.mjs';
 
 const ENVIROMENT_VARIABLE = {
     user: "DB_EA_USER", password: "DB_EA_PASSWORD", host: "DB_EA_URL", database: "DB_EA_DATABASE"
@@ -43,17 +44,36 @@ class Repository {
     /**
      * 
      * @param {String|{text : String, values : []}} sql 
+     * @param {Array} values
      * @returns {Promise<Array>}
      */
-    async queryRows(sql) {
+    async queryRows(sql, values) {
         try {
             let client = new pg.Client(this.config);
             await client.connect();
-            let rows = (await client.query(sql)).rows;
-            client.end();
+            let rows = (await client.query(sql, values)).rows;
+            await client.end();
             return rows;
         } catch (error) {
-            console.log( sql?.text??sql );
+            console.log(sql?.text ?? sql);
+            throw error;
+        }
+    }
+    /**
+   * 
+   * @param {String|{text : String, values : []}} sql 
+   * @param {Array} values 
+   * @returns {Promise}
+   */
+    async queryOne(sql, values) {
+        try {
+            let client = new pg.Client(this.config);
+            await client.connect();
+            let rows = (await client.query(sql, values)).rows;
+            await client.end();
+            return rows.find(a => a);
+        } catch (error) {
+            console.log(sql?.text ?? sql);
             throw error;
         }
     }
@@ -73,19 +93,33 @@ class Repository {
     async objectByAlias(alias) {
         return this.getObjectsByAlias(alias).then(rows => rows.find(v => true));
     }
-    async insert(type, value) {
+    async insert(type, value, client) {
         if (!(value instanceof type)) value = new type(value);
         if (value.beforeCreate) value.beforeCreate();
 
         let field_values = Object.entries(value).filter(([k, v]) => v);
         const text = `INSERT INTO ${type.name}(${field_values.map(([k, v]) => `${k}`).join(',')}) VALUES(${field_values.map((v, i) => `$${i + 1}`)}) RETURNING *`;
 
-        let client = new pg.Client(this.config);
+        if (client) return await client.query({ text: text, values: field_values.map(([_, v]) => v) }).then(
+            v => v.rows.find(a => a));
+
+        client = new pg.Client(this.config);
         await client.connect();
-        let res = await client.query({ text: text, values: field_values.map(([_, v]) => v) });
-        client.end();
-        if (res.rowCount)
-            return new type(res.rows[0]);
+
+        try {
+            await client.query('BEGIN');
+            let res = await client.query({ text: text, values: field_values.map(([_, v]) => v) });
+            await client.query('COMMIT');
+
+            if (res.rowCount)
+                return new type(res.rows[0]);
+
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            await client.end();
+        }
     }
     async update(type, value, condition) {
         if (!condition) throw Error('update condition is null ');
@@ -103,11 +137,61 @@ class Repository {
         const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r)));
     }
+    async first(type, condition) {
+        const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
+        return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r))).then(v => v.find(a => a));
+    }
     /**
      * 
      * @param {t_object} obj 
+     * @returns {Promise<t_object>}
      */
     async createObject(obj) {
+        if (!obj.alias) {
+            /**
+             * @type {pg.Client}
+             */
+            let client = new pg.Client(this.config);
+            await client.connect();
+            try {
+                await client.query('BEGIN');
+
+                let autocount = obj.stereotype ? await this.queryOne({
+                    text: `select * 
+                from t_trxtypes
+                where description = 'AutocountEx' and trx = $1`, values: [obj.stereotype]
+                }) : null;
+                if (!autocount) {
+                    autocount = await this.queryOne({ text: `select * from t_trxtypes where description = 'Autocount' and trx = $1`, values: [obj.object_type] })
+                }
+
+                if (autocount) {
+                    let trx = autocount.notes.split(';').filter(a => a.length)
+                        .map(v => v.split('='))
+                        .reduce((acc, [k, v]) => Object.assign(acc, { [k]: v }), {});
+                    if (trx.active == '1') {
+                        throw Error('not implemented')
+                    }
+                    if (trx.active_a == '1') {
+                        trx.counter_a = String(Number(trx.counter_a) + 1).padStart(trx.counter_a.length, '0');
+                        obj.alias = `${trx.prefix_a}${trx.counter_a}`;
+                    }
+                    await client.query({
+                        text: 'UPDATE t_trxtypes SET notes=$1 where trx_id=$2',
+                        values: [Object.entries(trx).map(([k, v]) => `${k}=${v};`).join(''), autocount.trx_id]
+                    });
+                    obj = await this.insert(t_object, obj, client);
+                }
+                await client.query('COMMIT');
+                return obj;
+            } catch (error) {
+                await client.query('ROLLBACK');
+                throw error;
+            } finally {
+                await client.end();
+            }
+
+        }
         return this.insert(t_object, obj);
     }
     /**
@@ -117,6 +201,19 @@ class Repository {
     async putPackage(pkg) {
         return (await this.find(t_package, { parent_id: pkg.parent_id, name: pkg.name }).then(rows => rows.find(r => r))) ?? (await this.createPackage({ parent_id: pkg.parent_id, name: pkg.name }));
     }
+    buildDiagram(d) {
+        return Object.assign({
+            package_id: 17888,
+            version: '1.0',
+            attpub: '1', attpri: '1', attpro: '1', orientation: 'P', cx: '795', cy: '1138', scale: '100',
+            showforeign: '1', showborder: '1', showpackagecontents: '1'
+        }, d);
+    }
+    async putDiagram(d) {
+        return (await this.first(t_diagram, { package_id: d.package_id, name: d.name })) ??
+            (await this.insert(t_diagram, this.buildDiagram(d)));
+    }
+
     async putConnector(start_object_id, end_object_id, connector_type, additionalProperties) {
         let connector_properties = { start_object_id: start_object_id, end_object_id: end_object_id, connector_type: connector_type };
         let connector = await this.find(t_connector, connector_properties).then(rows => rows.find(r => r));

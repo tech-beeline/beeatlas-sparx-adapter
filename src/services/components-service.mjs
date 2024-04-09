@@ -39,18 +39,22 @@ class ComponentsService {
 	#addContainerFromRow(system, row) {
 		if (!row.container_code)
 			return;
+		const container_code = row.container_code?.split('.').find(v => v);
+		if (!container_code) return;
 		/**
 		 * @type {Container}
 		 */
-		let container = system.containerByCode(row.container_code) ?? system.addContainer({
+		let container = system.containerByCode(container_code) ?? system.addContainer({
 			name: row.container,
-			code: row.container_code.split('.').find(v => v), version: row.container_version
+			code: container_code, version: row.container_version
 		});
+		const interface_code = row.interface_code.split('.').find(v => v);
+		if (!interface_code) return;
 		if (!row.interface_code)
 			return;
-		let api = container.interfaceByCode(row.i_code) ?? container.addInterface({
+		let api = container.interfaceByCode(interface_code) ?? container.addInterface({
 			name: row.interface,
-			code: row.interface_code.split('.').find(v => v), version: row.interface_version, ...row
+			code: interface_code, version: row.interface_version, ...row
 		});
 	}
 	async getSystemList() {
@@ -97,7 +101,7 @@ class ComponentsService {
 		 * @type {t_object}
 		 */
 		let ea_system = await Repository.find(t_object, { alias: code, object_type: 'Component' }).then(rows => rows.find(r => r));
-		if (!ea_system) Object.assign(Error(`system with code ${code} not found`, { status: 404 }));
+		if (!ea_system) throw Object.assign(Error(`system with code ${code} not found`, { status: 404 }));
 
 		const system_package_id = ea_system.package_id;
 		let container_package = await Repository.putPackage({ parent_id: system_package_id, name: CONSTANTS.CONTAINERS_FOLDER });

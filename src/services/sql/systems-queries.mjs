@@ -26,7 +26,6 @@ const SYSTEM_REALIZATION_LIST = `with recursive app_catalog as (
         left join rel i on i.start_object_id=container.object_id and i.object_type='Interface' and i.alias is not null and i.alias <> ''
     `;
 const SYSTEM_REALIZATION_BY_CODE = `${SYSTEM_REALIZATION_LIST}
-    where app.alias=$1
-    `
+    where app.alias=$1`
 
 export default { SYSTEM_REALIZATION_LIST, SYSTEM_REALIZATION_BY_CODE };

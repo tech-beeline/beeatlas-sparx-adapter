@@ -1,4 +1,5 @@
 import fs from "fs";
+import NodeBuffer, { Buffer } from "node:buffer";
 import https from "https"
 import zipStream from "node-stream-zip"
 import YAML from "yaml";
@@ -14,11 +15,21 @@ export class InterfaсeAgreement {
     constructor(rawContent) {
         this.raw = rawContent;
         try {
-            this.yaml = YAML.parse(rawContent.toString());
+
+            if (NodeBuffer.isUtf8(rawContent)) {
+                this.yaml = YAML.parse(rawContent.toString('utf-8'));
+                return;
+            }
+            if (NodeBuffer.isAscii(rawContent)) {
+                this.yaml = YAML.parse(rawContent.toString('ascii'));
+                return;
+            }
+            this.yaml = YAML.parse(rawContent.toString('utf-16le'));
         } catch (error) {
             this.parseError = error;
         }
     }
+
 }
 export class IARepository {
     static CACHE_STATUS_PATH = "./data/ia-cache-status.json";
@@ -106,8 +117,7 @@ export class IARepository {
     }
 
     /**
-     * 
-     * @param {string} path 
+     * @param {string} path
      * @returns {Promise<InterfaсeAgreement>}
      */
     async byPath(path) {
@@ -127,8 +137,8 @@ export class IARepository {
      * @returns {IARepository}
      */
     static get Instance() {
-        if( !this.IA_GIT_TOKEN ){
-            throw Error( 'IA_GIT_TOKEN not set')
+        if (!this.IA_GIT_TOKEN) {
+            throw Error('IA_GIT_TOKEN not set')
         }
         if (this.#instance)
             return this.#instance;

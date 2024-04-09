@@ -4,23 +4,12 @@ import { NavLink } from "react-router-dom";
 
 
 function App() {
-  function clickFn(msg){
-    console.log('!!!!!', msg);
-  }
   return (
-    <div className="App">
+    <div>
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
         <NavLink to="/e2e-filling-status" target='_blank'>Статус заполнения Е2Е процессов</NavLink>
-        <button onClick={clickFn}>Press me</button>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <NavLink to="/swagger" target='_blank'>Swagger</NavLink>
+        <NavLink to="/e2e-processes">Е2Е Процессы (иерархия вызовов)</NavLink>
       </header>
     </div>
   );

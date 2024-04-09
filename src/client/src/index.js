@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import E2EFillingDetails from './Components/e2e-filling-details.mjs';
 import E2EFillingDiagramStatus from './Components/e2e-filling-diagram-status';
 import E2EScenario from './Components/e2e-scenario.mjs';
+import E2EProcesses from './Components/e2e-processes';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -21,6 +22,7 @@ root.render(
       <Route path="/e2e-filling-status" element={<E2EFillingStatus />} />
       <Route path="/e2e-filling-status/:code/details" element={<E2EFillingDetails />} />
       <Route path="/e2e-filling-status/:sequence/details/:diagram" element={<E2EFillingDiagramStatus />} />
+      <Route path="/e2e-processes" element={<E2EProcesses/>} />
       <Route path="/e2e-scenarios/:uid" element={<E2EScenario/>} />
 
     </Routes>

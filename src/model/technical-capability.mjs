@@ -1,4 +1,6 @@
+
 class TechnicalCapability {
+    static STEREOTYPE = 'ArchiMate_TechnicalCapability';
     code;
     name;
     description;
@@ -9,20 +11,26 @@ class TechnicalCapability {
     parents = [];
     owner;
     children;
+    targetSystemCode;
+    relatedSystems;
+    /**
+     * 
+     * @param {{code, name, description, author, createdDate, modifiedDate, status, targetSystemCode, parents:[]}} cap 
+     * @returns 
+     */
     constructor(cap) {
         if (!cap) return;
-        cap.parents = cap.parents ?? [];
+        //cap.parents = cap.parents ?? [];
         for (const prop in this) {
             this[prop] = cap[prop] ?? undefined;
         }
+        this.relatedSystems = this.relatedSystems ?? cap.targetSystemCode ? [cap.targetSystemCode] : [];
     }
-    async getTechnicalCapabilities(request, response) {
-        try {
-            throw Error('not implemented');
-        } catch (err) {
-            console.error(err);
-            response.status(500).send(err.message);
-        }
+    addParent(s) {
+        /*if (s === null)
+            return;
+            */
+        (this.parents = this.parents ?? []).push(s);
     }
 }
 
