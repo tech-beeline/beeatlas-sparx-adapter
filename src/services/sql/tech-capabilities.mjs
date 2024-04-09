@@ -38,6 +38,7 @@ where
 	and tobj.stereotype in ('ArchiMate_Capability', 'ArchiMate_TechnicalCapability')
 `
 const TECH_CAPABILITITY_QUERY = `${ALL_TECH_CAPABILITITES_QUERY} and tobj2.alias=$1`
+
 const TECH_CAPABILITITY_REALIZATION_QUERY = `with recursive app_catalog as (
     select package_id, package_id as parent_id, name , name::text as "fullName", ea_guid
         from t_package where ea_guid='${app_catalog.APP_CATALOG_ROOT}'

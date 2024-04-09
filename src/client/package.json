@@ -18,8 +18,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build-rename": "npm run build-rename-js && npm run build-rename-css",
-    "build-rename-js": "renamer --find 'main\\.[^\\.]+\\.js' --replace 'main.js' build/static/js/*.js",
-    "build-rename-css": "renamer --find 'main\\.[^\\.]+\\.css' --replace 'main.css' build/static/css/*.css"
+    "build-rename-js": "renamer --find '/main\\.[^\\.]+\\.js/' --replace 'main.js' build/static/js/*.js",
+    "build-rename-css": "renamer --find '/main\\.[^\\.]+\\.css/' --replace 'main.css' build/static/css/*.css",
+    "build-deploy": ""
   },
   "eslintConfig": {
     "extends": [
