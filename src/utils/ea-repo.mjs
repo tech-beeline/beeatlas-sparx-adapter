@@ -284,6 +284,22 @@ class Repository {
         return new_pkg;
     }
 
+    async setMethodsDeleted(methodIds) {
+        if (!methodIds || !methodIds.length) return;
+
+        let client = new pg.Client(this.config);
+        await client.connect();
+        try {
+            await client.query(`UPDATE t_operation SET 
+            name = '[REMOVED] ' || name,
+            stereotype = 'removed'
+            where stereotype <> 'removed and operationid = ANY($1)
+            `, [methodIds]);
+        } catch (error) {
+            await client.end();
+        }
+
+    }
     async deleteMethods(methodIds) {
         if (!methodIds || !methodIds.length) return;
 

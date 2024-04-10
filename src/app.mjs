@@ -20,7 +20,7 @@ async function queryOnStart() {
     //*/
 }
 
-queryOnStart();
+//queryOnStart();
 
 //throw Error('environment variable API_PORT not set');
 let server = app.listen(process.env.API_PORT, () => {
