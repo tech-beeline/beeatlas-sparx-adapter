@@ -1,4 +1,5 @@
 import fs from "fs";
+import os from 'os'
 import NodeBuffer, { Buffer } from "node:buffer";
 import https from "https"
 import zipStream from "node-stream-zip"
@@ -33,14 +34,15 @@ export class InterfaсeAgreement {
 }
 export class IARepository {
     static CACHE_STATUS_PATH = "./data/ia-cache-status.json";
-    static GIT_ARCHIVE = "./data/interface-agreement.zip";
+    static DATA_FOLDER = os.tmpdir();
+    static GIT_ARCHIVE = `${this.DATA_FOLDER}/interface-agreement.zip`;
     static CACHE_REFRESH_MS = 3600000;
     static git_base = "https://git.vimpelcom.ru/common/architecture/interface-agreement/-/blob/main";
     static PREFIX_LIST = [
         "", this.git_base
     ];
     static IA_GIT_TOKEN = process.env.IA_GIT_TOKEN;
-    static DATA_FOLDER = './data'
+
     #data;
     #status;
     #cache_load_time;
