@@ -40,6 +40,7 @@ export class IARepository {
         "", this.git_base
     ];
     static IA_GIT_TOKEN = process.env.IA_GIT_TOKEN;
+    static DATA_FOLDER = './data'
     #data;
     #status;
     #cache_load_time;
@@ -68,6 +69,10 @@ export class IARepository {
     }
     async #downloadFromGit() {
         console.log(`download interface agreement from gitlab`);
+        if (!fs.existsSync(IARepository.DATA_FOLDER)) {
+            console.log('make ./data');
+            fs.mkdirSync(IARepository.DATA_FOLDER);
+        }
         let p = new Promise((resolve, reject) => {
             try {
                 https.get('https://git.vimpelcom.ru/api/v4/projects/common%2Farchitecture%2Finterface-agreement/repository/archive.zip', {
@@ -102,6 +107,7 @@ export class IARepository {
                                     reject(err);
                                 });
                         } catch (error) {
+                            console.error(error);
                             reject(error);
                         }
                     }).on('error', (e) => reject(e)).end();
