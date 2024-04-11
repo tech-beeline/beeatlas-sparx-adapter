@@ -33,7 +33,6 @@ RUN npm install --omit=dev && mv node_modules ../ && \
     rm -fr /tmp/* && \
     npm cache clean --force
 
-
 COPY . .
 EXPOSE 8080
 

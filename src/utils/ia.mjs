@@ -77,27 +77,33 @@ export class IARepository {
                     rejectUnauthorized: false //[ ] Можно заменить на подстановку сертификата, низкий приоритет
                 },
                     response => {
-                        let file = fs.createWriteStream(IARepository.GIT_ARCHIVE);
+                        try {
 
-                        if (response.statusCode !== 200) {
-                            reject(Error(`HTTP ${response.statusCode} : ${response.statusMessage}`));
-                            return;
-                        }
 
-                        file.on('finish', () => {
-                            resolve();
-                        });
+                            let file = fs.createWriteStream(IARepository.GIT_ARCHIVE);
 
-                        response.pipe(file);
+                            if (response.statusCode !== 200) {
+                                reject(Error(`HTTP ${response.statusCode} : ${response.statusMessage}`));
+                                return;
+                            }
 
-                        response.on('finish', (data) => {
-                            console.log('Interface Agreement downloaded from git')
-                            resolve();
-                        })
-                            .on('error', (err) => {
-                                console.error(err);
-                                reject(err);
+                            file.on('finish', () => {
+                                resolve();
                             });
+
+                            response.pipe(file);
+
+                            response.on('finish', (data) => {
+                                console.log('Interface Agreement downloaded from git')
+                                resolve();
+                            })
+                                .on('error', (err) => {
+                                    console.error(err);
+                                    reject(err);
+                                });
+                        } catch (error) {
+                            reject(error);
+                        }
                     }).on('error', (e) => reject(e)).end();
             } catch (ex) {
                 console.error(ex);

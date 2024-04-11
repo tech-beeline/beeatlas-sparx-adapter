@@ -23,7 +23,8 @@
 LICENSE
 README.md
 dump
-data
+data/tmp
+data/interface-agreement.zip
 diagrams
 docker
 test

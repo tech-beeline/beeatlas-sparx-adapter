@@ -82,6 +82,7 @@ class E2EProcessService {
      * @returns {Promise<Array>}
      */
     async getProcessMessages(processUID) {
+        console.log( `Request messages for ${processUID}`)
         /**
          * @type {Array<{ message, e2e_uid, diagram_uid, server_id}>}
          */
