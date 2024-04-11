@@ -54,3 +54,12 @@ ul {
     margin: 3px;
     padding: 3px;
 }
+
+.message-details-button {
+    background-color: lightblue;
+    cursor: pointer;
+}
+
+.details-block {
+    /*background-color: lightblue;*/
+}

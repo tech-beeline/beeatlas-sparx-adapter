@@ -92,12 +92,6 @@ export default function E2EScenario() {
                             <div>Максимальная задержка (95 перцентиль) : {m.interfaceAgreement?.yaml?.loadProfile?.responseDelayMax?.value} {m.interfaceAgreement?.yaml?.loadProfile?.responseDelayMax?.dimension}</div>
                         </div>
                     </div> : ''}
-                    {
-                        m.validationError?.length ? <div style={{ color: 'red' }}><b>Ошибки в описании:</b>
-                            <ul>
-                                {m.validationError.map(err => <li><div className="message-caption" dangerouslySetInnerHTML={{ __html: err }}></div></li>)}
-                            </ul>
-                        </div> : ''}
                     {has_child ? <div>
                         <span className="caret" onClick={showHideChild}>Дочерние сообщения</span>
                         <div className="child-messages">
