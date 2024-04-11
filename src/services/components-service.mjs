@@ -133,6 +133,7 @@ class ComponentsService {
 			await Repository.putConnector(ea_system.object_id, ea_container.object_id, 'Realisation');
 
 			//[ ] Добавить обновление контейнера в выходных данных
+			//[ ] Удаление интерфейсов - скорее всего надо помечать, как удаленные
 
 			for (let i_to_set of container_to_set.interfaces) {
 				let ea_interface = (await Repository.find(t_object, { package_id: interface_package.package_id, alias: i_to_set.code, object_type: 'Interface' })).find(r => r);

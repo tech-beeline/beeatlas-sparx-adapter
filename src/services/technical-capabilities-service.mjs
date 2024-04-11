@@ -2,11 +2,14 @@ import TechnicalCapability from "../model/technical-capability.mjs";
 import t_diagram from "../utils/ea-model/t_diagram.mjs";
 import t_diagramobjects from "../utils/ea-model/t_diagramobjects.mjs";
 import t_object from "../utils/ea-model/t_object.mjs";
+import t_xref from "../utils/ea-model/t_xref.mjs";
 import t_package from "../utils/ea-model/t_package.mjs";
-import Repository from "../utils/ea-repo.mjs";
+import Repository, { CONNECTOR_STEREOTYPES } from "../utils/ea-repo.mjs";
 import { BadRequest, NotFound } from "../utils/errors.mjs";
 import APP_CATALOG from "./sql/application-catalog.mjs";
 import TC_QUERY from './sql/tech-capabilities.mjs'
+import t_diagramlinks from "../utils/ea-model/t_diagramlinks.mjs";
+import t_connector from "../utils/ea-model/t_connector.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -25,6 +28,8 @@ class TechnicalCapabilityService {
 
 	}
 	async getTechnicalCapability({ code } = {}) {
+		if (!code) throw BadRequest('Не указан code для получения capability');
+
 		const tc_map = (await Repository.queryRows({ text: TC_QUERY.TECH_CAPABILITITY_QUERY, values: [code] }))
 			.reduce((acc, v) =>
 				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.bc_code), acc), {})
@@ -60,13 +65,18 @@ class TechnicalCapabilityService {
 			stereotype: TechnicalCapability.STEREOTYPE,
 			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 		});
+		await Repository.insert(t_xref, t_xref.ArchimateElementStereotype({ guid: tc.ea_guid, stereotype: TechnicalCapability.STEREOTYPE }));
 
-
+		tc.code = tc.alias;
+		tc.createdDate = tc.createddate;
+		tc.modifiedDate = tc.modifieddate;
+		tc.description = tc.note;
 
 		for (let bc of Object.values(parents_bc)) {
 			await this.addParent(tc, bc);
 		}
 
+		return this.getTechnicalCapability({ code: tc.alias });
 		return this.getTechnicalCapability({ code: tc.alias });
 	}
 
@@ -89,6 +99,7 @@ class TechnicalCapabilityService {
 					recttop: -35, rectleft: max_r + 50, rectbottom: -105, rectright: max_r + 150
 				})
 		};
+
 		let tc_do = await Repository.first(t_diagramobjects, { diagram_id: diagram.diagram_id, object_id: capability_id });
 
 		if (!tc_do) {
@@ -98,7 +109,9 @@ class TechnicalCapabilityService {
 					recttop: -275, rectleft: max_r + 50, rectbottom: -350, rectright: max_r + 150
 				});
 		}
-		Repository.putConnector(capability_id, parent_id, 'Realisation');
+		/** @type {t_connector} */
+		const connector = await Repository.putConnector(parent_id, capability_id, CONNECTOR_STEREOTYPES.ARCHIMATE_AGGREGATION);
+		await Repository.insert(t_diagramlinks, { diagramid: diagram.diagram_id, connectorid: connector.connector_id, geometry: 'EDGE=3;$LLB=;LLT=;LMT=;LMB=;LRT=;LRB=;IRHS=;ILHS=;' });
 	}
 }
 

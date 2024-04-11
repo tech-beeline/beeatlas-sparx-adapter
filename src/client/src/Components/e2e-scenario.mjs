@@ -2,6 +2,7 @@ import { NavLink, useParams } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
 import refresh from './refresh.png'
 import './css/e2e-scenario.css'
+import MessageCard from "./message-card.mjs";
 
 const IA_CAPTION_TEXT = {
     none: 'Показать профиль нагрузки',
@@ -69,7 +70,7 @@ export default function E2EScenario() {
         const div_caption = e.target;
         div_caption.parentElement.querySelectorAll('.ia-content').forEach(d => {
             d.style.display = d.style.display == 'none' ? '' : 'none';
-            div_caption.innerText = d.style.display === 'none'? IA_CAPTION_TEXT.none:IA_CAPTION_TEXT.show
+            div_caption.innerText = d.style.display === 'none' ? IA_CAPTION_TEXT.none : IA_CAPTION_TEXT.show
         })
     }
 
@@ -80,12 +81,8 @@ export default function E2EScenario() {
         return <><ul>
             {messages.map(m => {
                 const has_child = m.messages?.filter(m => m.type !== 'internalCall').length;
-                const message_caption = <><span className="application">[{getApp(m.server?.$ref)?.name ?? m.server_name}]</span> : {m.message}</>
 
-                return <li><div className={"message-caption"}>
-                    {message_caption} <font color='green'>
-                        <a href={"https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=" + m.diagram_uid} target="_blank">{m.diagram}</a></font>
-                </div>
+                return <li><MessageCard message={m} applications={e2eScenario?.scenario?.applications}></MessageCard>
                     {m.duration ? <div>Длительность : {m.duration}</div> : ''}
                     {m.interfaceAgreement?.yaml?.loadProfile ? <div>
                         <div onClick={showHideIA} className="ia-caption">{IA_CAPTION_TEXT.none}</div>

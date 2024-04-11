@@ -12,7 +12,7 @@ const CAPABILITY_QUERY =
 		d.name as name, 
 		true as "isDomain",
 		d.descr as description,
-		po.alias as "parentCode", 
+		po.alias as "parent", 
 		true as "isParentDomain",
 		d.owner,
 		p.author, 
@@ -72,9 +72,9 @@ class CapabiliiesService {
             if (ret[cap.code]) {
                 Object.assign(ret[cap.code], cap);
             } else ret[cap.code] = cap;
-            const parentCode = cap.parentCode;
-            if (parentCode) {
-                let parent = ret[parentCode] = ret[parentCode] ?? { code: parentCode };
+            const parent = cap.parentCode;
+            if (parent) {
+                let parent = ret[parent] = ret[parent] ?? { code: parent };
                 parent.children = parent.children ?? [];
                 parent.children.push(cap);
             } else {
@@ -92,8 +92,7 @@ class CapabiliiesService {
         const caps = await Repository.queryRows({
             text:
                 `${CAPABILITY_QUERY}
-    where code=$1
-        `, values: [code]
+    where code=$1`, values: [code]
         });
         if (caps.length === 0)
             return null;
@@ -107,7 +106,7 @@ class CapabiliiesService {
     async getCapabilityChildren(code) {
         return (await Repository.queryRows({
             text: `${CAPABILITY_QUERY}
-            where "parentCode" = $1`, values: [code]
+            where "parent" = $1`, values: [code]
         }))
             .map(c => new Capability(c));
     }

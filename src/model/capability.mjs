@@ -19,7 +19,7 @@ class Capability {
     createdDate;
     modifiedDate;
     status;
-    parentCode;
+    parent;
     owner;
     children;
     constructor(cap) {
