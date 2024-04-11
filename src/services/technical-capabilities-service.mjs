@@ -52,24 +52,22 @@ class TechnicalCapabilityService {
 
 		let tc_package = await Repository.putPackage({ parent_id: system_package.package_id, name: TC_QUERY.TC_PACKAGE_NAME });
 
-		const tc = await Repository.createObject({
+		const tc =  await Repository.createObject({
 			package_id: tc_package.package_id, name: capability.name, object_type: "Class",
 			author: "FDM API", alias: capability.code,
 			note: capability.description,
+			scope: 'Public', parentid: '0', classifier: '0', pdata4: '0',
 			stereotype: TechnicalCapability.STEREOTYPE,
 			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 		});
 
-		tc.code = tc.alias;
-		tc.createdDate = tc.createddate;
-		tc.modifiedDate = tc.modifieddate;
-		tc.description = tc.note;
+
 
 		for (let bc of Object.values(parents_bc)) {
 			await this.addParent(tc, bc);
 		}
 
-		return new TechnicalCapability(tc);
+		return this.getTechnicalCapability({ code: tc.alias });
 	}
 
 	async addParent(capability, parent) {
@@ -100,7 +98,7 @@ class TechnicalCapabilityService {
 					recttop: -275, rectleft: max_r + 50, rectbottom: -350, rectright: max_r + 150
 				});
 		}
-		Repository.putConnector( parent_id, capability_id, 'Realisation')
+		Repository.putConnector(capability_id, parent_id, 'Realisation');
 	}
 }
 

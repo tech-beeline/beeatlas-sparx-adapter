@@ -16,7 +16,7 @@ const TC_METHODS = {
                         content: {
                             "application/json": {
                                 examples: {
-                                    "OK": [ TC_SAMPLES.POST_SMAPLE]
+                                    "OK": [TC_SAMPLES.POST_SMAPLE]
                                 }
                             }
                         }
@@ -31,17 +31,17 @@ const TC_METHODS = {
                         description: "OK",
                         content: {
                             "application/json": {
-                                "OK": []
+                                examples: { "OK": TC_SAMPLES.POST_SMAPLE }
                             }
                         }
                     }
                 },
-                requestBody : {
+                requestBody: {
                     required: true,
                     content: {
-                        "application/json" : {
-                            examples : {
-                                "TC" : TC_SAMPLES.POST_SMAPLE
+                        "application/json": {
+                            examples: {
+                                "TC": TC_SAMPLES.POST_SMAPLE
                             }
                         }
                     }

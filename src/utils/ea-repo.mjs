@@ -197,6 +197,7 @@ class Repository {
     /**
      * 
      * @param {t_package} pkg 
+     * @returns {Promise<t_package>}
      */
     async putPackage(pkg) {
         return (await this.find(t_package, { parent_id: pkg.parent_id, name: pkg.name }).then(rows => rows.find(r => r))) ?? (await this.createPackage({ parent_id: pkg.parent_id, name: pkg.name }));
