@@ -84,21 +84,6 @@ export default function E2EScenario() {
 
                 return <li><MessageCard message={m} applications={e2eScenario?.scenario?.applications}></MessageCard>
                     {m.duration ? <div>Длительность : {m.duration}</div> : ''}
-                    {m.interfaceAgreement?.yaml?.loadProfile ? <div>
-                        <div onClick={showHideIA} className="ia-caption">{IA_CAPTION_TEXT.none}</div>
-                        <div className="ia-content" style={{ display: 'none' }}>
-                            <div>rps : {m.interfaceAgreement?.yaml?.loadProfile.requests?.value} / {m.interfaceAgreement?.yaml?.loadProfile.requests?.dimension}
-                            </div>
-                            <div>Максимальная задержка (95 перцентиль) : {m.interfaceAgreement?.yaml?.loadProfile?.responseDelayMax?.value} {m.interfaceAgreement?.yaml?.loadProfile?.responseDelayMax?.dimension}</div>
-                        </div>
-                    </div> : ''}
-                    {has_child ? <div>
-                        <span className="caret" onClick={showHideChild}>Дочерние сообщения</span>
-                        <div className="child-messages">
-                            {buildMessageTree(m.messages)}
-                        </div>
-                    </div>
-                        : ''}
                 </li>
             })}</ul></>
     }
