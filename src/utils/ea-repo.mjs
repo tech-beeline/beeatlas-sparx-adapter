@@ -24,7 +24,7 @@ const CONNECTOR_STEREOTYPE = {
         },
         t_xref: {
             name: 'Stereotypes', type: 'connector property',
-            description: '@STEREO;Name=ArchiMate_Aggregation;FQName=ArchiMate3::ArchiMate_Aggregation;@ENDSTEREO;', supplier: '<none'
+            description: '@STEREO;Name=ArchiMate_Aggregation;FQName=ArchiMate3::ArchiMate_Aggregation;@ENDSTEREO;', supplier: '<none>'
         }
     }
 }
@@ -262,10 +262,10 @@ class Repository {
                 destisordered: 0,
                 linecolor: -1,
                 rouestyle: 3
-            }, additionalProperties ?? {}, connector_properties, stereotype_prop.properties ?? {})
+            }, additionalProperties ?? {}, connector_properties, stereotype_prop?.properties ?? {})
 
             connector = await this.insert(t_connector, connector_properties);
-            if (stereotype_prop.t_xref) {
+            if (stereotype_prop?.t_xref) {
                 await this.insert(t_xref, Object.assign({ client: connector.ea_guid }, stereotype_prop.t_xref));
             }
             return connector;
