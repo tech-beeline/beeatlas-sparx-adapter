@@ -48,7 +48,7 @@ class ComponentsService {
 			name: row.container,
 			code: container_code, version: row.container_version
 		});
-		const interface_code = row.interface_code.split('.').find(v => v);
+		const interface_code = row.interface_code?.split('.').find(v => v);
 		if (!interface_code) return;
 		if (!row.interface_code)
 			return;

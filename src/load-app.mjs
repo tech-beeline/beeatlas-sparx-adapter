@@ -5,6 +5,7 @@ import SwaggerUI from 'swagger-ui-dist'
 import path from 'path'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import RESTMetric from './metrics/middleware.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,6 +15,8 @@ const pathToSwaggerUi = SwaggerUI.absolutePath();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use( RESTMetric );
+
 
 //#region Маршруты для swagger UI
 app.use('/swagger', express.static('./src/view/ea-board-swagger.html'))
