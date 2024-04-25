@@ -26,12 +26,13 @@ register.registerMetric(httpRequestDurationMicroseconds)
  * @param {*} next 
  */
 export default async function RESTMetric(req, res, next) {
-    if (req.path === '/metrics') {
+    if (req.path === '/actuator/prometheus') {
         res.setHeader('Content-Type', register.contentType)
         res.send(await register.metrics());
+        console.info('GET /actuator/prometheus');
         return;
     }
-    
+
     if (!req.path.startsWith('/api')) {
         return next();
     }
