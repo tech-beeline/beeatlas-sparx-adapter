@@ -5,7 +5,7 @@ import t_object from "../utils/ea-model/t_object.mjs";
 import t_xref from "../utils/ea-model/t_xref.mjs";
 import t_package from "../utils/ea-model/t_package.mjs";
 import Repository, { CONNECTOR_STEREOTYPES } from "../utils/ea-repo.mjs";
-import { BadRequest, NotFound } from "../utils/errors.mjs";
+import { BadRequest, ConflictException, NotFound } from "../utils/errors.mjs";
 import APP_CATALOG from "./sql/application-catalog.mjs";
 import TC_QUERY from './sql/tech-capabilities.mjs'
 import t_diagramlinks from "../utils/ea-model/t_diagramlinks.mjs";
@@ -25,8 +25,8 @@ class TechnicalCapabilityService {
 				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.bc_code), acc), {})
 
 		return Object.values(tc_map);
-
 	}
+
 	async getTechnicalCapability({ code } = {}) {
 		if (!code) throw BadRequest('Не указан code для получения capability');
 
@@ -42,6 +42,7 @@ class TechnicalCapabilityService {
 	async postTechnicalCapability(capability) {
 		if (!capability) throw BadRequest(`Capability is null`);
 		if (!capability.parents || !capability.parents.length) throw BadRequest('Для создаваемой ТС должны быть указаны родительские BC (parents)')
+		if (await Repository.first(t_object, { alias: capability.code })) throw ConflictException(`TC c кодом ${capability.code} уже существует`);
 		/**
 		 * @type {{ code, package_id}}
 		 */
@@ -57,7 +58,8 @@ class TechnicalCapabilityService {
 
 		let tc_package = await Repository.putPackage({ parent_id: system_package.package_id, name: TC_QUERY.TC_PACKAGE_NAME });
 
-		const tc =  await Repository.createObject({
+		const tc = await Repository.createObject({
+			alias: capability.code,
 			package_id: tc_package.package_id, name: capability.name, object_type: "Class",
 			author: "FDM API", alias: capability.code,
 			note: capability.description,
@@ -65,6 +67,7 @@ class TechnicalCapabilityService {
 			stereotype: TechnicalCapability.STEREOTYPE,
 			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 		});
+
 		await Repository.insert(t_xref, t_xref.ArchimateElementStereotype({ guid: tc.ea_guid, stereotype: TechnicalCapability.STEREOTYPE }));
 
 		tc.code = tc.alias;
@@ -76,7 +79,6 @@ class TechnicalCapabilityService {
 			await this.addParent(tc, bc);
 		}
 
-		return this.getTechnicalCapability({ code: tc.alias });
 		return this.getTechnicalCapability({ code: tc.alias });
 	}
 
