@@ -35,7 +35,6 @@ class LoadRouteOptions {
  */
 export function routeControllers(swagger, options) {
 
-
  
     let swagger_routes = express.Router();
 

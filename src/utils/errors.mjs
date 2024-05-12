@@ -14,3 +14,7 @@ export function ConflictException(message){
 export function ProcessError( error, response ){
 
 }
+
+export function NotImplemented(){
+    throw Error( 'Not implemented');
+}

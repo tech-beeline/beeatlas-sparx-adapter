@@ -236,6 +236,10 @@ class Repository {
             (await this.insert(t_diagram, this.buildDiagram(d)));
     }
 
+    async removeConnectors( start_object_id, end_object_id, connector_type ){
+        
+    }
+
     async putConnector(start_object_id, end_object_id, connector_type, additionalProperties) {
         const stereotype_prop = CONNECTOR_STEREOTYPE[connector_type];
 
