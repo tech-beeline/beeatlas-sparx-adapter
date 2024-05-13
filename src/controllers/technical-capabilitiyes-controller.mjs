@@ -1,6 +1,7 @@
 import express from 'express'
 import TechnicalCapabilityService from '../services/technical-capabilities-service.mjs'
 import TechnicalCapability from '../model/technical-capability.mjs';
+import { BadRequest } from '../utils/errors.mjs';
 
 class TechnicalCapabilitiesController {
     async getTechnicalCapabilities(request, response) {
@@ -17,6 +18,22 @@ class TechnicalCapabilitiesController {
         } catch (error) {
             console.error(error)
             response.status(500).send(error.message);
+        }
+    }
+    /**
+    * 
+    * @param {express.Request} request 
+    * @param {*} response 
+    */
+    async putTechnicalCapability(request, response) {
+        try {
+            const capability = request.body;
+            if (!capability) throw BadRequest(`Body is empty`);
+            if( capability.code !== request.params.code ) throw BadRequest(`Code in request body (${capability.code}) not equal code in path parameter (${request.params.code})`);
+            response.json(await TechnicalCapabilityService.putTechnicalCapability(request.params.code, capability) )
+        } catch (error) {
+            console.error(error)
+            response.status(error.status ?? 500).send(error.message);
         }
     }
     /**

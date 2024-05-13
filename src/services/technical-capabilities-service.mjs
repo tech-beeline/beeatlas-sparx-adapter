@@ -5,7 +5,7 @@ import t_object from "../utils/ea-model/t_object.mjs";
 import t_xref from "../utils/ea-model/t_xref.mjs";
 import t_package from "../utils/ea-model/t_package.mjs";
 import Repository, { CONNECTOR_STEREOTYPES } from "../utils/ea-repo.mjs";
-import { BadRequest, NotFound } from "../utils/errors.mjs";
+import { BadRequest, ConflictException, NotFound, NotImplemented } from "../utils/errors.mjs";
 import APP_CATALOG from "./sql/application-catalog.mjs";
 import TC_QUERY from './sql/tech-capabilities.mjs'
 import t_diagramlinks from "../utils/ea-model/t_diagramlinks.mjs";
@@ -25,8 +25,8 @@ class TechnicalCapabilityService {
 				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.bc_code), acc), {})
 
 		return Object.values(tc_map);
-
 	}
+
 	async getTechnicalCapability({ code } = {}) {
 		if (!code) throw BadRequest('Не указан code для получения capability');
 
@@ -36,12 +36,11 @@ class TechnicalCapabilityService {
 		return tc_map[code];
 	}
 	/**
-	 * 
-	 * @param {TechnicalCapability} capability 
-	 */
-	async postTechnicalCapability(capability) {
-		if (!capability) throw BadRequest(`Capability is null`);
-		if (!capability.parents || !capability.parents.length) throw BadRequest('Для создаваемой ТС должны быть указаны родительские BC (parents)')
+ * 
+ * @param {*} capability 
+ * @returns {Promise<{system_package : {package_id, alias}, parents_bc : Array<t_object>, tc_package : t_object}>}
+ */
+	async #getTCRelatedOjbects(capability) {
 		/**
 		 * @type {{ code, package_id}}
 		 */
@@ -54,10 +53,17 @@ class TechnicalCapabilityService {
 		capability.parents.forEach(code => {
 			if (!parents_bc[code]) throw NotFound(`BC with code ${code} not found`);
 		});
+		return {
+			system_pacakge: system_package, parents_bc: parents_bc,
+			tc_package: await Repository.putPackage({ parent_id: system_package.package_id, name: TC_QUERY.TC_PACKAGE_NAME })
+		};
+	}
 
-		let tc_package = await Repository.putPackage({ parent_id: system_package.package_id, name: TC_QUERY.TC_PACKAGE_NAME });
+	async #createTC(capability) {
+		const { system_package, parents_bc, tc_package } = await this.#getTCRelatedOjbects(capability)
 
-		const tc =  await Repository.createObject({
+		const tc = await Repository.createObject({
+			alias: capability.code,
 			package_id: tc_package.package_id, name: capability.name, object_type: "Class",
 			author: "FDM API", alias: capability.code,
 			note: capability.description,
@@ -65,6 +71,7 @@ class TechnicalCapabilityService {
 			stereotype: TechnicalCapability.STEREOTYPE,
 			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 		});
+
 		await Repository.insert(t_xref, t_xref.ArchimateElementStereotype({ guid: tc.ea_guid, stereotype: TechnicalCapability.STEREOTYPE }));
 
 		tc.code = tc.alias;
@@ -77,7 +84,45 @@ class TechnicalCapabilityService {
 		}
 
 		return this.getTechnicalCapability({ code: tc.alias });
-		return this.getTechnicalCapability({ code: tc.alias });
+	}
+	/**
+	 * 
+	 * @param {String} code 
+	 * @param {TechnicalCapability} capability 
+	 * @returns {Promise<TechnicalCapability>}
+	 */
+	async putTechnicalCapability(code, capability) {
+		// Проверки
+		if (!capability) throw BadRequest(`Capability is null`);
+		if (!capability.parents || !capability.parents.length) throw BadRequest('Для ТС должны быть указаны родительские BC (parents)');
+		let ea_capability = await Repository.first(t_object, { alias: code });
+
+		if (!ea_capability) {
+			return this.#createTC(capability);
+
+		}
+		const { system_package, parents_bc, tc_package } = await this.#getTCRelatedOjbects(capability);
+		/**
+		 * @type {Array<t_object>}
+		 */
+		const ea_parent_bc = await Repository.queryRows(`select tc.object_id as tc_id, r.start_object_id as bc_id
+		from t_object tc 
+		join t_connector r on r.end_object_id = tc.object_id and r.stereotype='ArchiMate_Aggregation'
+		join t_object bc on bc.object_id=r.start_object_id and bc.stereotype='ArchiMate_Capability'
+		where tc.alias = $1`, [code]);
+
+		NotImplemented();
+	}
+
+	/**
+	 * 
+	 * @param {TechnicalCapability} capability 
+	 */
+	async postTechnicalCapability(capability) {
+		if (!capability) throw BadRequest(`Capability is null`);
+		if (!capability.parents || !capability.parents.length) throw BadRequest('Для создаваемой ТС должны быть указаны родительские BC (parents)')
+		if (await Repository.first(t_object, { alias: capability.code })) throw ConflictException(`TC c кодом ${capability.code} уже существует`);
+		return this.#createTC(capability);
 	}
 
 	async addParent(capability, parent) {

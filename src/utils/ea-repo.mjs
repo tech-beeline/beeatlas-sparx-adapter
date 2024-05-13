@@ -175,31 +175,31 @@ class Repository {
             await client.connect();
             try {
                 await client.query('BEGIN');
+                if (!obj.alias) {
 
-                let autocount = obj.stereotype ? await this.queryOne({
-                    text: `select * 
-                from t_trxtypes
-                where description = 'AutocountEx' and trx = $1`, values: [obj.stereotype]
-                }) : null;
-                if (!autocount) {
-                    autocount = await this.queryOne({ text: `select * from t_trxtypes where description = 'Autocount' and trx = $1`, values: [obj.object_type] })
-                }
+                    let autocount = obj.stereotype ? await this.queryOne({
+                        text: `select * from t_trxtypes where description = 'AutocountEx' and trx = $1`, values: [obj.stereotype]
+                    }) : null;
+                    if (!autocount) {
+                        autocount = await this.queryOne({ text: `select * from t_trxtypes where description = 'Autocount' and trx = $1`, values: [obj.object_type] })
+                    }
 
-                if (autocount) {
-                    let trx = autocount.notes.split(';').filter(a => a.length)
-                        .map(v => v.split('='))
-                        .reduce((acc, [k, v]) => Object.assign(acc, { [k]: v }), {});
-                    if (trx.active == '1') {
-                        throw Error('not implemented')
+                    if (autocount) {
+                        let trx = autocount.notes.split(';').filter(a => a.length)
+                            .map(v => v.split('='))
+                            .reduce((acc, [k, v]) => Object.assign(acc, { [k]: v }), {});
+                        if (trx.active == '1') {
+                            throw Error('not implemented')
+                        }
+                        if (trx.active_a == '1') {
+                            trx.counter_a = String(Number(trx.counter_a) + 1).padStart(trx.counter_a.length, '0');
+                            obj.alias = `${trx.prefix_a}${trx.counter_a}`;
+                        }
+                        await client.query({
+                            text: 'UPDATE t_trxtypes SET notes=$1 where trx_id=$2',
+                            values: [Object.entries(trx).map(([k, v]) => `${k}=${v};`).join(''), autocount.trx_id]
+                        });
                     }
-                    if (trx.active_a == '1') {
-                        trx.counter_a = String(Number(trx.counter_a) + 1).padStart(trx.counter_a.length, '0');
-                        obj.alias = `${trx.prefix_a}${trx.counter_a}`;
-                    }
-                    await client.query({
-                        text: 'UPDATE t_trxtypes SET notes=$1 where trx_id=$2',
-                        values: [Object.entries(trx).map(([k, v]) => `${k}=${v};`).join(''), autocount.trx_id]
-                    });
                 }
                 obj = await this.insert(t_object, obj, client);
                 await client.query('COMMIT');
@@ -234,6 +234,10 @@ class Repository {
     async putDiagram(d) {
         return (await this.first(t_diagram, { package_id: d.package_id, name: d.name })) ??
             (await this.insert(t_diagram, this.buildDiagram(d)));
+    }
+
+    async removeConnectors( start_object_id, end_object_id, connector_type ){
+        
     }
 
     async putConnector(start_object_id, end_object_id, connector_type, additionalProperties) {

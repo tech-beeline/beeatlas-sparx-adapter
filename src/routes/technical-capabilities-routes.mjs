@@ -26,7 +26,7 @@ const TC_METHODS = {
                         content: {
                             "application/json": {
                                 examples: {
-                                    "OK": [TC_SAMPLES.POST_SMAPLE]
+                                    "OK": [TC_SAMPLES.POST_SAMPLE]
                                 }
                             }
                         }
@@ -42,7 +42,7 @@ const TC_METHODS = {
                         description: "OK",
                         content: {
                             "application/json": {
-                                examples: { "OK": TC_SAMPLES.POST_SMAPLE }
+                                examples: { "OK": TC_SAMPLES.POST_SAMPLE }
                             }
                         }
                     }
@@ -52,7 +52,7 @@ const TC_METHODS = {
                     content: {
                         "application/json": {
                             examples: {
-                                "TC": TC_SAMPLES.POST_SMAPLE
+                                "TC": TC_SAMPLES.POST_SAMPLE
                             }
                         }
                     }
@@ -83,13 +83,50 @@ const TC_METHODS = {
                         content: {
                             "application/json": {
                                 examples: {
-                                    "OK": TC_SAMPLES.POST_SMAPLE
+                                    "OK": TC_SAMPLES.POST_SAMPLE
                                 }
                             }
                         }
                     }
                 }
-            }
+            },
+            put: {
+                operation: TechnicalCapabilitiesController.putTechnicalCapability,
+                summary: "Регистрация/обновление технической возможности",
+                parameters: [
+                    {
+                        name: "code",
+                        in: "path",
+                        description: "CMDB мнемоника технической возможности",
+                        "required": true,
+                        examples: {
+                            'Поддержка сессии потребления и ее квотирование и тарификация(онлайн тарификация)': {
+                                value: 'TC-SAMPLE-CODE'
+                            }
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: { "OK": TC_SAMPLES.POST_SAMPLE }
+                            }
+                        }
+                    }
+                },
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            examples: {
+                                "TC": TC_SAMPLES.POST_SAMPLE
+                            }
+                        }
+                    }
+                }
+            },
         }
     }
 }

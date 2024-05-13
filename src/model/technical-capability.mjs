@@ -12,7 +12,6 @@ class TechnicalCapability {
     owner;
     children;
     targetSystemCode;
-    relatedSystems;
     /**
      * 
      * @param {{code, name, description, author, createdDate, modifiedDate, status, targetSystemCode, parents:[]}} cap 
@@ -24,7 +23,7 @@ class TechnicalCapability {
         for (const prop in this) {
             this[prop] = cap[prop] ?? undefined;
         }
-        this.relatedSystems = this.relatedSystems ?? cap.targetSystemCode ? [cap.targetSystemCode] : [];
+        //this.relatedSystems = this.relatedSystems ?? cap.targetSystemCode ? [cap.targetSystemCode] : [];
     }
     addParent(s) {
         /*if (s === null)
