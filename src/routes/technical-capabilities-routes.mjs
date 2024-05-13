@@ -10,6 +10,16 @@ const TC_METHODS = {
                 operation: TechnicalCapabilitiesController.getTechnicalCapabilities,
                 summary: "Получение списка технических возможностей",
                 description: "Получение списка технических возможностей",
+                parameters: [
+                    {
+                        name: "source",
+                        in: 'header',
+                        required: false,
+                        schema: {
+                            type: "string"
+                        }
+                    }
+                ],
                 responses: {
                     200: {
                         description: "OK",
@@ -26,6 +36,7 @@ const TC_METHODS = {
             post: {
                 operation: TechnicalCapabilitiesController.postTechnicalCapability,
                 summary: "Создание новой технической возможности",
+
                 responses: {
                     200: {
                         description: "OK",
