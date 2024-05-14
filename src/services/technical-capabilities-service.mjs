@@ -106,9 +106,6 @@ class TechnicalCapabilityService {
 
 
 		if (ea_capability.name !== capability.name || ea_capability.note !== capability.description) {
-			if (!asis_tc.object_id) {
-				NotImplemented('!asis_tc.object_id');
-			}
 			await Repository.update(t_object, { name: capability.name, note: capability.description }, { object_id: ea_capability.object_id })
 		}
 
