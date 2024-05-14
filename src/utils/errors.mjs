@@ -15,6 +15,6 @@ export function ProcessError( error, response ){
 
 }
 
-export function NotImplemented(){
-    throw Error( 'Not implemented');
+export function NotImplemented(str){
+    throw Error( str?`Not implemented : ${str}`:'Not implemented');
 }

@@ -23,7 +23,9 @@ class TechnicalCapability {
         for (const prop in this) {
             this[prop] = cap[prop] ?? undefined;
         }
-        //this.relatedSystems = this.relatedSystems ?? cap.targetSystemCode ? [cap.targetSystemCode] : [];
+        if( cap.object_id ){
+            this.object_id = ()=>cap.object_id;
+        }
     }
     addParent(s) {
         /*if (s === null)

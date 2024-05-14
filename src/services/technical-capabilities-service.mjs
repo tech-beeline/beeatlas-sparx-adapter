@@ -27,6 +27,11 @@ class TechnicalCapabilityService {
 		return Object.values(tc_map);
 	}
 
+	/**
+	 * 
+	 * @param {{code}} param0 
+	 * @returns {Promise<TechnicalCapability>}
+	 */
 	async getTechnicalCapability({ code } = {}) {
 		if (!code) throw BadRequest('Не указан code для получения capability');
 
@@ -69,18 +74,16 @@ class TechnicalCapabilityService {
 			note: capability.description,
 			scope: 'Public', parentid: '0', classifier: '0', pdata4: '0',
 			stereotype: TechnicalCapability.STEREOTYPE,
-			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
+			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1, status: "Created"
 		});
 
 		await Repository.insert(t_xref, t_xref.ArchimateElementStereotype({ guid: tc.ea_guid, stereotype: TechnicalCapability.STEREOTYPE }));
 
 		tc.code = tc.alias;
-		tc.createdDate = tc.createddate;
-		tc.modifiedDate = tc.modifieddate;
 		tc.description = tc.note;
 
 		for (let bc of Object.values(parents_bc)) {
-			await this.addParent(tc, bc);
+			await this.addParentBC(tc, bc);
 		}
 
 		return this.getTechnicalCapability({ code: tc.alias });
@@ -99,19 +102,47 @@ class TechnicalCapabilityService {
 
 		if (!ea_capability) {
 			return this.#createTC(capability);
-
 		}
-		const { system_package, parents_bc, tc_package } = await this.#getTCRelatedOjbects(capability);
-		/**
-		 * @type {Array<t_object>}
-		 */
-		const ea_parent_bc = await Repository.queryRows(`select tc.object_id as tc_id, r.start_object_id as bc_id
-		from t_object tc 
-		join t_connector r on r.end_object_id = tc.object_id and r.stereotype='ArchiMate_Aggregation'
-		join t_object bc on bc.object_id=r.start_object_id and bc.stereotype='ArchiMate_Capability'
-		where tc.alias = $1`, [code]);
 
-		NotImplemented();
+
+		if (ea_capability.name !== capability.name || ea_capability.note !== capability.description) {
+			if (!asis_tc.object_id) {
+				NotImplemented('!asis_tc.object_id');
+			}
+			await Repository.update(t_object, { name: capability.name, note: capability.description }, { object_id: ea_capability.object_id })
+		}
+
+		const asis_tc = await this.getTechnicalCapability({ code: code });
+		if( !asis_tc){
+			let parents_bc = (await Repository.queryRows('select distinct object_id from t_object where alias = ANY($1)', [capability.parents]));
+			for (const bc of parents_bc) {
+				await this.addParentBC(asis_tc, { object_id: bc.object_id });
+			}
+			return this.getTechnicalCapability(capability);
+		}
+
+		if (asis_tc.targetSystemCode !== capability.targetSystemCode) {
+			NotImplemented('Изменение целевой системы для ТС');
+		}
+
+		let bc_to_remove = asis_tc.parents.filter(bc => !capability.parents.some(c => c === bc));
+		if (bc_to_remove.length > 0) {
+			let parents_bc = (await Repository.queryRows('select distinct object_id from t_object where alias = ANY($1)', [bc_to_remove]));
+			for (let bc of parents_bc) {
+				await this.#removeParentBC(asis_tc.object_id(), bc.object_id);
+			}
+		}
+
+		const new_parent_bc = capability.parents.filter(c => !asis_tc.parents.some(bc => bc === c));
+
+		if (new_parent_bc.length > 0) {
+			let parents_bc = (await Repository.queryRows('select distinct object_id from t_object where alias = ANY($1)', [new_parent_bc]));
+			for (const bc of parents_bc) {
+				await this.addParentBC(ea_capability, { object_id: bc.object_id });
+			}
+		}
+
+		return this.getTechnicalCapability(capability);
 	}
 
 	/**
@@ -125,7 +156,23 @@ class TechnicalCapabilityService {
 		return this.#createTC(capability);
 	}
 
-	async addParent(capability, parent) {
+	async #removeParentBC(tc_id, bc_id) {
+		const bc_package = await Repository.queryOne(TC_QUERY.BC_PACKAGE_QUERY_BY_ID, [bc_id]);
+		/** @type {t_diagram} */
+		const diagram = await Repository.putDiagram({ package_id: bc_package.package_id, name: TC_QUERY.BC_TC_DIAGRAM_NAME, diagram_type: 'Component', author: 'FDM API' });
+		let parent_do = await Repository.first(t_diagramobjects, { diagram_id: diagram.diagram_id, object_id: bc_id });
+
+		let connector = await Repository.queryOne(`select distinct connectorid
+		from t_diagramlinks l
+		where l.diagramid=16466 and connectorid in ( select connector_id from t_connector where end_object_id=$1 and start_object_id =$2 )`, [tc_id, bc_id]);
+		if (!connector)
+			return;
+
+		await Repository.queryOne(`delete from t_diagramlinks where connectorid=$1`, [connector.connectorid]);
+		await Repository.queryOne(`delete from t_connector where connector_id=$1`, [connector.connectorid]);
+	}
+
+	async addParentBC(capability, parent) {
 		const parent_id = parent.object_id;
 		if (!parent_id) throw Error('not implemented');
 		const capability_id = capability.object_id;
