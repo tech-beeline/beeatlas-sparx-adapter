@@ -97,10 +97,10 @@ const TC_METHODS = {
                     {
                         name: "code",
                         in: "path",
-                        description: "CMDB мнемоника технической возможности",
+                        description: "Код технической возможности",
                         "required": true,
                         examples: {
-                            'Поддержка сессии потребления и ее квотирование и тарификация(онлайн тарификация)': {
+                            'Тестовая ТС': {
                                 value: 'TC-SAMPLE-CODE'
                             }
                         }
