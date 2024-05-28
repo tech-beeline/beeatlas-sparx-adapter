@@ -29,7 +29,8 @@ class TechnicalCapabilitiesController {
         try {
             const capability = request.body;
             if (!capability) throw BadRequest(`Body is empty`);
-            if( capability.code !== request.params.code ) throw BadRequest(`Code in request body (${capability.code}) not equal code in path parameter (${request.params.code})`);
+            capability.code = request.params.code;
+            
             response.json(await TechnicalCapabilityService.putTechnicalCapability(request.params.code, capability) )
         } catch (error) {
             console.error(error)
