@@ -4,20 +4,20 @@ const INTERFACES_ROUTES = {
     tag: "Управление манифестами платформы наблюдаемости",
     description: "Создание манифестов для подключения API к платформе наблюдаемости",
     paths: {
-        "/api/v1/monitoring/dashboards/interfaces/{code}": {
+        "/api/v1/systems/{code}/monitoring/api": {
             get: {
-                operation: monitoringController.getDashboardManifestForInterface,
+                operation: monitoringController.getSystemApiManifest,
                 summary: "полчение манифеста для создания дашборда API",
                 description: "",
                 parameters: [
                     {
                         name: "code",
                         in: "path",
-                        description: "Код интерфейса",
+                        description: "Код продукта",
                         "required": true,
                         examples: {
-                            'Интерфейс API digital-contract-edo-service': {
-                                value: 'digital-contract-edo-service-interface.digital-contract-edo-service.DCO'
+                            'Витрина ФДМ': {
+                                value: 'FDMSHOWCASEAPP'
                             }
                         }
                     }

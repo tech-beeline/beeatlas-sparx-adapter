@@ -1,4 +1,4 @@
-import System, { APIInterface, Container } from "../model/system.mjs";
+import System, { APIInterface, APIMethod, Container } from "../model/system.mjs";
 import t_connector from "../utils/ea-model/t_connector.mjs";
 import t_connectortag from "../utils/ea-model/t_connectortag.mjs";
 import t_objectproperties from "../utils/ea-model/t_objectproperties.mjs";
@@ -8,6 +8,8 @@ import Repository from "../utils/ea-repo.mjs";
 import interfacesService from "./interfaces-service.mjs";
 import applicationCatalog from "./sql/application-catalog.mjs";
 import SYSTEM_QUERY from "./sql/systems-queries.mjs";
+import { BadRequest, NotImplemented } from "../utils/errors.mjs";
+import t_operation from "../utils/ea-model/t_operation.mjs";
 
 
 
@@ -73,7 +75,7 @@ class ComponentsService {
 		return Object.values(systems);
 	}
 
-	async getSystem(code) {
+	async getSystem(code, { loadMethods, loadInterfaceTags} = {}) {
 		if (!code) throw Object.assign(Error(`system with code ${code} not found`, { status: 404 }));
 		/**
 		 * @type {System}
@@ -86,6 +88,16 @@ class ComponentsService {
 			 */
 			this.#addContainerFromRow(system, row);
 		}
+		if( loadMethods ){
+			for( const container of system.containers??[]){
+				for( const i of container.interfaces??[]){
+					i.methods = (await Repository.find( t_operation, { object_id: i.ea_id() })).map( m=>new APIMethod(
+						{...m }
+					));
+				}
+			}
+		}
+
 		return system;
 	}
 	/**
@@ -97,6 +109,8 @@ class ComponentsService {
 		if (!code) throw Object.assign(Error(`code is null`, { status: 406 }));
 		if (!system) throw Object.assign(Error(`System is null`, { status: 406 }));
 		if (system.code !== code) throw Object.assign(Error(`System code ${system.code} != ${code}`, { status: 406 }));
+		if( system.containers?.some( c=>!c.code)) throw BadRequest( `Не у всех контейнеров заданы коды`);
+		if( system.containers?.some( c=>c.interfaces?.some(i=>!i.code))) throw BadRequest( `Не у всех интерфесов заданы коды`);
 		/**
 		 * @type {t_object}
 		 */

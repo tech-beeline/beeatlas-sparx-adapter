@@ -18,10 +18,10 @@ export class APIMethod {
      */
     parameters = [];
 
-    constructor({ name, returnType, description, parameters } = {}) {
+    constructor({ name, returnType, description, parameters, notes } = {}) {
         this.name = name;
         this.returnType = returnType;
-        this.desciption = description;
+        this.desciption = description??notes;
         this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
     }
 }
@@ -38,7 +38,7 @@ export class APIInterface {
      * @type {APIMethod[]}
      */
     methods = [];
-    constructor({ name, code, version, type, api_url, capabilityCode, methods, description } = {}) {
+    constructor({ name, code, version, type, api_url, capabilityCode, methods, description , i_id} = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
@@ -47,6 +47,7 @@ export class APIInterface {
         this.capabilityCode = capabilityCode;
         this.description = description;
         this.methods = methods ?? [];
+        this.ea_id = ()=>i_id;
     }
 }
 export class Container {

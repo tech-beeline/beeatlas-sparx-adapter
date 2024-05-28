@@ -10,9 +10,9 @@ register.setDefaultLabels({
 
 let httpRequestDurationMicroseconds = new client.Histogram(
     {
-        name: 'http_request_duration_seconds',
+        name: 'http_server_requests_seconds',
         help: 'Duration of HTTP requests in microseconds',
-        labelNames: ['method', 'path', 'code'],
+        labelNames: ['method', 'path', 'code', 'uri'],
     })
 
 register.registerMetric(httpRequestDurationMicroseconds)
@@ -38,5 +38,5 @@ export default async function RESTMetric(req, res, next) {
     }
     const end = httpRequestDurationMicroseconds.startTimer();
     await next();
-    end({ path: req.path, code: res.statusCode, method: req.method })
+    end({ path: req.path, uri: req.path, code: res.statusCode, method: req.method })
 }

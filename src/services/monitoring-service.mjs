@@ -2,9 +2,66 @@ import { NotFound, NotImplemented } from "../utils/errors.mjs";
 import Repository from "../utils/ea-repo.mjs";
 import t_object from "../utils/ea-model/t_object.mjs";
 import t_operation from "../utils/ea-model/t_operation.mjs";
+import componentsService from "./components-service.mjs";
+import { APIInterface, Container } from "../model/system.mjs";
 
 
 class MonitoringService {
+    /**
+     * 
+     * @param {APIInterface} i 
+     * @returns 
+     */
+    buildInterfacesPanels(i) {
+        return [{ text: { title: `Методы ${i.name} [code=${i.code}]` } },
+        ...i.methods.map(m => m.name.split(' ').filter(s=>s.length) )
+            .reduce((ret, [method, path]) => [...ret,
+            {
+                timeseries: {
+                    title: `Traffic, Ingress`,
+                    datasource: "logstash-ingress-provider-ia-monitoring",
+                    targets: [
+                        {
+                            opensearch: `json.request_uri.keyword: ${path} json.request_method: ${method}`
+                        }
+                    ]
+                }
+            },
+            {
+                timeseries: {
+                    title: `Traffic, Application`,
+                    datasource: "Prometheus-BeeInside",
+                    targets: [
+                        {
+                            prometheus: `rate(http_server_requests_seconds_count{uri=\"${path}\"}[5m])`
+                        }
+                    ]
+                }
+            }
+            ], [])]
+    }
+    /**
+     * 
+     * @param {Container} container 
+     */
+    buildContainerPanels(container) {
+        return container.interfaces?.reduce((ret, i) => [...ret, ...this.buildInterfacesPanels(i)], []) ?? [];
+    }
+    async getSystemApiManifest(code) {
+        const system = await componentsService.getSystem(code, { loadMethods: true });
+        let manifest = {
+            title: `Дашборд API для ${system.name} [cmdb=${system.code}]`,
+            tags: ["pilot", 'ke=FDMSHOWCASEAPP', 'api'],
+            editable: true,
+            rows: (system.containers ?? []).map(contianer => {
+                return {
+                    name: `Интерфейсы контейнера ${contianer.name}[code=${contianer.code}]`,
+                    panels: this.buildContainerPanels(contianer)
+                }
+            })
+        };
+        return manifest;
+    }
     async getInterfaceDashboardManifest(code) {
         const ea_interface = await Repository.first(t_object, { alias: code });
         if (!ea_interface) {
@@ -40,10 +97,10 @@ class MonitoringService {
                     {
                         timeseries: {
                             title: `Traffic`,
-                            datasource : 'logstash-ingress-provider-ia-monitoring',
+                            datasource: 'logstash-ingress-provider-ia-monitoring',
                             targets: [{
                                 opensearch: {
-                                    query : `json.request_uri.keyword: ${o.name.split(' ').pop()}`
+                                    query: `json.request_uri.keyword: ${o.name.split(' ').pop()}`
                                 }
                             }]
                         }
@@ -51,7 +108,7 @@ class MonitoringService {
                 ]
             }))
         };
-        console.log( ret)
+        console.log(ret)
         return ret;
     }
 }
