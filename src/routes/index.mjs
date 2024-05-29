@@ -3,6 +3,7 @@ import express from 'express'
 import CAPABILITY_METHODS from './capabilities-routes.mjs';
 import COMPONENTS_METHODS from './components-routes.mjs';
 import { CONTROLLERS } from './swagger.mjs';
+import { createPromDecorator } from '../metrics/middleware.mjs';
 
 export const Routes = express.Router();
 
@@ -43,7 +44,7 @@ export function routeControllers(swagger, options) {
             const path_methods = CONTROLLERS[methods].paths[path];
 
             for (let method in path_methods) {
-                let operation = path_methods[method].operation;
+                let operation = createPromDecorator( path_methods[method].operation, path, method);
                 swagger_routes[method](preparePath(path), operation);
             }
         }

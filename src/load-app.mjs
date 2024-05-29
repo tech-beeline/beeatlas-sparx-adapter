@@ -15,7 +15,7 @@ const pathToSwaggerUi = SwaggerUI.absolutePath();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use( RESTMetric );
+app.use( '/actuator/prometheus', RESTMetric );
 
 
 //#region Маршруты для swagger UI

@@ -18,6 +18,14 @@ let httpRequestDurationMicroseconds = new client.Histogram(
 register.registerMetric(httpRequestDurationMicroseconds)
 
 
+
+export function createPromDecorator(fn, path, method) {
+    return async (req, res, next) => {
+        const end = httpRequestDurationMicroseconds.startTimer();
+        await fn(req, res, next);
+        end({ path: path, uri: path, code: res.statusCode, method: method })
+    }
+}
 //const paths = [ /a/ ]
 /**
  * 
@@ -26,17 +34,8 @@ register.registerMetric(httpRequestDurationMicroseconds)
  * @param {*} next 
  */
 export default async function RESTMetric(req, res, next) {
-    if (req.path === '/actuator/prometheus') {
-        res.setHeader('Content-Type', register.contentType)
-        res.send(await register.metrics());
-        //console.info('GET /actuator/prometheus');
-        return;
-    }
-
-    if (!req.path.startsWith('/api')) {
-        return next();
-    }
-    const end = httpRequestDurationMicroseconds.startTimer();
-    await next();
-    end({ path: req.path, uri: req.path, code: res.statusCode, method: req.method })
+    res.setHeader('Content-Type', register.contentType)
+    res.send(await register.metrics());
+    //console.info('GET /actuator/prometheus');
+    return;
 }

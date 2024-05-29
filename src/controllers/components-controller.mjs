@@ -27,7 +27,7 @@ class ComponentsController {
     }
     async getSystem(request, response) {
         try {
-            response.json(await componentsService.getSystem(request.params.code));
+            response.status(200).json(await componentsService.getSystem(request.params.code));
         } catch (error) {
             processError(error);
         }
