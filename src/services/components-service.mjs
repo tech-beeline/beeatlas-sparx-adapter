@@ -114,7 +114,8 @@ class ComponentsService {
 		/**
 		 * @type {t_object}
 		 */
-		let ea_system = await Repository.find(t_object, { alias: code, object_type: 'Component' }).then(rows => rows.find(r => r));
+		let ea_system = await Repository.first(t_object, { alias: code, object_type: 'Component' });
+		
 		if (!ea_system) throw Object.assign(Error(`system with code ${code} not found`, { status: 404 }));
 
 		const system_package_id = ea_system.package_id;
