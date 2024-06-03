@@ -5,9 +5,33 @@ import t_operationparams from '../utils/ea-model/t_operationparams.mjs';
 import INTERFACES_QUERIES from './sql/interfaces-queries.mjs'
 import Repository from '../utils/ea-repo.mjs'
 
+
+export class InterfaceCatalog {
+    byMethodGUID = {};
+    async #loadInterfaceByOperationGUID(operationGUID) {
+        let ea_i = await Repository.queryOne(`select * from t_object where object_id = (select object_id from t_operation where ea_guid=$1)`, [operationGUID])
+        if( ea_i ){
+            let operations = await Repository.find( t_operation, { object_id: ea_i.object_id});
+            let i = new APIInterface( {...ea_i, methods: operations.map( m=>new APIMethod(m))});
+            for( let o of i.methods ){
+                this.byMethodGUID[o.ea_guid] = i;
+            }
+            return i;
+        }
+    }
+    /**
+     * 
+     * @param {string} operationGUID 
+     * @returns {Promise<APIInterface>}
+     */
+    async byOperationGUID(operationGUID) {
+        return this.byMethodGUID[operationGUID] ?? (await this.#loadInterfaceByOperationGUID(operationGUID))
+    }
+}
+
 class InterfacesService {
     async getInterface(code) {
-        return this.#interfaceByAlias(code).then(i => new APIInterface({ name: i.name, version: i.version, code: i.alias }));
+        return this.#interfaceByAlias(code).then(i => new APIInterface({ name: i.name, version: i.version, code: i.alias, i_id: i.object_id }));
     }
     async #interfaceByAlias(alias) {
         if (!alias) {
@@ -47,7 +71,7 @@ class InterfacesService {
      * 
      * @param {APIMethod[]} methods 
      */
-    async insertMethods( methods ) {
+    async insertMethods(methods) {
     }
     /**
      * 
@@ -73,7 +97,7 @@ class InterfacesService {
         }
 
         // [ ] Подумать, что делать с удалением методов
-        
+
         let methods_to_remove = Object.values(methods_map).filter(v => !v.tobe);
         if (methods_to_remove.length > 0) {
             await Repository.deleteMethods(methods_to_remove.map(m => m.asis.operationid))

@@ -27,6 +27,14 @@ class MonitoringController {
             ProcessError(e, res);
         }
     }
+    async getProcessDashboardManifest(req, res,next){
+        try {
+            res.contentType('application/yaml')
+                .send(YAML.stringify(await monitoringService.getProcessDashboardManifest(req.params.code)));
+        } catch (e) {
+            ProcessError(e, res);
+        }
+    }
 }
 
 export default new MonitoringController();

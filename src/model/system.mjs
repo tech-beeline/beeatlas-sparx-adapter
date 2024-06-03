@@ -18,11 +18,12 @@ export class APIMethod {
      */
     parameters = [];
 
-    constructor({ name, returnType, description, parameters, notes } = {}) {
+    constructor({ name, returnType, description, parameters, notes, ea_guid } = {}) {
         this.name = name;
         this.returnType = returnType;
         this.desciption = description??notes;
         this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
+        this.ea_guid = ()=>ea_guid;
     }
 }
 
@@ -48,6 +49,14 @@ export class APIInterface {
         this.description = description;
         this.methods = methods ?? [];
         this.ea_id = ()=>i_id;
+    }
+    /**
+     * 
+     * @param {*} uid 
+     * @returns {APIMethod}
+     */
+    methodByUID(uid){
+        return this.methods?.find( m=>m.ea_guid()===uid);
     }
 }
 export class Container {

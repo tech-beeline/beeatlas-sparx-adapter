@@ -1,5 +1,6 @@
 import { BusinessInteraction } from '../model/e2e-process.mjs';
 import Repository from '../utils/ea-repo.mjs'
+import { BadRequest } from '../utils/errors.mjs';
 import IARepository from '../utils/ia.mjs';
 import applicationService from './application-service.mjs';
 import QUERIES from './sql/e2e-process-queries.mjs'
@@ -8,6 +9,8 @@ class E2EProcessService {
     /**
      * 
      * @param {Array<{ server_type, message, child_diagram_uid}>} messages 
+     * @param {} diagram_map
+     * @returns {BusinessInteraction[]}
      */
     buildBusinessInterations(messages, diagram_map) {
         return messages.filter(m => m.server_type === 'MessageEndpoint')
@@ -78,16 +81,25 @@ class E2EProcessService {
 
     /**
      * 
-     * @param {String} processUID 
-     * @returns {Promise<Array>}
+     * @param {*} processUID 
+     * @returns {Promise<Array<{ message, e2e_uid, diagram_uid, server_id}>}
      */
     async getProcessMessages(processUID) {
+        if( !processUID) throw BadRequest(`не задан идентификатор процесса`);
         console.log( `Request messages for ${processUID}`)
         /**
          * @type {Array<{ message, e2e_uid, diagram_uid, server_id}>}
          */
-        let rows = await Repository.queryRows({ text: QUERIES.E2E_MESSAGES_QUERY, values: [processUID] });
-        const app_catalog = await applicationService.getApplications()
+        return Repository.queryRows({ text: QUERIES.E2E_MESSAGES_QUERY, values: [processUID] });
+    }
+    /**
+     * 
+     * @param {String} processUID 
+     * @returns {Promise<{businessInteractions : BusinessInteraction[], application}>}
+     */
+    async getProcessScenario(processUID) {
+        let rows = await  this.getProcessMessages( processUID)
+        const app_catalog = await applicationService.getApplications();
 
         let diagram_map = {};
         let application_map = {}
@@ -97,13 +109,13 @@ class E2EProcessService {
             const server = app_catalog.byObjectId(row.server_id);
             if (server) {
                 if (!application_map[server.cmdb]) application_map[server.cmdb] = server;
-                row.server = { "$ref": `#/applications/${server.cmdb}` }
+                row.server = { "$ref": `#/applications/${server.cmdb}`, system : ()=>server }
                 row.server_id = server.component_id;
             }
             const client = app_catalog.byObjectId(row.client_id);
             if (client) {
                 if (!application_map[client.cmdb]) application_map[client.cmdb] = client;
-                row.client = { "$ref": `#/applications/${client.cmdb}` };
+                row.client = { "$ref": `#/applications/${client.cmdb}`, system : ()=>client };
                 row.client_id = client.component_id
             }
 
@@ -136,7 +148,6 @@ class E2EProcessService {
                 }
             }
             row.styleex = undefined;
-
 
             (diagram_map[row.diagram_uid] = diagram_map[row.diagram_uid] ?? { name: row.diagram, messages: [] }).messages.push(row);
         }
@@ -188,7 +199,7 @@ class E2EProcessService {
 
         let root_scenario = diagram_map[processUID];
         return {
-            businessInteractions: this.buildBusinessInterations(root_scenario.messages, diagram_map),
+            businessInteractions: this.buildBusinessInterations(root_scenario?.messages??[], diagram_map),
             applications: application_map
         }
     }

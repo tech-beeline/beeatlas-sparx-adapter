@@ -26,7 +26,36 @@ const INTERFACES_ROUTES = {
                     200: {
                         description: "OK",
                         content: {
-                            "application/json": {
+                            "application/yaml": {
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/process/{code}/monitoring/api" : {
+            get: {
+                operation: monitoringController.getProcessDashboardManifest,
+                summary: "полчение манифеста для создания дашборда E2E процесса",
+                description: "",
+                parameters: [
+                    {
+                        name: "code",
+                        in: "path",
+                        description: "Код процесса (uid)",
+                        "required": true,
+                        examples: {
+                            'тестовый процесс': {
+                                value: '{03D0D6E1-2527-41f1-908F-496DAE3877EF}'
+                            }
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/yaml": {
                             }
                         }
                     }

@@ -15,7 +15,7 @@ function processError(error, response) {
 class E2EProcessController {
     async getProcessMessages(request, response, next) {
         try {
-            return response.json(await e2eProcessSerivce.getProcessMessages(request.params.code))
+            return response.json(await e2eProcessSerivce.getProcessScenario(request.params.code))
         } catch (error) {
             processError(error, response);
         }
