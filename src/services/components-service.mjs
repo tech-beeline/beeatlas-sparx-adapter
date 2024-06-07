@@ -151,7 +151,7 @@ class ComponentsService {
 			//[ ] Удаление интерфейсов - скорее всего надо помечать, как удаленные
 
 			for (let i_to_set of container_to_set.interfaces) {
-				let ea_interface = (await Repository.find(t_object, { package_id: interface_package.package_id, alias: i_to_set.code, object_type: 'Interface' })).find(r => r);
+				let ea_interface = await Repository.first(t_object, { alias: i_to_set.code, object_type: 'Interface' });
 				if (!ea_interface) {
 					ea_interface = await Repository.createObject({
 						package_id: interface_package.package_id, version: i_to_set.version, name: i_to_set.name, object_type: 'Interface', author: "FDM API", alias: i_to_set.code,
@@ -182,7 +182,7 @@ class ComponentsService {
 					}
 				}
 
-				await interfacesService.putMethods(i_to_set.code, i_to_set.methods);
+				await interfacesService.putMethods(ea_interface.object_id, i_to_set.methods);
 
 				await Repository.putConnector(ea_container.object_id, ea_interface.object_id, 'Realisation');
 
@@ -193,7 +193,7 @@ class ComponentsService {
 				await Repository.putConnector(ea_interface.object_id, ea_tc.object_id, 'Realisation');
 			}
 		}
-		return;// [ ] Подумать, надо ли возвращать обновленные данные, например, для передачи идентификаторов (ea_guid)
+		return this.getSystem( code , { loadMethods: true});// [ ] Подумать, надо ли возвращать обновленные данные, например, для передачи идентификаторов (ea_guid)
 	}
 }
 

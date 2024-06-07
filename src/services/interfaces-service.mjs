@@ -78,13 +78,13 @@ class InterfacesService {
      * @param {string} code 
      * @param {Array<APIMethod>} methods 
      */
-    async putMethods(code, methods, apiInterface = { code: code }) {
+    async putMethods(id, methods) {
         if (!methods || !methods.length) return [];
         let methods_map = {};
-        const i = await this.#interfaceByAlias(code);
+        const i = await Repository.first( t_object, { object_id:id});
 
 
-        for (const m of (await this.#rawMethodsByInterfaceCode(code))) {
+        for (const m of (await this.#rawMethodsByInterfaceId(id))) {
             methods_map[m.name] = methods_map[m.name] ?? {};
             methods_map[m.name].asis = m;
         }
