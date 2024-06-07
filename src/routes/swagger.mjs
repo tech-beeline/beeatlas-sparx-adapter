@@ -8,6 +8,7 @@ import INTERFACES_ROUTES from './interface-routes.mjs';
 import E2E_PROCESS_ROUTES from './e2e-process-routes.mjs';
 import IA_ROUTES from './interface-agreement-routes.mjs'
 import MONITORING_ROUTES from './monitoring-routes.mjs'
+import TELEMETRY_ROUTES from './telemetry-routes.mjs'
 
 
 export const CONTROLLERS = [
@@ -18,7 +19,8 @@ export const CONTROLLERS = [
     INTERFACES_ROUTES,
     E2E_PROCESS_ROUTES,
     IA_ROUTES,
-    MONITORING_ROUTES
+    MONITORING_ROUTES,
+    TELEMETRY_ROUTES
 ]
 
 function joinSchemas(target, source) {

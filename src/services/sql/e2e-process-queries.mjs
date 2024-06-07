@@ -42,13 +42,13 @@ select
 	msg.message, msg.message_uid,  msg.seqno,msg.client_id, msg.server_id, msg.child_diagram_uid, 
 	msg.server_type, msg.server as server_name, msg.server_uid, msg.styleex,
 	d.name as diagram, d_tree.*,
-	op.value as operation_guid, ia.value as ia_path
+	m.ea_guid as operation_guid, ia.value as ia_path
 from d_tree
 	join msg on msg.diagram_id=d_tree.diagram_id
 	join t_diagram d on d.diagram_id=msg.diagram_id
 	left join t_connectortag op on op.property='operation_guid' and elementid=msg.connector_id
+	left join t_operation m on m.ea_guid=op.value
 	left join t_connectortag ia on ia.property='InterfaceAgreement' and ia.elementid=msg.connector_id
-
 where d_tree.e2e_uid=$1`
 
 const E2E_PROCESSES_QUERY = `

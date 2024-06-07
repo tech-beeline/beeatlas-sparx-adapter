@@ -10,6 +10,28 @@ import { InterfaceCatalog } from "./interfaces-service.mjs";
 import t_diagram from "../utils/ea-model/t_diagram.mjs";
 
 
+class InvalidMessageMetrics{
+    msg;
+    description;
+    constructor( msg, description ){
+        this.msg =  msg;
+        this.description = description;
+    }
+    toRow() {
+        return {
+            name: this.name,
+            panels: [
+                {
+                    text: {
+                        title: 'Ошибка при получении информации по сообщению',
+                        markdown: this.description
+                    }
+                }
+            ]
+        }
+    }
+}
+
 class RESTMethodMetrics {
     path;
     method;
@@ -146,20 +168,24 @@ class MonitoringService {
         let interface_catalog = new InterfaceCatalog();
         let api_list = {}
         for (let ea_m of process_messages.filter(m => m.operation_guid)) {
-            api_list[ea_m.operation_guid] = api_list[ea_m.operation_guid] ??
-                (await interface_catalog.byOperationGUID(ea_m.operation_guid)
-                    .then(i => i.methodByUID(ea_m.operation_guid)));
+            if( api_list[ea_m.operation_guid] )
+                continue;
 
+            let i = await interface_catalog.byOperationGUID(ea_m.operation_guid);
+            let m = i?.methodByUID(ea_m.operation_guid);
+            if( m ){
+                let [method,path] = m.name.split(' ').filter(s=>s.length);
+                api_list[ea_m.operation_guid] =new RESTMethodMetrics(path, method);
+                continue;
+            }
+            api_list[ea_m.operation_guid] = new InvalidMessageMetrics( ea_m.name, `Не получилось получить информацию о методу в сообщении`)
         }
+
         let manifest = {
-            title: `Дашборд для E2E процесса ${process.name}]`,
+            title: `Дашборд для E2E процесса ${process.name}`,
             tags: ["pilot", 'ke=FDMSHOWCASEAPP', 'process'],
             editable: true,
-            rows: (Object.values(api_list)).map(m => m.name.split(' ').filter(s => s.length))
-            .map( ([m,p])=> new RESTMethodMetrics(p,m))
-                .reduce((ret, m) => {
-                    return [...ret, m.toRow() ]
-                }, [])
+            rows: Object.values(api_list).map( m=>m.toRow() )
         };
         return manifest;
 

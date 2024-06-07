@@ -18,6 +18,17 @@ let httpRequestDurationMicroseconds = new client.Histogram(
 register.registerMetric(httpRequestDurationMicroseconds)
 
 
+const c4StartCounter = new client.Counter({
+    name: 'vscode_c4_plugin_start',
+    help: 'Duration of HTTP requests in microseconds',
+    labelNames: ['version' ],
+});
+
+register.registerMetric(c4StartCounter)
+
+export function registerC4PluginStart(version){
+    c4StartCounter.inc({version: version} );
+}
 
 export function createPromDecorator(fn, path, method) {
     return async (req, res, next) => {
@@ -36,6 +47,5 @@ export function createPromDecorator(fn, path, method) {
 export default async function RESTMetric(req, res, next) {
     res.setHeader('Content-Type', register.contentType)
     res.send(await register.metrics());
-    //console.info('GET /actuator/prometheus');
     return;
 }
