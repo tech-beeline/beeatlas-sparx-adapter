@@ -12,7 +12,7 @@ let httpRequestDurationMicroseconds = new client.Histogram(
     {
         name: 'http_server_requests_seconds',
         help: 'Duration of HTTP requests in microseconds',
-        labelNames: ['method', 'path', 'code', 'uri'],
+        labelNames: ['method', 'path', 'code', 'status', 'uri'],
     })
 
 register.registerMetric(httpRequestDurationMicroseconds)
@@ -21,20 +21,20 @@ register.registerMetric(httpRequestDurationMicroseconds)
 const c4StartCounter = new client.Counter({
     name: 'vscode_c4_plugin_start',
     help: 'Duration of HTTP requests in microseconds',
-    labelNames: ['version' ],
+    labelNames: ['version'],
 });
 
 register.registerMetric(c4StartCounter)
 
-export function registerC4PluginStart(version){
-    c4StartCounter.inc({version: version} );
+export function registerC4PluginStart(version) {
+    c4StartCounter.inc({ version: version });
 }
 
 export function createPromDecorator(fn, path, method) {
     return async (req, res, next) => {
         const end = httpRequestDurationMicroseconds.startTimer();
         await fn(req, res, next);
-        end({ path: path, uri: path, code: res.statusCode, method: method })
+        end({ path: path, uri: path, status: res.statusCode, code: res.statusCode, method: method })
     }
 }
 //const paths = [ /a/ ]
