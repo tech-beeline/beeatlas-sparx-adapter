@@ -43,54 +43,49 @@ class RESTMethodMetrics {
         this.method = method;
         this.sla = sla;
     }
+    static openSearchTarget(query, alias, metrics) {
+        return {
+            opensearch: {
+                datasource: "logstash-ingress-provider-ia-monitoring",
+                query: query,
+                alias: alias,
+                metrics: Array.isArray(metrics) ? metrics : metrics ? [metrics] : undefined
+            }
+        }
+    }
+    static prometheusTarget(query, legend) {
+        return {
+            prometheus: {
+                datasource: "Prometheus-BeeInside",
+                query: query,
+                legend: legend
+            }
+        }
+    }
     get #openSearchQuery() {
         return `json.request_uri.keyword: /${this.ingressPath}/ AND json.request_method: "${this.method}"`;
     }
-    get promTrafficQuery() {
+    get #promTrafficQuery() {
         return `sum (increase(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}))`;
     }
-    get promAvgLatency() {
+    get #promAvgLatency() {
         return `avg (http_server_requests_seconds_max{uri=\"${this.path}\", method=~"(?i:${this.method})"})`
     }
-    get promMaxLatency() {
+    get #promMaxLatency() {
         return `max (http_server_requests_seconds_max{uri=\"${this.path}\", method=~"(?i:${this.method})"})`
     }
-    get promPercentile95Latency(){
-        return `quantile_over_time (0.95,
-
-            avg ((sum by (uri) (
-            rate(http_server_requests_seconds_sum{uri=\"${this.path}\", method=~"(?i:${this.method})"})))
-            / 
-            (sum by (uri) (
-            rate(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}) > 0  ))) [$__rate_interval])`
+    get #promP95Latency() {
+        return `quantile_over_time (0.95, avg((sum(rate(http_server_requests_seconds_sum{uri=\"${this.path}\", method=~"(?i:${this.method})"}))
+/ sum(rate(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}) > 0  ))) [$__rate_interval])`
     }
-    get promPercentile75Latency(){
-        return `quantile_over_time (0.75,
-
-            avg ((sum by (uri) (
-            rate(http_server_requests_seconds_sum{uri=\"${this.path}\", method=~"(?i:${this.method})"})))
-            / 
-            (sum by (uri) (
-            rate(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}) > 0  ))) [$__rate_interval])`
-    }
-    get operSearchErrorRate(){
-        return `quantile_over_time (0.75,
-
-            avg ((sum by (uri) (
-            rate(http_server_requests_seconds_sum{uri=\"${this.path}\", method=~"(?i:${this.method})"})))
-            / 
-            (sum by (uri) (
-            rate(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}) > 0  ))) [$__rate_interval])`
+    get #promP75Latency() {
+        return `quantile_over_time (0.75, avg ((sum( rate(http_server_requests_seconds_sum{uri=\"${this.path}\", method=~"(?i:${this.method})"})))
+/ sum(rate(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}) > 0  ))) [$__rate_interval])`
     }
 
-    get promTrafficAllStatus() {
-        return `sum (increase(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"})) by (status)`;
-    }
-    get promErrorRate() {
+    get #promErrorRate() {
         return `sum (increase(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})", status="200"}))
-        /
-        sum (increase(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}))
-         by (status)`;
+        / sum (increase(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}))`;
     }
 
     get trafficPanels() {
@@ -99,27 +94,11 @@ class RESTMethodMetrics {
             {
                 timeseries: {
                     title: `${this.method} ${this.path} Traffic, Ingress`,
-                    datasource: "logstash-ingress-provider-ia-monitoring",
+                    datasource: "-- Mixed --",
                     targets: [
-                        {
-                            opensearch: {
-                                query: this.#openSearchQuery,
-                                alias: 'Ingress'
-                            }
-                        }]
-                }
-            },
-            {
-                timeseries: {
-                    title: `${this.method} ${this.path} Traffic, Prometheus`,
-                    datasource: "Prometheus-BeeInside",
-                    targets: [
-                        {
-                            prometheus: {
-                                query: this.promTrafficQuery,
-                                legend: "Traffic"
-                            }
-                        }]
+                        RESTMethodMetrics.openSearchTarget(this.#openSearchQuery, "Ingress Traffic"),
+                        RESTMethodMetrics.prometheusTarget(this.#promTrafficQuery, "Prometheus Traffic")
+                    ]
                 }
             }
         ]
@@ -128,81 +107,30 @@ class RESTMethodMetrics {
         return [
             {
                 timeseries: {
-                    title: `${this.method} ${this.path} Latency, Ingress`,
-                    datasource: "logstash-ingress-provider-ia-monitoring",
+                    title: `${this.method} ${this.path} Latency`,
+                    datasource: "-- Mixed --",
                     targets: [
-                        {
-                            opensearch: {
-                                query: this.#openSearchQuery,
-                                alias: "Ingress",
-                                metrics: [
-                                    {
-                                        field: "json.request_time",
-                                        type: "percentiles",
-                                        options:
-                                        {
-                                            values: [75, 95]
-                                        }
-                                    }
-                                ]
-                            }
-                        },
-                    ]
-                }
-            },
-            {
-                timeseries: {
-                    title: `${this.method} ${this.path} Latency, Promethus`,
-                    datasource: "Prometheus-BeeInside",
-                    targets : [
-                        {
-                            prometheus: {
-                                query: this.promAvgLatency,
-                                legend: "Traffic, AVG"
-                            }
-                        },
-                        {
-                            prometheus: {
-                                query: this.promMaxLatency,
-                                legend: "Traffic, MAX"
-                            }
-                        },
-                        {
-                            prometheus: {
-                                query: this.promPercentile75Latency,
-                                legend: "Traffic, 75"
-                            }
-                        },
-                        {
-                            prometheus: {
-                                query: this.promPercentile75Latency,
-                                legend: "Traffic, 95"
-                            }
-                        }
+                        RESTMethodMetrics.openSearchTarget(this.#openSearchQuery, "Ingress max", { field: "json.request_time", type: "max" }),
+                        RESTMethodMetrics.openSearchTarget(this.#openSearchQuery, "Ingress average", { field: "json.request_time", type: "average" }),
+                        RESTMethodMetrics.openSearchTarget(this.#openSearchQuery, "Ingress P75", { field: "json.request_time", type: "percentiles", options: { values: [75] } }),
+                        RESTMethodMetrics.openSearchTarget(this.#openSearchQuery, "Ingress P95", { field: "json.request_time", type: "percentiles", options: { values: [95] } }),
+                        RESTMethodMetrics.prometheusTarget(this.#promMaxLatency, "Prometheus max"),
+                        RESTMethodMetrics.prometheusTarget(this.#promAvgLatency, "Prometheus average"),
+                        RESTMethodMetrics.prometheusTarget(this.#promP75Latency, "Prometheus P75"),
+                        RESTMethodMetrics.prometheusTarget(this.#promP95Latency, "Prometheus P95")
                     ]
                 }
             }
         ];
     }
-    get errorRatePanel(){
+    get errorRatePanel() {
         return [
             {
                 timeseries: {
-                    title: `${this.method} ${this.path} errorRate, Prometheus`,
+                    title: `${this.method} ${this.path} error rate`,
                     datasource: "Prometheus-BeeInside",
-                    targets : [
-                        {
-                            prometheus: {
-                                query: this.promTrafficAllStatus,
-                                legend: "All Status"
-                            }
-                        },
-                        {
-                            prometheus: {
-                                query: this.promErrorRate,
-                                legend: "error rate"
-                            }
-                        }
+                    targets: [
+                        RESTMethodMetrics.prometheusTarget(this.#promErrorRate, "Prometheus error rate")
                     ]
                 }
             }
@@ -215,52 +143,6 @@ class RESTMethodMetrics {
                 ...this.trafficPanels,
                 ...this.latencePanels,
                 ...this.errorRatePanel
-                /*
-                {
-                    timeseries: {
-                        title: `${this.method} ${this.path} Latency, Ingress`,
-                        datasource: "logstash-ingress-provider-ia-monitoring",
-                        targets: [
-                            {
-                                opensearch: {
-                                    datasource: "logstash-ingress-provider-ia-monitoring",
-                                    query: `json.request_uri.keyword: /${this.ingressPath}/ AND json.request_method: "${this.method}"`,
-                                    alias: "Ingress",
-                                    metrics: [{
-                                        field: "json.request_time",
-                                        type: "percentiles",
-                                        options:
-                                            { values: [75, 95] }
-
-                                    }]
-                                }
-                            },
-                            {
-                                opensearch: {
-                                    datasource: "logstash-ingress-provider-ia-monitoring",
-                                    query: `json.request_uri.keyword: /${this.ingressPath}/ AND json.request_method: "${this.method}"`,
-                                    alias: "Ingress 75",
-                                    metrics: [{
-                                        field: "json.request_time",
-                                        type: "percentiles",
-                                        options:
-                                            { values: [75] }
-
-                                    }]
-                                }
-                            },
-                            {
-                                prometheus: {
-                                    datasource: "Prometheus-BeeInside",
-                                    query: `sum by (uri) (rate(http_server_requests_seconds_sum{uri="${this.path}", method=~"(?i:${this.method})"})  )
-/ 
-(sum by (uri) (rate(http_server_requests_seconds_count{uri="${this.path}", method=~"(?i:${this.method})"}) > 0 )[$__rate_interval])`,
-                                    legend: "Application"
-                                }
-                            }
-                        ]
-                    }
-                }*/
             ]
         }
 
