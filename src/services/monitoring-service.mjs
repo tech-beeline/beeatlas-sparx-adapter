@@ -74,13 +74,15 @@ class RESTMethodMetrics {
     get #promMaxLatency() {
         return `max (http_server_requests_seconds_max{uri=\"${this.path}\", method=~"(?i:${this.method})"})`
     }
-    get #promP95Latency() {
-        return `quantile_over_time (0.95, avg((sum(rate(http_server_requests_seconds_sum{uri=\"${this.path}\", method=~"(?i:${this.method})"}))
+    promPercentileLatency( p ){
+        return `quantile_over_time (${p}, avg((sum(rate(http_server_requests_seconds_sum{uri=\"${this.path}\", method=~"(?i:${this.method})"}))
 / sum(rate(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}) > 0  ))) [$__rate_interval])`
     }
+    get #promP95Latency() {
+        return this.promPercentileLatency(0.95);
+    }
     get #promP75Latency() {
-        return `quantile_over_time (0.75, avg ((sum( rate(http_server_requests_seconds_sum{uri=\"${this.path}\", method=~"(?i:${this.method})"})))
-/ sum(rate(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}) > 0  ))) [$__rate_interval])`
+        return this.promPercentileLatency(0.75);
     }
 
     get #promErrorRate() {
