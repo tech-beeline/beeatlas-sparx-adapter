@@ -69,7 +69,8 @@ class RESTMethodMetrics {
         return `sum (increase(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}))`;
     }
     get #promAvgLatency() {
-        return `avg (http_server_requests_seconds_max{uri=\"${this.path}\", method=~"(?i:${this.method})"})`
+        return `avg((sum(rate(http_server_requests_seconds_sum{uri=\"${this.path}\", method=~"(?i:${this.method})"}))
+        / sum(rate(http_server_requests_seconds_count{uri=\"${this.path}\", method=~"(?i:${this.method})"}) > 0  )))`
     }
     get #promMaxLatency() {
         return `max (http_server_requests_seconds_max{uri=\"${this.path}\", method=~"(?i:${this.method})"})`
