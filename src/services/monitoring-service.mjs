@@ -96,7 +96,7 @@ class RESTMethodMetrics {
         return [
             {
                 timeseries: {
-                    title: `${this.method} ${this.path} Traffic, Ingress`,
+                    title: `${this.method} ${this.path} Traffic`,
                     datasource: "-- Mixed --",
                     targets: [
                         RESTMethodMetrics.openSearchTarget(this.#openSearchQuery, "Ingress Traffic"),
