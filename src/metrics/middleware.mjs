@@ -31,7 +31,7 @@ let requestExpireTime = Date.now() + REQUEST_MAX_EXPIRE * 1000;
 
 const c4StartCounter = new client.Counter({
     name: 'vscode_c4_plugin_start',
-    help: 'Duration of HTTP requests in microseconds',
+    help: 'Количество запусков плагина',
     labelNames: ['version', 'action'],
 });
 
