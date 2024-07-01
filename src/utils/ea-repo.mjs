@@ -6,6 +6,7 @@ import t_connector from './ea-model/t_connector.mjs';
 import t_operation from './ea-model/t_operation.mjs';
 import t_diagram from './ea-model/t_diagram.mjs';
 import t_xref from './ea-model/t_xref.mjs';
+import t_operationtag from './ea-model/t_operationtag.mjs';
 
 const ENVIROMENT_VARIABLE = {
     user: "DB_EA_USER", password: "DB_EA_PASSWORD", host: "DB_EA_URL", database: "DB_EA_DATABASE"
@@ -236,8 +237,8 @@ class Repository {
             (await this.insert(t_diagram, this.buildDiagram(d)));
     }
 
-    async removeConnectors( start_object_id, end_object_id, connector_type ){
-        
+    async removeConnectors(start_object_id, end_object_id, connector_type) {
+
     }
 
     async putConnector(start_object_id, end_object_id, connector_type, additionalProperties) {
@@ -474,6 +475,21 @@ class Repository {
 
     async deleteParameters(paramersIds) {
         throw Error('not implemented')
+    }
+    async setOperationTag(operation_id, tag, value) {
+        /** @type {t_operationtag} */
+        const operation_tag = await this.first(t_operationtag, { elementid: operation_id, property: tag });
+        if (operation_tag?.value === value) {
+            return;
+        }
+        if (operation_tag) {
+            if (value)
+                return this.update(t_operationtag, { value: value }, { ea_guid: operation_tag.ea_guid });
+            else
+                return this.delete(t_operationtag, { ea_guid: operation_tag.ea_guid });
+        }
+        if (value)
+            return this.insert(t_operationtag, { elementid: operation_id, property: tag, value: value });
     }
 }
 

@@ -1,5 +1,6 @@
 import exporess from 'express'
 import client from 'prom-client'
+import { NotImplemented } from '../utils/errors.mjs';
 
 
 const register = new client.Registry()
@@ -52,7 +53,7 @@ export function createPromDecorator(fn, path, method) {
     return async (req, res, next) => {
         checkExpire();
         const end = httpRequestDurationMicroseconds.startTimer();
-        await fn(req, res, next);
+        if( fn) {await fn(req, res, next);} else res.status(501).send( "Нет обработчика для запроса" )
         const labels = { path: path, uri: path, status: res.statusCode, code: res.statusCode, method: method };
         httpRequestMax.set( labels, requestMax =  Math.max( requestMax, end(labels) ));
     }

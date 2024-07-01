@@ -22,6 +22,22 @@ const E2EProcessRoutes = {
                 }
             }
         },
+        "/api/v1/e2e-process/systems" :{
+            get:{
+                summary : "Выгрузка информации по процесса",
+                operation: e2eProcessController.getProcessSystems,
+                responses:{
+                    200: {
+                        description : "OK",
+                        content: {
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : {
+                                
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/e2e-process-messages/{code}": {
             get: {
                 operation: e2eProcessController.getProcessMessages,
@@ -54,6 +70,7 @@ const E2EProcessRoutes = {
                 }
             }
         }
+
     }
 }
 

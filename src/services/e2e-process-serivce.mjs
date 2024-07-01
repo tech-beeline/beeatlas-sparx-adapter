@@ -225,5 +225,9 @@ class E2EProcessService {
         }))
         throw Error('not implemented');
     }
+    async getProcessSystems(){
+        let processes = await this.getE2EProcesses();
+        console.log( processes)
+    }
 }
 export default new E2EProcessService();

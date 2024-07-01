@@ -22,5 +22,5 @@ export function ProcessError(error, response) {
 }
 
 export function NotImplemented(str) {
-    throw Error(str ? `Not implemented : ${str}` : 'Not implemented');
+    throw Object.assign( Error(str ? `Not implemented : ${str}` : 'Not implemented'), {status : 501} );
 }

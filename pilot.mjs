@@ -3,13 +3,16 @@ import oslc from './src/utils/oslc.mjs';
 
 import XMLJS from 'xml-js';
 import Repository from './src/utils/ea-repo.mjs'
-import processDashboardService, { ProcessStatusRow } from './src/services/process-dashboard-service.mjs';
+import processDashboardService from './src/services/e2e-process-serivce.mjs';
 import { sheetFromObject } from './src/utils/excel.mjs';
 import MAPIC from './src/utils/mapic.mjs';
 import { mapFromArray } from './src/utils/helpers.mjs';
 import Capability from './src/model/capability.mjs';
 import CAPABILITY_EXAMPLES from './src/swagger/examples/capability-examples.mjs';
 import SwaggerDefinition from './src/routes/swagger.mjs';
+import QUERIES from './src/services/sql/e2e-process-queries.mjs'
+import applicationService from './src/services/application-service.mjs';
+
 
 
 const COLUMNS = {
@@ -35,142 +38,6 @@ function parseMnemonic(text) {
     return { mnemonic: "", text: text };
 }
 
-const PROCESS_FOLDER_UID = '{44673B34-2358-4da0-887E-06311EAB7CA2}'
-
-async function createPackage({ alias, name, description, parentResourceIdentifier }) {
-    const result = await oslc.createResource({
-        alias: alias, name: name, type: "Package", resourceType: "Package", "parentresourceidentifier": parentResourceIdentifier, description: description
-    });
-
-    let xml = XMLJS.xml2js(result, { compact: true });
-    const about = xml["rdf:RDF"]?.["oslc_am:Resource"]?._attributes["rdf:about"]
-    let read_result = await oslc.readResource(about);
-    xml = XMLJS.xml2js(read_result, { compact: true });
-    return xml["rdf:RDF"]?.["oslc_am:Resource"]?.["dcterms:identifier"]?._text;
-}
-
-async function main() {
-    let processRefreneceXlsx = xlsx.readFile('./data/Справочник процессов.xlsx')
-    let data = xlsx.utils.sheet_to_json(processRefreneceXlsx.Sheets[processRefreneceXlsx.SheetNames[0]])
-    let state = {
-    };
-
-    let processRefrence = {}
-
-    /**
-     * 
-     * @param {{processGroup: {mnemonic:string, text:string},
-     *  baseProcess: { mnemonic: string, text: string},
-     *  keyProcess: { mnemonic: string, text: string},
-     *  comment: { mnemonic: string, text: string}
-     * }} process 
-     */
-    function addProcess(process) {
-        processRefrence[process.processGroup.text] = processRefrence[process.processGroup.text] ?? { name: process.processGroup.text, mnemonic: process.processGroup.mnemonic, baseProcesses: {} };
-        const processGroup = processRefrence[process.processGroup.text];
-        if (process.baseProcess) {
-            processGroup.baseProcesses[process.baseProcess.text] = processGroup.baseProcesses[process.baseProcess.text] ?? { name: process.baseProcess.text, mnemonic: process.baseProcess.mnemonic, keyProcesses: {} };
-            const baseProcess = processGroup.baseProcesses[process.baseProcess.text];
-            if (process.keyProcess) {
-                baseProcess.keyProcesses[process.keyProcess.text] = baseProcess.keyProcesses[process.keyProcess.text] ?? { name: process.keyProcess.text, mnemonic: process.keyProcess.mnemonic };
-                baseProcess.keyProcesses[process.keyProcess.text].comment = process.comment?.text;
-                return;
-            }
-            baseProcess.comment = process.comment?.text;
-            return;
-        }
-        processGroup.comment = process.comment?.text;
-    }
-
-    for (const row of data) {
-        state.keyProcess = null;
-        state.comment = null;
-        for (const column in COLUMNS) {
-            if (row[COLUMNS[column]]) {
-                state[column] = parseMnemonic(row[COLUMNS[column]]);
-            }
-        }
-        addProcess({ ...state });
-    }
-    console.log(processRefrence)
-
-    for (const process_group_name in processRefrence) {
-        const process_group = processRefrence[process_group_name];
-        const group_id = await createPackage({ alias: process_group.mnemonic, name: process_group.mnemonic ? `[${process_group.mnemonic}] ${process_group_name}` : process_group_name, parentResourceIdentifier: `pk_${PROCESS_FOLDER_UID}`, description: process_group.comment })
-        for (const base_process_name in process_group.baseProcesses) {
-            const base_process = process_group.baseProcesses[base_process_name];
-            const base_process_uid = await createPackage({
-                alias: base_process.mnemonic,
-                name: base_process.mnemonic ? `[${base_process.mnemonic}] ${base_process_name}` : base_process_name,
-                description: base_process.comment,
-                parentResourceIdentifier: group_id
-            });
-            for (const key_process_name in base_process.keyProcesses) {
-                const key_process = base_process.keyProcesses[key_process_name];
-                await createPackage({
-                    alias: key_process.mnemonic,
-                    name: key_process.mnemonic ? `[${key_process.mnemonic}] ${key_process_name}` : key_process_name,
-                    description: key_process.comment,
-                    parentResourceIdentifier: base_process_uid
-                })
-            }
-        }
-    }
-
-    //const new_uid = await createPackage({ alias: '2222', description: "this is description", parentResourceIdentifier : `pk_${PROCESS_FOLDER_UID}`, name : "test"})
-
-    //console.log( new_uid)
-}
-
-class ProcessDiagramStatus {
-    #name;
-    /**
-     * @type {ProcessOperation[]}
-     */
-    operations = [];
-    constructor({ baseDiagramName }) {
-        this.#name = baseDiagramName;
-    }
-    get participiants() {
-        let ret = {};
-        for (const op of this.operations) {
-            ret[op.serverCode] = ret[op.serverCode] ?? op.server;
-            ret[op.serverCode].server = true;
-            ret[op.clientCode] = ret[op.clientCode] ?? op.client;
-            ret[op.serverCode].client = true;
-        }
-        return Object.values(ret);
-    }
-    get operationsWithName() {
-        return this.operations.filter(o => o.name != '');
-    }
-}
-
-class ProcessOperation {
-    /**
-     * @type {ProcessStatusRow}
-     */
-    #row;
-    constructor(dbRow) {
-        this.#row = dbRow;
-    }
-    get serverCode() {
-        return this.#row.serverCode;
-    }
-    get server() {
-        return { name: this.#row.serverName, code: this.#row.serverCode };
-    }
-    get clientCode() {
-        return this.#row.clientCode;
-    }
-    get client() {
-        return { name: this.#row.clientName, code: this.#row.clientCode };
-    }
-    get name() {
-        return this.#row.operation;
-    }
-
-}
 
 function saveAsExcel(data, columns, fileName) {
     let wb = xlsx.utils.book_new();
@@ -180,9 +47,50 @@ function saveAsExcel(data, columns, fileName) {
 }
 
 async function dashBoardStatus() {
-    let status_rows = await processDashboardService.getProcessStatusRows();
 
-    let process_status = {}
+    let status_rows = await Repository.queryRows(QUERIES.E2E_PROCESSES_QUERY);
+    const app_catalog = await applicationService.getApplications();
+
+
+    for (let process of status_rows) {
+        process.systems = {};
+        let msg_list = await Repository.queryRows( QUERIES.E2E_MESSAGES_QUERY, [process.ea_guid] );
+        for( let msg of msg_list ){
+            const client = app_catalog.byObjectId( msg.client_id);
+            if( client?.cmdb)
+                process.systems[ client.cmdb] = `[${client.cmdb}] ${client.name}`
+            const  server = app_catalog.byObjectId( msg.server_id);
+
+            if( server?.cmdb)
+                process.systems[ server.cmdb] = `[${server.cmdb}] ${server.name}`
+        }
+    }
+
+    const COLUMN_DEFINITIONS_SYSTEMS = [
+        {
+            name: "Группа процессов", w: 25, data : r=>r.group_name
+        },
+        {
+            name: "Базовый процесс", w: 35, data : r=>r.base_process
+        },
+        {
+            name: "Ключевой процесс", w: 50, data : r=>r.key_process
+        },
+        {
+            name: "Процесс", w: 50, data : r=>r.diagram
+        },
+        {
+            name: "systems", w: 50
+        }
+    ];
+
+
+
+    let process_status = status_rows.map( r=>Object.assign(r,{ systems : Object.values( r.systems).join(',')}))
+
+    saveAsExcel(process_status, COLUMN_DEFINITIONS_SYSTEMS, './data/dashboard-new.xlsx');
+    return;
+
     for (let row of status_rows) {
         process_status[row.groupName] = process_status[row.groupName] ?? {};//{ name: row.groupName }
         let group = process_status[row.groupName];
@@ -374,3 +282,4 @@ async function mapic() {
 
 console.log('!')
 //mapic();
+dashBoardStatus()

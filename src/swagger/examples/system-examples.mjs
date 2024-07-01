@@ -38,13 +38,23 @@ const OTHER_SIMPLE_SAMPLE = new System({
                         {
                             name: 'GET /api/v1/systems/{code}',
                             description: 'ПОлучение системы по коду',
-                            returnType: 'System', parameters: [{ name: 'code', type: 'string' }]
+                            returnType: 'System', parameters: [{ name: 'code', type: 'string' }],
+                            sla: {
+                                rps: 100,
+                                latency: 200,
+                                error_rate: 95
+                            }
                         },
                         {
                             name: 'GET /api/v1/systems/{code}/interfaces',
                             description: 'ПОлучение системы по коду',
                             returnType: 'System', parameters: [
-                                { name: 'code', type: 'string' }]
+                                { name: 'code', type: 'string' }],
+                            sla: {
+                                rps: 100,
+                                latency: 200,
+                                error_rate: 95
+                            }
                         }
                     ]
                 })

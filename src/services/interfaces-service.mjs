@@ -4,16 +4,17 @@ import t_operation from '../utils/ea-model/t_operation.mjs';
 import t_operationparams from '../utils/ea-model/t_operationparams.mjs';
 import INTERFACES_QUERIES from './sql/interfaces-queries.mjs'
 import Repository from '../utils/ea-repo.mjs'
+import { NotImplemented } from '../utils/errors.mjs';
 
 
 export class InterfaceCatalog {
     byMethodGUID = {};
     async #loadInterfaceByOperationGUID(operationGUID) {
         let ea_i = await Repository.queryOne(`select * from t_object where object_id = (select object_id from t_operation where ea_guid=$1)`, [operationGUID])
-        if( ea_i ){
-            let operations = await Repository.find( t_operation, { object_id: ea_i.object_id});
-            let i = new APIInterface( {...ea_i, methods: operations.map( m=>new APIMethod(m))});
-            for( let o of i.methods ){
+        if (ea_i) {
+            let operations = await Repository.find(t_operation, { object_id: ea_i.object_id });
+            let i = new APIInterface({ ...ea_i, methods: operations.map(m => new APIMethod(m)) });
+            for (let o of i.methods) {
                 this.byMethodGUID[o.ea_guid] = i;
             }
             return i;
@@ -28,6 +29,14 @@ export class InterfaceCatalog {
         return this.byMethodGUID[operationGUID] ?? (await this.#loadInterfaceByOperationGUID(operationGUID))
     }
 }
+
+
+const SLA_TAGS = {
+    rps: "TPSThreshold",
+    latency: "LatencyThreshold",
+    error_rate: "ErrorThreshold"
+};
+
 
 class InterfacesService {
     async getInterface(code) {
@@ -73,6 +82,17 @@ class InterfacesService {
      */
     async insertMethods(methods) {
     }
+    async updateMethodsSLA(methods) {
+        for (let { operationid, sla } of methods) {
+            if( !operationid){
+                console.warn( `operationid is null`);
+                continue;
+            }
+            for (const t in SLA_TAGS) {
+                await Repository.setOperationTag(operationid, SLA_TAGS[t], sla?.[t])
+            }
+        }
+    }
     /**
      * 
      * @param {string} code 
@@ -81,7 +101,7 @@ class InterfacesService {
     async putMethods(id, methods) {
         if (!methods || !methods.length) return [];
         let methods_map = {};
-        const i = await Repository.first( t_object, { object_id:id});
+        const i = await Repository.first(t_object, { object_id: id });
 
 
         for (const m of (await this.#rawMethodsByInterfaceId(id))) {
@@ -124,6 +144,8 @@ class InterfacesService {
         for (const m of inserted_methods) {
             methods_map[m.name].tobe.operationid = m.operationid;
         }
+
+        await this.updateMethodsSLA(Object.values(methods_map).map(m => Object.assign(m.tobe, { operationid: m.asis.operationid ?? m.tobe.operationid })))
 
         let parameters_map = [];
         for (const m of [...methods_to_update, ...methods_to_insert]) {

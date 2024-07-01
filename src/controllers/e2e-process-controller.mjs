@@ -1,5 +1,6 @@
 import express from "express";
 import e2eProcessSerivce from "../services/e2e-process-serivce.mjs";
+import { NotImplemented } from "../utils/errors.mjs";
 
 
 function processError(error, response) {
@@ -13,6 +14,10 @@ function processError(error, response) {
 }
 
 class E2EProcessController {
+    constructor(){
+        this.getProcesses = this.getProcesses.bind(this);
+        this.getProcessSystems = this.getProcessSystems.bind(this)
+    }
     async getProcessMessages(request, response, next) {
         try {
             return response.json(await e2eProcessSerivce.getProcessScenario(request.params.code))
@@ -23,6 +28,14 @@ class E2EProcessController {
     async getProcesses(request, response, next) {
         try {
             response.json( await e2eProcessSerivce.getE2EProcesses());
+        } catch (error) {
+            processError(error, response);
+        }
+    }
+    async getProcessSystems(request, response, next) {
+        try {
+            let systems = await  e2eProcessSerivce.getProcessSystems();
+            NotImplemented();
         } catch (error) {
             processError(error, response);
         }
