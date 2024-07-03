@@ -18,12 +18,13 @@ export class APIMethod {
      */
     parameters = [];
 
-    constructor({ name, returnType, description, parameters, notes, ea_guid } = {}) {
+    constructor({ name, returnType, description, parameters, notes, ea_guid, operationid } = {}) {
         this.name = name;
         this.returnType = returnType;
         this.desciption = description??notes;
         this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
         this.ea_guid = ()=>ea_guid;
+        this.operationid = ()=>operationid
     }
 }
 

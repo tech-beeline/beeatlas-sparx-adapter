@@ -1,6 +1,6 @@
 import monitoringService from "../services/monitoring-service.mjs";
 import express from 'express'
-import { NotImplemented, ProcessError } from "../utils/errors.mjs";
+import { BadRequest, NotImplemented, ProcessError } from "../utils/errors.mjs";
 import YAML from 'yaml'
 
 class MonitoringController {
@@ -19,7 +19,7 @@ class MonitoringController {
             ProcessError(e, res);
         }
     }
-    async getSystemApiManifest( req,res,next){
+    async getSystemApiManifest(req, res, next) {
         try {
             res.contentType('application/yaml')
                 .send(YAML.stringify(await monitoringService.getSystemApiManifest(req.params.code)));
@@ -27,10 +27,26 @@ class MonitoringController {
             ProcessError(e, res);
         }
     }
-    async getProcessDashboardManifest(req, res,next){
+    async getProcessDashboardManifest(req, res, next) {
         try {
             res.contentType('application/yaml')
                 .send(YAML.stringify(await monitoringService.getProcessDashboardManifest(req.params.code)));
+        } catch (e) {
+            ProcessError(e, res);
+        }
+    }
+    async getScenarioJSON(req, res, next) {
+        try {
+            if (!req.params.code)
+                throw BadRequest(`Должен быть задан code`);
+            res.json(await monitoringService.getScenarioJSON(req.params.code));
+        } catch (e) {
+            ProcessError(e, res);
+        }
+    }
+    async getSystemJSON(req, res, next) {
+        try {
+            NotImplemented();
         } catch (e) {
             ProcessError(e, res);
         }

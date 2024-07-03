@@ -30,11 +30,15 @@ export class InterfaceCatalog {
     }
 }
 
+export const RPS_THRESHOLD_TAG = "TPSThreshold"
+
+export const LATENCY_THRESHOLD_TAG = "LatencyThreshold";
+export const ERROR_RATE_THRESHOLD_TAG = "ErrorThreshold";
 
 const SLA_TAGS = {
-    rps: "TPSThreshold",
-    latency: "LatencyThreshold",
-    error_rate: "ErrorThreshold"
+    rps: RPS_THRESHOLD_TAG,
+    latency: LATENCY_THRESHOLD_TAG,
+    error_rate: ERROR_RATE_THRESHOLD_TAG
 };
 
 
@@ -145,7 +149,7 @@ class InterfacesService {
             methods_map[m.name].tobe.operationid = m.operationid;
         }
 
-        await this.updateMethodsSLA(Object.values(methods_map).map(m => Object.assign(m.tobe, { operationid: m.asis.operationid ?? m.tobe.operationid })))
+        await this.updateMethodsSLA(Object.values(methods_map).map(m => Object.assign(m.tobe, { operationid: m.asis?.operationid ?? m.tobe.operationid })))
 
         let parameters_map = [];
         for (const m of [...methods_to_update, ...methods_to_insert]) {

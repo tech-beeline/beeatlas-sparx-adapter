@@ -13,15 +13,15 @@ import DATA_MODEL_ROUTES from './data-model-routes.mjs';
 
 
 export const CONTROLLERS = [
+    MONITORING_ROUTES,
+    COMPONENTS_METHODS,
     DATA_MODEL_ROUTES,
     CAPABILITY_METHODS,
-    COMPONENTS_METHODS,
     TC_METHODS,
     DASHBOARD_METHODS,
     INTERFACES_ROUTES,
     E2E_PROCESS_ROUTES,
     IA_ROUTES,
-    MONITORING_ROUTES,
     TELEMETRY_ROUTES
 ]
 
@@ -163,21 +163,6 @@ class SwaggerDefinition {
                             const { examples, schemas } = this.prepareContent(methods[method].responses[response].content, methods[method].operation.name)
                             Object.assign(swaggerApi.components.examples, examples);
                             Object.assign(swaggerApi.components.schemas, schemas);
-                            /*
-                            
-                            const response_examples = methods[method].responses[response].content[content_type].examples;
-                            for (const example_name in response_examples) {
-                                let full_name = `${methods[method].operation.name}${example_name}Example`;
-                                swaggerApi.components.examples[full_name] = { value: response_examples[example_name] };
-
-                                const { schema, refs } = schemaFromObject(response_examples[example_name]);
-                                joinSchemas(swaggerApi.components.schemas, refs);
-
-                                methods[method].responses[response].content[content_type].schema = schema;
-
-                                response_examples[example_name] = { "$ref": `#/components/examples/${full_name}` }
-                            }
-                            */
                         }
                     }
 

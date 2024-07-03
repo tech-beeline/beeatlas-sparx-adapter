@@ -33,12 +33,24 @@ const OTHER_SIMPLE_SAMPLE = new System({
         new Container({
             name: "Контейнер Системы B", code: 'CONTAINER.CMDB_B', version: '1.0', interfaces: [
                 new APIInterface({
-                    name: "IMyRestAPI", code: "IMYAPI.CONTAINER.CMDB_B", version: '1.0', capabilityCode: 'BC-ХХХХХ',
-                    api_url: "https://dashboard-dev-eafdmmart.apps.yd-m6-kt22.vimpelcom.ru/swagger/capabilities-api.json", methods: [
+                    name: "Some interfaces", code: "DCO_SAMPLE.CONTAINER.CMDB_B", version: '1.0', capabilityCode: 'BC-ХХХХХ',
+                    api_url: "https://dashboard-dev-eafdmmart.apps.yd-m6-kt22.vimpelcom.ru/swagger/capabilities-api.json",
+                    methods: [
                         {
-                            name: 'GET /api/v1/systems/{code}',
-                            description: 'ПОлучение системы по коду',
+                            name: 'GET /digital-contract-partners/api/v1/service_requests/{id}',
+                            description: '/digital-contract-partners/api/v1/service_requests/{id}',
                             returnType: 'System', parameters: [{ name: 'code', type: 'string' }],
+                            sla: {
+                                rps: 1,
+                                latency: 500,
+                                error_rate: 95
+                            }
+                        },
+                        {
+                            name: 'GET /service_list',
+                            description: 'PBE.FAMILY: GET /service_list',
+                            returnType: 'System', parameters: [
+                                { name: 'code', type: 'string' }],
                             sla: {
                                 rps: 100,
                                 latency: 200,
@@ -46,8 +58,8 @@ const OTHER_SIMPLE_SAMPLE = new System({
                             }
                         },
                         {
-                            name: 'GET /api/v1/systems/{code}/interfaces',
-                            description: 'ПОлучение системы по коду',
+                            name: 'GET /v2/products/list',
+                            description: 'PARTNERPLATFORM: GET /v2/products/list',
                             returnType: 'System', parameters: [
                                 { name: 'code', type: 'string' }],
                             sla: {
@@ -64,6 +76,7 @@ const OTHER_SIMPLE_SAMPLE = new System({
 const LIST_SAMPLE = [
     SIMPLE_SYSTEM, OTHER_SIMPLE_SAMPLE
 ]
+
 
 
 export default { SIMPLE_SYSTEM, OTHER_SIMPLE_SAMPLE, LIST_SAMPLE };

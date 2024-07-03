@@ -1,8 +1,10 @@
+import { Application, ApplicationRef } from '../model/application-catalog.mjs';
 import { BusinessInteraction } from '../model/e2e-process.mjs';
 import Repository from '../utils/ea-repo.mjs'
 import { BadRequest } from '../utils/errors.mjs';
 import IARepository from '../utils/ia.mjs';
 import applicationService from './application-service.mjs';
+import { InterfaceCatalog } from './interfaces-service.mjs';
 import QUERIES from './sql/e2e-process-queries.mjs'
 
 class E2EProcessService {
@@ -85,8 +87,8 @@ class E2EProcessService {
      * @returns {Promise<Array<{ message, e2e_uid, diagram_uid, server_id}>}
      */
     async getProcessMessages(processUID) {
-        if( !processUID) throw BadRequest(`не задан идентификатор процесса`);
-        console.log( `Request messages for ${processUID}`)
+        if (!processUID) throw BadRequest(`не задан идентификатор процесса`);
+        console.log(`Request messages for ${processUID}`)
         /**
          * @type {Array<{ message, e2e_uid, diagram_uid, server_id}>}
          */
@@ -97,25 +99,29 @@ class E2EProcessService {
      * @param {String} processUID 
      * @returns {Promise<{businessInteractions : BusinessInteraction[], application}>}
      */
-    async getProcessScenario(processUID) {
-        let rows = await  this.getProcessMessages( processUID)
+    async getProcessScenario(processUID, { isBIScenario } = {}) {
+        let rows = await this.getProcessMessages(processUID)
         const app_catalog = await applicationService.getApplications();
 
         let diagram_map = {};
-        let application_map = {}
+        let application_map = {
+        };
+        let interface_catalog = new InterfaceCatalog();
 
         for (const row of rows) {
             row.validationError = [];
+
             const server = app_catalog.byObjectId(row.server_id);
             if (server) {
                 if (!application_map[server.cmdb]) application_map[server.cmdb] = server;
-                row.server = { "$ref": `#/applications/${server.cmdb}`, system : ()=>server }
+                row.server = server.$ref;
                 row.server_id = server.component_id;
             }
+
             const client = app_catalog.byObjectId(row.client_id);
             if (client) {
                 if (!application_map[client.cmdb]) application_map[client.cmdb] = client;
-                row.client = { "$ref": `#/applications/${client.cmdb}`, system : ()=>client };
+                row.client = client.$ref;
                 row.client_id = client.component_id
             }
 
@@ -136,6 +142,7 @@ class E2EProcessService {
                     validationError: [`Не удалось найти интерфейсное соглашение по пути ${row.ia_path}`]
                 }
             }
+
             row.ia_path = undefined;
 
             if (row.styleex) {
@@ -143,7 +150,7 @@ class E2EProcessService {
                     const kv = v.split('=');
                     return kv.length > 0 ? Object.assign(acc, { [kv[0]]: kv.slice(1).join('') }) : acc;
                 }, {})
-                if( styleex_map.DCBM){
+                if (styleex_map.DCBM) {
                     row.duration = styleex_map.DCBM;
                 }
             }
@@ -198,8 +205,11 @@ class E2EProcessService {
         }
 
         let root_scenario = diagram_map[processUID];
-        return {
-            businessInteractions: this.buildBusinessInterations(root_scenario?.messages??[], diagram_map),
+        return isBIScenario ? {
+            applications: application_map,
+            messages : root_scenario?.messages ?? []
+        } : {
+            businessInteractions: this.buildBusinessInterations(root_scenario?.messages ?? [], diagram_map),
             applications: application_map
         }
     }
@@ -225,9 +235,9 @@ class E2EProcessService {
         }))
         throw Error('not implemented');
     }
-    async getProcessSystems(){
+    async getProcessSystems() {
         let processes = await this.getE2EProcesses();
-        console.log( processes)
+        console.log(processes)
     }
 }
 export default new E2EProcessService();

@@ -69,12 +69,11 @@ class DataModelService {
     }
 
     async getGlossaries() {
-        if (this.needRefresh(this.#refreshTime <= Date.now())) {
+        if (this.#refreshTime <= Date.now()) {
             let glossaries = await getJSON(`${OMD_URL}${GLOSSARIES_PATH}?limit=10000`, this.#defaultRequestOption);
             this.#glossaries = glossaries.data.reduce((acc, it) => Object.assign(acc, { [it.id]: new Glossary(it) }), {});
-            this.#terms = await getJSON(`${OMD_URL}${GLOSSARY_TERMS_PATH}?limit=100000`).then( r=>r.data);
-            this.#terms.forEach( t=>{
-                
+            this.#terms = await getJSON(`${OMD_URL}${GLOSSARY_TERMS_PATH}?limit=100000`).then(r => r.data);
+            this.#terms.forEach(t => {
             })
 
             this.#refreshTime = Date.now() + REFRESH_TIME;

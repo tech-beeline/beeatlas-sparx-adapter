@@ -10,6 +10,7 @@ import applicationCatalog from "./sql/application-catalog.mjs";
 import SYSTEM_QUERY from "./sql/systems-queries.mjs";
 import { BadRequest, NotImplemented } from "../utils/errors.mjs";
 import t_operation from "../utils/ea-model/t_operation.mjs";
+import t_operationtag from "../utils/ea-model/t_operationtag.mjs";
 
 
 
@@ -75,7 +76,7 @@ class ComponentsService {
 		return Object.values(systems);
 	}
 
-	async getSystem(code, { loadMethods, loadInterfaceTags} = {}) {
+	async getSystem(code, { loadMethods, loadInterfaceTags, loadMethodTags } = {}) {
 		if (!code) throw Object.assign(Error(`system with code ${code} not found`, { status: 404 }));
 		/**
 		 * @type {System}
@@ -88,12 +89,17 @@ class ComponentsService {
 			 */
 			this.#addContainerFromRow(system, row);
 		}
-		if( loadMethods ){
-			for( const container of system.containers??[]){
-				for( const i of container.interfaces??[]){
-					i.methods = (await Repository.find( t_operation, { object_id: i.ea_id() })).map( m=>new APIMethod(
-						{...m }
+		if (loadMethods) {
+			for (const container of system.containers ?? []) {
+				for (const i of container.interfaces ?? []) {
+					i.methods = (await Repository.find(t_operation, { object_id: i.ea_id() })).map(m => new APIMethod(
+						{ ...m }
 					));
+					if (loadMethodTags) {
+						for (let m of i.methods) {
+							m.taggedValues = await Repository.find(t_operationtag, { elementid: m.operationid() })
+						}
+					}
 				}
 			}
 		}
@@ -109,13 +115,13 @@ class ComponentsService {
 		if (!code) throw Object.assign(Error(`code is null`, { status: 406 }));
 		if (!system) throw Object.assign(Error(`System is null`, { status: 406 }));
 		if (system.code !== code) throw Object.assign(Error(`System code ${system.code} != ${code}`, { status: 406 }));
-		if( system.containers?.some( c=>!c.code)) throw BadRequest( `Не у всех контейнеров заданы коды`);
-		if( system.containers?.some( c=>c.interfaces?.some(i=>!i.code))) throw BadRequest( `Не у всех интерфесов заданы коды`);
+		if (system.containers?.some(c => !c.code)) throw BadRequest(`Не у всех контейнеров заданы коды`);
+		if (system.containers?.some(c => c.interfaces?.some(i => !i.code))) throw BadRequest(`Не у всех интерфесов заданы коды`);
 		/**
 		 * @type {t_object}
 		 */
 		let ea_system = await Repository.first(t_object, { alias: code, object_type: 'Component' });
-		
+
 		if (!ea_system) throw Object.assign(Error(`system with code ${code} not found`, { status: 404 }));
 
 		const system_package_id = ea_system.package_id;
@@ -193,7 +199,7 @@ class ComponentsService {
 				await Repository.putConnector(ea_interface.object_id, ea_tc.object_id, 'Realisation');
 			}
 		}
-		return this.getSystem( code , { loadMethods: true});// [ ] Подумать, надо ли возвращать обновленные данные, например, для передачи идентификаторов (ea_guid)
+		return this.getSystem(code, { loadMethods: true });// [ ] Подумать, надо ли возвращать обновленные данные, например, для передачи идентификаторов (ea_guid)
 	}
 }
 
