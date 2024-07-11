@@ -13,7 +13,7 @@ export class Application {
         this.#ref = new ApplicationRef( this );
     }
     get $ref(){
-        return this.$ref;
+        return this.#ref;
     }
 }
 

@@ -33,6 +33,7 @@ class E2EProcessService {
             }
             return context;
         }
+
         messages = messages.filter(m => m.message != 'use' && m.message != 'use()').sort((a, b) => a.seqno - b.seqno);
 
         let context = { client_id: 0, server_id: messages[0].client_id, messages: [] };
@@ -42,12 +43,13 @@ class E2EProcessService {
             let parent_context = searchContext(context, msg.client_id);
 
             if (msg.client_id === msg.server_id && !msg.operation_guid) {
-                context.messages.push({ type: "internalCall", message: msg.message })
+                context.messages.push({ type: "internalCall", message: msg.message, diagram: msg.diagram })
                 continue;
             }
 
             if (!parent_context) {
                 (context.failedMessages = context.failedMessages ?? []).push(msg);
+                console.log(`Не получилось определить контекст для ${JSON.stringify(msg)}`)
                 continue;
             }
 
@@ -100,13 +102,13 @@ class E2EProcessService {
      * @returns {Promise<{businessInteractions : BusinessInteraction[], application}>}
      */
     async getProcessScenario(processUID, { isBIScenario } = {}) {
+
         let rows = await this.getProcessMessages(processUID)
         const app_catalog = await applicationService.getApplications();
 
         let diagram_map = {};
         let application_map = {
         };
-        let interface_catalog = new InterfaceCatalog();
 
         for (const row of rows) {
             row.validationError = [];
@@ -160,7 +162,7 @@ class E2EProcessService {
         }
 
         for (const uid in diagram_map) {
-            if (uid === processUID) continue;
+            if (uid === processUID && !isBIScenario) continue;
 
             diagram_map[uid].messages = this.buildMessageTree(diagram_map[uid].messages, diagram_map)
         }
@@ -184,7 +186,6 @@ class E2EProcessService {
                         : parent_context.operation_guid;
 
 
-
                     const income_operations = diagram_map[uid].messages.filter(m => m.operation_guid === operation_guid);
 
                     if (income_operations.length === 1) {
@@ -205,14 +206,16 @@ class E2EProcessService {
         }
 
         let root_scenario = diagram_map[processUID];
+
         return isBIScenario ? {
             applications: application_map,
-            messages : root_scenario?.messages ?? []
+            messages: root_scenario?.messages ?? []
         } : {
             businessInteractions: this.buildBusinessInterations(root_scenario?.messages ?? [], diagram_map),
             applications: application_map
         }
     }
+
     async getE2EProcesses() {
         /**
          * @type {{ group_name, group_uid}}
@@ -233,7 +236,6 @@ class E2EProcessService {
                 key_processes: Object.values(b.key_processes)
             }))
         }))
-        throw Error('not implemented');
     }
     async getProcessSystems() {
         let processes = await this.getE2EProcesses();

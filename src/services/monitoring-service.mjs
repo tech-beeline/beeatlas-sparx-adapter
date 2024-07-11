@@ -3,13 +3,19 @@ import Repository from "../utils/ea-repo.mjs";
 import t_object from "../utils/ea-model/t_object.mjs";
 import t_operation from "../utils/ea-model/t_operation.mjs";
 import componentsService from "./components-service.mjs";
-import E2EProcessService from './e2e-process-serivce.mjs'
+import E2EProcessService from './e2e-process-service.mjs'
 import { APIInterface, APIMethod, Container } from "../model/system.mjs";
 import { query } from "express";
-import { ERROR_RATE_THRESHOLD_TAG, InterfaceCatalog, LATENCY_THRESHOLD_TAG, RPS_THRESHOLD_TAG } from "./interfaces-service.mjs";
+import { InterfaceCatalog } from "./interfaces-service.mjs";
 import t_diagram from "../utils/ea-model/t_diagram.mjs";
 import RestMethodRow from "./monitoring-templates/rest-api-row.mjs";
-import applicationService from "./application-service.mjs";
+import LEGEND_PANEL from "./monitoring-templates/panels/legend.mjs";
+import { API_STATE_HEADER_PANEL, SYSTEMS_HEALTH_HEADER_PANEL } from "./monitoring-templates/panels/headers.mjs";
+import createInteractionStatPanel, { createGrafanaSource } from "./monitoring-templates/panels/method-stat.mjs";
+import { ERROR_RATE_THRESHOLD_TAG, LATENCY_THRESHOLD_TAG, RPS_THRESHOLD_TAG } from "./sql/interfaces-queries.mjs";
+import createInteractionPanels from "./monitoring-templates/panels/interaction-timeseries.mjs";
+import { selectGrafanaSources } from "./sql/monitoring-source.mjs";
+import { DEFAULT_OPENSEARCH_API_SOURCE, MAPIC_DEFAULT_API_SOURCE } from "./monitoring-templates/panels/source-options/opensearch.mjs";
 
 
 class InvalidMessageMetrics {
@@ -157,11 +163,26 @@ class RESTMethodMetrics {
             .join('\\/');
     }
 }
+
+
 class MonitoringService {
     prepareInressPathRegex(path) {
         return path?.split('/')
             .map(a => a.startsWith('{') && a.endsWith('}') ? `(.*)` : a)
             .join('\\/');
+    }
+    async getGrafanaSources() {
+        const raw = await selectGrafanaSources();
+        let ret = {}
+        for (let row of raw) {
+            const source = ret[row.system_id] ?? (ret[row.system_id] = {})
+            source[row.property] = row.value ?? row.notes
+        }
+        for (let id in ret) {
+            const tv = ret[id];
+            ret[id] = createGrafanaSource(tv);
+        }
+        return ret;
     }
     /**
      * 
@@ -195,8 +216,6 @@ class MonitoringService {
             latency: m.taggedValues.find(i => i.property === LATENCY_THRESHOLD_TAG)?.value,
             error_rate: m.taggedValues.find(i => i.property === ERROR_RATE_THRESHOLD_TAG)?.value
         })).map(p => p.build());
-
-
 
         let manifest = {
             title: `Дашборд API для ${system.name} [cmdb=${system.code}]`,
@@ -238,40 +257,52 @@ class MonitoringService {
             rows: Object.values(api_list).map(m => m.toRow())
         };
         return manifest;
-
-        NotImplemented();
     }
 
-    async getScenarioJSON(code){
+
+    async buildInteractionsList(messages, map = { count: 0 }, grafana_sources) {
+        grafana_sources = grafana_sources ?? await this.getGrafanaSources();
+        let ret = [];
+        for (let m of messages) {
+            if (m.client && m.server) {
+                const title = `${m.client.server.cmdb} - ${m.server.server.cmdb}${m.stereotype ? ` ${m.stereotype}` : ""}: ${m.message}`
+                let interaction = map[title];
+                if (!interaction) {
+                    const [method, path] = m.message.split(' ').filter(it => it.length);
+                    m.rps = Number(m.rps?.replace(',', '.'));
+                    m.latency = Number(m.latency?.replace(',', '.'));
+                    m.error_rate = Number(m.error_rate?.replace(',', '.'));
+                    interaction = map[title] =
+                    {
+                        title: title, message: m.message, index: map.count++, count: 0, method: method, uri: path,
+                        grafanaSource: m.stereotype === "via MAPIC" ? MAPIC_DEFAULT_API_SOURCE : grafana_sources[m.server.server.component_id] ?? DEFAULT_OPENSEARCH_API_SOURCE,
+                        sla: {
+                            rps: Number.isNaN(m.rps) ? 10 : m.rps,
+                            latency: Number.isNaN(m.latency) ? 1 : m.latency,
+                            errorRate: Number.isNaN(m.error_rate) ? 0.1 : m.error_rate
+                        }
+                    }
+                    ret.push(interaction);
+                }
+                interaction.count++;
+            }
+            if (m.messages) ret.push(...await this.buildInteractionsList(m.messages, map, grafana_sources));
+        }
+        return ret;
+    }
+
+    async getScenarioJSON(code) {
         const process = await Repository.first(t_diagram, { ea_guid: code });
         if (!process) throw NotFound(`Процесс с GUID=${code} не найден`);
-        const process_messages = await E2EProcessService.getProcessMessages(code);
+        const process_messages = await E2EProcessService.getProcessScenario(code, { isBIScenario: true });
 
-        const app_catalog = await applicationService.getApplications();
-        let interface_catalog = new InterfaceCatalog();
+        let interactions = await this.buildInteractionsList(process_messages.messages);
 
-        let process_parties = {};
-        let api_list = {}
-        for (let ea_m of process_messages.filter(m => m.operation_guid)) {
-
-            const server = app_catalog.byObjectId(ea_m.server_id);
-            if (api_list[ea_m.operation_guid])
-                continue;
-
-            let i = await interface_catalog.byOperationGUID(ea_m.operation_guid);
-            let m = i?.methodByUID(ea_m.operation_guid);
-            if (m) {
-                let [method, path] = m.name.split(' ').filter(s => s.length);
-                NotImplemented();
-                continue;
-            }
-            NotImplemented();
-            api_list[ea_m.operation_guid] = new InvalidMessageMetrics(ea_m.name, `Не получилось получить информацию о методу в сообщении`)
-        }
-
-
-
-        NotImplemented();
+        let panels = [LEGEND_PANEL, SYSTEMS_HEALTH_HEADER_PANEL, API_STATE_HEADER_PANEL,
+            ...interactions.map(it => createInteractionStatPanel(it)),
+            ...interactions.reduce((r, v) => [...r, ...createInteractionPanels(v)], [])
+        ];
+        return panels;
     }
 }
 

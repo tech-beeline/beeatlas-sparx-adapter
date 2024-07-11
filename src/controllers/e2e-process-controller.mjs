@@ -1,5 +1,5 @@
 import express from "express";
-import e2eProcessSerivce from "../services/e2e-process-serivce.mjs";
+import e2eProcessSerivce from "../services/e2e-process-service.mjs";
 import { NotImplemented } from "../utils/errors.mjs";
 
 

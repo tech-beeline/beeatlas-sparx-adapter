@@ -31,7 +31,7 @@ ${applicationCatalog.APPLICATION_CATALOG_CTE}, msg as ( select distinct connecto
 	connector.ea_guid as message_uid,
 	cl.name as client, connector.name as message, cl.object_id as client_id,
 	connector.end_object_id as server_id, srv.name as server, d_refs.child_diagram_uid, srv.object_type as server_type, srv.ea_guid as server_uid,
-	connector.styleex
+	connector.styleex, connector.stereotype
 	from t_connector connector
 		join t_object srv on srv.object_id=connector.end_object_id
 		join t_object cl on cl.object_id=connector.start_object_id
@@ -39,16 +39,20 @@ ${applicationCatalog.APPLICATION_CATALOG_CTE}, msg as ( select distinct connecto
 	where connector.pdata4='0'
 )
 select 
-	msg.message, msg.message_uid,  msg.seqno,msg.client_id, msg.server_id, msg.child_diagram_uid, 
+	coalesce( m.name, msg.message ) as message, msg.message_uid,  msg.seqno,msg.client_id, msg.server_id, msg.child_diagram_uid, 
 	msg.server_type, msg.server as server_name, msg.server_uid, msg.styleex,
 	d.name as diagram, d_tree.*,
-	m.ea_guid as operation_guid, ia.value as ia_path
+	m.ea_guid as operation_guid, ia.value as ia_path, m.name as method, msg.stereotype,
+	rps.value as rps, latency.value as latency, er.value as error_rate
 from d_tree
 	join msg on msg.diagram_id=d_tree.diagram_id
 	join t_diagram d on d.diagram_id=msg.diagram_id
 	left join t_connectortag op on op.property='operation_guid' and elementid=msg.connector_id
 	left join t_operation m on m.ea_guid=op.value
 	left join t_connectortag ia on ia.property='InterfaceAgreement' and ia.elementid=msg.connector_id
+	left join t_connectortag rps on rps.property='TPSThreshold' and rps.elementid=msg.connector_id
+	left join t_connectortag latency on latency.property='LatencyThreshold' and latency.elementid=msg.connector_id
+	left join t_connectortag er on er.property='ErrorThreshold' and er.elementid=msg.connector_id
 where d_tree.e2e_uid=$1`
 
 const E2E_PROCESSES_QUERY = `

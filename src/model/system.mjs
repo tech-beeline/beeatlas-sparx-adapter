@@ -13,18 +13,21 @@ export class APIMethod {
     name;
     returnType;
     desciption;
+    rps;
+    latency;
+    error_rate;
     /**
      * @type {Array<APIMethodParameter>}
      */
     parameters = [];
 
-    constructor({ name, returnType, description, parameters, notes, ea_guid, operationid } = {}) {
+    constructor({ name, returnType, description, parameters, notes, ea_guid, operationid, rps, latency, error_rate } = {}) {
         this.name = name;
         this.returnType = returnType;
-        this.desciption = description??notes;
+        this.desciption = description ?? notes;
         this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
-        this.ea_guid = ()=>ea_guid;
-        this.operationid = ()=>operationid
+        this.ea_guid = () => ea_guid;
+        this.operationid = () => operationid
     }
 }
 
@@ -40,7 +43,7 @@ export class APIInterface {
      * @type {APIMethod[]}
      */
     methods = [];
-    constructor({ name, code, version, type, api_url, capabilityCode, methods, description , i_id} = {}) {
+    constructor({ name, code, version, type, api_url, capabilityCode, methods, description, i_id } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
@@ -49,15 +52,15 @@ export class APIInterface {
         this.capabilityCode = capabilityCode;
         this.description = description;
         this.methods = methods ?? [];
-        this.ea_id = ()=>i_id;
+        this.ea_id = () => i_id;
     }
     /**
      * 
      * @param {*} uid 
      * @returns {APIMethod}
      */
-    methodByUID(uid){
-        return this.methods?.find( m=>m.ea_guid()===uid);
+    methodByUID(uid) {
+        return this.methods?.find(m => m.ea_guid() === uid);
     }
 }
 export class Container {

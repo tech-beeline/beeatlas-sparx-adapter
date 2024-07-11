@@ -2,23 +2,26 @@ import { APIInterface, APIMethod, APIMethodParameter } from '../model/system.mjs
 import t_object from '../utils/ea-model/t_object.mjs';
 import t_operation from '../utils/ea-model/t_operation.mjs';
 import t_operationparams from '../utils/ea-model/t_operationparams.mjs';
-import INTERFACES_QUERIES from './sql/interfaces-queries.mjs'
+import INTERFACES_QUERIES, { ERROR_RATE_THRESHOLD_TAG, LATENCY_THRESHOLD_TAG, METHODS_QUERY, RPS_THRESHOLD_TAG } from './sql/interfaces-queries.mjs'
 import Repository from '../utils/ea-repo.mjs'
 import { NotImplemented } from '../utils/errors.mjs';
 
 
 export class InterfaceCatalog {
     byMethodGUID = {};
-    async #loadInterfaceByOperationGUID(operationGUID) {
-        let ea_i = await Repository.queryOne(`select * from t_object where object_id = (select object_id from t_operation where ea_guid=$1)`, [operationGUID])
-        if (ea_i) {
-            let operations = await Repository.find(t_operation, { object_id: ea_i.object_id });
-            let i = new APIInterface({ ...ea_i, methods: operations.map(m => new APIMethod(m)) });
-            for (let o of i.methods) {
-                this.byMethodGUID[o.ea_guid] = i;
-            }
-            return i;
+    byInterfaceGUID = {};
+    async #load() {
+        let methods = await Repository.queryRows(METHODS_QUERY);
+        for (let m of methods) {
+            const i = this.byInterfaceGUID[m.i_uid] ?? (this.byInterfaceGUID[m.i_uid] = new APIInterface(
+                { ea_guid: m.i_uid, name: m.interface_name, code: m.interface_code, methods: [] }))
+            i.methods.push(new APIMethod({ name: m.operation, ea_guid: m.operation_guid, rps: m.rps, latency: m.latency, error_rate: m.error }))
+            this.byMethodGUID[m.operation_guid] = i;
         }
+    }
+    async #loadInterfaceByOperationGUID(operationGUID) {
+        await this.#load();
+        return this.byMethodGUID[operationGUID];
     }
     /**
      * 
@@ -30,10 +33,7 @@ export class InterfaceCatalog {
     }
 }
 
-export const RPS_THRESHOLD_TAG = "TPSThreshold"
 
-export const LATENCY_THRESHOLD_TAG = "LatencyThreshold";
-export const ERROR_RATE_THRESHOLD_TAG = "ErrorThreshold";
 
 const SLA_TAGS = {
     rps: RPS_THRESHOLD_TAG,
@@ -88,8 +88,8 @@ class InterfacesService {
     }
     async updateMethodsSLA(methods) {
         for (let { operationid, sla } of methods) {
-            if( !operationid){
-                console.warn( `operationid is null`);
+            if (!operationid) {
+                console.warn(`operationid is null`);
                 continue;
             }
             for (const t in SLA_TAGS) {
