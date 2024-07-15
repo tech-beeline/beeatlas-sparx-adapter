@@ -10,6 +10,7 @@ import E2EFillingDetails from './Components/e2e-filling-details.mjs';
 import E2EFillingDiagramStatus from './Components/e2e-filling-diagram-status';
 import E2EScenario from './Components/e2e-scenario.mjs';
 import E2EProcesses from './Components/e2e-processes';
+import E2EScenarioDashboard from './Components/dashboards/e2e-scenarios-page.mjs';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -24,7 +25,7 @@ root.render(
       <Route path="/e2e-filling-status/:sequence/details/:diagram" element={<E2EFillingDiagramStatus />} />
       <Route path="/e2e-processes" element={<E2EProcesses/>} />
       <Route path="/e2e-scenarios/:uid" element={<E2EScenario/>} />
-
+      <Route path="/e2e-scenarios-dashboards/:uid" element={<E2EScenarioDashboard/>} />
     </Routes>
   </Router>,
   document.getElementById("root")

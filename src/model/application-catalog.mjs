@@ -42,7 +42,7 @@ export class ApplicationRef{
     $ref;
     constructor( app ){
         this.#application = app;
-        this.$ref = `#/application/${app.cmdb}`
+        this.$ref = `#/applications/${app.cmdb}`
     }
     get server(){
         return this.#application;

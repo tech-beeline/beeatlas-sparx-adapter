@@ -20,7 +20,7 @@ class E2EProcessController {
     }
     async getProcessMessages(request, response, next) {
         try {
-            return response.json(await e2eProcessSerivce.getProcessScenario(request.params.code))
+            return response.json(await e2eProcessSerivce.getProcessScenario(request.params.code, request.params))
         } catch (error) {
             processError(error, response);
         }

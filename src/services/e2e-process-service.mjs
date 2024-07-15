@@ -1,7 +1,9 @@
 import { Application, ApplicationRef } from '../model/application-catalog.mjs';
 import { BusinessInteraction } from '../model/e2e-process.mjs';
+import t_diagram from '../utils/ea-model/t_diagram.mjs';
+import t_object from '../utils/ea-model/t_object.mjs';
 import Repository from '../utils/ea-repo.mjs'
-import { BadRequest } from '../utils/errors.mjs';
+import { BadRequest, NotFound } from '../utils/errors.mjs';
 import IARepository from '../utils/ia.mjs';
 import applicationService from './application-service.mjs';
 import { InterfaceCatalog } from './interfaces-service.mjs';
@@ -103,6 +105,9 @@ class E2EProcessService {
      */
     async getProcessScenario(processUID, { isBIScenario } = {}) {
 
+        const process = await Repository.first(t_diagram, { ea_guid: processUID });
+        if( !process)
+            throw NotFound( `Процесс с UID = ${processUID} не найден`)
         let rows = await this.getProcessMessages(processUID)
         const app_catalog = await applicationService.getApplications();
 
@@ -162,7 +167,7 @@ class E2EProcessService {
         }
 
         for (const uid in diagram_map) {
-            if (uid === processUID && !isBIScenario) continue;
+            if (uid === processUID && !(isBIScenario || process.stereotype !== 'e2e_diagram')) continue;
 
             diagram_map[uid].messages = this.buildMessageTree(diagram_map[uid].messages, diagram_map)
         }
@@ -207,7 +212,7 @@ class E2EProcessService {
 
         let root_scenario = diagram_map[processUID];
 
-        return isBIScenario ? {
+        return isBIScenario || process.stereotype !== 'e2e_diagram' ? {
             applications: application_map,
             messages: root_scenario?.messages ?? []
         } : {
