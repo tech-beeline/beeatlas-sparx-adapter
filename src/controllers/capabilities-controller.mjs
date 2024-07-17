@@ -1,5 +1,6 @@
 import capabilitiesService from "../services/capabilities-service.mjs";
 import RealizationsService from "../services/realizations-service.mjs";
+import { NotImplemented } from "../utils/errors.mjs";
 import { formatHREF } from "../utils/href.mjs"
 
 export function capabilityDTO(request, capability) {
@@ -50,6 +51,19 @@ class CapabilitiesController {
     async getCapabilitiesTree(request, response) {
         try {
             response.json((await capabilitiesService.getCapabilitiesTree()));
+        } catch (err) {
+            console.error(err);
+            response.status(500).send(err.message);
+        }
+    }
+     /**
+     * 
+     * @param {Express.Request} request 
+     * @param {*} response 
+     */
+    async putCapability(request, response) {
+        try {
+            NotImplemented();
         } catch (err) {
             console.error(err);
             response.status(500).send(err.message);

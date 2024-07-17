@@ -68,6 +68,55 @@ const CAPABILITY_METHODS = {
                         }
                     }
                 }
+            },
+            put: {
+                operation: capabilitiesController.putCapability,
+                summary: "Создание/обновление бизнес-возможности",
+                description: `Если isDomain=true, то создается домен, в противном случае создается возможность.
+                Если isDomain не указан, то создается возможность (isDomain=false).
+                Можно поменять: name, description, parent, owner.`,
+                parameters: [
+                    {
+                        name: "code",
+                        in: "path",
+                        description: "Код обновляемой/создаваемой возможности",
+                        examples: {
+                            "Домен": {
+                                "value": "DOMAIN-SAMPLE"
+                            },
+                            "Бизнес-возможность": {
+                                value: "BC-SAMPLE"
+                            }
+                        },
+                        "required": true
+                    }
+                ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            examples: {
+                                "BC-SAMPLE": CAPABILITY_EXAMPLES.PutCapabilitySample,
+                                "DOMAIN-SAMPLE": CAPABILITY_EXAMPLES.PutDomainSample
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: {
+                                    "Domain": CAPABILITY_EXAMPLES.RootDomain,
+                                    "Group": CAPABILITY_EXAMPLES.DomainGroup,
+                                    "Capability": CAPABILITY_EXAMPLES.Capability,
+                                    "ChildCapability": CAPABILITY_EXAMPLES.ChildCapability
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/capabilities/{code}/children": {
@@ -79,7 +128,7 @@ const CAPABILITY_METHODS = {
                     {
                         name: "code",
                         in: "path",
-                        description : "Код возможности",
+                        description: "Код возможности",
                         required: true,
                         examples: {
                             "BC-014055": {

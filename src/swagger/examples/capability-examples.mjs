@@ -66,6 +66,12 @@ const CAPABILITY_EXAMPLES = {
                 "parent": "GRP.000"
             })
         ]
+    }),
+    PutCapabilitySample: new Capability({
+        isDomain : false, name: "Пример обновления возможности", description : `Пример для создания/изменения возможности.`, parent: "UPDATE-DOMAIN", owner : "Карабас Барабас"
+    }),
+    PutDomainSample: new Capability({
+        isDomain : true, name: "Пример домена", description : "Пример для обновления возмжности", parent: "GRP.000", owner : "Карабас Барабас"
     })
 }
 
