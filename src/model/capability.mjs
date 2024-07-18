@@ -22,10 +22,13 @@ class Capability {
     parent;
     owner;
     children;
+    ea_guid;
     constructor(cap) {
         for( const prop in this){
             this[prop] = cap[prop]??undefined;
         }
+        this.getCapabilityId = ()=>cap.id;
+        this.getPackageId = ()=>cap.package_id
     }
 }
 

@@ -72,20 +72,25 @@ const CAPABILITY_METHODS = {
             put: {
                 operation: capabilitiesController.putCapability,
                 summary: "Создание/обновление бизнес-возможности",
-                description: `Если isDomain=true, то создается домен, в противном случае создается возможность.
+                description: `Создание/обновление бизнес-возможности\n
+                Если isDomain=true, то создается домен, в противном случае создается возможность.
                 Если isDomain не указан, то создается возможность (isDomain=false).
-                Можно поменять: name, description, parent, owner.`,
+                Можно поменять: name, description, parent, status, author.
+                Пока не изменяется/добавляется owner (поле игнорируется)`,
                 parameters: [
                     {
                         name: "code",
                         in: "path",
                         description: "Код обновляемой/создаваемой возможности",
                         examples: {
-                            "Домен": {
-                                "value": "DOMAIN-SAMPLE"
+                            "Страна дураков": {
+                                value: CAPABILITY_EXAMPLES.PutDomainSample2.parent
                             },
-                            "Бизнес-возможность": {
-                                value: "BC-SAMPLE"
+                            "Поле Чудес": {
+                                value: CAPABILITY_EXAMPLES.PutCapabilitySample.parent
+                            },
+                            "Возможность посадить денежное дерево": {
+                                value: "BC-MONEY.TREE"
                             }
                         },
                         "required": true
@@ -96,8 +101,9 @@ const CAPABILITY_METHODS = {
                     content: {
                         "application/json": {
                             examples: {
-                                "BC-SAMPLE": CAPABILITY_EXAMPLES.PutCapabilitySample,
-                                "DOMAIN-SAMPLE": CAPABILITY_EXAMPLES.PutDomainSample
+                                [CAPABILITY_EXAMPLES.PutDomainSample.name]: CAPABILITY_EXAMPLES.PutDomainSample,
+                                [CAPABILITY_EXAMPLES.PutDomainSample2.name]: CAPABILITY_EXAMPLES.PutDomainSample2,
+                                [CAPABILITY_EXAMPLES.PutCapabilitySample.name]: CAPABILITY_EXAMPLES.PutCapabilitySample
                             }
                         }
                     }

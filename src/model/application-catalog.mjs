@@ -34,7 +34,6 @@ export class ApplicationCatalog {
     byObjectId( id ){
         return this.#objectMap[id];
     }
-
 }
 
 export class ApplicationRef{

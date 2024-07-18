@@ -7,6 +7,7 @@ import t_operation from './ea-model/t_operation.mjs';
 import t_diagram from './ea-model/t_diagram.mjs';
 import t_xref from './ea-model/t_xref.mjs';
 import t_operationtag from './ea-model/t_operationtag.mjs';
+import { NotImplemented } from './errors.mjs';
 
 const ENVIROMENT_VARIABLE = {
     user: "DB_EA_USER", password: "DB_EA_PASSWORD", host: "DB_EA_URL", database: "DB_EA_DATABASE"
@@ -17,15 +18,40 @@ export const CONNECTOR_STEREOTYPES = {
 }
 const CONNECTOR_STEREOTYPE = {
     [CONNECTOR_STEREOTYPES.ARCHIMATE_AGGREGATION]: {
-        connector_type: 'Association', stereotype: 'ArchiMate_Aggregation',
         properties: {
+            connector_type: 'Association', stereotype: 'ArchiMate_Aggregation',
             direction: 'Unspecified',
             destaccess: 'Public',
             sourceisaggregate: 1
         },
         t_xref: {
-            name: 'Stereotypes', type: 'connector property',
-            description: '@STEREO;Name=ArchiMate_Aggregation;FQName=ArchiMate3::ArchiMate_Aggregation;@ENDSTEREO;', supplier: '<none>'
+            Stereotypes: {
+                type: 'connector property',
+                description: '@STEREO;Name=ArchiMate_Aggregation;FQName=ArchiMate3::ArchiMate_Aggregation;@ENDSTEREO;', supplier: '<none>',
+            }
+        }
+    }
+}
+
+export const ARCHIMATE_CAPABILITY = "ArchiMate_Capability"
+
+const OBJECT_STEREOTYPES = {
+    [ARCHIMATE_CAPABILITY]: {
+        properties: {
+            object_type: 'Class', stereotype: ARCHIMATE_CAPABILITY,
+            scope: 'Public', parentid: '0', classifier: '0', pdata4: '0',
+            stereotype: ARCHIMATE_CAPABILITY,
+            backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
+        },
+        t_xref: {
+            Stereotypes: {
+                type: "element property", supplier: '<none>', visibility: "Public", partition: '0',
+                description: '@STEREO;Name=ArchiMate_Capability;FQName=ArchiMate3::ArchiMate_Capability;@ENDSTEREO;'
+            },
+            CustomProperties: {
+                type: "element property", supplier: '<none>', visibility: "Public", partition: '0',
+                description: '@PROP=@NAME=_HideUmlLinks@ENDNAME;@TYPE=string@ENDTYPE;@VALU=True@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;@PROP=@NAME=_defaultDiagramType@ENDNAME;@TYPE=string@ENDTYPE;@VALU=ArchiMate3::Motivation@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;'
+            }
         }
     }
 }
@@ -150,7 +176,8 @@ class Repository {
     }
 
     async delete(type, condition) {
-        throw Error('delete from ea repo is not imlemented');
+        const text = `DELETE FROM ${type.name} WHERE ${Object.entries(condition).map(([k, v], i) => `${k} = $${i + 1 + field_values.length}`).join(' AND ')}`;
+        this.queryOne(text, condition_list.map(([k, v]) => v))
     }
 
     async find(type, condition) {
@@ -162,58 +189,78 @@ class Repository {
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r))).then(v => v.find(a => a));
     }
 
+
+    async #prepareObjectAlias(obj, client) {
+        if (!obj.alias) {
+            let autocount = obj.stereotype ? await this.queryOne({
+                text: `select * from t_trxtypes where description = 'AutocountEx' and trx = $1`, values: [obj.stereotype]
+            }) : null;
+            if (!autocount) {
+                autocount = await this.queryOne({ text: `select * from t_trxtypes where description = 'Autocount' and trx = $1`, values: [obj.object_type] })
+            }
+
+            if (autocount) {
+                let trx = autocount.notes.split(';').filter(a => a.length)
+                    .map(v => v.split('='))
+                    .reduce((acc, [k, v]) => Object.assign(acc, { [k]: v }), {});
+                if (trx.active == '1') {
+                    throw Error('not implemented')
+                }
+                if (trx.active_a == '1') {
+                    trx.counter_a = String(Number(trx.counter_a) + 1).padStart(trx.counter_a.length, '0');
+                    obj.alias = `${trx.prefix_a}${trx.counter_a}`;
+                }
+                await client.query({
+                    text: 'UPDATE t_trxtypes SET notes=$1 where trx_id=$2',
+                    values: [Object.entries(trx).map(([k, v]) => `${k}=${v};`).join(''), autocount.trx_id]
+                });
+            }
+        }
+        return obj;
+    }
+
+    /**
+     * 
+     * @param {t_object} obj 
+     * @returns { {}|undefined}
+     */
+    #processStereotype(obj) {
+        const stereotype_template = OBJECT_STEREOTYPES[obj.object_type];
+        if (stereotype_template) {
+            Object.assign(obj, stereotype_template.properties);
+            return stereotype_template.t_xref;
+        }
+    }
     /**
      * 
      * @param {t_object} obj 
      * @returns {Promise<t_object>}
      */
     async createObject(obj) {
-        if (!obj.alias) {
-            /**
-             * @type {pg.Client}
-             */
-            let client = new pg.Client(this.config);
-            await client.connect();
-            try {
-                await client.query('BEGIN');
-                if (!obj.alias) {
 
-                    let autocount = obj.stereotype ? await this.queryOne({
-                        text: `select * from t_trxtypes where description = 'AutocountEx' and trx = $1`, values: [obj.stereotype]
-                    }) : null;
-                    if (!autocount) {
-                        autocount = await this.queryOne({ text: `select * from t_trxtypes where description = 'Autocount' and trx = $1`, values: [obj.object_type] })
-                    }
-
-                    if (autocount) {
-                        let trx = autocount.notes.split(';').filter(a => a.length)
-                            .map(v => v.split('='))
-                            .reduce((acc, [k, v]) => Object.assign(acc, { [k]: v }), {});
-                        if (trx.active == '1') {
-                            throw Error('not implemented')
-                        }
-                        if (trx.active_a == '1') {
-                            trx.counter_a = String(Number(trx.counter_a) + 1).padStart(trx.counter_a.length, '0');
-                            obj.alias = `${trx.prefix_a}${trx.counter_a}`;
-                        }
-                        await client.query({
-                            text: 'UPDATE t_trxtypes SET notes=$1 where trx_id=$2',
-                            values: [Object.entries(trx).map(([k, v]) => `${k}=${v};`).join(''), autocount.trx_id]
-                        });
-                    }
+        /**
+         * @type {pg.Client}
+         */
+        let client = new pg.Client(this.config);
+        await client.connect();
+        try {
+            await client.query('BEGIN');
+            const xref = this.#processStereotype(obj);
+            this.#prepareObjectAlias(obj);
+            obj = await this.insert(t_object, obj, client);
+            if (xref) {
+                for (let name in xref) {
+                    await this.insert(t_xref, Object.assign({ name: name, client: obj.ea_guid }, xref[name]), client);
                 }
-                obj = await this.insert(t_object, obj, client);
-                await client.query('COMMIT');
-                return obj;
-            } catch (error) {
-                await client.query('ROLLBACK');
-                throw error;
-            } finally {
-                await client.end();
             }
-
+            await client.query('COMMIT');
+            return obj;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            await client.end();
         }
-        return this.insert(t_object, obj);
     }
     /**
      * 
@@ -238,7 +285,14 @@ class Repository {
     }
 
     async removeConnectors(start_object_id, end_object_id, connector_type) {
+        let condition = { start_object_id: start_object_id, end_object_id: end_object_id, connector_type: connector_type };
+        const stereotype_template = CONNECTOR_STEREOTYPE[connector_type];
+        if (stereotype_template) {
+            Object.assign(condition, stereotype_template.properties)
+        }
 
+        NotImplemented();
+        return this.delete(t_connector, condition)
     }
 
     async putConnector(start_object_id, end_object_id, connector_type, additionalProperties) {
@@ -248,9 +302,6 @@ class Repository {
             start_object_id: start_object_id, end_object_id: end_object_id,
             connector_type: stereotype_prop?.connector_type ?? connector_type
         };
-        if (stereotype_prop?.stereotype) {
-            connector_properties.stereotype = stereotype_prop.stereotype;
-        }
 
         let connector = await this.find(t_connector, connector_properties).then(rows => rows.find(r => r));
 
@@ -270,13 +321,18 @@ class Repository {
             }, additionalProperties ?? {}, connector_properties, stereotype_prop?.properties ?? {})
 
             connector = await this.insert(t_connector, connector_properties);
-            if (stereotype_prop?.t_xref) {
-                await this.insert(t_xref, Object.assign({ client: connector.ea_guid }, stereotype_prop.t_xref));
+            for (let name in stereotype_prop?.t_xref ?? {}) {
+                await this.insert(t_xref, Object.assign({ name: name, client: connector.ea_guid }, stereotype_prop.t_xref[name]));
             }
             return connector;
         }
         return connector;
     }
+    /**
+     * 
+     * @param {t_package} pkg 
+     * @returns 
+     */
     async createPackage(pkg) {
         /**
          * @type {t_package}
@@ -285,8 +341,8 @@ class Repository {
 
         const obj = await this.createObject({
             name: new_pkg.name, ea_guid: new_pkg.ea_guid, object_type: 'Package',
-            package_id: pkg.parent_id, author: 'FDM API', version: '1.0', pdata1: new_pkg.package_id, status: 'Proposed'
-        })
+            package_id: pkg.parent_id, author: pkg.author ?? 'FDM API', version: '1.0', pdata1: new_pkg.package_id, status: pkg.status ?? 'Proposed', note: pkg.notes, alias: pkg.alias
+        });
         return new_pkg;
     }
 

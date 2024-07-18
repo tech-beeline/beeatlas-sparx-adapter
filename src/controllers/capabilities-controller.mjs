@@ -63,7 +63,7 @@ class CapabilitiesController {
      */
     async putCapability(request, response) {
         try {
-            NotImplemented();
+            response.json( await capabilitiesService.putCapability(request.params.code, request.body))
         } catch (err) {
             console.error(err);
             response.status(500).send(err.message);

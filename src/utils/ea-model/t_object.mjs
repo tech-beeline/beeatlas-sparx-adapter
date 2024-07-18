@@ -60,11 +60,12 @@ export default class t_object {
     eventflags;
     docvector;
     constructor(obj) {
-        if( !obj) return;
+        if (!obj) return;
         for (const fld in this) {
             if (obj[fld]) this[fld] = obj[fld];
         }
+        if (obj.description && !this.note) this.note = obj.description
     }
-    beforeCreate(){
+    beforeCreate() {
     }
 }

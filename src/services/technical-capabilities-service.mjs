@@ -6,10 +6,11 @@ import t_xref from "../utils/ea-model/t_xref.mjs";
 import t_package from "../utils/ea-model/t_package.mjs";
 import Repository, { CONNECTOR_STEREOTYPES } from "../utils/ea-repo.mjs";
 import { BadRequest, ConflictException, NotFound, NotImplemented } from "../utils/errors.mjs";
-import APP_CATALOG from "./sql/application-catalog.mjs";
+import APP_CATALOG, { APP_PACKAGE } from "./sql/application-catalog.mjs";
 import TC_QUERY from './sql/tech-capabilities.mjs'
 import t_diagramlinks from "../utils/ea-model/t_diagramlinks.mjs";
 import t_connector from "../utils/ea-model/t_connector.mjs";
+import applicationService from "./application-service.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -19,6 +20,7 @@ const STEREOTYPE_MAP = {
 }
 
 class TechnicalCapabilityService {
+	static app_package;
 	async getTechnicalCapabilities() {
 		const tc_map = (await Repository.queryRows(TC_QUERY.ALL_TECH_CAPABILITITES_QUERY))
 			.reduce((acc, v) =>
@@ -45,12 +47,18 @@ class TechnicalCapabilityService {
  * @param {*} capability 
  * @returns {Promise<{system_package : {package_id, alias}, parents_bc : Array<t_object>, tc_package : t_object}>}
  */
-	async #getTCRelatedOjbects(capability) {
+	async #prepareTCRelatedObjects(capability) {
 		/**
 		 * @type {{ code, package_id}}
 		 */
-		const system_package = await Repository.queryOne({ text: APP_CATALOG.APP_PACKAGE_QUERY, values: [capability.targetSystemCode] })
-		if (!system_package) throw Object.assign(Error(`Папка системы с кодом ${capability.targetSystemCode} не найдена`), { status: 404 });
+		let system_package = await Repository.queryOne({ text: APP_CATALOG.APP_PACKAGE_QUERY, values: [capability.targetSystemCode] })
+		if (!system_package) {
+			if (!TechnicalCapabilityService.app_package) TechnicalCapabilityService.app_package = await Repository.first(t_package, { ea_guid: APP_PACKAGE });
+			if (!TechnicalCapabilityService.app_package) throw Error(`Не удалось найти корневую папку (ea_guid=${APP_PACKAGE}) для создания папки приложения ${capability.targetSystemCode}`);
+			const app_catalog = await applicationService.getApplications();
+			const system_name = app_catalog.applications[capability.targetSystemCode]?.name ?? capability.targetSystemCode;
+			system_package = await Repository.createPackage({ name: system_name, alias: capability.targetSystemCode, parent_id: TechnicalCapability.app_package.package_id })
+		}
 
 		let parents_bc = (await Repository.queryRows('select * from t_object where alias = ANY($1)', [capability.parents]));
 		parents_bc = parents_bc.reduce((acc, v) => (acc[v.alias] = v, acc), {});
@@ -65,7 +73,7 @@ class TechnicalCapabilityService {
 	}
 
 	async #createTC(capability) {
-		const { system_package, parents_bc, tc_package } = await this.#getTCRelatedOjbects(capability)
+		const { system_package, parents_bc, tc_package } = await this.#prepareTCRelatedObjects(capability)
 
 		const tc = await Repository.createObject({
 			alias: capability.code,
@@ -110,7 +118,7 @@ class TechnicalCapabilityService {
 		}
 
 		const asis_tc = await this.getTechnicalCapability({ code: code });
-		if( !asis_tc){
+		if (!asis_tc) {
 			let parents_bc = (await Repository.queryRows('select distinct object_id from t_object where alias = ANY($1)', [capability.parents]));
 			for (const bc of parents_bc) {
 				await this.addParentBC(asis_tc, { object_id: bc.object_id });

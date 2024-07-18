@@ -1,8 +1,12 @@
 import { xml2js } from "xml-js";
-import Repository from "../utils/ea-repo.mjs";
+import Repository, { ARCHIMATE_CAPABILITY, CONNECTOR_STEREOTYPES } from "../utils/ea-repo.mjs";
 import OSLC from "../utils/oslc.mjs";
 import domainsService, { DomainNotFoundException } from "./domains-service.mjs";
 import Capability from "../model/capability.mjs";
+import { BadRequest, NotImplemented } from "../utils/errors.mjs";
+import t_package from "../utils/ea-model/t_package.mjs";
+import t_object from "../utils/ea-model/t_object.mjs";
+import t_connector from "../utils/ea-model/t_connector.mjs";
 
 const CAPABILITY_QUERY =
     `with recursive capabilities as (
@@ -18,7 +22,9 @@ const CAPABILITY_QUERY =
 		p.author, 
 		p.status, 
 		p.createddate as "createdDate", 
-		p.modifieddate as "modifiedDate"
+		p.modifieddate as "modifiedDate",
+		p.ea_guid,
+		p.package_id
 	from v_domains d
 		inner join t_object p on p.ea_guid=d.ea_guid
 		left join  t_package parent on parent.package_id=d.parent_id
@@ -40,7 +46,9 @@ const CAPABILITY_QUERY =
 		cap.author,
 		cap.status,
 		cap.createddate,
-		cap.modifieddate
+		cap.modifieddate,
+		cap.ea_guid,
+		cap.package_id
 	from t_connector rel
 		join capabilities p on p.id=rel.start_object_id and rel.stereotype='ArchiMate_Aggregation'
 		join t_object cap on cap.object_id=rel.end_object_id and cap.stereotype='ArchiMate_Capability'
@@ -109,6 +117,78 @@ class CapabiliiesService {
             where "parent" = $1`, values: [code]
         }))
             .map(c => new Capability(c));
+    }
+
+    async #createDomain(capability, parent) {
+        const code = capability.code;
+        if (!parent.isDomain) throw BadRequest(`Объект с кодом ${capability.parent} не является доменом (при создании домена)`)
+        if (!code.startsWith('DMN') && !code.startsWith('GRP')) throw BadRequest(`Код домена должен начинаться на DMN или на GRP`);
+
+        const ea_parent = await Repository.first(t_package, { ea_guid: parent.ea_guid })
+        const new_pkg = await Repository.createPackage({
+            name: capability.name, notes: capability.description, alias: code, parent_id: ea_parent.package_id,
+            author: capability.author, status: capability.status
+        });
+        return this.getCapabilityByCode(code);
+    }
+
+    /**
+     * 
+     * @param {Capability} capability 
+     * @param {Capability} parent 
+     * @returns {Promise<Capability>}
+     */
+    async #createBC(capability, parent) {
+        const package_id = parent.isDomain ? (await Repository.first(t_package, { ea_guid: parent.ea_guid })).package_id : parent.getPackageId();
+        let ea_cap = await Repository.createObject({ name: capability.name, note: capability.description, alias: capability.code, package_id: package_id, object_type: ARCHIMATE_CAPABILITY })
+
+        await Repository.putConnector(parent.getCapabilityId(), ea_cap.object_id, CONNECTOR_STEREOTYPES.ARCHIMATE_AGGREGATION);
+        return this.getCapabilityByCode(capability.code);
+    }
+    /**
+     * 
+     * @param {Capability} capability_asis 
+     * @param {Capability} capability 
+     * @param {Capability} parent 
+     */
+    async #updateBC(capability_asis, capability, parent) {
+        if (capability_asis.isDomain !== capability.isDomain) throw BadRequest('Нельзя менять тип возможности (Домен на BC и ИС на Домен');
+        await Repository.update(t_object, { name: capability.name, note: capability.description, status: capability.status, author: capability.author }, { ea_guid: capability_asis.ea_guid });
+        if (capability.isDomain) await Repository.update(t_package, { name: capability.name, notes: capability.description }, { ea_guid: capability.ea_guid });
+
+        if (capability_asis.parent != capability.parent) {
+            NotImplemented('Изменение родителя пока не реализовано');
+        }
+        return this.getCapabilityByCode(capability.code);
+    }
+    /**
+     * 
+     * @param {string} code 
+     * @param {Capability} capability 
+     */
+    async putCapability(code, capability) {
+        if (!capability) {
+            throw BadRequest('В теле не передается capability')
+        }
+        capability.code = code;
+        const parent = await this.getCapabilityByCode(capability.parent);
+        if (!parent) throw BadRequest(`Не найден родительская возможность/домен с кодом ${capability.parent}`);
+        const capability_asis = await this.getCapabilityByCode(code);
+
+        if (!capability_asis) {
+            //Создание новой возможности
+            if (!capability.parent) {
+                throw BadRequest(`для capability не указан parent`);
+            }
+
+            if (capability.isDomain) {
+                //Создаем домен
+                return this.#createDomain(capability, parent);
+            }
+            // Создание возможности
+            return this.#createBC(capability, parent);
+        }
+        return this.#updateBC(capability_asis, capability, parent);
     }
 
     async getCapabilityOwners(capability) {

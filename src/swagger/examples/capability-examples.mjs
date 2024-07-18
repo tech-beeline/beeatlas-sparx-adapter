@@ -68,10 +68,13 @@ const CAPABILITY_EXAMPLES = {
         ]
     }),
     PutCapabilitySample: new Capability({
-        isDomain : false, name: "Пример обновления возможности", description : `Пример для создания/изменения возможности.`, parent: "UPDATE-DOMAIN", owner : "Карабас Барабас"
+        isDomain : false, name: "Возможность посадить денежное дерево", description : `Пример для создания/изменения возможности.`, parent: "DMN.WONDERS", owner : "Карабас Барабас", author : "Алексей Толстой", status: "Черновик"
     }),
     PutDomainSample: new Capability({
-        isDomain : true, name: "Пример домена", description : "Пример для обновления возмжности", parent: "GRP.000", owner : "Карабас Барабас"
+        isDomain : true, name: "Страна Дураков", description : "Пример для обновления возмжности", parent: "GRP.000", owner : "Карабас Барабас", author : "Алексей Толстой"
+    }),
+    PutDomainSample2: new Capability({
+        isDomain : true, name: "Поле Чудес", description : "Пример для обновления возмжности", parent: "DMN.FOOLS", owner : "Карабас Барабас", author : "Алексей Толстой"
     })
 }
 

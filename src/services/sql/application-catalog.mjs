@@ -1,5 +1,6 @@
 
 const APP_CATALOG_ROOT = process.env.APP_CATALOG_ROOT ?? '{7889FE97-8783-4311-B229-3A88F8EFA8E3}';
+export const APP_PACKAGE = process.env.APP_PACKAGE ?? '{043ED25B-5EB6-4b6b-9A30-14C9CF0AD8A2}';
 const CONTAINER_STEREOTYPE = 'C2';
 const API_SPECIFICATION_URL_TAG = 'api_url'
 
@@ -32,7 +33,7 @@ const APP_PACKAGE_QUERY = `with recursive app_catalog as (
 	select p.package_id, p.package_id as parent_id, p.name, o.alias
 		from t_package p
 		join t_object o on o.ea_guid= p.ea_guid
-	where p.ea_guid='{043ED25B-5EB6-4b6b-9A30-14C9CF0AD8A2}'
+	where p.ea_guid='${APP_PACKAGE}'
 	union distinct
 	select c.package_id, p.parent_id, c.name,  o.alias
 		from app_catalog p
