@@ -5,8 +5,9 @@ export class Interaction {
     method;
     index;
     stereotype;
-    constructor(server, client, method, index, stereotype) {
-        Object.assign(this, { server: server, client: client, method: method, index: index , stereotype : stereotype});
+    dependOn;
+    constructor(server, client, method, index, stereotype, dependOn) {
+        Object.assign(this, { server: server, client: client, method: method, index: index, stereotype: stereotype, dependOn: dependOn });
     }
     get title() {
         return `${this.index + 1}. ${this.client.cmdb} - ${this.server.cmdb}: ${this.method}${this.stereotype ? ` ${this.stereotype}` : ""}`;
@@ -16,7 +17,7 @@ export class Interaction {
     }
     get totalRps() {
         const rps = this.messages.filter(r => !isNaN(r.rps));
-        return rps.length?rps.reduce((acc, v) => acc + v.rps ?? 0, 0):null;
+        return rps.length ? rps.reduce((acc, v) => acc + v.rps ?? 0, 0) : null;
     }
     get notDefinedRPSCount() {
         return this.messages.filter(r => isNaN(r.rps)).length
@@ -35,45 +36,74 @@ export class Interaction {
     get notDefinedErrorCount() {
         return this.messages.filter(m => isNaN(m.errorRate)).length;
     }
-    get notDefinedIACount(){
-        return this.messages.filter( m=>!m.interfaceAgreement).length
+    get notDefinedIACount() {
+        return this.messages.filter(m => !m.interfaceAgreement).length
     }
-    get validationErrorCount(){
-        console.log( this.messages )
-        return this.messages.some( m=>m.validationError?.length )
-    }
-}
-
-class Message {
-    #parent;
-    server;
-    client;
-    method;
-    init(scenario, parent) {
-        this.#parent = parent;
-    }
-    get parent() {
-        return this.#parent;
+    get validationErrorCount() {
+        console.log(this.messages)
+        return this.messages.some(m => m.validationError?.length)
     }
 }
 
-
-function tryParseFloat(n){
-    if( !n) return Number.NaN;
-    if( typeof n === "string") {
-        n = n.replace(',','.')
+function tryParseFloat(n) {
+    if (!n) return Number.NaN;
+    if (typeof n === "string") {
+        n = n.replace(',', '.')
     }
     return Number(n);
 }
+
+const RPS_DIMENTIONS = {
+    second: (value) => value
+}
+
+const LATENCY_DIMENTIONS = {
+    second: (value) => value * 1000
+}
+function getIaRPS(ia) {
+    if (ia?.agreementTemplateVersion) {
+        const requests = ia.loadProfile?.requests;
+        if (!requests) return null;
+        return RPS_DIMENTIONS[requests.dimension]?.(requests.value) ?? requests.value
+    }
+}
+
+function getIaLatency(ia) {
+    if (ia?.agreementTemplateVersion) {
+        const latency = ia.loadProfile?.responseDelayMax;
+        if (!latency) return null;
+        const value = tryParseFloat(latency.value);
+        return LATENCY_DIMENTIONS[latency.dimension]?.(value) ?? value
+    }
+}
+
+function getIaErrorRate(ia) {
+    if (ia?.agreementTemplateVersion) {
+        return tryParseFloat(ia.loadProfile?.errorPercentage);
+    }
+}
+
+function parseIA(message) {
+    const ia = message.interfaceAgreement?.yaml
+    message.iaRPS = getIaRPS(ia);
+    message.iaLatency = getIaLatency(ia);
+    message.iaErrorRate = getIaErrorRate(ia);
+}
+
 
 export class Scenario {
     applications;
     messages;
     interactions = {};
     #interactionCount = 0;
-    constructor({ applications, messages } = {}) {
+    name;
+    processUID;
+
+    constructor({ applications, messages, name, processUID } = {}) {
         this.applications = applications;
         this.messages = messages;
+        this.name = name;
+        this.processUID = processUID
         this.#buildInteractions(messages)
     }
 
@@ -86,24 +116,39 @@ export class Scenario {
     }
 
     #buildInteractions(messages, context) {
+
+        let depend_on = {};
         for (let m of messages) {
+            let message_depend_on = {};
             m.server = this.applicationByRef(m.server?.$ref);
             m.client = this.applicationByRef(m.client?.$ref);
             m.getParent = () => context;
-            m.stackTrace = m.type !== 'internalCall' && context ? `${context.stackTrace ?? ""}->${m.server?.cmdb ?? m.server_name}[${m.message}]` : context?.stackTrace;
+            m.stackTrace = m.type !== 'internalCall' && context ? [...context.stackTrace, `* ${m.seqno} [${m.server?.cmdb ?? ""}]${m.server?.name ?? m.server_name} [${m.message}]`] : context?.stackTrace ?? [];
+
             m.rps = tryParseFloat(m.rps);
-            m.latency = tryParseFloat(m.latency)
+            m.latency = tryParseFloat(m.latency);
+            if (m.latency && !isNaN(m.latency)) m.latency *= 1000;
             m.errorRate = tryParseFloat(m.errorRate)
+
+            parseIA(m);
 
             if (m.client && m.server && m.method) {
                 const title = `${m.client.cmdb} - ${m.server.cmdb}: ${m.method} ${m.stereotype ? ` ${m.stereotype}` : ""}`;
                 /** @type {Interaction} */
-                const interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction(m.server, m.client, m.method, this.#interactionCount++, m.stereotype));
-                interaction.addMessage(m)
+                m.interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction(m.server, m.client, m.method, this.#interactionCount++, m.stereotype, message_depend_on));
+                if (!depend_on[title]) depend_on[title] = m.interaction;
+                m.interaction.addMessage(m);
             }
+
+
             if (m.messages) {
-                this.#buildInteractions(m.messages, m);
+                message_depend_on = this.#buildInteractions(m.messages, m);
+                if (m.interaction) m.interaction.dependOn = message_depend_on;
+                for (let title in message_depend_on) {
+                    if (!depend_on[title]) depend_on[title] = message_depend_on[title];
+                }
             }
         }
+        return depend_on;
     }
 }

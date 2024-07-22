@@ -213,9 +213,13 @@ class E2EProcessService {
         let root_scenario = diagram_map[processUID];
 
         return isBIScenario || process.stereotype !== 'e2e_diagram' ? {
+            processUID: processUID,
+            name: root_scenario.name,
             applications: application_map,
             messages: root_scenario?.messages ?? []
         } : {
+            processUID: processUID,
+            name: root_scenario.name,
             businessInteractions: this.buildBusinessInterations(root_scenario?.messages ?? [], diagram_map),
             applications: application_map
         }

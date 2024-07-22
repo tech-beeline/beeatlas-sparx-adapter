@@ -28,7 +28,6 @@ root.render(
       <Route path="/e2e-scenarios-dashboards/:uid" element={<E2EScenarioDashboard/>} />
     </Routes>
   </Router>,
-  document.getElementById("root")
 )
 /*
 root.render(

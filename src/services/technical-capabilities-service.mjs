@@ -11,6 +11,8 @@ import TC_QUERY from './sql/tech-capabilities.mjs'
 import t_diagramlinks from "../utils/ea-model/t_diagramlinks.mjs";
 import t_connector from "../utils/ea-model/t_connector.mjs";
 import applicationService from "./application-service.mjs";
+import { version } from "uuid";
+import t_objectproperties from "../utils/ea-model/t_objectproperties.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -19,12 +21,23 @@ const STEREOTYPE_MAP = {
 	type: (s) => STEREOTYPE_MAP[s] ?? 'Unknown'
 }
 
+const TC_TAGS_NAMES = ["goal_from", "goal_to"];
+
 class TechnicalCapabilityService {
 	static app_package;
+	async #readTags(map) {
+		const arr = Object.values(map);
+		let tags = await Repository.readObjectsTags(arr.map(tc => tc.object_id()));
+		arr.forEach(tc => {
+			const tc_tags = tags[tc.object_id()];
+			if (tc_tags) Object.assign(tc, tc_tags);
+		})
+	}
 	async getTechnicalCapabilities() {
 		const tc_map = (await Repository.queryRows(TC_QUERY.ALL_TECH_CAPABILITITES_QUERY))
 			.reduce((acc, v) =>
 				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.bc_code), acc), {})
+		await this.#readTags(tc_map);
 
 		return Object.values(tc_map);
 	}
@@ -40,6 +53,8 @@ class TechnicalCapabilityService {
 		const tc_map = (await Repository.queryRows({ text: TC_QUERY.TECH_CAPABILITITY_QUERY, values: [code] }))
 			.reduce((acc, v) =>
 				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.bc_code), acc), {})
+
+		await this.#readTags(tc_map);
 		return tc_map[code];
 	}
 	/**
@@ -72,6 +87,11 @@ class TechnicalCapabilityService {
 		};
 	}
 
+	/**
+	 * 
+	 * @param {TechnicalCapability} capability 
+	 * @returns 
+	 */
 	async #createTC(capability) {
 		const { system_package, parents_bc, tc_package } = await this.#prepareTCRelatedObjects(capability)
 
@@ -82,7 +102,8 @@ class TechnicalCapabilityService {
 			note: capability.description,
 			scope: 'Public', parentid: '0', classifier: '0', pdata4: '0',
 			stereotype: TechnicalCapability.STEREOTYPE,
-			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1, status: "Created"
+			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1, status: "Created",
+			version: capability.version
 		});
 
 		await Repository.insert(t_xref, t_xref.ArchimateElementStereotype({ guid: tc.ea_guid, stereotype: TechnicalCapability.STEREOTYPE }));
@@ -93,8 +114,25 @@ class TechnicalCapabilityService {
 		for (let bc of Object.values(parents_bc)) {
 			await this.addParentBC(tc, bc);
 		}
+		await this.updateTCTags(tc.object_id, capability);
 
 		return this.getTechnicalCapability({ code: tc.alias });
+	}
+	async updateTCTags(object_id, capability) {
+		/**
+		 * @type {t_objectproperties[]}
+		 */
+		let current_tags = await Repository.queryRows("select * from t_objectproperties where object_id=$1 and property=ANY($2)", [object_id, TC_TAGS_NAMES]);
+		for (let name of TC_TAGS_NAMES) {
+			const ct = current_tags.find(t => t.property === name);
+			if (ct) {
+				await Repository.update(t_objectproperties, { value: capability[name] }, { propertyid: ct.propertyid });
+				continue;
+			}
+			if (capability[name]) {
+				await Repository.insert(t_objectproperties, { object_id: object_id, value: capability[name], property: name });
+			}
+		}
 	}
 	/**
 	 * 
@@ -106,6 +144,9 @@ class TechnicalCapabilityService {
 		// Проверки
 		if (!capability) throw BadRequest(`Capability is null`);
 		if (!capability.parents || !capability.parents.length) throw BadRequest('Для ТС должны быть указаны родительские BC (parents)');
+		/**
+		 * @type {t_object}
+		 */
 		let ea_capability = await Repository.first(t_object, { alias: code });
 
 		if (!ea_capability) {
@@ -113,9 +154,11 @@ class TechnicalCapabilityService {
 		}
 
 
-		if (ea_capability.name !== capability.name || ea_capability.note !== capability.description) {
-			await Repository.update(t_object, { name: capability.name, note: capability.description }, { object_id: ea_capability.object_id })
+		if (ea_capability.name !== capability.name || ea_capability.note !== capability.description || ea_capability.version !== capability.version) {
+			await Repository.update(t_object, { name: capability.name, note: capability.description, version: capability.version }, { object_id: ea_capability.object_id })
 		}
+
+		await this.updateTCTags(ea_capability.object_id, capability);
 
 		const asis_tc = await this.getTechnicalCapability({ code: code });
 		if (!asis_tc) {

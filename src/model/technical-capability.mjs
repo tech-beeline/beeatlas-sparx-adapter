@@ -12,6 +12,9 @@ class TechnicalCapability {
     owner;
     children;
     targetSystemCode;
+    version;
+    goal_from;
+    goal_to;
     /**
      * 
      * @param {{code, name, description, author, createdDate, modifiedDate, status, targetSystemCode, parents:[]}} cap 

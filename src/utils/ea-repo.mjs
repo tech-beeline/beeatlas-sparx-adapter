@@ -7,6 +7,7 @@ import t_operation from './ea-model/t_operation.mjs';
 import t_diagram from './ea-model/t_diagram.mjs';
 import t_xref from './ea-model/t_xref.mjs';
 import t_operationtag from './ea-model/t_operationtag.mjs';
+import t_objectproperties from './ea-model/t_objectproperties.mjs';
 import { NotImplemented } from './errors.mjs';
 
 const ENVIROMENT_VARIABLE = {
@@ -184,6 +185,12 @@ class Repository {
         const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r)));
     }
+    /**
+     * 
+     * @param {type} type 
+     * @param {*} condition 
+     * @returns 
+     */
     async first(type, condition) {
         const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r))).then(v => v.find(a => a));
@@ -546,6 +553,18 @@ class Repository {
         }
         if (value)
             return this.insert(t_operationtag, { elementid: operation_id, property: tag, value: value });
+    }
+
+    async readObjectsTags(ids) {
+        /**
+         * @type {Array{t_objectproperties}}
+         */
+        const rows = await this.queryRows(`SELECT * from t_objectproperties where object_id = ANY($1)`, [ids]);
+        return rows.reduce((map, t) => {
+            const tags = map[t.object_id] ?? (map[t.object_id] = {})
+            tags[t.property] = t.value;
+            return map;
+        }, {});
     }
 }
 

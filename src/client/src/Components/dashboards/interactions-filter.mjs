@@ -55,7 +55,6 @@ export class FilterState {
             && FilterState.latencyFilterFunction[this.latencyFilter](i)
             && FilterState.errorFilterFunction[this.errorFilter](i);
     }
-
 }
 
 function filterBox(id, label, options, value, cb = () => { }) {
@@ -64,7 +63,7 @@ function filterBox(id, label, options, value, cb = () => { }) {
         <FormControl sx={{ width: 200 }}>
             <InputLabel id={labelid}>{label}</InputLabel>
             <Select value={value} labelId={labelid} id={id} label={label} onChange={cb}>
-                {options.map((o, i) => <MenuItem value={i}>{o}</MenuItem>)}
+                {options.map((o, i) => <MenuItem value={i} key={i}>{o}</MenuItem>)}
             </Select>
         </FormControl>
     </Box>

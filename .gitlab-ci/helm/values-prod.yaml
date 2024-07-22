@@ -4,3 +4,5 @@ env:
   DB_EA_PASSWORD: "vault:eafdmmart/data/prod/ea_api#password"
   DB_EA_DATABASE : "ea_repository"
   IA_GIT_TOKEN: "vault:eafdmmart/data/prod/ia#token"
+  OPENMETADATA_TOKEN : "vault:eafdmmart/data/prod/OMD#TOKEN"
+  OPENMETADATA_URL : "vault:eafdmmart/data/prod/OMD#URL"

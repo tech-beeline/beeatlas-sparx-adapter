@@ -68,17 +68,31 @@ class DataModelService {
         }
     }
 
-    async getGlossaries() {
+    async #getGlossaryMap() {
         if (this.#refreshTime <= Date.now()) {
-            let glossaries = await getJSON(`${OMD_URL}${GLOSSARIES_PATH}?limit=10000`, this.#defaultRequestOption);
-            this.#glossaries = glossaries.data.reduce((acc, it) => Object.assign(acc, { [it.id]: new Glossary(it) }), {});
-            this.#terms = await getJSON(`${OMD_URL}${GLOSSARY_TERMS_PATH}?limit=100000`).then(r => r.data);
+            //let glossaries = await getJSON(`${OMD_URL}${GLOSSARIES_PATH}?limit=10000`, this.#defaultRequestOption);
+            this.#glossaries = {}
+            this.#terms = await getJSON(`${OMD_URL}${GLOSSARY_TERMS_PATH}?limit=100000`, this.#defaultRequestOption).then(r => r.data);
             this.#terms.forEach(t => {
+                (this.#glossaries[t.glossary.id] ?? (this.#glossaries[t.glossary.id] = Object.assign({ terms: [] }, t.glossary))).terms.push(t)
             })
 
             this.#refreshTime = Date.now() + REFRESH_TIME;
         }
-        return Object.values(this.#glossaries);
+        return this.#glossaries;
+    }
+
+    async getGlossaries() {
+        return this.#getGlossaryMap().then(m => Object.values(m).map(g => ({
+            id: g.id,
+            type: g.type,
+            name: g.name,
+            fullyQualifiedName: g.fullyQualifiedName,
+            description: g.description,
+            displayName: g.displayName,
+            deleted: g.deleted,
+            href: g.href
+        })));
     }
 
     /**
@@ -87,7 +101,7 @@ class DataModelService {
      * @returns {Promise<Glossary>}
      */
     async getGlossarById(id) {
-        return getGlossaries()[id];
+        return (await this.#getGlossaryMap())[id];
     }
 
     async getGlossaryTerms(id) {

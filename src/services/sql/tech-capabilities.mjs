@@ -13,7 +13,7 @@ const ALL_TECH_CAPABILITITES_QUERY = `with recursive bc_catalog as (
 ), btc as 
 (
 	select distinct bc.alias as bc_code, bc.ea_guid as bc_uid, d.ea_guid as dname, c.alias as code, c.stereotype, c.ea_guid, c.author, c.status, c.name, c.modifieddate as "modifiedDate", c.createddate as "createdDate",
-		c.note as description, c.package_id, c.object_id
+		c.note as description, c.package_id, c.object_id, c.version
 	from bc_catalog cat
 		join t_diagram d on d.package_id=cat.package_id
 		join t_diagramobjects oo on oo.diagram_id=d.diagram_id
