@@ -126,7 +126,7 @@ class TechnicalCapabilityService {
 		for (let name of TC_TAGS_NAMES) {
 			const ct = current_tags.find(t => t.property === name);
 			if (ct) {
-				await Repository.update(t_objectproperties, { value: capability[name] }, { propertyid: ct.propertyid });
+				await Repository.update(t_objectproperties, { value: capability[name]??"" }, { propertyid: ct.propertyid });
 				continue;
 			}
 			if (capability[name]) {

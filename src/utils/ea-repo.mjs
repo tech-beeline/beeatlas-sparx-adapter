@@ -170,7 +170,7 @@ class Repository {
     }
     async update(type, value, condition) {
         if (!condition) throw Error('update condition is null ');
-        let field_values = Object.entries(value).filter(([k, v]) => v);
+        let field_values = Object.entries(value);//.filter(([k, v]) => v);
         let condition_list = Object.entries(condition);
         const text = `UPDATE ${type.name} SET ${field_values.map(([k, v], i) => `${k} = $${i + 1}`).join(', ')} WHERE ${Object.entries(condition).map(([k, v], i) => `${k} = $${i + 1 + field_values.length}`).join(' AND ')}`;
         return this.queryRows({ text: text, values: [...field_values.map(([k, v]) => v), ...condition_list.map(([k, v]) => v)] });
