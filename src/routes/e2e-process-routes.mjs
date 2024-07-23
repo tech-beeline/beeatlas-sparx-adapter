@@ -22,6 +22,68 @@ const E2EProcessRoutes = {
                 }
             }
         },
+        "/api/v1/e2e-processes/{code}/business-interactions": {
+            get: {
+                operation: e2eProcessController.getProcessBusinessInterctions,
+                summary: "Получение списка сквозных Е2Е процессов",
+                parameters: [
+                    {
+                        name: "code",
+                        in: "path",
+                        description: "Код процесса",
+                        required: true,
+                        examples: {
+                            "Смена ТП в ЕЛК": {
+                                value: "{AD0F73D8-87B1-41ed-AD5A-61DC188466D7}"
+                            }
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: {
+                                    "OK": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/e2e-processes/{code}": {
+            get: {
+                operation: e2eProcessController.getProcessSummary,
+                summary: "Получение списка сквозных Е2Е процессов",
+                parameters: [
+                    {
+                        name: "code",
+                        in: "path",
+                        description: "Код процесса",
+                        required: true,
+                        examples: {
+                            "Смена ТП в ЕЛК": {
+                                value: "{AD0F73D8-87B1-41ed-AD5A-61DC188466D7}"
+                            }
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: {
+                                    "OK": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/e2e-process/systems" :{
             get:{
                 summary : "Выгрузка информации по процесса",

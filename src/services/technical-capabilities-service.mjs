@@ -11,7 +11,6 @@ import TC_QUERY from './sql/tech-capabilities.mjs'
 import t_diagramlinks from "../utils/ea-model/t_diagramlinks.mjs";
 import t_connector from "../utils/ea-model/t_connector.mjs";
 import applicationService from "./application-service.mjs";
-import { version } from "uuid";
 import t_objectproperties from "../utils/ea-model/t_objectproperties.mjs";
 
 
@@ -114,25 +113,9 @@ class TechnicalCapabilityService {
 		for (let bc of Object.values(parents_bc)) {
 			await this.addParentBC(tc, bc);
 		}
-		await this.updateTCTags(tc.object_id, capability);
+		await Repository.updateObjectTags(tc.object_id, capability, TC_TAGS_NAMES);
 
 		return this.getTechnicalCapability({ code: tc.alias });
-	}
-	async updateTCTags(object_id, capability) {
-		/**
-		 * @type {t_objectproperties[]}
-		 */
-		let current_tags = await Repository.queryRows("select * from t_objectproperties where object_id=$1 and property=ANY($2)", [object_id, TC_TAGS_NAMES]);
-		for (let name of TC_TAGS_NAMES) {
-			const ct = current_tags.find(t => t.property === name);
-			if (ct) {
-				await Repository.update(t_objectproperties, { value: capability[name]??"" }, { propertyid: ct.propertyid });
-				continue;
-			}
-			if (capability[name]) {
-				await Repository.insert(t_objectproperties, { object_id: object_id, value: capability[name], property: name });
-			}
-		}
 	}
 	/**
 	 * 
@@ -158,7 +141,7 @@ class TechnicalCapabilityService {
 			await Repository.update(t_object, { name: capability.name, note: capability.description, version: capability.version }, { object_id: ea_capability.object_id })
 		}
 
-		await this.updateTCTags(ea_capability.object_id, capability);
+		await Repository.updateObjectTags(ea_capability.object_id, capability, TC_TAGS_NAMES);
 
 		const asis_tc = await this.getTechnicalCapability({ code: code });
 		if (!asis_tc) {

@@ -1,4 +1,4 @@
-import applicationCatalog from "./application-catalog.mjs";
+import applicationCatalog, { API_SPECIFICATION_URL_TAG, PROTOCOL_TAG } from "./application-catalog.mjs";
 
 const SYSTEM_REALIZATION_LIST = `with recursive app_catalog as (
         select package_id, package_id as parent_id, name , name::text as "fullName", ea_guid
@@ -18,7 +18,8 @@ const SYSTEM_REALIZATION_LIST = `with recursive app_catalog as (
     app.name as system, app.alias as cmdb, app.version as sys_version, app.note as sys_description, app.ea_guid,
     container.name as container, container.alias as container_code, container.version as container_version, container.note as container_description,
     i.name as interface, i.alias as interface_code, i.version as interface_version, i.note as interface_description, i.object_id as i_id,
-    (select api_url.value from t_objectproperties api_url where api_url.object_id=i.object_id and api_url.property='${applicationCatalog.API_SPECIFICATION_URL_TAG}' limit 1) as api_url,
+    (select api_url.value from t_objectproperties api_url where api_url.object_id=i.object_id and api_url.property='${API_SPECIFICATION_URL_TAG}' limit 1) as ${API_SPECIFICATION_URL_TAG},
+    (select api_url.value from t_objectproperties api_url where api_url.object_id=i.object_id and api_url.property='${PROTOCOL_TAG}' limit 1) as ${PROTOCOL_TAG},
     (select alias from rel tc where tc.start_object_id=i.object_id and tc.stereotype='ArchiMate_TechnicalCapability' limit 1) as "capabilityCode"
     from app_catalog cat
     join t_object app on app.package_id=cat.package_id and object_type='Component' and alias is not null and stereotype is null

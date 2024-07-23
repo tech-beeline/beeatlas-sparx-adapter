@@ -39,11 +39,12 @@ export class APIInterface {
     api_url;
     capabilityCode;
     description;
+    protocol;
     /**
      * @type {APIMethod[]}
      */
     methods = [];
-    constructor({ name, code, version, type, api_url, capabilityCode, methods, description, i_id } = {}) {
+    constructor({ name, code, version, type, api_url, capabilityCode, methods, description, i_id, protocol } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
@@ -52,6 +53,7 @@ export class APIInterface {
         this.capabilityCode = capabilityCode;
         this.description = description;
         this.methods = methods ?? [];
+        this.protocol = protocol;
         this.ea_id = () => i_id;
     }
     /**

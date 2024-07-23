@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 import { Button } from '@mui/material'
-import { KeyboardArrowDown, KeyboardArrowUp, EditNote } from '@mui/icons-material';
+import { KeyboardArrowDown, KeyboardArrowUp, EditNote, ArrowUpward } from '@mui/icons-material';
 
 
 export default function MessageEditForm({ message }) {
@@ -38,9 +38,35 @@ export default function MessageEditForm({ message }) {
             <DialogTitle>{`${message.seqno} [${message.server.cmdb}] ${message.server.name} - [${message.client?.cmdb}] ${message.client?.name} ${message.method}`}</DialogTitle>
             <DialogContent>
                 <DialogContentText>Изменение параметров сообщения</DialogContentText>
+                <TableContainer>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell></TableCell>
+                                <TableCell>RPS</TableCell>
+                                <TableCell>Latency</TableCell>
+                                <TableCell>Error Rate</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell>Interface Agreement</TableCell>
+                                <TableCell><TextField id='ia-rps-value' label='RPS' defaultValue={message.iaRPS}></TextField><IconButton ><ArrowUpward/></IconButton></TableCell>
+                                <TableCell><TextField id='ia-latency-value' label='Latency'></TextField></TableCell>
+                                <TableCell><TextField id='ia-error-rate-value' label='ErrorRate'></TextField></TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>Sparx EA</TableCell>
+                                <TableCell><TextField id='ea-rps-value' label='RPS'></TextField></TableCell>
+                                <TableCell><TextField id='ea-latency-value' label='Latency'></TextField></TableCell>
+                                <TableCell><TextField id='ea-error-rate-value' label='ErrorRate'></TextField></TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
                 <DialogActions>
                     <Button onClick={handleClose}>Cancel</Button>
-                    <Button type="submit">Subscribe</Button>
+                    <Button type="submit">Save</Button>
                 </DialogActions>
             </DialogContent>
         </Dialog>

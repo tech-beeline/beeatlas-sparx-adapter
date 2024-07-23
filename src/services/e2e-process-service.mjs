@@ -92,7 +92,6 @@ class E2EProcessService {
      */
     async getProcessMessages(processUID) {
         if (!processUID) throw BadRequest(`не задан идентификатор процесса`);
-        console.log(`Request messages for ${processUID}`)
         /**
          * @type {Array<{ message, e2e_uid, diagram_uid, server_id}>}
          */
@@ -106,8 +105,8 @@ class E2EProcessService {
     async getProcessScenario(processUID, { isBIScenario } = {}) {
 
         const process = await Repository.first(t_diagram, { ea_guid: processUID });
-        if( !process)
-            throw NotFound( `Процесс с UID = ${processUID} не найден`)
+        if (!process)
+            throw NotFound(`Процесс с UID = ${processUID} не найден`)
         let rows = await this.getProcessMessages(processUID)
         const app_catalog = await applicationService.getApplications();
 
@@ -223,6 +222,15 @@ class E2EProcessService {
             businessInteractions: this.buildBusinessInterations(root_scenario?.messages ?? [], diagram_map),
             applications: application_map
         }
+    }
+
+
+    async getProcessBusinessInterctions(code) {
+        return Repository.queryRows(`${QUERIES.E2E_PROCESS_BI_QUERY} and p.ea_guid=$1`, [code]);
+    }
+
+    async getProcessSummary(code) {
+        return Repository.first(t_diagram, { ea_guid: code }).then( p=>({ name: p.name, description: p.notes, code: p.ea_guid, author: p.author }))
     }
 
     async getE2EProcesses() {

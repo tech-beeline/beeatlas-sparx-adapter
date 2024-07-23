@@ -14,7 +14,7 @@ function processError(error, response) {
 }
 
 class E2EProcessController {
-    constructor(){
+    constructor() {
         this.getProcesses = this.getProcesses.bind(this);
         this.getProcessSystems = this.getProcessSystems.bind(this)
     }
@@ -27,15 +27,29 @@ class E2EProcessController {
     }
     async getProcesses(request, response, next) {
         try {
-            response.json( await e2eProcessSerivce.getE2EProcesses());
+            response.json(await e2eProcessSerivce.getE2EProcesses());
         } catch (error) {
             processError(error, response);
         }
     }
     async getProcessSystems(request, response, next) {
         try {
-            let systems = await  e2eProcessSerivce.getProcessSystems();
+            let systems = await e2eProcessSerivce.getProcessSystems();
             NotImplemented();
+        } catch (error) {
+            processError(error, response);
+        }
+    }
+    async getProcessSummary(request, response) {
+        try {
+            response.json(await e2eProcessSerivce.getProcessSummary(request.params.code));
+        } catch (error) {
+            processError(error, response);
+        }
+    }
+    async getProcessBusinessInterctions(request, response) {
+        try {
+            response.json(await e2eProcessSerivce.getProcessBusinessInterctions(request.params.code));
         } catch (error) {
             processError(error, response);
         }

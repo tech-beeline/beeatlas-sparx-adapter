@@ -65,7 +65,7 @@ function ContextList({ messages }) {
         <Table>
             <colgroup>
                 <col style={{ width: '5%' }} />
-                <col style={{ width: '40%' }} />
+                <col style={{ width: '60%' }} />
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
@@ -223,6 +223,7 @@ function InteractionList({ interactions }) {
     </div>
 }
 
+export const E2EScenarioDashboard_URI = "/e2e-scenarios-dashboards"
 
 export default function E2EScenarioDashboard() {
     const [e2eScenario, setE2EScenario] = useState(null);

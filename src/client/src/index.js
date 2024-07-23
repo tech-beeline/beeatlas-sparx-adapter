@@ -10,7 +10,9 @@ import E2EFillingDetails from './Components/e2e-filling-details.mjs';
 import E2EFillingDiagramStatus from './Components/e2e-filling-diagram-status';
 import E2EScenario from './Components/e2e-scenario.mjs';
 import E2EProcesses from './Components/e2e-processes';
-import E2EScenarioDashboard from './Components/dashboards/e2e-scenarios-page.mjs';
+import E2EScenarioDashboard, { E2EScenarioDashboard_URI } from './Components/dashboards/e2e-scenarios-page.mjs';
+import E2EDashboardMainPage, { E2EDashboardMainPage_URI } from './Components/dashboards/scenarios-main-page.mjs';
+import E2EProcessSummary, { E2EProcessSummary_URI } from './Components/dashboards/e2e-process-page.mjs';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -25,7 +27,9 @@ root.render(
       <Route path="/e2e-filling-status/:sequence/details/:diagram" element={<E2EFillingDiagramStatus />} />
       <Route path="/e2e-processes" element={<E2EProcesses/>} />
       <Route path="/e2e-scenarios/:uid" element={<E2EScenario/>} />
-      <Route path="/e2e-scenarios-dashboards/:uid" element={<E2EScenarioDashboard/>} />
+      <Route path={E2EDashboardMainPage_URI} element={<E2EDashboardMainPage/>} />
+      <Route path={`${E2EProcessSummary_URI}/:uid`} element={<E2EProcessSummary/>} />
+      <Route path={`${E2EScenarioDashboard_URI}/:uid`} element={<E2EScenarioDashboard/>} />
     </Routes>
   </Router>,
 )

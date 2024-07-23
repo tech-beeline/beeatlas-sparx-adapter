@@ -6,14 +6,14 @@ import t_object from "../utils/ea-model/t_object.mjs";
 import t_package from "../utils/ea-model/t_package.mjs";
 import Repository from "../utils/ea-repo.mjs";
 import interfacesService from "./interfaces-service.mjs";
-import applicationCatalog from "./sql/application-catalog.mjs";
+import applicationCatalog, { API_SPECIFICATION_URL_TAG, PROTOCOL_TAG } from "./sql/application-catalog.mjs";
 import SYSTEM_QUERY from "./sql/systems-queries.mjs";
 import { BadRequest, NotImplemented } from "../utils/errors.mjs";
 import t_operation from "../utils/ea-model/t_operation.mjs";
 import t_operationtag from "../utils/ea-model/t_operationtag.mjs";
 
 
-
+const INTERFACE_TAGS = [PROTOCOL_TAG, API_SPECIFICATION_URL_TAG]
 
 const ALL_COMPONENTS_QUERY =
 	`with recursive packages as 
@@ -36,6 +36,7 @@ const CONSTANTS = {
 	INTERFACES_FOLDER: "Interfaces"
 }
 class ComponentsService {
+
 	async getComponents() {
 		return Repository.queryRows(ALL_COMPONENTS_QUERY);
 	}
@@ -73,6 +74,8 @@ class ComponentsService {
 
 			this.#addContainerFromRow(system, row);
 		}
+
+		const arr = Object.values(systems);
 		return Object.values(systems);
 	}
 
@@ -157,6 +160,9 @@ class ComponentsService {
 			//[ ] Удаление интерфейсов - скорее всего надо помечать, как удаленные
 
 			for (let i_to_set of container_to_set.interfaces) {
+				/**
+				 * @type {t_object}
+				 */
 				let ea_interface = await Repository.first(t_object, { alias: i_to_set.code, object_type: 'Interface' });
 				if (!ea_interface) {
 					ea_interface = await Repository.createObject({
@@ -164,29 +170,15 @@ class ComponentsService {
 						note: i_to_set.description,
 						backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 					});
-					if (i_to_set.api_url) {
-						await Repository.insert(t_objectproperties, { object_id: ea_interface.object_id, value: i_to_set.api_url, property: applicationCatalog.API_SPECIFICATION_URL_TAG })
-					}
 				} else {
 					if (ea_interface.name !== i_to_set.name || ea_interface.version !== i_to_set.version) {
 						await Repository.update(t_object, {
 							name: i_to_set.name, version: i_to_set.version, note: i_to_set.description
 						}, { object_id: ea_interface.object_id })
 					}
-					/**
-					 * @type {t_objectproperties}
-					 */
-					const ea_api_url = await Repository.find(t_objectproperties, { object_id: ea_interface.object_id, property: applicationCatalog.API_SPECIFICATION_URL_TAG }).then(rows => rows.find(v => v));
-					if (ea_api_url) {
-						if (ea_api_url.value !== i_to_set.api_url) {
-							if (i_to_set.api_url)
-								await Repository.update(t_objectproperties, { value: i_to_set.api_url }, { object_id: ea_interface.object_id, property: applicationCatalog.API_SPECIFICATION_URL_TAG })
-							//throw Error('update api_url not implemented')
-						}
-					} else {
-						await Repository.insert(t_objectproperties, { object_id: ea_interface.object_id, value: i_to_set.api_url, property: applicationCatalog.API_SPECIFICATION_URL_TAG })
-					}
 				}
+
+				await Repository.updateObjectTags( ea_interface.object_id, i_to_set, INTERFACE_TAGS)
 
 				await interfacesService.putMethods(ea_interface.object_id, i_to_set.methods);
 
