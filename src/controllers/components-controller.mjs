@@ -39,6 +39,13 @@ class ComponentsController {
             processError(error, response);
         }
     }
+    async getSystemProcesses(request, response) {
+        try {
+            response.status(200).json(await componentsService.getSystemProcesses(request.params.cmdb));
+        } catch (error) {
+            processError(error);
+        }
+    }
 }
 
 export default new ComponentsController();

@@ -42,12 +42,14 @@ function alertText(txt, color = "red") {
 
 const NO_DATA_MESSAGE = alertText('Нет')
 
-function ContextRow({ message }) {
+function ContextRow(props) {
+    const [message, setMessage] = useState(props.message);
     const rps_color = !isNaN(message.rps) && message.iaRPS == message.rps ? "green" : "red";
     const latence_color = !isNaN(message.latency) && message.iaLatency == message.latency ? "green" : "red";
     const error_color = !isNaN(message.errorRate) && message.iaErrorRate == message.errorRate ? "green" : "red";
+
     return <TableRow>
-        <TableCell><MessageEditForm message={message} /></TableCell>
+        <TableCell><MessageEditForm message={message} setMessage = {setMessage}/></TableCell>
         <TableCell>{message.stackTrace.map(c => <>{c}<br /></>)}</TableCell>
         <TableCell>{message.interfaceAgreement ? <a href={message.interfaceAgreement.path} target="_blank">{message.interfaceAgreement.yaml?.status}</a> : alertText(NO_DATA_MESSAGE)}</TableCell>
         <TableCell>{isNaN(message.rps) ? alertText(NO_DATA_MESSAGE) : alertText(message.rps, rps_color)}</TableCell>

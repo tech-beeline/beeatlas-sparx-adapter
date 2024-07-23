@@ -13,6 +13,7 @@ import E2EProcesses from './Components/e2e-processes';
 import E2EScenarioDashboard, { E2EScenarioDashboard_URI } from './Components/dashboards/e2e-scenarios-page.mjs';
 import E2EDashboardMainPage, { E2EDashboardMainPage_URI } from './Components/dashboards/scenarios-main-page.mjs';
 import E2EProcessSummary, { E2EProcessSummary_URI } from './Components/dashboards/e2e-process-page.mjs';
+import SystemProcesses from './Components/system-processes.mjs';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -30,6 +31,7 @@ root.render(
       <Route path={E2EDashboardMainPage_URI} element={<E2EDashboardMainPage/>} />
       <Route path={`${E2EProcessSummary_URI}/:uid`} element={<E2EProcessSummary/>} />
       <Route path={`${E2EScenarioDashboard_URI}/:uid`} element={<E2EScenarioDashboard/>} />
+      <Route path='/e2e/systems' element={<SystemProcesses/>} />
     </Routes>
   </Router>,
 )

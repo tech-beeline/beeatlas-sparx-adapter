@@ -114,6 +114,34 @@ const COMPONENTS_METHODS = {
                     }
                 }
             }
+        },
+        "/api/v1/systems/{cmdb}/e2e-processes": {
+            get: {
+                operation: componentsController.getSystemProcesses,
+                description: "Получение описания системы по коду",
+                parameters: [
+                    {
+                        name: "cmdb",
+                        in: "path",
+                        description: "Код системы",
+                        required: true,
+                        examples: {
+                            "RICH": {
+                                value: "RICH"
+                            }
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

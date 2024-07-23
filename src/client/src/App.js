@@ -11,6 +11,7 @@ function App() {
         <NavLink to="/swagger" target='_blank'>Swagger</NavLink>
         <NavLink to="/e2e-processes">Е2Е Процессы (иерархия вызовов)</NavLink>
         <NavLink to="/e2e-scenarios-dashboard">Дашборд Е2Е сценариев</NavLink>
+        <NavLink to="/e2e/systems">Системы</NavLink>
       </header>
     </div>
   );

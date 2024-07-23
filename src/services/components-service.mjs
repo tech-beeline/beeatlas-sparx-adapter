@@ -11,6 +11,7 @@ import SYSTEM_QUERY from "./sql/systems-queries.mjs";
 import { BadRequest, NotImplemented } from "../utils/errors.mjs";
 import t_operation from "../utils/ea-model/t_operation.mjs";
 import t_operationtag from "../utils/ea-model/t_operationtag.mjs";
+import systemParticipation from "./sql/system-participation.mjs";
 
 
 const INTERFACE_TAGS = [PROTOCOL_TAG, API_SPECIFICATION_URL_TAG]
@@ -109,6 +110,12 @@ class ComponentsService {
 
 		return system;
 	}
+
+	async getSystemProcesses(cmdb) {
+
+		return Repository.queryRows( systemParticipation, [cmdb])
+
+	}
 	/**
 	 * 
 	 * @param {String} code 
@@ -178,7 +185,7 @@ class ComponentsService {
 					}
 				}
 
-				await Repository.updateObjectTags( ea_interface.object_id, i_to_set, INTERFACE_TAGS)
+				await Repository.updateObjectTags(ea_interface.object_id, i_to_set, INTERFACE_TAGS)
 
 				await interfacesService.putMethods(ea_interface.object_id, i_to_set.methods);
 
