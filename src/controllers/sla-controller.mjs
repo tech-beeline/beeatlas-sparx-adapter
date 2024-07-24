@@ -9,7 +9,7 @@ class SLAController {
             if (!latency) BadRequest('Не указан latency')
             if (!errorRate) BadRequest('Не указан errorRate');
 
-            response.json(await slaService.updateInteractionSLA(request.param.uid, rps, latency, errorRate));
+            response.json(await slaService.updateInteractionSLA(request.params.uid, rps, latency, errorRate));
         } catch (err) {
             ProcessError(err, response);
         }

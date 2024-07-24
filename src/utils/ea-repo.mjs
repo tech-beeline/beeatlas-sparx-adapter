@@ -9,6 +9,7 @@ import t_xref from './ea-model/t_xref.mjs';
 import t_operationtag from './ea-model/t_operationtag.mjs';
 import t_objectproperties from './ea-model/t_objectproperties.mjs';
 import { NotImplemented } from './errors.mjs';
+import t_connectortag from './ea-model/t_connectortag.mjs';
 
 const ENVIROMENT_VARIABLE = {
     user: "DB_EA_USER", password: "DB_EA_PASSWORD", host: "DB_EA_URL", database: "DB_EA_DATABASE"
@@ -579,6 +580,23 @@ class Repository {
 			}
 			if (obj[name]) {
 				await this.insert(t_objectproperties, { object_id: object_id, value: obj[name], property: name });
+			}
+		}
+	}
+
+    async updateConnectorTags(connector_id, connector, tags) {
+		/**
+		 * @type {t_objectproperties[]}
+		 */
+		let current_tags = await this.queryRows("select * from t_connectortag where elementid=$1 and property=ANY($2)", [connector_id, tags]);
+		for (let name of tags) {
+			const ct = current_tags.find(t => t.property === name);
+			if (ct) {
+				await this.update(t_connectortag, { value: connector[name]??"" }, { propertyid: ct.propertyid });
+				continue;
+			}
+			if (connector[name]) {
+				await this.insert(t_connectortag, { elementid: connector_id, value: connector[name], property: name });
 			}
 		}
 	}
