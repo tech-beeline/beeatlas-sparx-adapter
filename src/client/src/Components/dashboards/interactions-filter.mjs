@@ -49,6 +49,9 @@ export class FilterState {
         this.errorFilter = errorFilter;
         return this;
     }
+    setConsumerFilter(){
+
+    }
     check(i) {
         return FilterState.iaFilterFunction[this.iaFilter](i)
             && FilterState.rpsFilterFunction[this.rpsFilter](i)
@@ -69,7 +72,7 @@ function filterBox(id, label, options, value, cb = () => { }) {
     </Box>
 }
 
-export function InteractionFilter({ filterState, setFilterState }) {
+export function InteractionFilter({ filterState, setFilterState, applications }) {
     return <div style={{ display: "flex" }}>
         {filterBox('ia-filter', 'Статус IA', ["Все", "Есть", "Нет"], filterState.iaFilter, (event) => setFilterState(new FilterState(filterState).setIAFilter(event.target.value)))}
         {filterBox('rps-filter', 'RPS', ["Все", "Есть", "Нет"], filterState.rpsFilter, (event) => setFilterState(new FilterState(filterState).setRPSilter(event.target.value)))}

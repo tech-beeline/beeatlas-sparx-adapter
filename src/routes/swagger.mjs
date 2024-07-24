@@ -10,9 +10,11 @@ import IA_ROUTES from './interface-agreement-routes.mjs'
 import MONITORING_ROUTES from './monitoring-routes.mjs'
 import TELEMETRY_ROUTES from './telemetry-routes.mjs'
 import DATA_MODEL_ROUTES from './data-model-routes.mjs';
+import SLA_ROUTES from './sla-routes.mjs';
 
 
 export const CONTROLLERS = [
+    SLA_ROUTES,
     MONITORING_ROUTES,
     COMPONENTS_METHODS,
     DATA_MODEL_ROUTES,

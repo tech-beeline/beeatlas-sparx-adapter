@@ -17,7 +17,7 @@ export default function E2EDashboardMainPage() {
         let response = await fetch('api/v1/e2e-processes');
         if (response.status !== 200) {
             let body = await response.text();
-            setE2eProcessList(`Ошибка при загрузке данных ${response.status} ${body}`)
+            setE2eProcessList({ error: `Ошибка при загрузке данных ${response.status} ${body}` })
             return;
         }
         let data = await response.json();
@@ -39,7 +39,11 @@ export default function E2EDashboardMainPage() {
 
     const groupData = groups => groups.reduce((acc, p) => [...acc, ...baseData(p.base_processes).map((v, i, a) => i ? [v] : [<TableCell rowSpan={a.length}>{p.name}</TableCell>, v])], [])
 
-    return e2eProcessList ? <TableContainer component={Paper}>
+    return e2eProcessList  ? 
+    e2eProcessList.error?<Box component={Paper}>
+        Ошибка при получении данных: {e2eProcessList.error}
+    </Box>:
+    <TableContainer component={Paper}>
         <Table>
             <TableHead>
                 <TableRow>

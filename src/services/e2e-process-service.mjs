@@ -230,7 +230,7 @@ class E2EProcessService {
     }
 
     async getProcessSummary(code) {
-        return Repository.first(t_diagram, { ea_guid: code }).then( p=>({ name: p.name, description: p.notes, code: p.ea_guid, author: p.author }))
+        return Repository.first(t_diagram, { ea_guid: code }).then(p => ({ name: p.name, description: p.notes, code: p.ea_guid, author: p.author }))
     }
 
     async getE2EProcesses() {

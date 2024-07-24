@@ -19,10 +19,12 @@ export default function MessageEditForm({ message, setMessage }) {
         setErrorRate([message.iaErrorRate, isNaN(message.errorRate) ? null : message.errorRate])
     };
 
+    const [alertMessage, setAlertMessage] = React.useState(null);
+
     const handleClose = () => {
         setOpen(false);
+        setAlertMessage(null);
     }
-
 
     return <React.Fragment>
         <Button variant="outlined" startIcon={<EditNote />} onClick={handleClickOpen}>Изменить</Button>
@@ -36,7 +38,6 @@ export default function MessageEditForm({ message, setMessage }) {
                     event.preventDefault();
                     message.rps = rps[1];
                     message.latency = latency[1];
-                    console.log(latency);
                     message.errorRate = errorRate[1];
                     setMessage(Object.assign({}, message));
                     handleClose();
@@ -46,34 +47,11 @@ export default function MessageEditForm({ message, setMessage }) {
             <DialogTitle>{`${message.seqno} [${message.server.cmdb}] ${message.server.name} - [${message.client?.cmdb}] ${message.client?.name} ${message.method}`}</DialogTitle>
             <DialogContent>
                 <DialogContentText>Изменение параметров сообщения</DialogContentText>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Метрика</TableCell>
-                                <TableCell>Interface Agreement</TableCell>
-                                <TableCell>Sparx EA</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell>RPS</TableCell>
-                                <TableCell>{rps[0]}</TableCell>
-                                <TableCell><TextField label="RPS" defaultValue={rps[1]} onChange={event => setRPS([rps[0], event.target.value])} /></TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Latency</TableCell>
-                                <TableCell>{latency[0]}</TableCell>
-                                <TableCell><TextField label="Latency" defaultValue={latency[1]} onChange={event => setLatency([latency[0], event.target.value])} /></TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Error Rate</TableCell>
-                                <TableCell>{errorRate[0]}</TableCell>
-                                <TableCell><TextField label="Error Rate" defaultValue={errorRate[1]} onChange={event => setErrorRate([errorRate[0], event.target.value])} /></TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+
+                <TextField label="RPS" variant="standard" defaultValue={rps[1]} onChange={event => setRPS([rps[0], event.target.value])} />
+                <TextField label="Latency" variant="standard" defaultValue={latency[1]} onChange={event => setLatency([latency[0], event.target.value])} />
+                <TextField label="Error Rate" variant="standard" defaultValue={errorRate[1]} onChange={event => setErrorRate([errorRate[0], event.target.value])} />
+                {alertMessage ? <DialogContentText>{alertMessage}</DialogContentText> : null}
                 <DialogActions>
                     <Button onClick={handleClose}>Cancel</Button>
                     <Button type="submit">Save</Button>

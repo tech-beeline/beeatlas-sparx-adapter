@@ -1,7 +1,7 @@
 import { NavLink, useParams } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
 import '../css/e2e-scenario.css'
-import { Interaction, Scenario } from "./scenario-model.mjs";
+import { Interaction, Scenario } from "./model/scenario-model.mjs";
 import Table from '@mui/material/Table/Table.js';
 import TableBody from '@mui/material/TableBody/TableBody.js';
 import TableCell from '@mui/material/TableCell/TableCell.js';
@@ -49,15 +49,12 @@ function ContextRow(props) {
     const error_color = !isNaN(message.errorRate) && message.iaErrorRate == message.errorRate ? "green" : "red";
 
     return <TableRow>
-        <TableCell><MessageEditForm message={message} setMessage = {setMessage}/></TableCell>
+        <TableCell><MessageEditForm message={message} setMessage={setMessage} /></TableCell>
         <TableCell>{message.stackTrace.map(c => <>{c}<br /></>)}</TableCell>
         <TableCell>{message.interfaceAgreement ? <a href={message.interfaceAgreement.path} target="_blank">{message.interfaceAgreement.yaml?.status}</a> : alertText(NO_DATA_MESSAGE)}</TableCell>
         <TableCell>{isNaN(message.rps) ? alertText(NO_DATA_MESSAGE) : alertText(message.rps, rps_color)}</TableCell>
-        <TableCell>{alertText(message.iaRPS ?? NO_DATA_MESSAGE, rps_color)}</TableCell>
         <TableCell>{isNaN(message.latency) ? alertText(NO_DATA_MESSAGE) : alertText(message.latency, latence_color)}</TableCell>
-        <TableCell>{alertText(message.iaLatency ?? NO_DATA_MESSAGE, latence_color)}</TableCell>
         <TableCell>{isNaN(message.errorRate) ? alertText(NO_DATA_MESSAGE) : alertText(message.errorRate, error_color)}</TableCell>
-        <TableCell>{alertText(message.iaErrorRate ?? NO_DATA_MESSAGE, error_color)}</TableCell>
         <TableCell><a target="_blank" href={`https://ms-seaapp001.bee.vimpelcom.ru:83/?m=1&o=${message.diagram_uid}`}>{message.diagram}</a></TableCell>
     </TableRow>
 }
@@ -67,35 +64,23 @@ function ContextList({ messages }) {
         <Table>
             <colgroup>
                 <col style={{ width: '5%' }} />
-                <col style={{ width: '60%' }} />
+                <col style={{ width: '30%' }} />
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
-                <col style={{ width: '5%' }} />
-                <col style={{ width: '5%' }} />
-                <col style={{ width: '5%' }} />
-                <col style={{ width: '20%' }} />
+                <col style={{ width: '40%' }} />
             </colgroup>
             <TableHead>
                 <TableRow key={-1} sx={{ width: 10 }}>
-                    <TableCell rowSpan={2}></TableCell>
-                    <TableCell rowSpan={2}>Контекст</TableCell>
-                    <TableCell rowSpan={2}>IA</TableCell>
-                    <TableCell colSpan={2} align="center">RPS, requests/sec</TableCell>
-                    <TableCell colSpan={2} align="center">Latency, ms</TableCell>
-                    <TableCell colSpan={2} align="center">Error Rate, %</TableCell>
-                    <TableCell rowSpan={2}>Диаграмма</TableCell>
+                    <TableCell ></TableCell>
+                    <TableCell >Контекст</TableCell>
+                    <TableCell >IA</TableCell>
+                    <TableCell align="center">RPS, requests/sec</TableCell>
+                    <TableCell align="center">Latency, ms</TableCell>
+                    <TableCell align="center">Error Rate, %</TableCell>
+                    <TableCell >Диаграмма</TableCell>
                 </TableRow>
-                <TableRow key={-2} >
-                    <TableCell>EA</TableCell>
-                    <TableCell>IA</TableCell>
-                    <TableCell>EA</TableCell>
-                    <TableCell>IA</TableCell>
-                    <TableCell>EA</TableCell>
-                    <TableCell>IA</TableCell>
-                </TableRow>
-
             </TableHead>
             <TableBody>
                 {messages.map((m, i) => <ContextRow message={m} key={i} />)}
@@ -163,14 +148,20 @@ function InteractionCard({ interaction }) {
             <TableCell component="th" scope="row">
                 {interaction.notDefinedErrorCount ? alertText("---") : interaction.minErrorRate}
             </TableCell>
+            <TableCell component="th" scope="row">
+                {interaction.notDefinedErrorCount ? alertText("---") : interaction.minErrorRate}
+            </TableCell>
+            <TableCell component="th" scope="row">
+                {interaction.notDefinedErrorCount ? alertText("---") : interaction.minErrorRate}
+            </TableCell>
             <TableCell align="left" component="th" scope="row">
                 <DependOn dependency={interaction.dependOn} />
             </TableCell>
         </TableRow>
         <TableRow>
-            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={10}>
                 <Collapse in={open} timeout="auto" unmountOnExit>
-                    <Box sx={{ margin: 1 }}>
+                    <Box sx={{ margin: 1, width: "100%" }}>
                         <Typography variant="h6" gutterBottom component="div">
                             Контексты
                         </Typography>
@@ -203,6 +194,8 @@ function InteractionList({ interactions }) {
                         <col style={{ width: '5%' }} />
                         <col style={{ width: '5%' }} />
                         <col style={{ width: '5%' }} />
+                        <col style={{ width: '5%' }} />
+                        <col style={{ width: '5%' }} />
                     </colgroup>
                     <TableHead>
                         <TableRow key={0}>
@@ -213,6 +206,8 @@ function InteractionList({ interactions }) {
                             <TableCell>RPS</TableCell>
                             <TableCell>Latency</TableCell>
                             <TableCell>Error Rate</TableCell>
+                            <TableCell>Протокол</TableCell>
+                            <TableCell>Источник метрик</TableCell>
                             <TableCell>От чего зависит</TableCell>
                         </TableRow>
                     </TableHead>
