@@ -74,7 +74,7 @@ select e2e_pkg.*, sd.name as diagram, sd.ea_guid from e2e_pkg
 	join t_diagram sd on sd.package_id=e2e_pkg.package_id and sd.stereotype='e2e_diagram'`
 
 
-const E2E_PROCESS_BI_QUERY = `select odd.diagram_id,mep.object_id, ref.pdata1::integer, d.ea_guid, d.name as bi_name
+const E2E_PROCESS_BI_QUERY = `select distinct odd.diagram_id, ref.pdata1::integer, d.ea_guid, d.name as bi_name
 from t_object mep 
 	join t_object ref on ref.object_id=mep.parentid
 	join t_diagramobjects odd on odd.object_id = ref.object_id and odd.diagram_id <> ref.pdata1::integer
