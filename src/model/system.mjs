@@ -20,6 +20,7 @@ export class APIMethod {
      * @type {Array<APIMethodParameter>}
      */
     parameters = [];
+    tags = {}
 
     constructor({ name, returnType, description, parameters, notes, ea_guid, operationid, rps, latency, error_rate } = {}) {
         this.name = name;

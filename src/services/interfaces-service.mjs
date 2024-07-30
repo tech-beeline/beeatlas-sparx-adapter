@@ -33,8 +33,6 @@ export class InterfaceCatalog {
     }
 }
 
-
-
 const SLA_TAGS = {
     rps: RPS_THRESHOLD_TAG,
     latency: LATENCY_THRESHOLD_TAG,
@@ -46,6 +44,7 @@ class InterfacesService {
     async getInterface(code) {
         return this.#interfaceByAlias(code).then(i => new APIInterface({ name: i.name, version: i.version, code: i.alias, i_id: i.object_id }));
     }
+
     async #interfaceByAlias(alias) {
         if (!alias) {
             throw Object.assign(Error(`Не задан код`), { status: 406 })
@@ -85,6 +84,7 @@ class InterfacesService {
      * @param {APIMethod[]} methods 
      */
     async insertMethods(methods) {
+        NotImplemented();
     }
     async updateMethodsSLA(methods) {
         for (let { operationid, sla } of methods) {

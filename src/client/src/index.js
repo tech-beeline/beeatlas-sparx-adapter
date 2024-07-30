@@ -14,6 +14,8 @@ import E2EScenarioDashboard, { E2EScenarioDashboard_URI } from './Components/das
 import E2EDashboardMainPage, { E2EDashboardMainPage_URI } from './Components/dashboards/scenarios-main-page.mjs';
 import E2EProcessSummary, { E2EProcessSummary_URI } from './Components/dashboards/e2e-process-page.mjs';
 import SystemProcesses from './Components/system-processes.mjs';
+import SearchSystemPage from './Components/dashboards/system/search-system-page.mjs';
+import SystemPage from './Components/dashboards/system/system-page.mjs';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -30,10 +32,12 @@ root.render(
       <Route path="/e2e-scenarios/:uid" element={<E2EScenario/>} />
       <Route path={E2EDashboardMainPage_URI} element={<E2EDashboardMainPage/>} />
       <Route path={`${E2EProcessSummary_URI}/:uid`} element={<E2EProcessSummary/>} />
-      <Route path={`${E2EScenarioDashboard_URI}/:uid`} element={<E2EScenarioDashboard/>} />
+      <Route path={`${E2EProcessSummary_URI}/:process_uid/bi/:uid`} element={<E2EScenarioDashboard/>} />
       <Route path='/e2e/systems' element={<SystemProcesses/>} />
+      <Route path='/monitoring/systems' element={<SearchSystemPage/>} />
+      <Route path='/monitoring/systems/:code' element={<SystemPage/>} />
     </Routes>
-  </Router>,
+  </Router>
 )
 /*
 root.render(

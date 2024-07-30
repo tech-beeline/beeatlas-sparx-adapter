@@ -27,9 +27,10 @@ class ComponentsController {
     }
     async getSystem(request, response) {
         try {
-            response.status(200).json(await componentsService.getSystem(request.params.code));
+            const loadMethods = request.query.loadMethods == 1 && request.query.loadMethods == true
+            response.status(200).json(await componentsService.getSystem(request.params.code, { loadMethods: loadMethods }));
         } catch (error) {
-            processError(error);
+            processError(error, response);
         }
     }
     async putSystem(request, response) {
@@ -43,7 +44,7 @@ class ComponentsController {
         try {
             response.status(200).json(await componentsService.getSystemProcesses(request.params.cmdb));
         } catch (error) {
-            processError(error);
+            processError(error, response);
         }
     }
 }

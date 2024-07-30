@@ -3,7 +3,7 @@ import { BusinessInteraction } from '../model/e2e-process.mjs';
 import t_diagram from '../utils/ea-model/t_diagram.mjs';
 import t_object from '../utils/ea-model/t_object.mjs';
 import Repository from '../utils/ea-repo.mjs'
-import { BadRequest, NotFound } from '../utils/errors.mjs';
+import { BadRequest, NotFound, NotImplemented } from '../utils/errors.mjs';
 import IARepository from '../utils/ia.mjs';
 import applicationService from './application-service.mjs';
 import { InterfaceCatalog } from './interfaces-service.mjs';
@@ -110,6 +110,7 @@ class E2EProcessService {
         let rows = await this.getProcessMessages(processUID)
         const app_catalog = await applicationService.getApplications();
 
+
         let diagram_map = {};
         let application_map = {
         };
@@ -118,6 +119,7 @@ class E2EProcessService {
             row.validationError = [];
 
             const server = app_catalog.byObjectId(row.server_id);
+
             if (server) {
                 if (!application_map[server.cmdb]) application_map[server.cmdb] = server;
                 row.server = server.$ref;
@@ -224,9 +226,11 @@ class E2EProcessService {
         }
     }
 
-
     async getProcessBusinessInterctions(code) {
-        return Repository.queryRows(`${QUERIES.E2E_PROCESS_BI_QUERY} and p.ea_guid=$1`, [code]);
+        let rows = await Repository.queryRows(`${QUERIES.E2E_PROCESS_BI_QUERY} where p.ea_guid=$1 order by m.seqno`, [code]);
+        const valid_rows = rows.filter(r => r.seqno);
+        const invalid_rows = rows.filter(r => !valid_rows.some(v => v.ea_guid === r.ea_guid)).map(r => Object.assign(r, { alert: `Не связано с сообщением или MessageEndpoint не является дочерним элементом для диаграммы` }))
+        return [...valid_rows, ...invalid_rows];
     }
 
     async getProcessSummary(code) {
@@ -253,6 +257,15 @@ class E2EProcessService {
                 key_processes: Object.values(b.key_processes)
             }))
         }))
+    }
+
+    async getBIScenario(uid) {
+        const diagrams = await Repository.queryRows(`with recursive ${QUERIES.DIAGRAM_TREE_CTE} select * from d_tree where e2e_uid=$1`, [uid])
+        const diagram_uids = diagrams.map( d=>d.diagram_uid);
+        console.log( diagram_uids.map(d=>`'${d}'`).join(','))
+
+        console.log( diagrams)
+        NotImplemented();
     }
     async getProcessSystems() {
         let processes = await this.getE2EProcesses();

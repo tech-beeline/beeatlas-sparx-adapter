@@ -77,13 +77,6 @@ class Repository {
         if (config.host.startsWith('jdbc:')) {
             let url = new URL(config.host.slice(5));
             config.host = url.hostname;
-            /*
-            if( url.port ) config.port = url.port;
-            if( url.pathname ){
-                let paths = url.pathname.split('/');
-                if( paths.length > 1) config.database = paths[1];
-            }
-            */
         }
         this.#config = config;
         return this.#config

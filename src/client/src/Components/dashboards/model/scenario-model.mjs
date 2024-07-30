@@ -45,7 +45,7 @@ export class Interaction {
     }
 }
 
-function tryParseFloat(n) {
+export function tryParseFloat(n) {
     if (!n) return Number.NaN;
     if (typeof n === "string") {
         n = n.replace(',', '.')
@@ -128,7 +128,7 @@ export class Scenario {
             m.rps = tryParseFloat(m.rps);
             m.latency = tryParseFloat(m.latency);
             if (m.latency && !isNaN(m.latency)) m.latency *= 1000;
-            m.errorRate = tryParseFloat(m.errorRate)
+            m.errorRate = tryParseFloat(m.error_rate)
 
             parseIA(m);
 

@@ -92,7 +92,7 @@ const INTERFACES_ROUTES = {
                 }
             }
         },
-        "/api/v1/process/{code}/monitoring/api" : {
+        "/api/v1/process/{code}/monitoring/api": {
             get: {
                 operation: monitoringController.getProcessDashboardManifest,
                 summary: "полчение манифеста для создания дашборда E2E процесса",
@@ -115,6 +115,62 @@ const INTERFACES_ROUTES = {
                         description: "OK",
                         content: {
                             "application/yaml": {
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/monitoring/bi/publish" :{
+            post: {
+                operation: monitoringController.publishBIDashboard,
+                summary: "2.1.1 Я как мобильный клиент хочу открыть ЕЛК для управления подключенными и доступными услугами",
+                description: "",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            examples: {
+                                "Витрина ФДМ": {
+                                    code: "{74276CF2-9C3D-419e-A8F8-EB39A7A68FC0}"
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/monitoring/system/publish": {
+            post: {
+                operation: monitoringController.publishSystemDashboard,
+                summary: "Создание дашборда на платформе наблюдаемости для системы",
+                description: "",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            examples: {
+                                "Витрина ФДМ": {
+                                    cmdb: "FDMSHOWCASEAPP"
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
                             }
                         }
                     }

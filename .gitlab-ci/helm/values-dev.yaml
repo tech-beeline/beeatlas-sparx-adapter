@@ -6,3 +6,8 @@ env:
   IA_GIT_TOKEN: "vault:eafdmmart/data/dev/ia#token"
   OPENMETADATA_TOKEN : "vault:eafdmmart/data/dev/OMD#TOKEN"
   OPENMETADATA_URL : "vault:eafdmmart/data/dev/OMD#URL"
+  FDM_URL : "vault:eafdmmart/data/dev/fdm#url"
+  FDM_USERNAME : "vault:eafdmmart/data/dev/ea#username"
+  FDM_PASSWORD : "vault:eafdmmart/data/dev/ea#password"
+  GRAFANA_URL : "vault:eafdmmart/data/dev/grafana#url"
+  GRAFANA_TOKEN : "vault:eafdmmart/data/dev/grafana#token"

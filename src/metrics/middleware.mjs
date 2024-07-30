@@ -1,6 +1,7 @@
 import exporess from 'express'
 import client from 'prom-client'
 import { NotImplemented } from '../utils/errors.mjs';
+import ArchMetrics from '../utils/arch-metrics-storage.mjs';
 
 
 const register = new client.Registry()
@@ -16,7 +17,7 @@ let httpRequestDurationMicroseconds = new client.Histogram(
         labelNames: ['method', 'path', 'code', 'status', 'uri'],
     })
 
-let httpRequestMax = new client.Gauge( {
+let httpRequestMax = new client.Gauge({
     name: 'http_server_requests_seconds_max',
     help: 'Max Duration of HTTP requests in microseconds',
     labelNames: ['method', 'path', 'code', 'status', 'uri'],
@@ -33,17 +34,37 @@ let requestExpireTime = Date.now() + REQUEST_MAX_EXPIRE * 1000;
 const c4StartCounter = new client.Counter({
     name: 'vscode_c4_plugin_start',
     help: 'Количество запусков плагина',
-    labelNames: ['version', 'action'],
+    labelNames: ['version', 'action', 'user']
+});
+
+const pluginUsers = new client.Counter({
+    name: 'vscode_c4_plugin_users',
+    help: 'Количество пользователей',
+    labelNames: []
 });
 
 register.registerMetric(c4StartCounter)
-
-export function registerC4PluginStart(version, action = 'start') {
-    c4StartCounter.inc({ version: version , action: action});
+register.registerMetric(pluginUsers)
+const PLUGIN_USERS = {}
+function processPluginUser(user) {
+    if (PLUGIN_USERS[user]) return;
+    PLUGIN_USERS[user] = user;
+    pluginUsers.inc();
 }
 
-function checkExpire(){
-    if( Date.now() > requestExpireTime){
+ArchMetrics.initPluginActionCounter((version, action, user, value) => {
+    c4StartCounter.inc({ version: version, action: action, user: user }, value);
+    processPluginUser(user);
+});
+
+export function registerC4PluginStart(version, action = 'start', user) {
+    ArchMetrics.onPluginAction(version, action, user); // Асинхронно обновляем базу данных метрик
+    c4StartCounter.inc({ version: version, action: action, user: user });
+    processPluginUser(user);
+}
+
+function checkExpire() {
+    if (Date.now() > requestExpireTime) {
         requestMax = 0;
         requestExpireTime += REQUEST_MAX_EXPIRE * 1000;
     }
@@ -53,9 +74,9 @@ export function createPromDecorator(fn, path, method) {
     return async (req, res, next) => {
         checkExpire();
         const end = httpRequestDurationMicroseconds.startTimer();
-        if( fn) {await fn(req, res, next);} else res.status(501).send( "Нет обработчика для запроса" )
+        if (fn) { await fn(req, res, next); } else res.status(501).send("Нет обработчика для запроса")
         const labels = { path: path, uri: path, status: res.statusCode, code: res.statusCode, method: method };
-        httpRequestMax.set( labels, requestMax =  Math.max( requestMax, end(labels) ));
+        httpRequestMax.set(labels, requestMax = Math.max(requestMax, end(labels)));
     }
 }
 //const paths = [ /a/ ]

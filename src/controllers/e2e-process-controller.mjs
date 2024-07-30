@@ -47,9 +47,16 @@ class E2EProcessController {
             processError(error, response);
         }
     }
-    async getProcessBusinessInterctions(request, response) {
+    async getProcessBusinessInteractions(request, response) {
         try {
             response.json(await e2eProcessSerivce.getProcessBusinessInterctions(request.params.code));
+        } catch (error) {
+            processError(error, response);
+        }
+    }
+    async getBusinessInteractionScenario(request, response) {
+        try {
+            response.json(await e2eProcessSerivce.getBIScenario(request.params.code));
         } catch (error) {
             processError(error, response);
         }

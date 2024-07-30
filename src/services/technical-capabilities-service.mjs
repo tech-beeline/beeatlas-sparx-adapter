@@ -12,6 +12,7 @@ import t_diagramlinks from "../utils/ea-model/t_diagramlinks.mjs";
 import t_connector from "../utils/ea-model/t_connector.mjs";
 import applicationService from "./application-service.mjs";
 import t_objectproperties from "../utils/ea-model/t_objectproperties.mjs";
+import ArchMetrics from "../utils/arch-metrics-storage.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -105,6 +106,8 @@ class TechnicalCapabilityService {
 			version: capability.version
 		});
 
+		ArchMetrics.onTCChanged({ code: capability.code, name: capability.name, change_date: tc.modifieddate });
+
 		await Repository.insert(t_xref, t_xref.ArchimateElementStereotype({ guid: tc.ea_guid, stereotype: TechnicalCapability.STEREOTYPE }));
 
 		tc.code = tc.alias;
@@ -139,6 +142,7 @@ class TechnicalCapabilityService {
 
 		if (ea_capability.name !== capability.name || ea_capability.note !== capability.description || ea_capability.version !== capability.version) {
 			await Repository.update(t_object, { name: capability.name, note: capability.description, version: capability.version }, { object_id: ea_capability.object_id })
+			ArchMetrics.onTCChanged({ code: code, name: capability.name })
 		}
 
 		await Repository.updateObjectTags(ea_capability.object_id, capability, TC_TAGS_NAMES);
@@ -150,7 +154,7 @@ class TechnicalCapabilityService {
 				await this.addParentBC(asis_tc, { object_id: bc.object_id });
 			}
 			return this.getTechnicalCapability(capability);
-		}
+		} 
 
 		if (asis_tc.targetSystemCode !== capability.targetSystemCode) {
 			NotImplemented('Изменение целевой системы для ТС');

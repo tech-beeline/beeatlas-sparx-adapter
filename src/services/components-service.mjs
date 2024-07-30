@@ -12,6 +12,7 @@ import { BadRequest, NotImplemented } from "../utils/errors.mjs";
 import t_operation from "../utils/ea-model/t_operation.mjs";
 import t_operationtag from "../utils/ea-model/t_operationtag.mjs";
 import systemParticipation from "./sql/system-participation.mjs";
+import { ERROR_RATE_THRESHOLD_TAG, LATENCY_THRESHOLD_TAG, RPS_THRESHOLD_TAG } from "./sql/interfaces-queries.mjs";
 
 
 const INTERFACE_TAGS = [PROTOCOL_TAG, API_SPECIFICATION_URL_TAG]
@@ -35,6 +36,12 @@ select p.ea_guid as pguid, c.ea_guid, p.name as package, c.name, p."fullName" ||
 const CONSTANTS = {
 	CONTAINERS_FOLDER: "Containers",
 	INTERFACES_FOLDER: "Interfaces"
+}
+
+const SLA_TAG_MAP = {
+	[RPS_THRESHOLD_TAG]: "rps",
+	[LATENCY_THRESHOLD_TAG]: "latency",
+	[ERROR_RATE_THRESHOLD_TAG]: "error_rate"
 }
 class ComponentsService {
 
@@ -80,7 +87,7 @@ class ComponentsService {
 		return Object.values(systems);
 	}
 
-	async getSystem(code, { loadMethods, loadInterfaceTags, loadMethodTags } = {}) {
+	async getSystem(code, { loadMethods } = {}) {
 		if (!code) throw Object.assign(Error(`system with code ${code} not found`, { status: 404 }));
 		/**
 		 * @type {System}
@@ -93,18 +100,25 @@ class ComponentsService {
 			 */
 			this.#addContainerFromRow(system, row);
 		}
+
 		if (loadMethods) {
+			const interfaces = {};
 			for (const container of system.containers ?? []) {
 				for (const i of container.interfaces ?? []) {
-					i.methods = (await Repository.find(t_operation, { object_id: i.ea_id() })).map(m => new APIMethod(
-						{ ...m }
-					));
-					if (loadMethodTags) {
-						for (let m of i.methods) {
-							m.taggedValues = await Repository.find(t_operationtag, { elementid: m.operationid() })
-						}
-					}
+					interfaces[i.ea_id()] = i;
+
 				}
+			}
+
+			const methods = await Repository.queryRows(`select * from t_operation where object_id = ANY($1)`, [Object.keys(interfaces)])
+			let method_map = {}
+			for (const m of methods) {
+				interfaces[m.object_id].methods.push(method_map[m.operationid] = new APIMethod({ ...m }))
+			}
+
+			const tags = await Repository.queryRows('select * from t_operationtag where elementid=ANY($1) and property=ANY($2)', [Object.keys(method_map), [ERROR_RATE_THRESHOLD_TAG, LATENCY_THRESHOLD_TAG, RPS_THRESHOLD_TAG]]);
+			for (const t of tags) {
+				method_map[t.elementid][SLA_TAG_MAP[t.property]] = t.value;
 			}
 		}
 
@@ -113,7 +127,7 @@ class ComponentsService {
 
 	async getSystemProcesses(cmdb) {
 
-		return Repository.queryRows( systemParticipation, [cmdb])
+		return Repository.queryRows(systemParticipation, [cmdb])
 
 	}
 	/**

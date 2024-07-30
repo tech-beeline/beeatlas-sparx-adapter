@@ -3,10 +3,8 @@ import { registerC4PluginStart } from "../metrics/middleware.mjs";
 class TelemetryController {
     async postC4Plugin(request, response) {
         try {
-            let { version, action } = request.body;
-            console.log( `start c4 plugin (version=${version})`);
-
-            registerC4PluginStart(version, action);
+            let { version, action, user } = request.body;
+            registerC4PluginStart(version, action, user);
             response.status(200).send('OK');
         } catch (error) {
             console.error(error)

@@ -19,10 +19,10 @@ d_refs as
 ),
 d_tree as
 (
-	select diagram_id as e2e_id, diagram_id as diagram_id, ea_guid as e2e_uid, ea_guid as diagram_uid
+	select diagram_id as e2e_id, diagram_id as diagram_id, ea_guid as e2e_uid, ea_guid as diagram_uid, 0 as object_id
 	from t_diagram where diagram_type='Sequence'
 	union distinct
-	select d.e2e_id, r.child_diagram_id, d.e2e_uid, r.child_diagram_uid
+	select d.e2e_id, r.child_diagram_id, d.e2e_uid, r.child_diagram_uid, r.object_id
 	from d_refs r
 		join d_tree d on d.diagram_id=r.diagram_id
 )`
@@ -74,12 +74,12 @@ select e2e_pkg.*, sd.name as diagram, sd.ea_guid from e2e_pkg
 	join t_diagram sd on sd.package_id=e2e_pkg.package_id and sd.stereotype='e2e_diagram'`
 
 
-const E2E_PROCESS_BI_QUERY = `select distinct odd.diagram_id, ref.pdata1::integer, d.ea_guid, d.name as bi_name
-from t_object mep 
-	join t_object ref on ref.object_id=mep.parentid
+const E2E_PROCESS_BI_QUERY = `select distinct  odd.diagram_id, ref.pdata1::integer, d.ea_guid, d.name as bi_name, m.seqno
+from t_object ref
 	join t_diagramobjects odd on odd.object_id = ref.object_id and odd.diagram_id <> ref.pdata1::integer
 	join t_diagram d on d.diagram_id=ref.pdata1::integer
 	join t_diagram p on p.diagram_id=odd.diagram_id
-where mep.object_type='MessageEndpoint'`;
+	left join t_object mep  on ref.object_id=mep.parentid and mep.object_type='MessageEndpoint' 
+	left join t_connector m on m.end_object_id=mep.object_id and m.diagramid=p.diagram_id`;
 
-export default { E2E_MESSAGES_QUERY, E2E_PROCESSES_QUERY, E2E_PROCESS_BI_QUERY }
+export default { E2E_MESSAGES_QUERY, E2E_PROCESSES_QUERY, E2E_PROCESS_BI_QUERY , DIAGRAM_TREE_CTE}

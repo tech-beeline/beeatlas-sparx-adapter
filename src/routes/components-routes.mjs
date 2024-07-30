@@ -61,6 +61,17 @@ const COMPONENTS_METHODS = {
                                 value: "CMDB_A"
                             }
                         }
+                    },
+                    {
+                        name: "loadMethods",
+                        in: "query",
+                        description: "Выгружать методы",
+                        required: false,
+                        examples: {
+                            "Выгрузить методы": {
+                                value: 0
+                            }
+                        }
                     }
                 ],
                 responses: {

@@ -51,6 +51,20 @@ class MonitoringController {
             ProcessError(e, res);
         }
     }
+    async publishBIDashboard(request, response) {
+        try {
+            response.json(await monitoringService.publishBIDashboard(request.body.code));
+        } catch (e) {
+            ProcessError(e, response);
+        }
+    }
+    async publishSystemDashboard(request, response) {
+        try {
+            response.json(await monitoringService.publishSystemDashboard(request.body.cmdb));
+        } catch (e) {
+            ProcessError(e, response);
+        }
+    }
 }
 
 export default new MonitoringController();

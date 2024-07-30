@@ -16,7 +16,18 @@ import { ERROR_RATE_THRESHOLD_TAG, LATENCY_THRESHOLD_TAG, RPS_THRESHOLD_TAG } fr
 import createInteractionPanels from "./monitoring-templates/panels/interaction-timeseries.mjs";
 import { selectGrafanaSources } from "./sql/monitoring-source.mjs";
 import { DEFAULT_OPENSEARCH_API_SOURCE, MAPIC_DEFAULT_API_SOURCE } from "./monitoring-templates/panels/source-options/opensearch.mjs";
+import { getJSON, postJSON } from "../utils/http-request-promise.mjs";
 
+const GRAFANA_URL = process.env.GRAFANA_URL ?? "https://inside-dev.beeline.ru"
+const GRAFANA_TOKEN = process.env.GRAFANA_TOKEN;
+const FOLDER_API_PATH = "/api/folders"
+const DASHBOARD_API_PATH = "/api/dashboards/db"
+
+const GRAFANA_HTTP_OPTIONS = { headers: { 'Authorization': `Bearer ${GRAFANA_TOKEN}` }, rejectUnauthorized: false };
+const DEFAULT_FOLDER_UID = "archops";
+const DEFAULT_FOLDER_NAME = "Architecture as a Code";
+const SYSTEM_UID_PREFIX = 'archops-sys-'
+const BI_UID_PREFIX = 'archops-bi-'
 
 class InvalidMessageMetrics {
     msg;
@@ -303,6 +314,65 @@ class MonitoringService {
             ...interactions.reduce((r, v) => [...r, ...createInteractionPanels(v)], [])
         ];
         return panels;
+
+    }
+    async #prepareGrafanaFolder() {
+        try {
+            const folder = await getJSON(`${GRAFANA_URL}${FOLDER_API_PATH}/archops`, GRAFANA_HTTP_OPTIONS)
+        } catch (err) {
+            if (err.statusCode != 404)
+                throw err;
+            let resp = await postJSON(`${GRAFANA_URL}${FOLDER_API_PATH}`, GRAFANA_HTTP_OPTIONS, {
+                uid: DEFAULT_FOLDER_UID,
+                title: DEFAULT_FOLDER_NAME
+            })
+        }
+    }
+    /**
+     * 
+     * @param {string} code 
+     * @returns 
+     */
+    async publishBIDashboard(code) {
+        await this.#prepareGrafanaFolder();
+
+        let body = {
+            folderUid: DEFAULT_FOLDER_UID,
+            overwrite: true,
+            dashboard: {
+                uid: code.replaceAll(/\{|\}/g, ''),
+                title: `Дашборд для шага ${code}`,
+                panels: await this.getScenarioJSON(code)
+            }
+        };
+
+        return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, body);
+    }
+    async publishSystemDashboard(cmdb) {
+        await this.#prepareGrafanaFolder();
+
+
+        const system = await componentsService.getSystem(cmdb, { loadMethods: true, loadMethodTags: true });
+        const grafana_sources = await this.getGrafanaSources();
+
+
+        /** @type {APIMethod[]} */
+        let methods = (system.containers ?? []).reduce((ret, container) => {
+            return [...ret,
+            ...container.interfaces?.reduce((c, i) => [...c, ...i.methods?.map(m => Object.assign({ container: container.name, interface: i.name }, m))], [])
+            ]
+        }, []);
+
+        let body = {
+            folderUid: DEFAULT_FOLDER_UID,
+            overwrite: true,
+            dashboard: {
+                uid: `${SYSTEM_UID_PREFIX}${cmdb}`,
+                title: `Дашборд для ${cmdb}`,
+            }
+        };
+
+        return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, body);
     }
 }
 

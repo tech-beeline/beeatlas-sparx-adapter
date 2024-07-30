@@ -6,15 +6,15 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 import { E2EProcessSummary_URI } from './e2e-process-page.mjs';
 
 
-export const E2EDashboardMainPage_URI = '/e2e-scenarios-dashboard';
+export const E2EDashboardMainPage_URI = '/e2e/processes';
 
 
 export default function E2EDashboardMainPage() {
 
     const [e2eProcessList, setE2eProcessList] = useState(null);
 
-    const update = async () => {
-        let response = await fetch('api/v1/e2e-processes');
+    const loadProcessList = async () => {
+        let response = await fetch('/api/v1/e2e-processes');
         if (response.status !== 200) {
             let body = await response.text();
             setE2eProcessList({ error: `Ошибка при загрузке данных ${response.status} ${body}` })
@@ -25,8 +25,9 @@ export default function E2EDashboardMainPage() {
     }
 
     useEffect(() => {
-        update();
-    }, [])
+        loadProcessList();
+    }, []);
+    
     const scenarioData = (scenarios) => scenarios ? scenarios.map(s =>
         <TableCell><a target="_blank" href={`${E2EProcessSummary_URI}/${encodeURIComponent(s.uid)}`}>{s.name}</a></TableCell>) : (console.log(scenarios), []);
     /** @param {Array} processes*/

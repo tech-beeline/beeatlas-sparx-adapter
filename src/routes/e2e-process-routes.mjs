@@ -24,7 +24,7 @@ const E2EProcessRoutes = {
         },
         "/api/v1/e2e-processes/{code}/business-interactions": {
             get: {
-                operation: e2eProcessController.getProcessBusinessInterctions,
+                operation: e2eProcessController.getProcessBusinessInteractions,
                 summary: "Получение списка сквозных Е2Е процессов",
                 parameters: [
                     {
@@ -35,6 +35,37 @@ const E2EProcessRoutes = {
                         examples: {
                             "Смена ТП в ЕЛК": {
                                 value: "{AD0F73D8-87B1-41ed-AD5A-61DC188466D7}"
+                            }
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: {
+                                    "OK": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/e2e/bi-scenarios/{code}": {
+            get: {
+                operation: e2eProcessController.getBusinessInteractionScenario,
+                summary: "Получение списка сквозных Е2Е процессов",
+                parameters: [
+                    {
+                        name: "code",
+                        in: "path",
+                        description: "Код сценария",
+                        required: true,
+                        examples: {
+                            "Инициирую подключение": {
+                                value: "{F1A39AE9-CE2B-41eb-A57E-9B3A5F76F253}"
                             }
                         }
                     }
@@ -84,16 +115,16 @@ const E2EProcessRoutes = {
                 }
             }
         },
-        "/api/v1/e2e-process/systems" :{
-            get:{
-                summary : "Выгрузка информации по процесса",
+        "/api/v1/e2e-process/systems": {
+            get: {
+                summary: "Выгрузка информации по процесса",
                 operation: e2eProcessController.getProcessSystems,
-                responses:{
+                responses: {
                     200: {
-                        description : "OK",
+                        description: "OK",
                         content: {
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : {
-                                
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+
                             }
                         }
                     }

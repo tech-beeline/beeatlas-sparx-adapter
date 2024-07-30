@@ -13,10 +13,13 @@ import { FilterState, InteractionFilter } from "./interactions-filter.mjs";
 import IconButton from '@mui/material/IconButton/IconButton.js';
 import { KeyboardArrowDown, KeyboardArrowUp, EditNote } from '@mui/icons-material';
 import Collapse from '@mui/material/Collapse/Collapse.js';
-import { Box, Typography } from "@mui/material";
+import { Box, List, ListItem, Typography } from "@mui/material";
 import { TreeView, TreeItem } from '@mui/x-tree-view';
 
 import MessageEditForm from "./message-form.mjs";
+import { WebEANaviLine } from "../utils.mjs";
+import { E2EDashboardMainPage_URI } from "./scenarios-main-page.mjs";
+import { E2EProcessSummary_URI } from "./e2e-process-page.mjs";
 
 function Application({ application }) {
     return <div><b>[{application.cmdb}] {application.name}</b></div>
@@ -32,8 +35,27 @@ function ApplicationList({ applications }) {
     </div>
 }
 
-function ScenarioHeader({ scenario }) {
-    return <div><h2>Сценарий: {scenario.name} <a href={`https://ms-seaapp001.bee.vimpelcom.ru:83/?m=1&o=${scenario.processUID}`} target="_blank">Перейти на диаграмму в WebEA</a></h2></div>
+function ScenarioHeader({ scenario, process_uid }) {
+    const [e2e, setE2E] = React.useState(null)
+
+    const loadE2E = async () => {
+        const response = await fetch(`/api/v1/e2e-processes/${encodeURIComponent(process_uid)}`)
+        if (response.status !== 200) {
+            setE2E({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() })
+            return;
+        }
+        //let scenario = new Scenario( await response.json)
+        setE2E(await response.json())
+    }
+
+    useEffect(() => {
+        loadE2E();
+    }, [])
+
+
+    return <div><h2>Business Interaction: {scenario.name} <WebEANaviLine uid={scenario.processUID}/> </h2>
+        <h3>Е2Е процесс : {e2e ? e2e.error ? alertText(`Ошибка при загрукен данных: ${e2e.error}`) : <><a href={`${E2EProcessSummary_URI}/${encodeURIComponent(process_uid)}`}>{e2e.name}</a> <WebEANaviLine uid={process_uid} /></> : `Данные загружаются...`}</h3>
+    </div>
 }
 
 function alertText(txt, color = "red") {
@@ -44,18 +66,18 @@ const NO_DATA_MESSAGE = alertText('Нет')
 
 function ContextRow(props) {
     const [message, setMessage] = useState(props.message);
-    const rps_color = !isNaN(message.rps) && message.iaRPS == message.rps ? "green" : "red";
-    const latence_color = !isNaN(message.latency) && message.iaLatency == message.latency ? "green" : "red";
-    const error_color = !isNaN(message.errorRate) && message.iaErrorRate == message.errorRate ? "green" : "red";
+    const rps_color = !isNaN(message.rps) ? "green" : "red";
+    const latence_color = !isNaN(message.latency) ? "green" : "red";
+    const error_color = !isNaN(message.errorRate) ? "green" : "red";
 
-    return <TableRow>
-        <TableCell><MessageEditForm message={message} setMessage={setMessage} /></TableCell>
-        <TableCell>{message.stackTrace.map(c => <>{c}<br /></>)}</TableCell>
-        <TableCell>{message.interfaceAgreement ? <a href={message.interfaceAgreement.path} target="_blank">{message.interfaceAgreement.yaml?.status}</a> : alertText(NO_DATA_MESSAGE)}</TableCell>
-        <TableCell>{isNaN(message.rps) ? alertText(NO_DATA_MESSAGE) : alertText(message.rps, rps_color)}</TableCell>
-        <TableCell>{isNaN(message.latency) ? alertText(NO_DATA_MESSAGE) : alertText(message.latency, latence_color)}</TableCell>
-        <TableCell>{isNaN(message.errorRate) ? alertText(NO_DATA_MESSAGE) : alertText(message.errorRate, error_color)}</TableCell>
-        <TableCell><a target="_blank" href={`https://ms-seaapp001.bee.vimpelcom.ru:83/?m=1&o=${message.diagram_uid}`}>{message.diagram}</a></TableCell>
+    return <TableRow key={message.message_uid}>
+        <TableCell key={`edit-${message.message_uid}`}><MessageEditForm message={message} setMessage={setMessage} /></TableCell>
+        <TableCell key={`ctx-${message.message_uid}`}><List>{message.stackTrace.map((c, i) => <ListItem kye={i}>{c}</ListItem>)}</List></TableCell>
+        <TableCell key={`ia-${message.message_uid}`}>{message.interfaceAgreement ? <a href={message.interfaceAgreement.path} target="_blank">{message.interfaceAgreement.yaml?.status}</a> : alertText(NO_DATA_MESSAGE)}</TableCell>
+        <TableCell key={`rps-${message.message_uid}`}>{isNaN(message.rps) ? alertText(NO_DATA_MESSAGE) : alertText(message.rps, rps_color)}</TableCell>
+        <TableCell key={`latency-${message.message_uid}`}>{isNaN(message.latency) ? alertText(NO_DATA_MESSAGE) : alertText(message.latency, latence_color)}</TableCell>
+        <TableCell key={`errorRate-${message.message_uid}`}>{isNaN(message.errorRate) ? alertText(NO_DATA_MESSAGE) : alertText(message.errorRate, error_color)}</TableCell>
+        <TableCell key={`diagram-`}><a target="_blank" href={`https://ms-seaapp001.bee.vimpelcom.ru:83/?m=1&o=${message.diagram_uid}`}>{message.diagram}</a></TableCell>
     </TableRow>
 }
 
@@ -112,7 +134,7 @@ function InteractionCard({ interaction }) {
                 <TreeView defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
                     <TreeItem nodeId="root" label={`Используется систем: ${dependency_tree.length}`}>
                         {Object.values(dependency_tree).map((sys, i) => <TreeItem nodeId={sys.cmdb} itemID={sys.cmdb} label={`${sys.name} (используемых методов: ${sys.usedApi.length})`} key={i}>
-                            {sys.usedApi.map((api, i) => <TreeItem nodeId={api} itemID={api} label={api}></TreeItem>)}
+                            {sys.usedApi.map((api, i) => <TreeItem nodeId={api} itemID={api} label={api} key={i}></TreeItem>)}
                         </TreeItem>)}
                     </TreeItem>
                 </TreeView> : 'Нет'}
@@ -149,10 +171,13 @@ function InteractionCard({ interaction }) {
                 {interaction.notDefinedErrorCount ? alertText("---") : interaction.minErrorRate}
             </TableCell>
             <TableCell component="th" scope="row">
-                {interaction.notDefinedErrorCount ? alertText("---") : interaction.minErrorRate}
+                ---
             </TableCell>
             <TableCell component="th" scope="row">
-                {interaction.notDefinedErrorCount ? alertText("---") : interaction.minErrorRate}
+                ---
+            </TableCell>
+            <TableCell component="th" scope="row">
+                ---
             </TableCell>
             <TableCell align="left" component="th" scope="row">
                 <DependOn dependency={interaction.dependOn} />
@@ -178,7 +203,7 @@ function InteractionCard({ interaction }) {
 
 function InteractionList({ interactions }) {
 
-    const [showState, setShowState] = useState(false);
+    const [showState, setShowState] = useState(true);
     const [filterState, setFilterState] = useState(new FilterState());
 
     return <div><h2><span onClick={e => setShowState(!showState)} id='show-hide-application'>[{showState ? 'Скрыть взаимодействия' : 'Показать взаимодействия'}]</span></h2>
@@ -207,6 +232,7 @@ function InteractionList({ interactions }) {
                             <TableCell>Latency</TableCell>
                             <TableCell>Error Rate</TableCell>
                             <TableCell>Протокол</TableCell>
+                            <TableCell>TC</TableCell>
                             <TableCell>Источник метрик</TableCell>
                             <TableCell>От чего зависит</TableCell>
                         </TableRow>
@@ -238,12 +264,12 @@ export default function E2EScenarioDashboard() {
         loadScenario();
     }, [])
 
-    const { uid } = useParams();
+    const { process_uid, uid } = useParams();
 
     return e2eScenario ?
         e2eScenario.error ? <div><h3>Ошибка при загрузке данных<br />{e2eScenario?.error}</h3><p>{e2eScenario.errorBody}</p></div> :
             <div>
-                <ScenarioHeader scenario={e2eScenario.scenario}></ScenarioHeader>
+                <ScenarioHeader scenario={e2eScenario.scenario} process_uid={process_uid}></ScenarioHeader>
                 <ApplicationList applications={e2eScenario?.scenario.applications ?? {}}></ApplicationList>
                 <InteractionList interactions={e2eScenario.scenario.interactions ?? {}} />
             </div> : <img src="/images/loading.gif" style={{ display: "block", marginLeft: "auto", marginRight: "auto" }} />
