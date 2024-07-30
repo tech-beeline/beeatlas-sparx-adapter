@@ -82,4 +82,5 @@ from t_object ref
 	left join t_object mep  on ref.object_id=mep.parentid and mep.object_type='MessageEndpoint' 
 	left join t_connector m on m.end_object_id=mep.object_id and m.diagramid=p.diagram_id`;
 
+
 export default { E2E_MESSAGES_QUERY, E2E_PROCESSES_QUERY, E2E_PROCESS_BI_QUERY , DIAGRAM_TREE_CTE}

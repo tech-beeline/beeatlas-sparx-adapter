@@ -8,6 +8,7 @@ import IARepository from '../utils/ia.mjs';
 import applicationService from './application-service.mjs';
 import { InterfaceCatalog } from './interfaces-service.mjs';
 import QUERIES from './sql/e2e-process-queries.mjs'
+import { TC_API_QUERY } from './sql/interfaces-queries.mjs';
 
 class E2EProcessService {
     /**
@@ -262,9 +263,22 @@ class E2EProcessService {
     async getBIScenario(uid) {
         const diagrams = await Repository.queryRows(`with recursive ${QUERIES.DIAGRAM_TREE_CTE} select * from d_tree where e2e_uid=$1`, [uid])
         const diagram_uids = diagrams.map( d=>d.diagram_uid);
-        console.log( diagram_uids.map(d=>`'${d}'`).join(','))
 
-        console.log( diagrams)
+        const messages = await Repository.queryRows(
+`select d.ea_guid as d_uid, m.name, m.start_object_id as client_id, m.end_object_id as server_id, m.stereotype, m.ea_guid, m.notes,
+op.value as operation_guid, rps.value as rps, l.value as latency, e.value as error_rate
+from t_diagram d
+join t_connector m on m.diagramid=d.diagram_id
+left join t_connectortag op on op.elementid=m.connector_id and op.property='operation_guid'
+left join t_connectortag rps on rps.elementid=m.connector_id and rps.property='TPSThreshold'
+left join t_connectortag l on l.elementid=m.connector_id and l.property='LatencyThreshold'
+left join t_connectortag e  on e.elementid=m.connector_id and e.property='ErrorThreshold'
+where d.ea_guid  = ANY($1)`, [diagram_uids]
+        )
+
+        const api_methods = await Repository.queryRows( TC_API_QUERY)
+
+        console.log( api_methods )
         NotImplemented();
     }
     async getProcessSystems() {
