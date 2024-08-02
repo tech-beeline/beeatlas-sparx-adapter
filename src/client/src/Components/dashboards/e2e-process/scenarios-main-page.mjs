@@ -1,6 +1,6 @@
 //import { NavLink, useParams } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
-import '../css/e2e-scenario.css'
+//import '../../css/e2e-scenario.css'
 
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography } from '@mui/material';
 import { E2EProcessSummary_URI } from './e2e-process-page.mjs';

@@ -4,7 +4,7 @@ import refresh from './refresh.png'
 import './css/e2e-scenario.css'
 import MessageCard from "./message-card.mjs";
 import { Autocomplete, Box, FormControl, InputLabel, List, ListItem, MenuItem, Paper, Select, TextField } from "@mui/material";
-import { E2EProcessSummary_URI } from "./dashboards/e2e-process-page.mjs";
+import { E2EProcessSummary_URI } from "./dashboards/e2e-process/e2e-process-page.mjs";
 
 
 function SystemSelect({ onSelect }) {

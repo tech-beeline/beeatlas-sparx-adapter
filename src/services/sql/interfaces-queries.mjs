@@ -38,18 +38,19 @@ export const TC_API_QUERY = `with realisation as (
 		left join t_operationtag l on l.elementid=o.operationid and l.property='LatencyThreshold'
 		left join t_operationtag e on e.elementid=o.operationid and e.property='ErrorThreshold'
 )
-select  op.name, op.ea_guid as operation_guid, api.name as api, api.alias as api_code, 
-container.name as container, container.alias as container_code, 
+select  op.name, op.ea_guid as operation_guid, api.name as api, api.alias as api_code, api.ea_guid as api_guid
+,container.name as container, container.alias as container_code, 
 sys.name as sys_name , sys.alias as sys_code,
 tc.name as tc_name, tc.alias as tc_code,
 api_tags.protocol, op_tags.*
 from t_operation op
-join realisation api on api.object_id=op.object_id
+join t_object api on api.object_id=op.object_id
 left join op_tags on op_tags.operationid=op.operationid
+left join api_tags on api_tags.object_id=api.object_id
 left join realisation container on container.from_id=api.object_id
 left join realisation sys on sys.from_id=container.object_id
-left join t_object tc on tc.object_id= api.from_id and tc.stereotype='ArchiMate_TechnicalCapability'
-left join api_tags on api_tags.object_id=api.object_id
+left join t_connector l on l.start_object_id=api.object_id and l.connector_type='Realisation'
+left join t_object tc on tc.object_id= l.end_object_id and tc.stereotype='ArchiMate_TechnicalCapability'
 `
 
 export default { METHOD_PARAMTER_QUERY };

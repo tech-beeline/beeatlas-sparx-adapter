@@ -98,13 +98,17 @@ export class Scenario {
     #interactionCount = 0;
     name;
     processUID;
+    info;
+    callTrace;
 
-    constructor({ applications, messages, name, processUID } = {}) {
+    constructor({ applications, messages, name, processUID, info,callTrace } = {}) {
         this.applications = applications;
         this.messages = messages;
         this.name = name;
         this.processUID = processUID
-        this.#buildInteractions(messages)
+        this.info = info;
+        this.callTrace = callTrace;
+        //this.#buildInteractions(messages)
     }
 
     applicationByRef(ref) {
@@ -114,6 +118,7 @@ export class Scenario {
         }
         return null;
     }
+    
 
     #buildInteractions(messages, context) {
 

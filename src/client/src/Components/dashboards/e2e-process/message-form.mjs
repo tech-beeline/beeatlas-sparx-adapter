@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 import { Button } from '@mui/material'
 import { KeyboardArrowDown, KeyboardArrowUp, EditNote, ArrowUpward, ArrowLeft, ArrowBack, ArrowForward } from '@mui/icons-material';
-import { tryParseFloat } from './model/scenario-model.mjs';
+import { tryParseFloat } from './scenario-model.mjs';
 
 const POST_SLA_URL = "/api/v3/sla/interactions"
 

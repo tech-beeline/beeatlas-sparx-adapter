@@ -6,9 +6,11 @@ import Repository from '../utils/ea-repo.mjs'
 import { BadRequest, NotFound, NotImplemented } from '../utils/errors.mjs';
 import IARepository from '../utils/ia.mjs';
 import applicationService from './application-service.mjs';
+import CallTreeBuilder from './call-tree-builder.mjs';
 import { InterfaceCatalog } from './interfaces-service.mjs';
 import QUERIES from './sql/e2e-process-queries.mjs'
 import { TC_API_QUERY } from './sql/interfaces-queries.mjs';
+
 
 class E2EProcessService {
     /**
@@ -259,14 +261,21 @@ class E2EProcessService {
             }))
         }))
     }
+    async #loadBIScenarioData(uid) {
 
-    async getBIScenario(uid) {
-        const diagrams = await Repository.queryRows(`with recursive ${QUERIES.DIAGRAM_TREE_CTE} select * from d_tree where e2e_uid=$1`, [uid])
-        const diagram_uids = diagrams.map( d=>d.diagram_uid);
+        const [diagram_rows, api_methods, scenario] = await Promise.all(
+            [
+                Repository.queryRows(`with recursive ${QUERIES.DIAGRAM_TREE_CTE} select * from d_tree where e2e_uid=$1`, [uid]),
+                Repository.queryRows(TC_API_QUERY),
+                Repository.first(t_diagram, { ea_guid: uid })
+            ]); // [ ] Возможно надо добавить фильтрацию при запросе, что бы не тащить все методы
 
-        const messages = await Repository.queryRows(
-`select d.ea_guid as d_uid, m.name, m.start_object_id as client_id, m.end_object_id as server_id, m.stereotype, m.ea_guid, m.notes,
-op.value as operation_guid, rps.value as rps, l.value as latency, e.value as error_rate
+        const diagram_uids = diagram_rows.map(d => d.diagram_uid);
+
+        const [messages, systems] = await Promise.all([
+            Repository.queryRows(
+                `select d.ea_guid as d_uid, d.name as diagram, m.name, m.start_object_id as client_id, m.end_object_id as server_id, m.stereotype, m.ea_guid, m.notes,
+op.value as operation_guid, rps.value as rps, l.value as latency, e.value as error_rate, m.seqno, m.pdata1 = 'Synchronous' as is_sync, m.pdata4 as is_ret
 from t_diagram d
 join t_connector m on m.diagramid=d.diagram_id
 left join t_connectortag op on op.elementid=m.connector_id and op.property='operation_guid'
@@ -274,12 +283,95 @@ left join t_connectortag rps on rps.elementid=m.connector_id and rps.property='T
 left join t_connectortag l on l.elementid=m.connector_id and l.property='LatencyThreshold'
 left join t_connectortag e  on e.elementid=m.connector_id and e.property='ErrorThreshold'
 where d.ea_guid  = ANY($1)`, [diagram_uids]
-        )
+            ),
+            Repository.queryRows(`SELECT d.ea_guid as d_uid,od.object_id, p.object_id as parent_id, coalesce( p.alias, o.alias) as code, coalesce(p.name, o.name) as name, o.object_type
+        FROM t_diagram d
+            JOIN t_diagramobjects od on od.diagram_id=d.diagram_id
+            JOIN t_object o on o.object_id=od.object_id
+            LEFT JOIN t_object p on p.object_id=o.parentid and o.object_type='ProvidedInterface'
+            where d.ea_guid=ANY($1)`, [diagram_uids])
+        ]);
+        return [
+            diagram_rows,
+            api_methods,
+            messages,
+            systems,
+            scenario
+        ]
+    }
 
-        const api_methods = await Repository.queryRows( TC_API_QUERY)
+    async getBIScenario(uid) {
+        const EXCLUDE_NAMES = {
+            use: true,
+            "use()": true
+        }
 
-        console.log( api_methods )
-        NotImplemented();
+        let [diagram_rows, api_methods, messages, system_rows, scenario] = await this.#loadBIScenarioData(uid);
+        const methods = api_methods.reduce((res, m) => ((res[m.operation_guid] = m), res), {});
+        const systems = system_rows.reduce((res, s) => Object.assign(res, { [s.object_id]: Object.assign({ interfaces: {} }, s) }), {})
+
+        const diagrams = { byUID: {}, byContainerId: {} };
+        for (const d of diagram_rows) {
+            diagrams.byContainerId[d.object_id] = diagrams.byUID[d.diagram_uid] = diagrams.byUID[d.diagram_uid] ?? (diagrams.byUID[d.diagram_uid] = Object.assign(d, { messages: [], parents: [] }));
+        }
+
+        for (const m of messages) {
+            if (m.server = systems[m.server_id]) {
+                const method = methods[m.operation_guid]
+                if (method) {
+                    const api = m.server.interfaces[method.api_guid] ?? (m.server.interfaces[method.api_guid] = { name: method.api, code: method.api_code, uid: method.api_guid, methods: {} });
+                    api.methods[method.name] = method;
+                }
+            }
+            m.client = systems[m.client_id];
+            //m.method = methods[m.operation_guid];
+
+            if (m.client && m.server) {
+                m.childDiagram = diagrams.byContainerId[m.server_id];
+                m.childDiagram?.parents.push(m);
+
+            }
+            if (m.server?.object_type === 'MessageEndpoint') {
+                const error_message = `Сообщение связано с Message Endpoint ${m.server.name}`
+                console.warn(error_message);
+                m.errors ?? (m.errors = []).push(error_message)
+            }
+
+            if (!m.server || !m.client) {
+                console.warn(`Сообщение связано с элементом, который отсутствует на диаграмме`);
+                m.errors ?? (m.errors = []).push(`Сообщение связано с элементом, который отсутствует на диаграмме`)
+            }
+        }
+
+        messages = messages.filter(
+            m => m.is_sync
+                && !EXCLUDE_NAMES[m.name]
+                && m.client_id && m.server_id
+                && m.is_ret !== '1'
+        ).sort((a, b) => (a.d_uid > b.d_uid) ? 1 : ((b.d_uid > a.d_uid) ? -1 : 0) || a.seqno - b.seqno);
+
+        CallTreeBuilder.setParents(messages);
+        for (const m of messages.filter(m => !m.parent)) {
+            diagrams.byUID[m.d_uid].messages.push(m);
+        }
+
+        const root_messages = []
+        for (const m of diagrams.byContainerId[0].messages) {
+            root_messages.push(...CallTreeBuilder.build(m));
+        }
+
+        let applications = {}
+        for (const o of Object.values(systems)) {
+            const code = o.code??'---'
+            const app = applications[code] ?? (applications[code] = { code: o.code, name: o.code?o.name:"Участники без CMDB мнемоники", interfaces: {} });
+            Object.assign(app.interfaces, o.interfaces)
+        }
+
+        return {
+            info: { name: scenario.name, authod: scenario.author, version: scenario.version, createdDate: scenario.createddate, modifiedDate: scenario.modifieddate, guid: scenario.ea_guid},
+            callTrace : root_messages,
+            applications : applications
+        }
     }
     async getProcessSystems() {
         let processes = await this.getE2EProcesses();

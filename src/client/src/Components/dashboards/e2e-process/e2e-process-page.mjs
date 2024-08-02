@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
 import { E2EScenarioDashboard_URI } from './e2e-scenarios-page.mjs';
-import { WebEANaviLine, webEALink } from '../utils.mjs';
+import { WebEANaviLine, webEALink } from '../../utils.mjs';
 
 
 export const E2EProcessSummary_URI = "/e2e/processes";

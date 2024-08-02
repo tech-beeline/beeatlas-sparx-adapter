@@ -1,7 +1,7 @@
-import { NavLink, useParams } from "react-router-dom";
+import { Link, NavLink, useParams } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
-import '../css/e2e-scenario.css'
-import { Interaction, Scenario } from "./model/scenario-model.mjs";
+//import '../../css/e2e-scenario.css'
+import { Interaction, Scenario } from "./scenario-model.mjs";
 import Table from '@mui/material/Table/Table.js';
 import TableBody from '@mui/material/TableBody/TableBody.js';
 import TableCell from '@mui/material/TableCell/TableCell.js';
@@ -11,32 +11,22 @@ import TableRow from '@mui/material/TableRow/TableRow.js';
 import Paper from '@mui/material/Paper/Paper.js';
 import { FilterState, InteractionFilter } from "./interactions-filter.mjs";
 import IconButton from '@mui/material/IconButton/IconButton.js';
-import { KeyboardArrowDown, KeyboardArrowUp, EditNote } from '@mui/icons-material';
+import { KeyboardArrowDown, KeyboardArrowUp, EditNote, ExpandMore, Menu as MenuIcon } from '@mui/icons-material';
 import Collapse from '@mui/material/Collapse/Collapse.js';
-import { Box, List, ListItem, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, AppBar, Box, Button, List, ListItem, Menu, MenuItem, Toolbar, Typography } from "@mui/material";
 import { TreeView, TreeItem } from '@mui/x-tree-view';
-
 import MessageEditForm from "./message-form.mjs";
-import { WebEANaviLine } from "../utils.mjs";
+import { WebEANaviLine, webEALink } from "../../utils.mjs";
 import { E2EDashboardMainPage_URI } from "./scenarios-main-page.mjs";
 import { E2EProcessSummary_URI } from "./e2e-process-page.mjs";
-
-function Application({ application }) {
-    return <div><b>[{application.cmdb}] {application.name}</b></div>
-}
-
-function ApplicationList({ applications }) {
-
-    const [showState, setShowState] = useState(false);
-
-    return <div>
-        <h2><span onClick={e => setShowState(!showState)} id='show-hide-application'>[{showState ? 'Скрыть системы' : 'Показать системы'}]</span></h2>
-        {showState ? <div>{Object.values(applications).map(a => <Application application={a} />)}</div> : null}
-    </div>
-}
+import { ApplicationSection } from "./e2e-application-section.mjs";
+import { CallTraceSection } from "./e2e-call-trace-section.mjs";
+import { CreateDashboardDialog } from "./e2e-create-dashboard.mjs";
 
 function ScenarioHeader({ scenario, process_uid }) {
     const [e2e, setE2E] = React.useState(null)
+    const [anchorMenu, setAnchorMenu] = useState(null)
+    const [showCreateDashboard, setShowCreateDashboard] = useState(false);
 
     const loadE2E = async () => {
         const response = await fetch(`/api/v1/e2e-processes/${encodeURIComponent(process_uid)}`)
@@ -52,10 +42,48 @@ function ScenarioHeader({ scenario, process_uid }) {
         loadE2E();
     }, [])
 
+    const createScenarioDashboard = () => {
+        setShowCreateDashboard(true);
+        setAnchorMenu(null);
+    }
 
-    return <div><h2>Business Interaction: {scenario.name} <WebEANaviLine uid={scenario.processUID}/> </h2>
-        <h3>Е2Е процесс : {e2e ? e2e.error ? alertText(`Ошибка при загрукен данных: ${e2e.error}`) : <><a href={`${E2EProcessSummary_URI}/${encodeURIComponent(process_uid)}`}>{e2e.name}</a> <WebEANaviLine uid={process_uid} /></> : `Данные загружаются...`}</h3>
-    </div>
+    return (<Box sx={{ flexGrow: 1 }}><CreateDashboardDialog open={showCreateDashboard} setOpen={setShowCreateDashboard} scenario={scenario} />
+        <AppBar position="static">
+            <Toolbar>
+                <div>
+                    <IconButton
+                        size="large"
+                        edge="start"
+                        color="inherit"
+                        aria-label="menu"
+                        sx={{ mr: 2 }}
+                        onClick={e => setAnchorMenu(e.currentTarget)}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <Menu id='menu-appbar' anchorEl={anchorMenu} open={Boolean(anchorMenu)}
+                        sx={{ mt: '45px' }}
+                        onClose={() => setAnchorMenu(null)}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        keepMounted
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}>
+                        <MenuItem onClick={createScenarioDashboard}>Создать дашборд наблюдемости сценария</MenuItem>
+                        <MenuItem component={Link} to={`${E2EProcessSummary_URI}/${encodeURIComponent(process_uid)}`}>На строницу Е2Е процесса</MenuItem>
+                        <MenuItem component={Link} to={webEALink(scenario.guid)} target="_blank" onClick={() => setAnchorMenu(null)}>Открыть сценарий в WebEA </MenuItem>
+                    </Menu>
+                </div>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    {e2e ? e2e.error ? 'Ошибка при загрузке информации о процессе' : `${e2e.name}: ${scenario.name}` : `[Загрузка информации о процессе...]/ ${scenario.name}`}
+                </Typography>
+            </Toolbar>
+        </AppBar>
+    </Box>)
 }
 
 function alertText(txt, color = "red") {
@@ -251,13 +279,13 @@ export const E2EScenarioDashboard_URI = "/e2e-scenarios-dashboards"
 export default function E2EScenarioDashboard() {
     const [e2eScenario, setE2EScenario] = useState(null);
     const loadScenario = async () => {
-        const response = await fetch(`/api/v1/e2e-process-messages/${encodeURIComponent(uid)}`)
+        const response = await fetch(`/api/v3/e2e/bi-scenarios/${encodeURIComponent(uid)}`)
         if (response.status !== 200) {
             setE2EScenario({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() })
             return;
         }
         //let scenario = new Scenario( await response.json)
-        setE2EScenario({ scenario: new Scenario(await response.json()) })
+        setE2EScenario(new Scenario(await response.json()))
     }
 
     useEffect(() => {
@@ -269,8 +297,8 @@ export default function E2EScenarioDashboard() {
     return e2eScenario ?
         e2eScenario.error ? <div><h3>Ошибка при загрузке данных<br />{e2eScenario?.error}</h3><p>{e2eScenario.errorBody}</p></div> :
             <div>
-                <ScenarioHeader scenario={e2eScenario.scenario} process_uid={process_uid}></ScenarioHeader>
-                <ApplicationList applications={e2eScenario?.scenario.applications ?? {}}></ApplicationList>
-                <InteractionList interactions={e2eScenario.scenario.interactions ?? {}} />
+                <ScenarioHeader scenario={e2eScenario.info} process_uid={process_uid}></ScenarioHeader>
+                <ApplicationSection applications={e2eScenario.applications} />
+                <CallTraceSection callTree={e2eScenario.callTrace}></CallTraceSection>
             </div> : <img src="/images/loading.gif" style={{ display: "block", marginLeft: "auto", marginRight: "auto" }} />
 }
