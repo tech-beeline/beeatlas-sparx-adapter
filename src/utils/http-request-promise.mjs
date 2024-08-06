@@ -34,6 +34,10 @@ ${Buffer.concat(chunks).toString()}
             if (body) {
                 req.write(body)
             }
+            req.on('error', (err)=>{
+                console.error( err.message)
+                reject(err);
+            })
 
             req.end();
         } catch (ex) {
@@ -47,7 +51,8 @@ export async function get(url, options) {
 }
 
 export async function getJSON(url, options) {
-    return request(url, Object.assign({ method: "GET" }, options)).then(buffer => JSON.parse(buffer));
+    return request(url, Object.assign({ method: "GET" }, options)).then(buffer =>
+        JSON.parse(buffer));
 }
 
 export async function postJSON(url, options, body) {

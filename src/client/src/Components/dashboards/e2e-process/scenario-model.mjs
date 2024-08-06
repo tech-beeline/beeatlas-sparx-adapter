@@ -1,4 +1,4 @@
-export class Interaction {
+export class Interaction2 {
     messages = [];
     server;
     client;
@@ -42,6 +42,46 @@ export class Interaction {
     get validationErrorCount() {
         console.log(this.messages)
         return this.messages.some(m => m.validationError?.length)
+    }
+}
+
+class Interaction {
+    title;
+    client_code;
+    server_code;
+    name;
+    messages = [];
+    order;
+    constructor(obj = {}) {
+        this.title = obj.title;
+        this.client_code = obj.client_code;
+        this.server_code = obj.server_code;
+        this.name = obj.name;
+        this.order = obj.order;
+    }
+    get notDefinedIACount() {
+        return this.messages.filter(m => !m.ia).length
+    }
+    get totalRPS() {
+        const rps = this.messages.filter(r => !isNaN(r.rps));
+        return rps.length ? rps.reduce((acc, v) => acc + v.rps ?? 0, 0) : null;
+    }
+    get notDefinedRPSCount() {
+        return this.messages.filter(r => isNaN(r.rps)).length
+    }
+    get maxLatency() {
+        const ll = this.messages.filter(m => !isNaN(m.latency));
+        return ll.length > 0 ? Math.max(...ll.map(m => m.latency)) : null
+    }
+    get notDefinedLatencyCount() {
+        return this.messages.filter(m => isNaN(m.latency)).length;
+    }
+    get minErrorRate() {
+        const l = this.messages.filter(m => !isNaN(m.errorRate));
+        return l.length > 0 ? Math.min(...l.map(m => m.errorRate)) : null;
+    }
+    get notDefinedErrorCount() {
+        return this.messages.filter(m => isNaN(m.errorRate)).length;
     }
 }
 
@@ -101,14 +141,14 @@ export class Scenario {
     info;
     callTrace;
 
-    constructor({ applications, messages, name, processUID, info,callTrace } = {}) {
+    constructor({ applications, messages, name, processUID, info, callTrace } = {}) {
         this.applications = applications;
         this.messages = messages;
         this.name = name;
         this.processUID = processUID
         this.info = info;
         this.callTrace = callTrace;
-        //this.#buildInteractions(messages)
+        this.#buildInteractions(callTrace)
     }
 
     applicationByRef(ref) {
@@ -118,9 +158,40 @@ export class Scenario {
         }
         return null;
     }
-    
+
+    #setInvalidChild(context, child) {
+        if (!context) return;
+        (context.invalidChildren ?? (context.invalidChildren = [])).push(child);
+        this.#setInvalidChild(context.getParent(), child);
+    }
 
     #buildInteractions(messages, context) {
+        for (let m of messages) {
+            m.getParent = () => context;
+
+            if (m.client_code && m.server_code && m.name) {
+                m.rps = tryParseFloat(m.rps);
+                m.latency = tryParseFloat(m.latency);
+                if (m.latency && !isNaN(m.latency)) m.latency *= 1000;
+                m.errorRate = tryParseFloat(m.error_rate)
+                m.stackTrace = context ? [...context.stackTrace ?? [], `* ${m.seqno} [${m.server_code ?? ""}]${m.server_name} [${m.name}]`] : context?.stackTrace ?? [];
+                if (m.errors) this.#setInvalidChild(context, m);
+
+                if (m.ia) {
+                    console.log(m.ia);
+                }
+
+                const title = `${m.client_code}->${m.server_code}: ${m.name}${m.stereotype ? ` ${m.stereotype}` : ""}`
+                const interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction(Object.assign({ title: title, order: ++this.#interactionCount }, m)))
+                interaction.messages.push(m);
+            }
+            if (m.children) {
+                this.#buildInteractions(m.children, m);
+            }
+        }
+    }
+
+    #buildInteractions2(messages, context) {
 
         let depend_on = {};
         for (let m of messages) {
@@ -139,15 +210,15 @@ export class Scenario {
 
             if (m.client && m.server && m.method) {
                 const title = `${m.client.cmdb} - ${m.server.cmdb}: ${m.method} ${m.stereotype ? ` ${m.stereotype}` : ""}`;
-                /** @type {Interaction} */
-                m.interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction(m.server, m.client, m.method, this.#interactionCount++, m.stereotype, message_depend_on));
+                /** @type {Interaction2} */
+                m.interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction2(m.server, m.client, m.method, this.#interactionCount++, m.stereotype, message_depend_on));
                 if (!depend_on[title]) depend_on[title] = m.interaction;
                 m.interaction.addMessage(m);
             }
 
 
             if (m.messages) {
-                message_depend_on = this.#buildInteractions(m.messages, m);
+                message_depend_on = this.#buildInteractions2(m.messages, m);
                 if (m.interaction) m.interaction.dependOn = message_depend_on;
                 for (let title in message_depend_on) {
                     if (!depend_on[title]) depend_on[title] = message_depend_on[title];

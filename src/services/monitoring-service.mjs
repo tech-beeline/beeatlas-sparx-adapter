@@ -182,6 +182,21 @@ class MonitoringService {
             .map(a => a.startsWith('{') && a.endsWith('}') ? `(.*)` : a)
             .join('\\/');
     }
+
+    async getGrafanaSourceMap() {
+        const raw = await selectGrafanaSources();
+        let ret = {}
+        for (let row of raw) {
+            const source = ret[row.code] ?? (ret[row.code] = {})
+            source[row.property] = row.value ?? row.notes
+        }
+        for (let id in ret) {
+            const tv = ret[id];
+            ret[id] = createGrafanaSource(tv);
+        }
+        return ret;
+    }
+
     async getGrafanaSources() {
         const raw = await selectGrafanaSources();
         let ret = {}
@@ -302,20 +317,53 @@ class MonitoringService {
         return ret;
     }
 
+    async getInteractions(messages, map = { count: 0 }, grafana_sources) {
+        grafana_sources = grafana_sources ?? await this.getGrafanaSourceMap();
+        let ret = [];
+        for (let m of messages) {
+            if (m.client_code && m.server_code) {
+                const title = `${m.client_code} - ${m.server_code}${m.stereotype ? ` ${m.stereotype}` : ""}: ${m.name}`
+                let interaction = map[title];
+                if (!interaction) {
+                    const [method, path] = m.name.split(' ').filter(it => it.length);
+                    m.rps = Number(m.rps?.replace(',', '.'));
+                    m.latency = Number(m.latency?.replace(',', '.'));
+                    m.error_rate = Number(m.error_rate?.replace(',', '.'));
+                    interaction = map[title] =
+                    {
+                        title: title, message: m.message, index: map.count++, count: 0, method: method, uri: path,
+                        grafanaSource: m.stereotype === "via MAPIC" ? MAPIC_DEFAULT_API_SOURCE : grafana_sources[m.server_code] ?? DEFAULT_OPENSEARCH_API_SOURCE,
+                        sla: {
+                            rps: Number.isNaN(m.rps) ? 10 : m.rps,
+                            latency: Number.isNaN(m.latency) ? 1 : m.latency,
+                            errorRate: Number.isNaN(m.error_rate) ? 0.1 : m.error_rate
+                        }
+                    }
+                    ret.push(interaction);
+                }
+                interaction.count++;
+            }
+            if (m.children) ret.push(...await this.getInteractions(m.children, map, grafana_sources));
+        }
+        return ret;
+    }
+
     async getScenarioJSON(code) {
         const process = await Repository.first(t_diagram, { ea_guid: code });
         if (!process) throw NotFound(`Процесс с GUID=${code} не найден`);
-        const process_messages = await E2EProcessService.getProcessScenario(code, { isBIScenario: true });
 
-        let interactions = await this.buildInteractionsList(process_messages.messages);
+        //const process_messages = await E2EProcessService.getProcessScenario(code, { isBIScenario: true });
+        const scenario = await E2EProcessService.getBIScenario(code);
+        console.log(scenario)
+        let interactions = await this.getInteractions(scenario.callTrace);
 
         let panels = [LEGEND_PANEL, SYSTEMS_HEALTH_HEADER_PANEL, API_STATE_HEADER_PANEL,
             ...interactions.map(it => createInteractionStatPanel(it)),
             ...interactions.reduce((r, v) => [...r, ...createInteractionPanels(v)], [])
         ];
         return panels;
-
     }
+
     async #prepareGrafanaFolder() {
         try {
             const folder = await getJSON(`${GRAFANA_URL}${FOLDER_API_PATH}/archops`, GRAFANA_HTTP_OPTIONS)
@@ -334,7 +382,8 @@ class MonitoringService {
      * @returns 
      */
     async publishBIDashboard(code) {
-        await this.#prepareGrafanaFolder();
+        let scenarioJSON = await this.getScenarioJSON(code)
+
 
         let body = {
             folderUid: DEFAULT_FOLDER_UID,
@@ -342,9 +391,13 @@ class MonitoringService {
             dashboard: {
                 uid: code.replaceAll(/\{|\}/g, ''),
                 title: `Дашборд для шага ${code}`,
-                panels: await this.getScenarioJSON(code)
+                panels: scenarioJSON
             }
         };
+
+        await this.#prepareGrafanaFolder();
+
+        NotImplemented();
 
         return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, body);
     }

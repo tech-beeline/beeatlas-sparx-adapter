@@ -26,6 +26,8 @@ export class CallMessage {
     error_rate;
     method;
     ea_guid;
+    seqno;
+    ia;
     constructor(obj) {
         if (!obj) return;
         for (const fld in this) {

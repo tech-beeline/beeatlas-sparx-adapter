@@ -6,7 +6,7 @@ import Repository from '../utils/ea-repo.mjs'
 import { BadRequest, NotFound, NotImplemented } from '../utils/errors.mjs';
 import IARepository from '../utils/ia.mjs';
 import applicationService from './application-service.mjs';
-import CallTreeBuilder from './call-tree-builder.mjs';
+import CallTreeBuilder, { onError } from './call-tree-builder.mjs';
 import { InterfaceCatalog } from './interfaces-service.mjs';
 import QUERIES from './sql/e2e-process-queries.mjs'
 import { TC_API_QUERY } from './sql/interfaces-queries.mjs';
@@ -275,13 +275,14 @@ class E2EProcessService {
         const [messages, systems] = await Promise.all([
             Repository.queryRows(
                 `select d.ea_guid as d_uid, d.name as diagram, m.name, m.start_object_id as client_id, m.end_object_id as server_id, m.stereotype, m.ea_guid, m.notes,
-op.value as operation_guid, rps.value as rps, l.value as latency, e.value as error_rate, m.seqno, m.pdata1 = 'Synchronous' as is_sync, m.pdata4 as is_ret
+op.value as operation_guid, rps.value as rps, l.value as latency, e.value as error_rate, m.seqno, m.pdata1 = 'Synchronous' as is_sync, m.pdata4 as is_ret, ia.value as ia_path
 from t_diagram d
 join t_connector m on m.diagramid=d.diagram_id
 left join t_connectortag op on op.elementid=m.connector_id and op.property='operation_guid'
 left join t_connectortag rps on rps.elementid=m.connector_id and rps.property='TPSThreshold'
 left join t_connectortag l on l.elementid=m.connector_id and l.property='LatencyThreshold'
 left join t_connectortag e  on e.elementid=m.connector_id and e.property='ErrorThreshold'
+left join t_connectortag ia on ia.elementid=m.connector_id and ia.property='InterfaceAgreement'
 where d.ea_guid  = ANY($1)`, [diagram_uids]
             ),
             Repository.queryRows(`SELECT d.ea_guid as d_uid,od.object_id, p.object_id as parent_id, coalesce( p.alias, o.alias) as code, coalesce(p.name, o.name) as name, o.object_type
@@ -315,15 +316,26 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             diagrams.byContainerId[d.object_id] = diagrams.byUID[d.diagram_uid] = diagrams.byUID[d.diagram_uid] ?? (diagrams.byUID[d.diagram_uid] = Object.assign(d, { messages: [], parents: [] }));
         }
 
+        const usedSystems = {}
+
+        const useSystem = id => usedSystems[id] ?? (usedSystems[id] = systems[id]);
+
         for (const m of messages) {
-            if (m.server = systems[m.server_id]) {
+            if (m.server = useSystem(m.server_id)) {
                 const method = methods[m.operation_guid]
                 if (method) {
                     const api = m.server.interfaces[method.api_guid] ?? (m.server.interfaces[method.api_guid] = { name: method.api, code: method.api_code, uid: method.api_guid, methods: {} });
                     api.methods[method.name] = method;
                 }
             }
-            m.client = systems[m.client_id];
+            m.client = useSystem(m.client_id);
+            if (m.ia_path) {
+                if( m.ia_path.endsWith('?ref_type=heads')) m.ia_path=m.ia_path.slice(0,-15)
+                m.ia = {
+                    path: m.ia_path,
+                    content: await IARepository.Instance.byPath(decodeURIComponent(m.ia_path))
+                }
+            }
             //m.method = methods[m.operation_guid];
 
             if (m.client && m.server) {
@@ -333,13 +345,11 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             }
             if (m.server?.object_type === 'MessageEndpoint') {
                 const error_message = `Сообщение связано с Message Endpoint ${m.server.name}`
-                console.warn(error_message);
-                m.errors ?? (m.errors = []).push(error_message)
+                onError(m, error_message)
             }
 
             if (!m.server || !m.client) {
-                console.warn(`Сообщение связано с элементом, который отсутствует на диаграмме`);
-                m.errors ?? (m.errors = []).push(`Сообщение связано с элементом, который отсутствует на диаграмме`)
+                onError(m, `Сообщение связано с элементом, который отсутствует на диаграмме`)
             }
         }
 
@@ -361,16 +371,17 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
         }
 
         let applications = {}
-        for (const o of Object.values(systems)) {
-            const code = o.code??'---'
-            const app = applications[code] ?? (applications[code] = { code: o.code, name: o.code?o.name:"Участники без CMDB мнемоники", interfaces: {} });
+        for (const o of Object.values(usedSystems)) {
+            if( !o) continue;
+            const code = o.code ?? o.object_id
+            const app = applications[code] ?? (applications[code] = { code: code, name: o.name, interfaces: {}, type: o.object_type });
             Object.assign(app.interfaces, o.interfaces)
         }
 
         return {
-            info: { name: scenario.name, authod: scenario.author, version: scenario.version, createdDate: scenario.createddate, modifiedDate: scenario.modifieddate, guid: scenario.ea_guid},
-            callTrace : root_messages,
-            applications : applications
+            info: { name: scenario.name, authod: scenario.author, version: scenario.version, createdDate: scenario.createddate, modifiedDate: scenario.modifieddate, guid: scenario.ea_guid },
+            callTrace: root_messages,
+            applications: applications
         }
     }
     async getProcessSystems() {

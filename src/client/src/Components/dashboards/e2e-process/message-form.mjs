@@ -41,6 +41,7 @@ export default function MessageEditForm({ message, setMessage }) {
 
     async function updateSLA() {
         try {
+            console.log( message);
             if (!canSave()) return;
             let sla = { rps: rps[1], latency: Number(latency[1]) / 1000, errorRate: errorRate[1] }
             let options = {
@@ -50,7 +51,7 @@ export default function MessageEditForm({ message, setMessage }) {
                 }
             }
 
-            let response = await fetch(`${POST_SLA_URL}/${encodeURIComponent(message.message_uid)}`, options);
+            let response = await fetch(`${POST_SLA_URL}/${encodeURIComponent(message.ea_guid)}`, options);
             if (response.status !== 200) {
                 const body = await response.text();
                 setAlertMessage(`Не удалось обновить SLA : ${body}`)
@@ -84,14 +85,14 @@ export default function MessageEditForm({ message, setMessage }) {
                 },
             }}
         >
-            <DialogTitle>{`${message.seqno} [${message.server.cmdb}] ${message.server.name} - [${message.client?.cmdb}] ${message.client?.name} ${message.method}`}</DialogTitle>
+            <DialogTitle>{`${message.seqno} [${message.server_code}] ${message.server_name} - [${message.client_code}] ${message.client_name} ${message.name}`}</DialogTitle>
             <DialogContent>
                 <DialogContentText>Изменение параметров сообщения</DialogContentText>
 
                 <TextField label="RPS" disabled={saveState} error={rps_errors ? true : false} helperText={rps_errors} variant="standard" defaultValue={rps[1]} onChange={event => setRPS([rps[0], event.target.value])} />
                 <TextField label="Latency" disabled={saveState} error={latency_errors ? true : false} helperText={latency_errors} variant="standard" defaultValue={latency[1]} onChange={event => setLatency([latency[0], event.target.value])} />
                 <TextField label="Error Rate" disabled={saveState} error={error_rate_errors ? true : false} helperText={error_rate_errors} variant="standard" defaultValue={errorRate[1]} onChange={event => setErrorRate([errorRate[0], event.target.value])} />
-                {alertMessage ? <DialogContentText>{alertMessage}</DialogContentText> : null}
+                {alertMessage ? <DialogContentText color="red">{alertMessage}</DialogContentText> : null}
                 <DialogActions>
                     <Button onClick={handleClose}>Cancel</Button>
                     <Button type="submit" disabled={saveState || !canSave()}>Save</Button>

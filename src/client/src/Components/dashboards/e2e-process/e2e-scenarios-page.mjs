@@ -1,7 +1,7 @@
 import { Link, NavLink, useParams } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
 //import '../../css/e2e-scenario.css'
-import { Interaction, Scenario } from "./scenario-model.mjs";
+import { Interaction2, Scenario } from "./scenario-model.mjs";
 import Table from '@mui/material/Table/Table.js';
 import TableBody from '@mui/material/TableBody/TableBody.js';
 import TableCell from '@mui/material/TableCell/TableCell.js';
@@ -22,6 +22,7 @@ import { E2EProcessSummary_URI } from "./e2e-process-page.mjs";
 import { ApplicationSection } from "./e2e-application-section.mjs";
 import { CallTraceSection } from "./e2e-call-trace-section.mjs";
 import { CreateDashboardDialog } from "./e2e-create-dashboard.mjs";
+import { InteractionsSection } from "./e2e-interactions-section.mjs";
 
 function ScenarioHeader({ scenario, process_uid }) {
     const [e2e, setE2E] = React.useState(null)
@@ -140,7 +141,7 @@ function ContextList({ messages }) {
 }
 /**
  * 
- * @param {{interaction: Interaction}} param0 
+ * @param {{interaction: Interaction2}} param0 
  * @returns 
  */
 function InteractionCard({ interaction }) {
@@ -229,7 +230,7 @@ function InteractionCard({ interaction }) {
 
 
 
-function InteractionList({ interactions }) {
+function InteractionsSection2({ interactions }) {
 
     const [showState, setShowState] = useState(true);
     const [filterState, setFilterState] = useState(new FilterState());
@@ -300,5 +301,6 @@ export default function E2EScenarioDashboard() {
                 <ScenarioHeader scenario={e2eScenario.info} process_uid={process_uid}></ScenarioHeader>
                 <ApplicationSection applications={e2eScenario.applications} />
                 <CallTraceSection callTree={e2eScenario.callTrace}></CallTraceSection>
+                <InteractionsSection scenario={e2eScenario}/>
             </div> : <img src="/images/loading.gif" style={{ display: "block", marginLeft: "auto", marginRight: "auto" }} />
 }
