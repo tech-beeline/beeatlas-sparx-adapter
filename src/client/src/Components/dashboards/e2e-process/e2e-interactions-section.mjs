@@ -11,29 +11,67 @@ function alertText(txt, color = "red") {
 
 const NO_DATA_MESSAGE = alertText('Нет')
 
-function ContextRow(props) {
+
+function MessageContexts({ message }) {
+    const stack = message.contexts.map((ctx, ci) => ctx.reduceRight((acc, v, i) => <TreeItem nodeId={`${ci}-${i}`} key={i} label={v}>{acc}</TreeItem>, ""))
+    return (
+        <Box component={Paper}>
+            <TreeView defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
+                {stack}
+            </TreeView>
+        </Box>
+    )
+}
+
+function UsedMethods({ message }) {
+    const usedMethods = {}
+    function build(m) {
+        for (const c of m.children ?? []) {
+            if (m.operation_guid) {
+                const app = usedMethods[m.server_code ?? m.server_name] ?? (usedMethods[m.server_code ?? m.server_name] = { server: m.server_code ?? m.server_name, methods: {} });
+                app.methods[m.operation_guid] ?? (app.methods[m.operation_guid] = { operation_guid: m.operation_guid, name: m.name, count: 0 }).count++;
+            }
+            build(c);
+        }
+    }
+    build(message)
+    console.log(Object.values(usedMethods))
+    return (
+        <TreeView defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
+            {Object.values(usedMethods).map(app => <TreeItem label={app.server} nodeId={app.server}>
+                {Object.values(app.methods).map(m => <TreeItem label={m.name} nodeId={m.operation_guid}></TreeItem>)}
+            </TreeItem>)}
+        </TreeView>
+    );
+}
+
+function Message(props) {
     const [message, setMessage] = useState(props.message);
     const rps_color = !isNaN(message.rps) ? "green" : "red";
     const latence_color = !isNaN(message.latency) ? "green" : "red";
     const error_color = !isNaN(message.errorRate) ? "green" : "red";
 
+
     return <TableRow key={message.ea_guid}>
         <TableCell key={`edit-${message.ea_guid}`}><MessageEditForm message={message} setMessage={setMessage} /></TableCell>
-        <TableCell key={`ctx-${message.ea_guid}`}><List>{message.stackTrace?.map((c, i) => <ListItem key={`${i}`}>{c}</ListItem>)}</List></TableCell>
-        <TableCell key={`ia-${message.ea_guid}`}>{message.ia ? <a href={message.ia.path} target="_blank">{message.ia.content ? message.ia.content.yaml?.status : 'Не верная ссылка'}</a> : alertText(NO_DATA_MESSAGE)}</TableCell>
         <TableCell key={`rps-${message.ea_guid}`}>{isNaN(message.rps) ? alertText(NO_DATA_MESSAGE) : alertText(message.rps, rps_color)}</TableCell>
         <TableCell key={`latency-${message.ea_guid}`}>{isNaN(message.latency) ? alertText(NO_DATA_MESSAGE) : alertText(message.latency, latence_color)}</TableCell>
         <TableCell key={`errorRate-${message.ea_guid}`}>{isNaN(message.errorRate) ? alertText(NO_DATA_MESSAGE) : alertText(message.errorRate, error_color)}</TableCell>
+        <TableCell key={`ia-${message.ea_guid}`}>{message.ia ? <a href={message.ia.path} target="_blank">{message.ia.content ? message.ia.content.yaml?.status : 'Не верная ссылка'}</a> : alertText(NO_DATA_MESSAGE)}</TableCell>
         <TableCell key={`diagram-`}><a target="_blank" href={`https://ms-seaapp001.bee.vimpelcom.ru:83/?m=1&o=${message.d_uid}`}>{message.diagram}</a></TableCell>
+        <TableCell key={`ctx-${message.ea_guid}`}><MessageContexts message={props.message} /></TableCell>
+        <TableCell>
+            <UsedMethods message={props.message}></UsedMethods>
+        </TableCell>
     </TableRow>
 }
 
-function ContextList({ messages }) {
+function MessagesInstances({ messages }) {
     return <TableContainer component={Paper}>
         <Table size='smal'>
             <colgroup>
                 <col style={{ width: '5%' }} />
-                <col style={{ width: '30%' }} />
+                <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
@@ -43,16 +81,17 @@ function ContextList({ messages }) {
             <TableHead>
                 <TableRow key={-1} sx={{ width: 10 }}>
                     <TableCell ></TableCell>
-                    <TableCell >Контекст</TableCell>
-                    <TableCell >IA</TableCell>
                     <TableCell align="center">RPS, requests/sec</TableCell>
                     <TableCell align="center">Latency, ms</TableCell>
                     <TableCell align="center">Error Rate, %</TableCell>
+                    <TableCell >Интерфейсное соглашение</TableCell>
                     <TableCell >Диаграмма</TableCell>
+                    <TableCell >Контексты</TableCell>
+                    <TableCell >Используемые методы</TableCell>
                 </TableRow>
             </TableHead>
             <TableBody>
-                {messages.map((m, i) => <ContextRow message={m} key={i} />)}
+                {messages.map((m, i) => <Message message={m} key={i} />)}
             </TableBody>
         </Table>
     </TableContainer>
@@ -78,9 +117,6 @@ function InteractionCard({ interaction }) {
                 {interaction.title}
             </TableCell>
             <TableCell scope="row">
-                {interaction.messages.length}
-            </TableCell>
-            <TableCell scope="row">
                 {interaction.notDefinedIACount ? alertText('---') : alertText('+', "green")}
             </TableCell>
             <TableCell scope="row">
@@ -101,6 +137,10 @@ function InteractionCard({ interaction }) {
             <TableCell scope="row">
                 ---
             </TableCell>
+            <TableCell scope="row">
+                {`${interaction.messages.length}[${interaction.messages.reduce((ret, v) => ret + v.contexts.length, 0)}]`}
+            </TableCell>
+
             <TableCell align="left" scope="row">
             </TableCell>
         </TableRow>
@@ -111,7 +151,7 @@ function InteractionCard({ interaction }) {
                         <Typography variant="h8" gutterBottom component={Paper}>
                             Контексты
                         </Typography>
-                        <ContextList messages={interaction.messages}></ContextList>
+                        <MessagesInstances messages={interaction.messages}></MessagesInstances>
                     </Box>
                 </Collapse>
             </TableCell>
@@ -137,12 +177,14 @@ export function InteractionsSection({ scenario }) {
                         <col style={{ width: '5%' }} />
                         <col style={{ width: '5%' }} />
                         <col style={{ width: '5%' }} />
+                        <col style={{ width: '5%' }} />
+                        <col style={{ width: '5%' }} />
                     </colgroup>
                     <TableHead>
                         <TableRow key={0}>
                             <TableCell size="small">No</TableCell>
                             <TableCell>Взаимодействие</TableCell>
-                            <TableCell>Количество</TableCell>
+
                             <TableCell>IA</TableCell>
                             <TableCell>RPS</TableCell>
                             <TableCell>Latency</TableCell>
@@ -150,6 +192,7 @@ export function InteractionsSection({ scenario }) {
                             <TableCell>Протокол</TableCell>
                             <TableCell>TC</TableCell>
                             <TableCell>Источник метрик</TableCell>
+                            <TableCell>Уникальных сообщений [всего используется]</TableCell>
                             <TableCell>От чего зависит</TableCell>
                         </TableRow>
                     </TableHead>

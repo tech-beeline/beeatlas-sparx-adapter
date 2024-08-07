@@ -16,17 +16,22 @@ export function ApplicationSection({ applications }) {
             <TreeView component={Paper} defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
                 <TreeItem label="Приложения" nodeId='products'>
                     {products.map(app => <TreeItem sx={{ fontWeight: "bolder" }} label={<div><SettingsApplicationsOutlined />{`[${app.code}] ${app.name}`}</div>} nodeId={app.code ?? "NULL"} key={app.code}>
-                        {Object.values(app.interfaces).map((it, i) => <TreeItem label={<div><ApiOutlined /> {it.name}</div>} key={i} nodeId={`${app.code}-${i}`}>
-                            {Object.values(it.methods).map((m, j) => <TreeItem label={<div><Code />{m.name}</div>} nodeId={`${app.code}-${i}-${m.name}`} key={`${app.code}-${i}-${m.name}`} />)}
-                        </TreeItem>)}
+                        {Object.values(app.interfaces).map((it, i) =>
+                            <TreeItem label={<div><ApiOutlined /> {it.name}</div>} key={i} nodeId={`${app.code}-${i}`}>
+                                {Object.values(it.methods).map((m, j) =>
+                                    <TreeItem label={<div><Code />{m.name}</div>} nodeId={`${app.code}-${i}-${m.name}`} key={`${app.code}-${i}-${m.name}`} />)}
+                            </TreeItem>)}
                     </TreeItem>)}
                 </TreeItem>
                 <TreeItem label="Другие участники" nodeId='objects'>
-                    {objects.filter(a => !SKIP_OBJECT_TYPE[a.type]).map(app => <TreeItem sx={{ fontWeight: "bolder" }} label={<div><SettingsApplicationsOutlined />{`[${app.code}] ${app.name}`}</div>} nodeId={app.code ?? "NULL"} key={app.code}>
-                        {Object.values(app.interfaces).map((it, i) => <TreeItem label={<div><ApiOutlined /> {it.name}</div>} key={i} nodeId={`${app.code}-${i}`}>
-                            {Object.values(it.methods).map((m, j) => <TreeItem label={<div><Code />{m.name}</div>} nodeId={`${app.code}-${i}-${m.name}`} key={`${app.code}-${i}-${m.name}`} />)}
+                    {objects.filter(a => !SKIP_OBJECT_TYPE[a.type]).map(app =>
+                        <TreeItem sx={{ fontWeight: "bolder" }} label={<div><SettingsApplicationsOutlined />{`[${app.code}] ${app.name}`}</div>} nodeId={"id" + app.code ?? "NULL"} key={app.code}>
+                            {Object.values(app.interfaces).map((it, i) =>
+                                <TreeItem label={<div><ApiOutlined /> {it.name}</div>} key={`-${i}`} nodeId={`#${app.code}-${i}`}>
+                                    {Object.values(it.methods).map((m, j) =>
+                                        <TreeItem label={<div><Code />{m.name}</div>} nodeId={`${app.code}-${i}-${m.name}`} key={`${app.code}-${i}-${m.name}`} />)}
+                                </TreeItem>)}
                         </TreeItem>)}
-                    </TreeItem>)}
                 </TreeItem>
             </TreeView>
         </AccordionDetails>

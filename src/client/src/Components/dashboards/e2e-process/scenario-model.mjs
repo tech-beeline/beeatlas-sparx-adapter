@@ -60,7 +60,7 @@ class Interaction {
         this.order = obj.order;
     }
     get notDefinedIACount() {
-        return this.messages.filter(m => !m.ia).length
+        return this.messages.filter(m => !(m.ia && m.ia.content)).length
     }
     get totalRPS() {
         const rps = this.messages.filter(r => !isNaN(r.rps));
@@ -174,17 +174,19 @@ export class Scenario {
                 m.latency = tryParseFloat(m.latency);
                 if (m.latency && !isNaN(m.latency)) m.latency *= 1000;
                 m.errorRate = tryParseFloat(m.error_rate)
-                m.stackTrace = context ? [...context.stackTrace ?? [], `* ${m.seqno} [${m.server_code ?? ""}]${m.server_name} [${m.name}]`] : context?.stackTrace ?? [];
-                if (m.errors) this.#setInvalidChild(context, m);
-
-                if (m.ia) {
-                    console.log(m.ia);
-                }
+                m.stackTrace = context ? [...context.stackTrace ?? [], `${m.seqno} [${m.server_code ?? ""}]${m.server_name} [${m.name}]`] : context?.stackTrace ?? [];
 
                 const title = `${m.client_code}->${m.server_code}: ${m.name}${m.stereotype ? ` ${m.stereotype}` : ""}`
                 const interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction(Object.assign({ title: title, order: ++this.#interactionCount }, m)))
-                interaction.messages.push(m);
+                let exisiting = interaction.messages.find(i => i.ea_guid == m.ea_guid);
+                if (!exisiting) {
+                    exisiting = Object.assign({ contexts: [] }, m)
+                    interaction.messages.push(exisiting);
+                }
+                exisiting.contexts.push(m.stackTrace);
             }
+            if (m.errors) this.#setInvalidChild(context, m);
+
             if (m.children) {
                 this.#buildInteractions(m.children, m);
             }

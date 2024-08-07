@@ -74,12 +74,12 @@ select e2e_pkg.*, sd.name as diagram, sd.ea_guid from e2e_pkg
 	join t_diagram sd on sd.package_id=e2e_pkg.package_id and sd.stereotype='e2e_diagram'`
 
 
-const E2E_PROCESS_BI_QUERY = `select distinct  odd.diagram_id, ref.pdata1::integer, d.ea_guid, d.name as bi_name, m.seqno
-from t_object ref
-	join t_diagramobjects odd on odd.object_id = ref.object_id and odd.diagram_id <> ref.pdata1::integer
-	join t_diagram d on d.diagram_id=ref.pdata1::integer
-	join t_diagram p on p.diagram_id=odd.diagram_id
-	left join t_object mep  on ref.object_id=mep.parentid and mep.object_type='MessageEndpoint' 
+const E2E_PROCESS_BI_QUERY = `select distinct ref.object_type,ref.name,  odd.diagram_id, ref.pdata1::integer, d.ea_guid, d.name as bi_name, m.seqno
+from t_diagram p
+	join t_diagramobjects odd on odd.diagram_id=p.diagram_id 
+	join t_object ref on ref.object_id=odd.object_id and ref.object_type='InteractionOccurrence'
+	join t_diagram d on d.diagram_id::text=ref.pdata1
+	left join t_object mep on mep.parentid=ref.object_id and mep.object_type='MessageEndpoint'
 	left join t_connector m on m.end_object_id=mep.object_id and m.diagramid=p.diagram_id`;
 
 
