@@ -397,8 +397,6 @@ class MonitoringService {
 
         await this.#prepareGrafanaFolder();
 
-        NotImplemented();
-
         return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, body);
     }
     async publishSystemDashboard(cmdb) {
