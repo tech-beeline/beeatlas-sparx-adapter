@@ -17,6 +17,7 @@ import createInteractionPanels from "./monitoring-templates/panels/interaction-t
 import { selectGrafanaSources } from "./sql/monitoring-source.mjs";
 import { DEFAULT_OPENSEARCH_API_SOURCE, MAPIC_DEFAULT_API_SOURCE } from "./monitoring-templates/panels/source-options/opensearch.mjs";
 import { getJSON, postJSON } from "../utils/http-request-promise.mjs";
+import callTreePanel from "./monitoring-templates/panels/call-tree.mjs";
 
 const GRAFANA_URL = process.env.GRAFANA_URL ?? "https://inside-dev.beeline.ru"
 const GRAFANA_TOKEN = process.env.GRAFANA_TOKEN;
@@ -323,13 +324,13 @@ class MonitoringService {
         for (let m of messages) {
             if (m.client_code && m.server_code) {
                 const title = `${m.client_code} - ${m.server_code}${m.stereotype ? ` ${m.stereotype}` : ""}: ${m.name}`
-                let interaction = map[title];
-                if (!interaction) {
+                m.interaction = map[title];
+                if (!m.interaction) {
                     const [method, path] = m.name.split(' ').filter(it => it.length);
                     m.rps = Number(m.rps?.replace(',', '.'));
                     m.latency = Number(m.latency?.replace(',', '.'));
                     m.error_rate = Number(m.error_rate?.replace(',', '.'));
-                    interaction = map[title] =
+                    m.interaction = map[title] =
                     {
                         title: title, message: m.message, index: map.count++, count: 0, method: method, uri: path,
                         grafanaSource: m.stereotype === "via MAPIC" ? MAPIC_DEFAULT_API_SOURCE : grafana_sources[m.server_code] ?? DEFAULT_OPENSEARCH_API_SOURCE,
@@ -339,9 +340,9 @@ class MonitoringService {
                             errorRate: Number.isNaN(m.error_rate) ? 0.1 : m.error_rate
                         }
                     }
-                    ret.push(interaction);
+                    ret.push(m.interaction);
                 }
-                interaction.count++;
+                m.interaction.count++;
             }
             if (m.children) ret.push(...await this.getInteractions(m.children, map, grafana_sources));
         }
@@ -349,15 +350,15 @@ class MonitoringService {
     }
 
     async getScenarioJSON(code) {
-        const process = await Repository.first(t_diagram, { ea_guid: code });
-        if (!process) throw NotFound(`Процесс с GUID=${code} не найден`);
 
-        //const process_messages = await E2EProcessService.getProcessScenario(code, { isBIScenario: true });
         const scenario = await E2EProcessService.getBIScenario(code);
-        console.log(scenario)
         let interactions = await this.getInteractions(scenario.callTrace);
 
-        let panels = [LEGEND_PANEL, SYSTEMS_HEALTH_HEADER_PANEL, API_STATE_HEADER_PANEL,
+
+
+        let panels = [LEGEND_PANEL, SYSTEMS_HEALTH_HEADER_PANEL, 
+            callTreePanel( scenario.callTrace),
+            API_STATE_HEADER_PANEL,
             ...interactions.map(it => createInteractionStatPanel(it)),
             ...interactions.reduce((r, v) => [...r, ...createInteractionPanels(v)], [])
         ];
@@ -382,15 +383,18 @@ class MonitoringService {
      * @returns 
      */
     async publishBIDashboard(code) {
-        let scenarioJSON = await this.getScenarioJSON(code)
 
+        const process = await Repository.first(t_diagram, { ea_guid: code });
+        if (!process) throw NotFound(`Процесс с GUID=${code} не найден`);
+
+        let scenarioJSON = await this.getScenarioJSON(code)
 
         let body = {
             folderUid: DEFAULT_FOLDER_UID,
             overwrite: true,
             dashboard: {
                 uid: code.replaceAll(/\{|\}/g, ''),
-                title: `Дашборд для шага ${code}`,
+                title: `Дашборд для шага ${process.name}`,
                 panels: scenarioJSON
             }
         };
