@@ -1,9 +1,10 @@
+import { ERROR_INFO, OPERATION_GUID_NOT_FOUND } from "../client/src/Components/message-validate-errors.mjs";
 import { NotImplemented } from "../utils/errors.mjs";
 
 
-export function onError(msg, errorMessage) {
-    console.warn(errorMessage);
-    msg.errors ?? (msg.errors = []).push(errorMessage)
+export function onError(msg, type) {
+    console.warn(type);
+    msg.errors ?? (msg.errors = []).push(type)
 }
 
 export class CallMessage {
@@ -103,14 +104,13 @@ export default class CallTreeBuilder {
                 // Ввызов при котором на дочерней диаграмме первый вызов того же обьекта, что и последний на родительской
                 let child_of_child = method.child.reduce((res, v) => [...res, ...v.child], [])
                 return child_of_child.reduce((ret, v) => [...ret, ...this.build(v, op_guid)], []);
-                NotImplemented();
             }
             NotImplemented();
         }
         if (client?.code != server?.code) {
             const tmp = child.reduce((ret, v) => [...ret, ...this.build(v, operation_guid ?? lastOperationGuid)], []);
             if (!operation_guid) {
-                onError(message, `У взаимодействия не указан метод из интерфейса`);
+                onError(message, OPERATION_GUID_NOT_FOUND);
             }
             return [new CallMessage(Object.assign({}, message, { children: tmp }))]
         }

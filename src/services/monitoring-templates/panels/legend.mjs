@@ -1,5 +1,5 @@
-const LEGEND_PANEL = {
-    "id": 1,
+const LEGEND_PANEL = (seq)=>({
+    "id": seq.next(),
     "gridPos": {
       "h": 2,
       "w": 24,
@@ -110,6 +110,6 @@ const LEGEND_PANEL = {
         "scenarioId": "csv_content"
       }
     ]
-  }
+  })
 
   export default LEGEND_PANEL;

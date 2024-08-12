@@ -1,4 +1,4 @@
-function row(title, index, panels) {
+function row(id, title, index, panels) {
   return {
     "collapsed": true,
     "gridPos": {
@@ -7,8 +7,8 @@ function row(title, index, panels) {
       "x": 0,
       "y": 25 + index * 15
     },
-    "id": 10000 + (index + 1) * 10,
-    "panels": panels??[],
+    id: id,
+    "panels": panels ?? [],
     "title": `${title}`,
     "type": "row"
   }
@@ -152,43 +152,46 @@ function consumerSummary({ index }, y) {
   }
 }
 
-function consumerSuccess(interaction, y) {
+function consumerSuccess(seq, interaction, y = 26) {
   return {
-    "datasource": {
-      "type": "datasource",
-      "uid": "-- Dashboard --"
+    id: seq.next(),
+    "gridPos": { h: 4, w: 4, x: 2, y: y + interaction.index * 15 },
+
+    datasource: {
+      type: "datasource",
+      uid: "-- Dashboard --"
     },
-    "description": "",
-    "fieldConfig": {
-      "defaults": {
-        "color": {
+    description: "",
+    fieldConfig: {
+      defaults: {
+        color: {
           "mode": "thresholds"
         },
-        "displayName": "Успешных по времени",
-        "mappings": [
+        displayName: "Успешных по времени",
+        mappings: [
           {
-            "options": {
-              "from": 95,
-              "result": {
-                "color": "green",
-                "index": 0,
-                "text": ">95%"
+            options: {
+              from: 95,
+              result: {
+                color: "green",
+                index: 0,
+                text: ">95%"
               },
-              "to": 100
+              to: 100
             },
-            "type": "range"
+            type: "range"
           },
           {
-            "options": {
-              "from": 75,
-              "result": {
-                "color": "orange",
-                "index": 1,
-                "text": "75-95%"
+            options: {
+              from: 75,
+              result: {
+                color: "orange",
+                index: 1,
+                text: "75-95%"
               },
-              "to": 95
+              to: 95
             },
-            "type": "range"
+            type: "range"
           },
           {
             "options": {
@@ -218,13 +221,7 @@ function consumerSuccess(interaction, y) {
       },
       "overrides": []
     },
-    "gridPos": {
-      "h": 4,
-      "w": 4,
-      "x": 2,
-      "y": y ?? (26 + interaction.index * 15)
-    },
-    "id": 10012 + interaction.index * 10,
+
     "links": [],
     "options": {
       "colorMode": "background",
@@ -241,18 +238,17 @@ function consumerSuccess(interaction, y) {
       "text": {},
       "textMode": "value_and_name"
     },
-    "pluginVersion": "8.5.10",
-    "targets": [
+    targets: [
       {
-        "datasource": {
-          "type": "datasource",
-          "uid": "-- Dashboard --"
+        datasource: {
+          type: "datasource",
+          uid: "-- Dashboard --"
         },
-        "panelId": 2001 + interaction.index,
-        "refId": "A"
+        panelId: interaction.statPanel.id,
+        refId: "A"
       }
     ],
-    "transformations": [
+    transformations: [
       {
         "id": "filterByRefId",
         "options": {
@@ -260,15 +256,17 @@ function consumerSuccess(interaction, y) {
         }
       }
     ],
-    "type": "stat"
+    type: "stat"
   }
 }
 
-function consumerLatency(interaction) {
+function consumerLatency(seq, interaction, y = 26) {
   return {
-    "datasource": {
-      "type": "datasource",
-      "uid": "-- Dashboard --"
+    id: seq.next(),
+    gridPos: { h: 4, w: 18, x: 6, y: y + interaction.index * 15 },
+    datasource: {
+      type: "datasource",
+      uid: "-- Dashboard --"
     },
     "fieldConfig": {
       "defaults": {
@@ -325,13 +323,7 @@ function consumerLatency(interaction) {
       },
       "overrides": []
     },
-    "gridPos": {
-      "h": 4,
-      "w": 18,
-      "x": 6,
-      "y": 26 + interaction.index * 15
-    },
-    "id": 10013 + interaction.index * 10,
+
     "options": {
       "legend": {
         "calcs": [
@@ -346,14 +338,14 @@ function consumerLatency(interaction) {
       }
     },
     "pluginVersion": "8.5.10",
-    "targets": [
+    targets: [
       {
-        "datasource": {
-          "type": "datasource",
-          "uid": "-- Dashboard --"
+        datasource: {
+          type: "datasource",
+          uid: "-- Dashboard --"
         },
-        "panelId": 2001 + interaction.index,
-        "refId": "A"
+        panelId: interaction.statPanel.id,
+        refId: "A"
       }
     ],
     "transformations": [
@@ -392,11 +384,13 @@ function consumerLatency(interaction) {
   }
 }
 
-function errorRate(interaction) {
+function errorRate(seq, interaction, y = 26) {
   return {
-    "datasource": {
-      "type": "datasource",
-      "uid": "-- Dashboard --"
+    gridPos: { h: 2, w: 4, "x": 2, "y": y + 4 + interaction.index * 15 },
+    id: seq.next(),
+    datasource: {
+      type: "datasource",
+      uid: "-- Dashboard --"
     },
     "fieldConfig": {
       "defaults": {
@@ -428,13 +422,6 @@ function errorRate(interaction) {
       },
       "overrides": []
     },
-    "gridPos": {
-      "h": 2,
-      "w": 4,
-      "x": 2,
-      "y": 30 + interaction.index * 15
-    },
-    "id": 10015 + interaction.index * 10,
     "options": {
       "colorMode": "background",
       "graphMode": "none",
@@ -451,14 +438,14 @@ function errorRate(interaction) {
       "textMode": "auto"
     },
     "pluginVersion": "8.5.10",
-    "targets": [
+    targets: [
       {
-        "datasource": {
-          "type": "datasource",
-          "uid": "-- Dashboard --"
+        datasource: {
+          type: "datasource",
+          uid: "-- Dashboard --"
         },
-        "panelId": 2001 + interaction.index,
-        "refId": "A"
+        panelId: interaction.statPanel.id,
+        refId: "A"
       }
     ],
     "transformations": [
@@ -486,12 +473,24 @@ function errorRate(interaction) {
 }
 
 
-function errorTimeline(interaction) {
+function errorTimeline(seq, interaction, y) {
   return {
-    "datasource": {
+    gridPos: { h: 2, w: 18, x: 6, y: y + 4 + interaction.index * 15 },
+    id: seq.next(),
+    datasource: {
       "type": "datasource",
       "uid": "-- Dashboard --"
     },
+    targets: [
+      {
+        "datasource": {
+          "type": "datasource",
+          "uid": "-- Dashboard --"
+        },
+        panelId: interaction.statPanel.id,
+        refId: "A"
+      }
+    ],
     "fieldConfig": {
       "defaults": {
         "color": {
@@ -518,13 +517,7 @@ function errorTimeline(interaction) {
       },
       "overrides": []
     },
-    "gridPos": {
-      "h": 2,
-      "w": 18,
-      "x": 6,
-      "y": 30 + interaction.index * 15
-    },
-    "id": 10016 + interaction.index * 10,
+
     "links": [],
     "maxDataPoints": 100,
     "options": {
@@ -541,17 +534,6 @@ function errorTimeline(interaction) {
         "sort": "none"
       }
     },
-    "pluginVersion": "8.5.10",
-    "targets": [
-      {
-        "datasource": {
-          "type": "datasource",
-          "uid": "-- Dashboard --"
-        },
-        "panelId": 2001 + interaction.index,
-        "refId": "A"
-      }
-    ],
     "transformations": [
       {
         "id": "filterByRefId",
@@ -717,12 +699,24 @@ function providerHealth(interaction) {
   }
 }
 
-function traffic(interaction) {
+function traffic(seq, interaction, y) {
   return {
-    "datasource": {
-      "type": "datasource",
-      "uid": "-- Dashboard --"
+    "gridPos": { h: 4, w: 4, x: 2, y: y + 6 + interaction.index * 15 },
+    id: seq.next(),
+    datasource: {
+      type: "datasource",
+      uid: "-- Dashboard --"
     },
+    targets: [
+      {
+        datasource: {
+          type: "datasource",
+          uid: "-- Dashboard --"
+        },
+        panelId: interaction.statPanel.id,
+        "refId": "A"
+      }
+    ],
     "description": "",
     "fieldConfig": {
       "defaults": {
@@ -753,13 +747,7 @@ function traffic(interaction) {
       },
       "overrides": []
     },
-    "gridPos": {
-      "h": 4,
-      "w": 4,
-      "x": 2,
-      "y": 32 + interaction.index * 15
-    },
-    "id": 10017 + interaction.index * 10,
+
     "links": [],
     "options": {
       "colorMode": "background",
@@ -776,17 +764,6 @@ function traffic(interaction) {
       "text": {},
       "textMode": "value_and_name"
     },
-    "pluginVersion": "8.5.10",
-    "targets": [
-      {
-        "datasource": {
-          "type": "datasource",
-          "uid": "-- Dashboard --"
-        },
-        "panelId": 2001 + interaction.index,
-        "refId": "A"
-      }
-    ],
     "transformations": [
       {
         "id": "filterByRefId",
@@ -811,14 +788,26 @@ function traffic(interaction) {
   }
 }
 
-function trafficTimeline(interaction) {
+function trafficTimeline(seq, interaction, y) {
   return {
-    "datasource": {
-      "type": "datasource",
-      "uid": "-- Dashboard --"
+    gridPos: { h: 4, w: 18, x: 6, y: y + 6 + interaction.index * 15 },
+    id: seq.next(),
+    datasource: {
+      type: "datasource",
+      uid: "-- Dashboard --"
     },
-    "fieldConfig": {
-      "defaults": {
+    targets: [
+      {
+        datasource: {
+          type: "datasource",
+          uid: "-- Dashboard --"
+        },
+        panelId: interaction.statPanel.id,
+        refId: "A"
+      }
+    ],
+    fieldConfig: {
+      defaults: {
         "color": {
           "mode": "palette-classic"
         },
@@ -864,13 +853,6 @@ function trafficTimeline(interaction) {
       },
       "overrides": []
     },
-    "gridPos": {
-      "h": 4,
-      "w": 18,
-      "x": 6,
-      "y": 32 + interaction.index * 15
-    },
-    "id": 10018 + interaction.index * 10,
     "options": {
       "legend": {
         "calcs": [
@@ -884,16 +866,6 @@ function trafficTimeline(interaction) {
         "sort": "none"
       }
     },
-    "targets": [
-      {
-        "datasource": {
-          "type": "datasource",
-          "uid": "-- Dashboard --"
-        },
-        "panelId": 2001 + interaction.index,
-        "refId": "A"
-      }
-    ],
     "transformations": [
       {
         "id": "filterByRefId",
@@ -918,24 +890,18 @@ function trafficTimeline(interaction) {
   }
 }
 
-function description(interaction) {
+function description(seq, interaction, y) {
   return {
     "datasource": {
       "type": "datasource",
       "uid": "grafana"
     },
-    "gridPos": {
-      "h": 4,
-      "w": 24,
-      "x": 0,
-      "y": 36 + interaction.index * 15
-    },
-    "id": 10019 + interaction.index * 10,
+    gridPos: { h: 4, w: 24, x: 0, y: y + 10 + interaction.index * 15 },
+    id: seq.next(),
     "options": {
       "content": "Описание",
       "mode": "markdown"
     },
-    "pluginVersion": "8.5.10",
     "type": "text"
   };
 }
@@ -944,11 +910,19 @@ function description(interaction) {
  * @param {{ title: string, message: string, index:number, count: 0, method: string, path:string }} interaction 
  * @returns 
  */
-export default function createInteractionPanels(interaction) {
+export default function createInteractionPanels(seq, interaction, y = 0) {
+  const rowId = seq.next();
   return [
-    row(`${interaction.index + 1}. ${interaction.title}`, interaction.index,
+    row(rowId, `${interaction.index + 1}. ${interaction.title}`, y + interaction.index,
       [
-        consumerSuccess(interaction), consumerLatency(interaction), errorRate(interaction), errorTimeline(interaction),
-        traffic(interaction), trafficTimeline(interaction), description(interaction)]),
+        consumerSuccess(seq, interaction, y), consumerLatency(seq, interaction, y),
+        errorRate(seq, interaction, y), errorTimeline(seq, interaction, y),
+        traffic(seq, interaction, y), trafficTimeline(seq, interaction, y), description(seq, interaction, y)
+        /*
+        errorRate(interaction), errorTimeline(interaction),
+        traffic(interaction), trafficTimeline(interaction), description(interaction)
+        */
+      ]),
+
   ];
 }

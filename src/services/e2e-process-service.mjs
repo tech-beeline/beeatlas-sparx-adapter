@@ -1,5 +1,6 @@
 import { Application, ApplicationRef } from '../model/application-catalog.mjs';
 import { BusinessInteraction } from '../model/e2e-process.mjs';
+import t_connector from '../utils/ea-model/t_connector.mjs';
 import t_diagram from '../utils/ea-model/t_diagram.mjs';
 import t_object from '../utils/ea-model/t_object.mjs';
 import Repository from '../utils/ea-repo.mjs'
@@ -330,7 +331,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             }
             m.client = useSystem(m.client_id);
             if (m.ia_path) {
-                if( m.ia_path.endsWith('?ref_type=heads')) m.ia_path=m.ia_path.slice(0,-15)
+                if (m.ia_path.endsWith('?ref_type=heads')) m.ia_path = m.ia_path.slice(0, -15)
                 m.ia = {
                     path: m.ia_path,
                     content: await IARepository.Instance.byPath(decodeURIComponent(m.ia_path))
@@ -372,7 +373,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
 
         let applications = {}
         for (const o of Object.values(usedSystems)) {
-            if( !o) continue;
+            if (!o) continue;
             const code = o.code ?? o.object_id
             const app = applications[code] ?? (applications[code] = { code: code, name: o.name, interfaces: {}, type: o.object_type });
             Object.assign(app.interfaces, o.interfaces)
@@ -387,6 +388,28 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
     async getProcessSystems() {
         let processes = await this.getE2EProcesses();
         console.log(processes)
+    }
+    async getMessageDetails(uid) {
+        const [message, server_methods] = await Promise.all([
+            Repository.first(t_connector, { ea_guid: uid }),
+            Repository.queryRows(`with recursive cls as(
+                select object_id, classifier
+                from t_object where classifier <>0 
+                union distinct 
+                select distinct start_object_id, end_object_id
+                from t_connector where connector_type in ('Realisation', 'Generalization')
+            ), cte_cls as (
+                select object_id, object_id as cls_id
+                from t_object where object_id = (select end_object_id from t_connector where ea_guid=$1 )
+                union distinct 
+                    select c.object_id, cls.classifier 
+                from cte_cls c	join cls on cls.object_id= c.cls_id
+            )
+            select op.name, op.ea_guid as operation_guid
+            from cte_cls 
+            join t_operation op on op.object_id=cte_cls.cls_id`, [uid])
+        ]);
+        return {message: message, server_methods: server_methods}
     }
 }
 export default new E2EProcessService();

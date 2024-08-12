@@ -61,6 +61,13 @@ class E2EProcessController {
             processError(error, response);
         }
     }
+    async getMessageDetails(request, response) {
+        try {
+            response.json(await e2eProcessSerivce.getMessageDetails(request.params.uid))
+        } catch (error) {
+            processError(error, response)
+        }
+    }
 }
 
 export default new E2EProcessController();

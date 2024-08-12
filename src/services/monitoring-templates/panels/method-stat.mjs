@@ -16,9 +16,9 @@ import { PrometheusApiSource } from "./source-options/prometheus.mjs";
  */
 export function createGrafanaSource(src) {
     if (OpensearchApiSource.isOpenSearchSource(src)) {
-        return new OpensearchApiSource( src );
+        return new OpensearchApiSource(src);
     }
-    if( PrometheusApiSource.IsPrometheusSource(src)){
+    if (PrometheusApiSource.IsPrometheusSource(src)) {
         return new PrometheusApiSource(src);
     }
 
@@ -38,76 +38,67 @@ function expr(exp, ref, type = "math") {
     }
 }
 
-export default function createInteractionStatPanel({ index, uri, method, host, client, server, sla, grafanaSource }, { idStart, yStart } = {}) {
-    idStart = idStart ?? 2000;
-    yStart = yStart ?? 14;
-    return {
-        "id": 2001 + index,
-        "gridPos": {
-            "h": 2,
-            "w": 1,
-            "x": index % 24,
-            "y": 13 + Math.floor(index / 23)
-        },
-        "type": "stat",
-        "title": `${index + 1}`,
+export default function createInteractionStatPanel(interfaction, seq, yPos = 13) {
+    const { index, uri, method, host, client, server, sla, grafanaSource } = interfaction;
+
+    return interfaction.statPanel = {
+        id: seq.next(),
+        gridPos: { h: 2, w: 1, x: index % 24, y: yPos + Math.floor(index / 23) },
+        type: "stat",
+        title: `${index + 1}`,
         transformations: [
             {
-                "id": "filterByRefId",
-                "options": {
-                    "include": "LatencyState|ErrorState|State"
+                id: "filterByRefId",
+                options: {
+                    include: "LatencyState|ErrorState|State"
                 }
             },
             {
-                "id": "reduce",
-                "options": {
-                    "includeTimeField": false,
-                    "mode": "reduceFields",
-                    "reducers": [
-                        "lastNotNull"
-                    ]
+                id: "reduce",
+                options: {
+                    includeTimeField: false,
+                    mode: "reduceFields",
+                    reducers: ["lastNotNull"]
                 }
             },
             {
-                "id": "concatenate",
-                "options": {}
+                id: "concatenate", options: {}
             },
             {
-                "id": "calculateField",
-                "options": {
-                    "mode": "reduceRow",
-                    "reduce": {
-                        "include": [],
-                        "reducer": "max"
+                id: "calculateField",
+                options: {
+                    mode: "reduceRow",
+                    reduce: {
+                        include: [],
+                        reducer: "max"
                     },
-                    "replaceFields": true
+                    replaceFields: true
                 }
             }
         ],
         datasource: grafanaSource.datasource,
-        "pluginVersion": "8.5.10",
-        "fieldConfig": {
-            "defaults": {
-                "mappings": [
+        fieldConfig: {
+            defaults: {
+                mappings: [
                     {
-                        "options": {
+                        options: {
                             "0": {
-                                "color": "green",
-                                "index": 0,
-                                "text": "OK"
+                                color: "green",
+                                index: 0,
+                                text: "OK"
                             },
                             "1": {
-                                "color": "red",
-                                "index": 1,
-                                "text": "CRIT"
+                                color: "red",
+                                index: 1,
+                                text: "CRIT"
                             },
                             "-1": {
-                                "color": "#c9c9c9",
-                                "index": 4,
-                                "text": "TBD"
+                                color: "#c9c9c9",
+                                index: 4,
+                                text: "TBD"
                             }
                         },
-                        "type": "value"
+                        type: "value"
                     },
                     {
                         "options": {
@@ -156,34 +147,32 @@ export default function createInteractionStatPanel({ index, uri, method, host, c
             },
             "overrides": []
         },
-        "options": {
-            "reduceOptions": {
-                "values": false,
-                "calcs": [
-                    "lastNotNull"
-                ],
-                "fields": "",
-                "limit": 3
+        options: {
+            reduceOptions: {
+                values: false,
+                calcs: ["lastNotNull"],
+                fields: "",
+                limit: 3
             },
-            "orientation": "auto",
-            "textMode": "value",
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "text": {}
+            orientation: "auto",
+            textMode: "value",
+            colorMode: "background",
+            graphMode: "none",
+            justifyMode: "auto",
+            text: {}
         },
-        "targets": [
+        targets: [
             grafanaSource.percentileTarget(method, uri, 75),
             grafanaSource.percentileTarget(method, uri, 95),
             grafanaSource.totalCountTarget(method, uri),
             grafanaSource.errorCountTarget(method, uri),
             expr("$A75 * 1", "Latency75"), expr("$A95 * 1", "Latency95"),
-            expr(sla.latency * 1000 + '/1000', "LatencyThreshold1"), expr( sla.errorRate.toString(), "ErrorThreshold1"), expr(sla.rps.toString(), "TPSThreshold1"),
+            expr(sla.latency * 1000 + '/1000', "LatencyThreshold1"), expr(sla.errorRate.toString(), "ErrorThreshold1"), expr(sla.rps.toString(), "TPSThreshold1"),
             expr("$C/$B * 100", "Error"), expr("$B / (60 * 5)", "TPS"),
             expr("(${Latency75} > ${LatencyThreshold1}) / 2 + (${Latency95} > ${LatencyThreshold1}) / 2", "LatencyState"),
             expr("($Error > 0) / 2 +\n($Error > $ErrorThreshold1) / 2", "ErrorState"),
             expr("($Latency95 < ${LatencyThreshold1}) * 95 + ($Latency75 < ${LatencyThreshold1}) * ($Latency95 > ${LatencyThreshold1}) * 75", "LatencyPercent")
         ],
-        "description": ""
+        description: ""
     }
 }

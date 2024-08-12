@@ -30,6 +30,7 @@ export function CreateDashboardDialog({ open, setOpen, scenario }) {
                 return;
             }
             setCreationInProcess(false); 
+            handleClose();
         } catch (err) {
             setAlertMessage(`Ошибка при создании дашборда: ${err.message}`)
         }

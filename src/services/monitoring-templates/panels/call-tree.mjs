@@ -1,6 +1,52 @@
+const DEFAULT_FIELD_CONFIG_MAPPINGS = [
+    {
+        options: {
+            "0": {
+                "color": "green",
+                "index": 0,
+                "text": "OK"
+            },
+            "1": {
+                "color": "red",
+                "index": 1,
+                "text": "CRITICAL"
+            },
+            "-1": {
+                "color": "#c9c9c9",
+                "index": 4,
+                "text": "TBD"
+            }
+        },
+        type: "value"
+    },
+    {
+        options: {
+            from: 0,
+            result: {
+                "color": "orange",
+                "index": 2,
+                "text": "WARNING"
+            },
+            to: 1
+        },
+        type: "range"
+    },
+    {
+        options: {
+            match: "null",
+            result: {
+                color: "yellow",
+                index: 3,
+                text: "NO DATA"
+            }
+        },
+        type: "special"
+    }
+]
+
 
 function latancyBarguage(id, y, targetPanelId) {
-    const ret = {
+    return {
         id: id,
         gridPos: {
             h: 1,
@@ -94,14 +140,15 @@ function latancyBarguage(id, y, targetPanelId) {
 }
 
 
-function callPanel(displayName, x, y, id, targetPanelId) {
-    const ret = {
+function callPanel(seq, displayName, x, y, statPanelId) {
+    return {
+        id: seq.next(),
+        gridPos: { h: 1, w: 19 - x, x: x, y: y },
         datasource: {
-            "type": "datasource",
-            "uid": "-- Dashboard --"
+            type: "datasource",
+            uid: "-- Dashboard --"
         },
         depth: 1,
-        description: "",
         fieldConfig: {
             defaults: {
                 color: {
@@ -109,51 +156,7 @@ function callPanel(displayName, x, y, id, targetPanelId) {
                     mode: "continuous-GrYlRd"
                 },
                 displayName: displayName,
-                mappings: [
-                    {
-                        options: {
-                            "0": {
-                                "color": "green",
-                                "index": 0,
-                                "text": "OK"
-                            },
-                            "1": {
-                                "color": "red",
-                                "index": 1,
-                                "text": "CRITICAL"
-                            },
-                            "-1": {
-                                "color": "#c9c9c9",
-                                "index": 4,
-                                "text": "TBD"
-                            }
-                        },
-                        type: "value"
-                    },
-                    {
-                        options: {
-                            from: 0,
-                            result: {
-                                "color": "orange",
-                                "index": 2,
-                                "text": "WARNING"
-                            },
-                            to: 1
-                        },
-                        type: "range"
-                    },
-                    {
-                        options: {
-                            match: "null",
-                            result: {
-                                color: "yellow",
-                                index: 3,
-                                text: "NO DATA"
-                            }
-                        },
-                        type: "special"
-                    }
-                ],
+                mappings: DEFAULT_FIELD_CONFIG_MAPPINGS,
                 max: 1,
                 min: 0,
                 thresholds: {
@@ -172,13 +175,6 @@ function callPanel(displayName, x, y, id, targetPanelId) {
             },
             overrides: []
         },
-        gridPos: {
-            h: 1,
-            w: 19,
-            x: x,
-            y: y
-        },
-        id: id,
         options: {
             colorMode: "value",
             graphMode: "none",
@@ -196,16 +192,15 @@ function callPanel(displayName, x, y, id, targetPanelId) {
                 titleSize: 14,
                 valueSize: 18
             },
-            "textMode": "value_and_name"
+            textMode: "value_and_name"
         },
-        pluginVersion: "8.5.10",
         targets: [
             {
                 datasource: {
                     "type": "datasource",
                     "uid": "-- Dashboard --"
                 },
-                panelId: targetPanelId,
+                panelId: statPanelId,
                 refId: "A"
             }
         ],
@@ -252,16 +247,17 @@ function callPanel(displayName, x, y, id, targetPanelId) {
     }
 }
 
-export default function callTreePanel(callTree, y = 14) {
+export default function callTreePanel(seq, callTree, y = 14) {
 
     const call_panels = [];
 
     let order = 1;
+    const headerId = seq.next();
 
     function buildCallPanels(messages, depth = 0) {
         for (const m of messages) {
             if (m.interaction) {
-                call_panels.push(callPanel(`${order}.${m.client_code ?? m.client_name}->${m.server_code ?? m.server_name} ${m.name}`, depth, 14 + order, 3000 + order++, 2000 + m.interaction.index))
+                call_panels.push(callPanel(seq, `${order}.${m.client_code ?? m.client_name}->${m.server_code ?? m.server_name} ${m.name}`, depth, y + order++, m.interaction.statPanel.id))
             }
 
             if (m.children?.length) {
@@ -271,16 +267,12 @@ export default function callTreePanel(callTree, y = 14) {
     }
 
     buildCallPanels(callTree.length > 1 ? callTree : callTree[0].children)
+
     return {
-        "collapsed": true,
-        "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": y
-        },
-        id: 4,
-        panels: [call_panels],
+        collapsed: true,
+        gridPos: { h: 1, w: 24, x: 0, y: y },
+        id: headerId,
+        panels: call_panels,
         title: "Sequence состояний интерфейсных соглашений",
         type: "row"
     }

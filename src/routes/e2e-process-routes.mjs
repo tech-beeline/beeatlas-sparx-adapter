@@ -53,6 +53,37 @@ const E2EProcessRoutes = {
                 }
             }
         },
+        "/api/v3/e2e/messages/{uid}": {
+            get: {
+                operation: e2eProcessController.getMessageDetails,
+                summary: "Получение списка сквозных Е2Е процессов",
+                parameters: [
+                    {
+                        name: "uid",
+                        in: "path",
+                        description: "Идентификатор сообщения",
+                        required: true,
+                        examples: {
+                            "PBE.ATTRACTION->ORDER MANAGEMENT PUT /basket": {
+                                value: "{D532DC8D-09F7-42aa-8B18-B3F3B71E285C}"
+                            }
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "OK",
+                        content: {
+                            "application/json": {
+                                examples: {
+                                    "OK": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/e2e/bi-scenarios/{code}": {
             get: {
                 operation: e2eProcessController.getBusinessInteractionScenario,

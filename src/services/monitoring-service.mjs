@@ -349,20 +349,33 @@ class MonitoringService {
         return ret;
     }
 
-    async getScenarioJSON(code) {
+    async getScenarioJSON(code, process) {
 
         const scenario = await E2EProcessService.getBIScenario(code);
-        let interactions = await this.getInteractions(scenario.callTrace);
+        function Sequence() {
+            let id = 1;
+            this.next = () => {
+                return id++;
+            }
+            return this;
+        }
+        const panelIdSequence = new Sequence();
 
+        const interactions = await this.getInteractions(scenario.callTrace);
+        const legendPanel = LEGEND_PANEL(panelIdSequence);
+        const systemHealthHeaderPanel = SYSTEMS_HEALTH_HEADER_PANEL(panelIdSequence, process.name);
+        const apiStateHeaderPanel = API_STATE_HEADER_PANEL(panelIdSequence, process.name);
+        const interactionStatPanels = interactions.map(it => createInteractionStatPanel(it, panelIdSequence));
+        const sequenceCallTreePanel = callTreePanel(panelIdSequence, scenario.callTrace, Math.max(...interactions.map(it => it.statPanel?.gridPos.y ?? 0)) + 1);
+        const maxY = sequenceCallTreePanel.panels[sequenceCallTreePanel.panels.length - 1].gridPos.y + 1
+        const interactionDetailsPanels = interactions.reduce((r, v) => [...r, ...createInteractionPanels(panelIdSequence, v, maxY)], [])
 
-
-        let panels = [LEGEND_PANEL, SYSTEMS_HEALTH_HEADER_PANEL, 
-            callTreePanel( scenario.callTrace),
-            API_STATE_HEADER_PANEL,
-            ...interactions.map(it => createInteractionStatPanel(it)),
-            ...interactions.reduce((r, v) => [...r, ...createInteractionPanels(v)], [])
+        return [
+            legendPanel, systemHealthHeaderPanel, apiStateHeaderPanel,
+            ...interactionStatPanels,
+            sequenceCallTreePanel,
+            ...interactionDetailsPanels
         ];
-        return panels;
     }
 
     async #prepareGrafanaFolder() {
@@ -387,7 +400,7 @@ class MonitoringService {
         const process = await Repository.first(t_diagram, { ea_guid: code });
         if (!process) throw NotFound(`Процесс с GUID=${code} не найден`);
 
-        let scenarioJSON = await this.getScenarioJSON(code)
+        let scenarioJSON = await this.getScenarioJSON(code, process)
 
         let body = {
             folderUid: DEFAULT_FOLDER_UID,
