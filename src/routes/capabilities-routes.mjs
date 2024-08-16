@@ -1,6 +1,7 @@
 import capabilitiesController from "../controllers/capabilities-controller.mjs";
 import CAPABILITY_EXAMPLES from "../swagger/examples/capability-examples.mjs";
 
+
 const CAPABILITY_METHODS = {
     tag: "Управление возможностями",
     description: "Управление возможностями и доменами",

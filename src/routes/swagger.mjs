@@ -1,5 +1,5 @@
 import fs from 'fs'
-import CAPABILITY_SWAGGER from '../swagger/capability-api.mjs';
+import SWAGGER_TEMPLATE from '../swagger/swagger-template.mjs';
 import CAPABILITY_METHODS from './capabilities-routes.mjs';
 import COMPONENTS_METHODS from './components-routes.mjs';
 import TC_METHODS from './technical-capabilities-routes.mjs';
@@ -11,9 +11,10 @@ import MONITORING_ROUTES from './monitoring-routes.mjs'
 import TELEMETRY_ROUTES from './telemetry-routes.mjs'
 import DATA_MODEL_ROUTES from './data-model-routes.mjs';
 import SLA_ROUTES from './sla-routes.mjs';
+import { NotImplemented } from '../utils/errors.mjs';
 
 
-export const CONTROLLERS = [
+export const ROUTES = [
     SLA_ROUTES,
     MONITORING_ROUTES,
     COMPONENTS_METHODS,
@@ -26,6 +27,14 @@ export const CONTROLLERS = [
     IA_ROUTES,
     TELEMETRY_ROUTES
 ]
+
+export const ROUTES_MAP = {
+    "capability-service": {
+        title: CAPABILITY_METHODS.tag,
+        description: CAPABILITY_METHODS.description,
+        specification: CAPABILITY_METHODS
+    }
+}
 
 function joinSchemas(target, source) {
     for (const ref in source) {
@@ -48,6 +57,9 @@ function joinSchemas(target, source) {
 }
 
 function schemaFromObject(o) {
+    if (o instanceof Function) {
+        NotImplemented()
+    }
 
     if (Array.isArray(o)) {
         let orefs = {}
@@ -83,7 +95,7 @@ function schemaFromObject(o) {
         let properties = {};
         let orefs = {};
         for (const prop in o) {
-            if (!o[prop]) {
+            if (!o[prop] || o[prop] instanceof Function) {
                 continue;
             }
             let { schema, refs } = schemaFromObject(o[prop]);
@@ -134,14 +146,14 @@ class SwaggerDefinition {
         }
         return { examples, schemas };
     }
-    static load() {
-        let swaggerApi = CAPABILITY_SWAGGER;
+    static load(serviceDefinition = ROUTES, title, description, version) {
+        let swaggerApi = SWAGGER_TEMPLATE( title, description, version);
 
         swaggerApi.tags = swaggerApi.tags ?? []
         swaggerApi.paths = swaggerApi.paths ?? {};
         swaggerApi.components = swaggerApi.components ?? { schemas: {}, examples: {} }
 
-        for (let tag of CONTROLLERS) {
+        for (let tag of serviceDefinition) {
             swaggerApi.tags[tag.tag] = swaggerApi.tags[tag.tag] ?? { name: tag.tag, description: tag.description }
             for (const path in tag.paths) {
                 swaggerApi.paths[path] = swaggerApi.paths[path] ?? {};
@@ -159,7 +171,7 @@ class SwaggerDefinition {
 
                     for (const response in methods[method].responses) {
                         for (const content_type in methods[method].responses[response].content) {
-                            if( !methods[method].operation ){
+                            if (!methods[method].operation) {
                                 continue;
                             }
                             const { examples, schemas } = this.prepareContent(methods[method].responses[response].content, methods[method].operation.name)
@@ -167,22 +179,13 @@ class SwaggerDefinition {
                             Object.assign(swaggerApi.components.schemas, schemas);
                         }
                     }
-
-                    //swaggerApi.paths[path][method]["x-swagger-router-controller"] = controller;
                 }
             }
         }
 
         swaggerApi.tags = Object.values(swaggerApi.tags);
 
-
-
         return swaggerApi;
-        /*
-        return async (request, response) => {
-            return response.json(swaggerApi);
-        }
-        */
     }
 }
 

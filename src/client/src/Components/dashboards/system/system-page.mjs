@@ -140,7 +140,7 @@ function SystemHeader({ app }) {
                             <MenuItem onClick={() => {
                                 setCreateDashbaordDialog(true);
                                 setAnchorMenu(null)
-                            }}>Создать дашборд наблюдемости продукта</MenuItem>
+                            }}>Создать или обновить дашборд наблюдаемости продукта</MenuItem>
                         </Menu>
                         {createDashbaordDialog ? <CreateSystemDashboard system={app} setOpen={setCreateDashbaordDialog} /> : null}
                     </div>
@@ -180,6 +180,10 @@ function SystemSummary({ system }) {
                             <TableRow>
                                 <TableCell>Дата изменения</TableCell>
                                 <TableCell>{system.modifiedDate}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>Дашборд продукта</TableCell>
+                                <TableCell><a href={`https://inside-dev.beeline.ru/d/archops-sys-${system.code}`} target="_blank">https://inside-dev.beeline.ru/d/archops-sys-{system.code}</a></TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>

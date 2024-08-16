@@ -10,17 +10,14 @@
     <script src="/swagger-ui/swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
     <script src="/swagger-ui/swagger-ui-bundle.js"></script>
     <script type="module">
-        //import { SwaggerUI } from '/swagger-ui/swagger-ui-bundle.js'
-        //var EASwaggerBundle = swagger.SwaggerUIBundle;
-
+ 
         const ui = SwaggerUIBundle({
-            url: "/swagger/capabilities-api.json",
+            url: `${document.URL}/api.json`,
             dom_id: '#ea-swagger-ui',
             presets: [
                 SwaggerUIBundle.presets.apis,
                 SwaggerUIBundle.SwaggerUIStandalonePreset
-            ],
-            //layout: "StandaloneLayout"
+            ]
         })
     </script>
 </head>

@@ -311,7 +311,7 @@ export default function SystemDashboard(system) {
         folderUid: DEFAULT_FOLDER_UID,
         overwrite: true,
         dashboard: {
-            uid: `${SYSTEM_UID_PREFIX}${system.codes}`,
+            uid: `${SYSTEM_UID_PREFIX}${system.code}`,
             title: `Дашборд для ${system.name}`,
             panels: [
                 header,
