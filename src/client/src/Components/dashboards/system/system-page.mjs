@@ -1,7 +1,9 @@
-import { KeyboardArrowDown, KeyboardArrowUp, Label, Title } from "@mui/icons-material";
-import { Box, Collapse, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { KeyboardArrowDown, KeyboardArrowUp, Label, Title, Menu as MenuIcon, ExpandMore, SettingsApplications } from "@mui/icons-material";
+import { Accordion, AccordionDetails, AccordionSummary, AppBar, Box, Collapse, IconButton, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Toolbar, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom";
+import { ApplicationApi } from "./system-api.mjs";
+import CreateSystemDashboard from "./system-create-dashboard.mjs";
 
 
 function MethodRow({ method }) {
@@ -103,6 +105,90 @@ function ContainerRow({ container }) {
         </TableRow>
     </>
 }
+
+function SystemHeader({ app }) {
+    const [anchorMenu, setAnchorMenu] = useState(null)
+    const [createDashbaordDialog, setCreateDashbaordDialog] = useState(false);
+
+    return (
+        <Box sx={{ flexGrow: 1 }}>
+            <AppBar position="static">
+                <Toolbar>
+                    <div>
+                        <IconButton
+                            size="large"
+                            edge="start"
+                            color="inherit"
+                            aria-label="menu"
+                            sx={{ mr: 2 }}
+                            onClick={e => setAnchorMenu(e.currentTarget)}
+                        >
+                            <MenuIcon />
+                        </IconButton>
+                        <Menu id='menu-appbar' anchorEl={anchorMenu} open={Boolean(anchorMenu)}
+                            sx={{ mt: '45px' }}
+                            onClose={() => setAnchorMenu(null)}
+                            anchorOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}
+                            keepMounted
+                            transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}>
+                            <MenuItem onClick={() => {
+                                setCreateDashbaordDialog(true);
+                                setAnchorMenu(null)
+                            }}>Создать дашборд наблюдемости продукта</MenuItem>
+                        </Menu>
+                        {createDashbaordDialog ? <CreateSystemDashboard system={app} setOpen={setCreateDashbaordDialog} /> : null}
+                    </div>
+                    <Typography variant="h6">{app.name}</Typography>
+                </Toolbar>
+            </AppBar>
+        </Box>
+    )
+}
+
+function SystemSummary({ system }) {
+    console.log(system)
+    return (
+        <Accordion>
+            <AccordionSummary expandIcon={<ExpandMore />}><SettingsApplications />
+                <Box fontWeight='fontWeightMedium' display='inline'>Информация о продукте</Box>
+            </AccordionSummary>
+            <AccordionDetails>
+                <TableContainer component={Paper}>
+                    <Table>
+                        <colgroup>
+                            <col width="15%">
+                            </col></colgroup>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell>Название продукта</TableCell>
+                                <TableCell>{system.name}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>CMDB мнемоника</TableCell>
+                                <TableCell>{system.code}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>Статус</TableCell>
+                                <TableCell>{system.status}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>Дата изменения</TableCell>
+                                <TableCell>{system.modifiedDate}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </AccordionDetails>
+        </Accordion>
+    )
+}
+
 export default function SystemPage() {
     const [system, setSystem] = React.useState(null)
     const { code } = useParams();
@@ -114,42 +200,17 @@ export default function SystemPage() {
             return;
         }
 
-        let apps = await response.json()
-
-        setSystem(apps)
+        setSystem(await response.json())
     }
     console.log(system)
-
     useEffect(() => {
         loadData();
     }, [])
     return system ?
         system.error ? <Box>Ошибка при загрузке данных: {system.error}</Box> :
             <Box component={Paper}>
-                <Typography variant="h3" gutterBottom component={Paper}>{system.name}</Typography>
-                <Box component={Paper}>
-                    <Box>Код: {system.code}</Box>
-                    <Box>Автор: {system.author}</Box>
-                    <Box>Статус: {system.status}</Box>
-                    <Box>Дата изменения: {system.modifiedDate}</Box>
-                </Box>
-                {system.description ? <Box>Описание: {system.description}</Box> : null}
-                <Typography variant="h3">Контейнеры (Единицы развертывания)</Typography>
-                <TableContainer component={Paper}>
-                    <Table>
-                        <colgroup>
-                            <col style={{ width: "5%" }}></col>
-                        </colgroup>
-
-                        <TableHead>
-                            <TableRow key="0">
-                                <TableCell key="colapse"></TableCell><TableCell key="code">Код</TableCell><TableCell key="name">Имя</TableCell><TableCell key="version">Версия</TableCell><TableCell key="icoint">Количество интерфейсов</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {system.containers.map(c => <ContainerRow key={c.code} container={c} />)}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                <SystemHeader app={system} />
+                <SystemSummary system={system} />
+                <ApplicationApi system={system} />
             </Box> : <Box>Данные загружаются</Box>
 }

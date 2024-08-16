@@ -337,7 +337,6 @@ function consumerLatency(seq, interaction, y = 26) {
         "sort": "none"
       }
     },
-    "pluginVersion": "8.5.10",
     targets: [
       {
         datasource: {
@@ -437,7 +436,6 @@ function errorRate(seq, interaction, y = 26) {
       "text": {},
       "textMode": "auto"
     },
-    "pluginVersion": "8.5.10",
     targets: [
       {
         datasource: {

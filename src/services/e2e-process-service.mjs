@@ -388,6 +388,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
     async getProcessSystems() {
         let processes = await this.getE2EProcesses();
         console.log(processes)
+        NotImplemented();
     }
     async getMessageDetails(uid) {
         const [message, server_methods] = await Promise.all([

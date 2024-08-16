@@ -1,4 +1,5 @@
 import { NotImplemented } from "../../../utils/errors.mjs";
+import { expr } from "./primitive-panels.mjs";
 import { OpensearchApiSource } from "./source-options/opensearch.mjs";
 import { PrometheusApiSource } from "./source-options/prometheus.mjs";
 
@@ -26,17 +27,7 @@ export function createGrafanaSource(src) {
 }
 
 
-function expr(exp, ref, type = "math") {
-    return {
-        "datasource": {
-            "type": "__expr__",
-            "uid": "__expr__"
-        },
-        "expression": exp,
-        "hide": false,
-        "refId": ref, type: type
-    }
-}
+
 
 export default function createInteractionStatPanel(interfaction, seq, yPos = 13) {
     const { index, uri, method, host, client, server, sla, grafanaSource } = interfaction;

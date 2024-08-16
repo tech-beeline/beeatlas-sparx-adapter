@@ -18,6 +18,9 @@ import { selectGrafanaSources } from "./sql/monitoring-source.mjs";
 import { DEFAULT_OPENSEARCH_API_SOURCE, MAPIC_DEFAULT_API_SOURCE } from "./monitoring-templates/panels/source-options/opensearch.mjs";
 import { getJSON, postJSON } from "../utils/http-request-promise.mjs";
 import callTreePanel from "./monitoring-templates/panels/call-tree.mjs";
+import { DEFAULT_FOLDER_NAME, DEFAULT_FOLDER_UID } from "./monitoring-templates/const.mjs";
+import SystemDashboard from "./monitoring-templates/system-dashboard.mjs";
+import Sequence from "./monitoring-templates/sequence.mjs";
 
 const GRAFANA_URL = process.env.GRAFANA_URL ?? "https://inside-dev.beeline.ru"
 const GRAFANA_TOKEN = process.env.GRAFANA_TOKEN;
@@ -25,9 +28,8 @@ const FOLDER_API_PATH = "/api/folders"
 const DASHBOARD_API_PATH = "/api/dashboards/db"
 
 const GRAFANA_HTTP_OPTIONS = { headers: { 'Authorization': `Bearer ${GRAFANA_TOKEN}` }, rejectUnauthorized: false };
-const DEFAULT_FOLDER_UID = "archops";
-const DEFAULT_FOLDER_NAME = "Architecture as a Code";
-const SYSTEM_UID_PREFIX = 'archops-sys-'
+
+
 const BI_UID_PREFIX = 'archops-bi-'
 
 class InvalidMessageMetrics {
@@ -352,13 +354,7 @@ class MonitoringService {
     async getScenarioJSON(code, process) {
 
         const scenario = await E2EProcessService.getBIScenario(code);
-        function Sequence() {
-            let id = 1;
-            this.next = () => {
-                return id++;
-            }
-            return this;
-        }
+
         const panelIdSequence = new Sequence();
 
         const interactions = await this.getInteractions(scenario.callTrace);
@@ -419,9 +415,10 @@ class MonitoringService {
     async publishSystemDashboard(cmdb) {
         await this.#prepareGrafanaFolder();
 
-
         const system = await componentsService.getSystem(cmdb, { loadMethods: true, loadMethodTags: true });
         const grafana_sources = await this.getGrafanaSources();
+
+        system.grafanaSource = grafana_sources[system.code] ?? DEFAULT_OPENSEARCH_API_SOURCE; // [ ] ДОбавить управление источниками графаны
 
 
         /** @type {APIMethod[]} */
@@ -431,16 +428,10 @@ class MonitoringService {
             ]
         }, []);
 
-        let body = {
-            folderUid: DEFAULT_FOLDER_UID,
-            overwrite: true,
-            dashboard: {
-                uid: `${SYSTEM_UID_PREFIX}${cmdb}`,
-                title: `Дашборд для ${cmdb}`,
-            }
-        };
+        const dashboard = SystemDashboard(system);
+        console.log(dashboard);
 
-        return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, body);
+        return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, dashboard);
     }
 }
 
