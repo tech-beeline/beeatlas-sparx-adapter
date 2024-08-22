@@ -1,4 +1,4 @@
-import { APIInterface, APIMethod, APIMethodParameter } from '../model/system.mjs';
+import { APIInterface, APIMethod, APIMethodParameter } from '../api/model/system.mjs';
 import t_object from '../utils/ea-model/t_object.mjs';
 import t_operation from '../utils/ea-model/t_operation.mjs';
 import t_operationparams from '../utils/ea-model/t_operationparams.mjs';

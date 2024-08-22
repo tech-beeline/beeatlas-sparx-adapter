@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import App2 from './App2';
 import E2EFillingStatus from './Components/e2e-filling-status';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
@@ -24,7 +23,6 @@ root.render(
   <Router>
     <Routes>
       <Route path="/" element={<App />} />
-      <Route path="/app2" element={<App2 />} />
       <Route path="/e2e-filling-status" element={<E2EFillingStatus />} />
       <Route path="/e2e-filling-status/:code/details" element={<E2EFillingDetails />} />
       <Route path="/e2e-filling-status/:sequence/details/:diagram" element={<E2EFillingDiagramStatus />} />
@@ -34,8 +32,9 @@ root.render(
       <Route path={`${E2EProcessSummary_URI}/:uid`} element={<E2EProcessSummary/>} />
       <Route path={`${E2EProcessSummary_URI}/:process_uid/bi/:uid`} element={<E2EScenarioDashboard/>} />
       <Route path='/e2e/systems' element={<SystemProcesses/>} />
-      <Route path='/monitoring/systems' element={<SearchSystemPage/>} />
-      <Route path='/monitoring/systems/:code' element={<SystemPage/>} />
+      <Route path='/systems' element={<SearchSystemPage/>} />
+      <Route path='/systems/:code' element={<SystemPage/>} />
+      <Route path='/e2e' element={<E2EDashboardMainPage/>}/>
     </Routes>
   </Router>
 )

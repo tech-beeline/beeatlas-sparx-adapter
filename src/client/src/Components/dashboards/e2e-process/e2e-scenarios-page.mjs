@@ -41,7 +41,7 @@ function ScenarioHeader({ scenario, process_uid }) {
 
     useEffect(() => {
         loadE2E();
-    }, [])
+    }, []);
 
     const createScenarioDashboard = () => {
         setShowCreateDashboard(true);
@@ -301,6 +301,6 @@ export default function E2EScenarioDashboard() {
                 <ScenarioHeader scenario={e2eScenario.info} process_uid={process_uid}></ScenarioHeader>
                 <ApplicationSection applications={e2eScenario.applications} />
                 <CallTraceSection callTree={e2eScenario.callTrace}></CallTraceSection>
-                <InteractionsSection scenario={e2eScenario}/>
+                <InteractionsSection scenario={e2eScenario} />
             </div> : <img src="/images/loading.gif" style={{ display: "block", marginLeft: "auto", marginRight: "auto" }} />
 }

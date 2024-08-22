@@ -1,9 +1,11 @@
-import { KeyboardArrowDown, KeyboardArrowUp, Label, Title, Menu as MenuIcon, ExpandMore, SettingsApplications } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary, AppBar, Box, Collapse, IconButton, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Toolbar, Typography } from "@mui/material";
+import { KeyboardArrowDown, KeyboardArrowUp, Label, Title, Menu as MenuIcon, ExpandMore, SettingsApplications, Home, AddCard } from "@mui/icons-material";
+import { Accordion, AccordionDetails, AccordionSummary, AppBar, Box, Breadcrumbs, Collapse, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Toolbar, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react"
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ApplicationApi } from "./system-api.mjs";
 import CreateSystemDashboard from "./system-create-dashboard.mjs";
+import { MainBar } from "../../../Menu/main-bar.mjs";
+import { SystemCapabilitiesAccordion } from "./system-capabilities.mjs";
 
 
 function MethodRow({ method }) {
@@ -106,61 +108,17 @@ function ContainerRow({ container }) {
     </>
 }
 
-function SystemHeader({ app }) {
-    const [anchorMenu, setAnchorMenu] = useState(null)
-    const [createDashbaordDialog, setCreateDashbaordDialog] = useState(false);
-
-    return (
-        <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
-                <Toolbar>
-                    <div>
-                        <IconButton
-                            size="large"
-                            edge="start"
-                            color="inherit"
-                            aria-label="menu"
-                            sx={{ mr: 2 }}
-                            onClick={e => setAnchorMenu(e.currentTarget)}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                        <Menu id='menu-appbar' anchorEl={anchorMenu} open={Boolean(anchorMenu)}
-                            sx={{ mt: '45px' }}
-                            onClose={() => setAnchorMenu(null)}
-                            anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}>
-                            <MenuItem onClick={() => {
-                                setCreateDashbaordDialog(true);
-                                setAnchorMenu(null)
-                            }}>Создать или обновить дашборд наблюдаемости продукта</MenuItem>
-                        </Menu>
-                        {createDashbaordDialog ? <CreateSystemDashboard system={app} setOpen={setCreateDashbaordDialog} /> : null}
-                    </div>
-                    <Typography variant="h6">{app.name}</Typography>
-                </Toolbar>
-            </AppBar>
-        </Box>
-    )
-}
 
 function SystemSummary({ system }) {
     console.log(system)
     return (
         <Accordion>
-            <AccordionSummary expandIcon={<ExpandMore />}><SettingsApplications />
+            <AccordionSummary component={Paper} expandIcon={<ExpandMore />}><SettingsApplications />
                 <Box fontWeight='fontWeightMedium' display='inline'>Информация о продукте</Box>
             </AccordionSummary>
             <AccordionDetails>
                 <TableContainer component={Paper}>
-                    <Table>
+                    <Table size="small">
                         <colgroup>
                             <col width="15%">
                             </col></colgroup>
@@ -196,6 +154,7 @@ function SystemSummary({ system }) {
 export default function SystemPage() {
     const [system, setSystem] = React.useState(null)
     const { code } = useParams();
+    const [dashboardDialogOpen, setDashboardDialogOpen] = useState(false);
 
     async function loadData() {
         const response = await fetch(`/api/v1/systems/${code}?loadMethods=1`)
@@ -204,17 +163,50 @@ export default function SystemPage() {
             return;
         }
 
-        setSystem(await response.json())
+        setSystem(await response.json());
     }
+
+    const breadcrumbs = <Breadcrumbs aria-label="breadcrumb">
+        <Link underline="hover"
+            sx={{ display: 'flex', alignItems: 'center' }}
+            color="inherit"
+            to="/"><Home />Архитектура
+        </Link>
+        <Link underline="hover"
+            sx={{ display: 'flex', alignItems: 'center' }}
+            color="inherit"
+            to="/systems">
+            <SettingsApplications />
+            Каталог систем
+        </Link>
+        <Typography
+            sx={{ display: 'flex', alignItems: 'center' }}
+            color="text.primary">
+            {system?.name}
+        </Typography>
+    </Breadcrumbs>
     console.log(system)
     useEffect(() => {
         loadData();
     }, [])
+
+    const contextMenu = <List>
+        <ListItem key="create-dashboard" disablePadding>
+            <ListItemButton onClick={() => { setDashboardDialogOpen(true) }}>
+                <ListItemIcon>
+                    <AddCard />
+                </ListItemIcon>
+                <ListItemText primary="Создать дашборд системы" />
+            </ListItemButton>
+        </ListItem>
+        {dashboardDialogOpen ? <CreateSystemDashboard system={system} setOpen={setDashboardDialogOpen} /> : null}
+    </List>
     return system ?
         system.error ? <Box>Ошибка при загрузке данных: {system.error}</Box> :
             <Box component={Paper}>
-                <SystemHeader app={system} />
+                <MainBar barContent={breadcrumbs} contextMenu={contextMenu} />
                 <SystemSummary system={system} />
+                <SystemCapabilitiesAccordion system={system} />
                 <ApplicationApi system={system} />
             </Box> : <Box>Данные загружаются</Box>
 }

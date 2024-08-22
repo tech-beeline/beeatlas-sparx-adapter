@@ -102,14 +102,14 @@ function Errors({ call }) {
                 vertical: 'top',
                 horizontal: 'right',
             }}>
-                {
-                    /*
-            <MenuItem onClick={() => {
-                setOpenDetails(true);
-                setAnchorMenu(null);
-            }}><Handyman />Детальная информация о проблеме</MenuItem>
-            */
-        }
+            {
+                /*
+        <MenuItem onClick={() => {
+            setOpenDetails(true);
+            setAnchorMenu(null);
+        }}><Handyman />Детальная информация о проблеме</MenuItem>
+        */
+            }
             {openDetails ? <ErrorDetails setOpen={setOpenDetails} error={error} call={call} /> : null}
             <MenuItem component={Link} to={webEALink(call.d_uid)} target="_blank" onClick={() => setAnchorMenu(null)}><img src={webeaLogo} width="25" />  <Typography variant='h8'>Открыть диаграмму в WebEA</Typography> </MenuItem>
         </Menu>{ERROR_INFO[error]?.summary ?? error}</Box>;
@@ -134,19 +134,21 @@ function CallItem({ call }) {
     return call.errors ? <CallTreeItem label={<div>{LabelIcon}{`${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name} ${call.name}`}</div>} nodeId={call.ea_guid}>
         <Errors call={call} />
         {call.children?.map((c, i) => <CallItem key={i} call={c} />)}
-    </CallTreeItem> : <CallTreeItem label={<div>{LabelIcon}{`${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name} ${call.name}`}</div>} nodeId={call.ea_guid}>
-        {call.children?.map((c, i) => <CallItem key={i} call={c} />)}
-    </CallTreeItem>
+    </CallTreeItem> :
+        <CallTreeItem label={<div>{LabelIcon}{`${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name} ${call.name}`}</div>} nodeId={call.ea_guid}>
+            {call.children?.map((c, i) => <CallItem key={i} call={c} />)}
+        </CallTreeItem>
 }
 
 export function CallTraceSection({ callTree }) {
+    console.log(callTree)
     return <Accordion component={Paper}>
         <AccordionSummary component={Paper} expandIcon={<ExpandMore />}><AccountTree /><Box fontWeight='fontWeightMedium' display='inline'>Иерархия вызовов</Box></AccordionSummary>
         <AccordionDetails>
             <Typography variant='h8' component={Paper}>Легенда: <Warning sx={{ color: "red" }} /> - ошибка заполнения взаимодействия, <WarningAmber sx={{ color: "red" }} /> - Ошибка заполнения в дочерних вызовах, <Check sx={{ color: "green" }} /> - корректное заполнение</Typography>
             <Box component={Paper}>
                 <TreeView defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
-                    {(callTree.length > 1 ? callTree : callTree[0].children).map((it, i) => <CallItem key={i} call={it} />)}
+                    {((callTree.length > 1 || callTree[0].children?.length === 0) ? callTree : callTree[0].children).map((it, i) => <CallItem key={i} call={it} />)}
                 </TreeView>
             </Box>
         </AccordionDetails>

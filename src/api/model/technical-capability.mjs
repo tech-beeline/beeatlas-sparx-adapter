@@ -22,18 +22,17 @@ class TechnicalCapability {
      */
     constructor(cap) {
         if (!cap) return;
-        //cap.parents = cap.parents ?? [];
+
         for (const prop in this) {
             this[prop] = cap[prop] ?? undefined;
         }
+
+        // [ ] отрефакторить, что бы не было ссылки на идентификатор элемента в ЕА
         if( cap.object_id ){
             this.object_id = ()=>cap.object_id;
         }
     }
     addParent(s) {
-        /*if (s === null)
-            return;
-            */
         (this.parents = this.parents ?? []).push(s);
     }
 }

@@ -1,4 +1,4 @@
-import Capability, { CapabilityRef } from "../../model/capability.mjs";
+import Capability, { CapabilityRef } from "../../api/model/capability.mjs";
 
 class CAPABILITY_EXAMPLES {
     get RootDomain() {

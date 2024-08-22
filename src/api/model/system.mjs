@@ -82,7 +82,7 @@ export class Container {
         this.version = version;
         this.tags = tags;
         this.interfaces = interfaces;
-        this.description = description;
+        this.description = description??undefined;
     }
     addInterface(i) {
         if (!(i instanceof APIInterface)) i = new APIInterface(i)
@@ -103,23 +103,23 @@ export default class System {
     author;
     description;
     ea_guid;
-    fullName;
+    FQName;
     status;
     modifiedDate;
     /**
      * @type {Container[]}
      */
     containers = [];
-    constructor({ name, code, version, tags, containers, author, description, ea_guid, fullName, packageName, status, modifiedDate } = {}) {
+    constructor({ name, code, version, tags, containers, author, description, ea_guid, FQName, packageName, status, modifiedDate } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
         this.tags = tags;
         this.containers = containers ?? this.containers;
         this.author = author;
-        this.description = description;
+        this.description = description??undefined;
         this.ea_guid = ea_guid;
-        this.fullName = fullName;
+        this.FQName = FQName;
         this.package = packageName;
         this.status = status;
         this.modifiedDate = modifiedDate;

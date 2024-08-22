@@ -4,7 +4,7 @@ import t_object from "../utils/ea-model/t_object.mjs";
 import t_operation from "../utils/ea-model/t_operation.mjs";
 import componentsService from "./components-service.mjs";
 import E2EProcessService from './e2e-process-service.mjs'
-import { APIInterface, APIMethod, Container } from "../model/system.mjs";
+import { APIInterface, APIMethod, Container } from "../api/model/system.mjs";
 import { query } from "express";
 import { InterfaceCatalog } from "./interfaces-service.mjs";
 import t_diagram from "../utils/ea-model/t_diagram.mjs";

@@ -371,6 +371,8 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             root_messages.push(...CallTreeBuilder.build(m));
         }
 
+        //messages.forEach(m => m.childDiagram = undefined);
+
         let applications = {}
         for (const o of Object.values(usedSystems)) {
             if (!o) continue;
@@ -410,7 +412,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             from cte_cls 
             join t_operation op on op.object_id=cte_cls.cls_id`, [uid])
         ]);
-        return {message: message, server_methods: server_methods}
+        return { message: message, server_methods: server_methods }
     }
 }
 export default new E2EProcessService();

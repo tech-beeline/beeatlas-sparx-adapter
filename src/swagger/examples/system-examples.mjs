@@ -1,4 +1,4 @@
-import System, { Container, APIInterface, APIMethod } from "../../model/system.mjs";
+import System, { Container, APIInterface, APIMethod } from "../../api/model/system.mjs";
 
 
 const SIMPLE_SYSTEM = new System({

@@ -1,6 +1,6 @@
 import express from 'express'
 import TechnicalCapabilityService from '../services/technical-capabilities-service.mjs'
-import TechnicalCapability from '../model/technical-capability.mjs';
+import TechnicalCapability from '../api/model/technical-capability.mjs';
 import { BadRequest } from '../utils/errors.mjs';
 
 class TechnicalCapabilitiesController {

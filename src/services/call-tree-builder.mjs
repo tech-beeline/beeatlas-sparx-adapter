@@ -18,7 +18,7 @@ export class CallMessage {
     #client;
     #childDiagram;
     stereotype;
-    children;
+    children = [];
     errors;
     d_uid;
     diagram;
@@ -88,7 +88,7 @@ export default class CallTreeBuilder {
             const op_guid = operation_guid ?? lastOperationGuid;
             if (!op_guid) {
                 onError(message, `На родительской диаграмме нельзя определить, какой метод искать на поддиаграмме`)
-                return [message];
+                return [new CallMessage(message)];
             }
             const method = childDiagram.messages.find(m => m.operation_guid == op_guid);
             if (!method) {

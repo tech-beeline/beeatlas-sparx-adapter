@@ -1,4 +1,4 @@
-import System, { APIInterface, APIMethod, Container } from "../model/system.mjs";
+import System, { APIInterface, APIMethod, Container } from "../api/model/system.mjs";
 import t_connector from "../utils/ea-model/t_connector.mjs";
 import t_connectortag from "../utils/ea-model/t_connectortag.mjs";
 import t_objectproperties from "../utils/ea-model/t_objectproperties.mjs";

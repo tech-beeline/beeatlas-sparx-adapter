@@ -1,11 +1,12 @@
 import express from 'express'
 import ApiRouter, { routeControllers } from './routes/index.mjs'
-import SwaggerDefinition, { ROUTES_MAP } from './routes/swagger.mjs';
+import SwaggerDefinition from './routes/swagger.mjs';
 import SwaggerUI from 'swagger-ui-dist'
 import path from 'path'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import RESTMetric from './metrics/middleware.mjs';
+import API_ROUTES from './api/routes/index.mjs'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,12 +23,7 @@ app.use('/actuator/prometheus', RESTMetric);
 app.use('/swagger-ui', express.static(pathToSwaggerUi));
 app.use('/swagger', express.static('./src/view/ea-board-swagger.html'))
 
-Object.entries(ROUTES_MAP).forEach(([key, servceDescription]) => {
-    const service_definition = JSON.stringify( SwaggerDefinition.load([servceDescription.specification],servceDescription.title, servceDescription.description, servceDescription.version ));
-    app.use(`/swagger/${key}`, express.static('./src/view/ea-board-swagger.html'))
-    app.use(`/swagger/${key}/api.json`, (request, response) => response.contentType('application/json').send(service_definition))
-})
-
+app.use(API_ROUTES)
 //#endregion
 
 const SWAGGER_DEFINITION = SwaggerDefinition.load();

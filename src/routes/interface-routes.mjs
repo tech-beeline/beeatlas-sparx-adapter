@@ -1,5 +1,5 @@
 import interfacesController from "../controllers/interfaces-controller.mjs";
-import { APIMethod } from "../model/system.mjs";
+import { APIMethod } from "../api/model/system.mjs";
 
 const INTERFACES_ROUTES = {
     tag: "Управление Интерфейсами",

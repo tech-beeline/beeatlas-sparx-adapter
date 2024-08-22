@@ -1,5 +1,9 @@
 import { Box, Button, Paper, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import React, { useEffect, useRef } from "react"
+import { MainBar } from "../../../Menu/main-bar.mjs";
+import { SearchBox } from "../../../Menu/search.mjs";
+
 
 function SearchFilter({ systems, setFilter, filter }) {
     const valueRef = useRef('')
@@ -8,9 +12,13 @@ function SearchFilter({ systems, setFilter, filter }) {
         />
     </Box>
 }
+
+
 export default function SearchSystemPage() {
     const [systems, setSystems] = React.useState(null)
     const [filter, setFilter] = React.useState('')
+
+    const navigate = useNavigate();
 
     async function loadData() {
         const response = await fetch(`/api/v1/systems`)
@@ -21,7 +29,7 @@ export default function SearchSystemPage() {
 
         let apps = await response.json()
 
-        setSystems(apps)
+        setSystems(apps);
     }
 
     useEffect(() => {
@@ -31,9 +39,9 @@ export default function SearchSystemPage() {
         systems.error ?
             <Box component={Paper}>Ошибка при загрузке данных {systems.error}</Box> :
             <Box>
-                <SearchFilter systems={systems} filter={filter} setFilter={setFilter} />
+                <MainBar title="Каталог систем" barContent={<SearchBox setSearchText={setFilter} />} />
                 <TableContainer component={Paper}>
-                    <Table>
+                    <Table size="small">
                         <colgroup>
                             <col style={{ width: '5%' }} />
                             <col style={{ width: '30%' }} />
@@ -46,7 +54,7 @@ export default function SearchSystemPage() {
                         </TableHead>
                         <TableBody>
                             {(filter.length > 0 ? systems.filter(s => s.code.includes(filter) || s.name.includes(filter)) : systems).map(s =>
-                                <TableRow key={s.code}><TableCell>{s.code}</TableCell><TableCell><a href={`systems/${s.code}`}>{s.name}</a></TableCell></TableRow>
+                                <TableRow sx={{ cursor: "pointer" }} key={s.code} hover onClick={() => { navigate(`/systems/${s.code}`) }}><TableCell>{s.code}</TableCell><TableCell><a href={`${s.code}`}>{s.name}</a></TableCell></TableRow>
                             )}
                         </TableBody>
                     </Table>

@@ -1,4 +1,4 @@
-import TechnicalCapability from "../model/technical-capability.mjs";
+import TechnicalCapability from "../api/model/technical-capability.mjs";
 import t_diagram from "../utils/ea-model/t_diagram.mjs";
 import t_diagramobjects from "../utils/ea-model/t_diagramobjects.mjs";
 import t_object from "../utils/ea-model/t_object.mjs";
