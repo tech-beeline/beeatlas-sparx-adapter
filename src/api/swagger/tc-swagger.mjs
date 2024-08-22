@@ -1,4 +1,3 @@
-import { describe } from "mocha";
 import { API_VERSION, CONTACT } from "../../resources/const.mjs"
 import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
 
