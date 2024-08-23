@@ -42,13 +42,25 @@ const SELECT_SYSTEM_CAPABILITIES = `WITH RECURSIVE cte_sys AS(
 	FROM t_object sys
 	WHERE sys.alias=$1 and sys.object_type='Component'
 ),
+cte_sys_pack AS( 
+	SELECT
+		tcp.package_id
+	FROM t_object ro 
+		JOIN t_package rp ON rp.ea_guid=ro.ea_guid
+		JOIN t_package tcp ON tcp.parent_id=rp.package_id
+	WHERE ro.alias=$1 AND object_type='Package'
+	UNION ALL
+	SELECT c.package_id
+	FROM cte_sys_pack p
+		JOIN t_package c ON c.parent_id=p.package_id 
+),
 cte_realization AS ( 
 	SELECT DISTINCT r.start_object_id, c.*
     FROM t_connector r 
         JOIN t_object c ON  c.object_id=r.end_object_id
     WHERE r.connector_type='Realisation'),
 cte_tc as (
-	SELECT
+	SELECT DISTINCT
 		tc.name, tc.object_id, tc.alias, tc.stereotype
 	FROM cte_sys sys
 		JOIN t_connector irel ON irel.start_object_id=sys.object_id
@@ -57,12 +69,16 @@ cte_tc as (
 		JOIN t_object sr ON sr.object_id=srel.end_object_id
 		JOIN t_connector tcr ON tcr.start_object_id=sr.object_id
 		JOIN t_object tc ON tc.object_id=tcr.end_object_id AND tc.stereotype='ArchiMate_TechnicalCapability'
-	UNION
+	UNION DISTINCT
 	SELECT tc.name, tc.object_id, tc.alias as code, tc.stereotype
 	FROM cte_sys sys
 		JOIN cte_realization c ON c.start_object_id=sys.object_id AND c.object_type='Component' AND c.alias is not null and c.stereotype='C2'
 		JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface' AND it.alias is not null AND it.alias <> ''
 		JOIN cte_realization tc ON tc.start_object_id=it.object_id AND tc.stereotype='ArchiMate_TechnicalCapability' AND tc.alias is not null AND tc.alias <> ''
+	UNION DISTINCT
+	SELECT tc.name, tc.object_id, tc.alias, tc.stereotype
+	FROM cte_sys_pack p
+		JOIN t_object tc ON tc.package_id=p.package_id AND tc.stereotype='ArchiMate_TechnicalCapability' AND tc.alias is not null AND tc.alias <> ''
 ),
 cte_aggregation as (
 	SELECT  
@@ -86,7 +102,7 @@ cte_capability AS (
 		JOIN cte_aggregation rel ON rel.child_id=ch.object_id 
 		JOIN t_object bc ON bc.object_id=rel.parent_id AND (bc.stereotype='ArchiMate_Capability' OR bc.object_type='Package')
 )
-SELECT DISTINCT name, code, object_id, child_id,stereotype FROM cte_capability`;
+SELECT distinct name, code, object_id, child_id,stereotype FROM cte_capability`;
 /*
 const SYSTEM_REALIZATION_LIST = `with recursive app_catalog as (
     select package_id, package_id as parent_id, name , name::text as "fullName", ea_guid

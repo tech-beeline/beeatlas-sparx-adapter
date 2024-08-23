@@ -271,6 +271,9 @@ class E2EProcessService {
                 Repository.first(t_diagram, { ea_guid: uid })
             ]); // [ ] Возможно надо добавить фильтрацию при запросе, что бы не тащить все методы
 
+        if( !scenario )
+            throw NotFound(`Сценарий с uid=${uid} не найден`)
+
         const diagram_uids = diagram_rows.map(d => d.diagram_uid);
 
         const [messages, systems] = await Promise.all([
@@ -367,7 +370,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
         }
 
         const root_messages = []
-        for (const m of diagrams.byContainerId[0].messages) {
+        for (const m of diagrams.byContainerId[0]?.messages) {
             root_messages.push(...CallTreeBuilder.build(m));
         }
 

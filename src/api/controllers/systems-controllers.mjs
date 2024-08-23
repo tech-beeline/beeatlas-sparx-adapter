@@ -53,7 +53,6 @@ class SystemsControllers {
         if (!request.params.code) throw BadRequest('The code is not specified');
 
         response.json(await service.getPurpose(request.params.code));
-
     }
 }
 

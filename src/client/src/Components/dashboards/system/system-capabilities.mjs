@@ -11,9 +11,9 @@ import { useEffect, useState } from "react";
 function CapabilityItem({ capability }) {
 
     const icon = capability.type === 'Domain' ? <Domain />
-        : capability.type === "Capability" ? <CorporateFare/> : <SmartButton/>;
+        : capability.type === "Capability" ? <CorporateFare /> : <SmartButton />;
     return (
-        <TreeItem nodeId={capability.code} label={<>{icon}{capability.name}</>}>
+        <TreeItem nodeId={capability.code} label={<>{icon}{`${capability.code} ${capability.name}`}</>}>
             {capability.children?.map((c, index) => <CapabilityItem capability={c} key={index} />)}
         </TreeItem>)
 }
@@ -22,11 +22,15 @@ export function SystemCapabilitiesAccordion({ system }) {
     const [capabilityTree, setCapabilityTree] = useState(null);
     const [error, setError] = useState(null)
     const loadCapability = async () => {
-        const response = await fetch(`/api/v4/systems/${system.code}/purpose`);
-        if (response.status != 200) {
-            setError(error);
+        try {
+            const response = await fetch(`/api/v4/systems/${system.code}/purpose`);
+            if (response.status != 200) {
+                throw Error(response.body)
+            }
+            setCapabilityTree(await response.json());
+        } catch (error) {
+            setError(error.message);
         }
-        setCapabilityTree(await response.json());
     }
 
     useEffect(() => { loadCapability() }, [])

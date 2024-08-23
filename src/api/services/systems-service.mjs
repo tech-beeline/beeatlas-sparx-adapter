@@ -92,7 +92,7 @@ class SystemService {
             (capability.children ?? (capability.children = [])).push(child);
         }
 
-        return Object.values(capabilityMap).find( r=>r.code='GRP.000')
+        return Object.values(capabilityMap).find( r=>r.code='GRP.000')??{children:[]}
         console.log(rows)
         NotImplemented();
     }

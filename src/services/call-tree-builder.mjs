@@ -100,11 +100,14 @@ export default class CallTreeBuilder {
                 return method.child.reduce((ret, v) => [...ret, ...this.build(v, op_guid)], []);
             }
 
-            if (method.server == server) {
-                // Ввызов при котором на дочерней диаграмме первый вызов того же обьекта, что и последний на родительской
-                let child_of_child = method.child.reduce((res, v) => [...res, ...v.child], [])
-                return child_of_child.reduce((ret, v) => [...ret, ...this.build(v, op_guid)], []);
+            if (method.server != server) {
+                //onError(message, 'На родительской диаграмме объект не явля')
+                console.warn( 'method.server != server')
+                // Вызов при котором на дочерней диаграмме первый вызов того же обьекта, что и последний на родительской
             }
+            let child_of_child = method.child.reduce((res, v) => [...res, ...v.child], [])
+            return child_of_child.reduce((ret, v) => [...ret, ...this.build(v, op_guid)], []);
+
             NotImplemented();
         }
         if (client?.code != server?.code) {
