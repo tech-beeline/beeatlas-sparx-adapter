@@ -6,6 +6,10 @@ export const BC_DESCRIPTION = "Управление информацией о Е
 
 export const E2E_LIST_RESOURCE = "/api/v4/e2e"
 export const E2E_RESOURCE = "/api/v4/e2e/{uid}"
+export const E2E_MESSAGES_RESOURCE = "/api/v4/e2e/{uid}/messages"
+export const E2E_BI_RESOURCE = "/api/v4/e2e/{uid}/bi"
+export const E2E_BI_MESSAGES_RESOURCE = "/api/v4/e2e-bi/{uid}/messages"
+export const E2E_BI_SCENARIO_RESOURCE = "/api/v4/e2e-bi/{uid}/scenario"
 
 export const GET_ALL_E2E = {
     tags: [BC_NAME],
@@ -48,12 +52,42 @@ export const GET_E2E = {
 }
 
 
+const GET_E2E_MESSAGES = {
+    tags: [BC_NAME],
+    summary: "Получение сообщений(вызовов) для Е2Е процесса",
+    parameters: [
+        {
+            name: "uid",
+            in: "path",
+            description: "Идентификатор Е2Е процесса",
+            required: true,
+            example: "{5DE220EF-4CC4-4adb-AB5B-C49223DB7ED4}"
+        }
+    ],
+    responses: {
+        200: {
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "array",
+                        items: schemasRef('E2EProcess')
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 const PATHS = {
     [E2E_LIST_RESOURCE]: {
         get: GET_ALL_E2E
     },
     [E2E_RESOURCE]: {
         get: GET_E2E
+    },
+    [E2E_MESSAGES_RESOURCE]: {
+        get: GET_E2E_MESSAGES
     }
 }
 
@@ -61,12 +95,21 @@ export const E2E_SCHEMA = {
     type: "object",
     properties: {
         uid: stringProperty("Идентификатор Е2Е процесса", { example: "{5DE220EF-4CC4-4adb-AB5B-C49223DB7ED4}" }),
-        name: stringProperty("Название Е2Е процесса" , {example : "Я, как ..."}),
+        name: stringProperty("Название Е2Е процесса", { example: "Я, как ..." }),
+    }
+}
+
+export const E2E_MESSAGE_SCHEMA = {
+    type: "object",
+    properties: {
+        uid: stringProperty("Идентфиикатор сообщения"),
+        name: stringProperty("Название сообщения")
     }
 }
 
 const SCHEMAS = {
-    E2EProcess: E2E_SCHEMA
+    E2EProcess: E2E_SCHEMA,
+    E2EMessage: E2E_MESSAGE_SCHEMA
 }
 
 const SWAGGER = buildServiceSwagger(BC_NAME, BC_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })

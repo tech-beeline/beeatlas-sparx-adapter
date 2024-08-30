@@ -25,7 +25,24 @@ class E2EProcessControllers {
      * @param {express.Request} request 
      * @param {express.Response} response 
      */
-    async getE2EBusinessInteractions(reques, response) {
+    async getE2EBusinessInteractions(request, response) {
+        if (!request.params.uid) throw BadRequest('Process uid is not specified');
+        response.json(await service.getE2EBusinessInteractions(request.params.uid))
+    }
+    /**
+     * 
+     * @param {express.Request} request 
+     * @param {express.Response} response 
+     */
+    async getE2EMessages(request, response) {
+        response.json(await service.getE2EMessages(request.params.uid));
+    }
+    /**
+     * 
+     * @param {express.Request} request 
+     * @param {express.Response} response 
+     */
+    async getBIScenario(request, response) {
         NotImplemented()
     }
     /**
@@ -33,23 +50,7 @@ class E2EProcessControllers {
      * @param {express.Request} request 
      * @param {express.Response} response 
      */
-    async getE2EMessages(reques, response) {
-        NotImplemented()
-    }
-    /**
-     * 
-     * @param {express.Request} request 
-     * @param {express.Response} response 
-     */
-    async getBIScenario(reques, response) {
-        NotImplemented()
-    }
-    /**
-     * 
-     * @param {express.Request} request 
-     * @param {express.Response} response 
-     */
-    async getBIMessages(reques, response) {
+    async getBIMessages(request, response) {
         NotImplemented()
     }
 }
