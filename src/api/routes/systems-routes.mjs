@@ -1,6 +1,6 @@
 import { NotImplemented } from "../../utils/errors.mjs";
 import controllers from "../controllers/systems-controllers.mjs";
-import SWAGGER, { SYSTEM_LIST_RESOURCE, SYSTEM_PURPOSE_RESOURCE, SYSTEM_RESOURCE } from "../swagger/systems-swagger.mjs";
+import SWAGGER, { SYSTEM_E2E_RESOURCE, SYSTEM_LIST_RESOURCE, SYSTEM_PURPOSE_RESOURCE, SYSTEM_RESOURCE } from "../swagger/systems-swagger.mjs";
 
 
 export default {
@@ -8,5 +8,6 @@ export default {
         { path: SYSTEM_LIST_RESOURCE, method: "get", controller: controllers.getAll },
         { path: SYSTEM_RESOURCE, method: "get", controller: controllers.getByCode },
         { path: SYSTEM_PURPOSE_RESOURCE, method: "get", controller: controllers.getPurpose },
+        { path: SYSTEM_E2E_RESOURCE, method: "get", controller: controllers.getE2EParticipition }
     ], swagger: SWAGGER
 }

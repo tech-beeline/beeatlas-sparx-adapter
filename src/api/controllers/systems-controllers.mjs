@@ -48,11 +48,19 @@ class SystemsControllers {
     * @param {express.Response} response 
     */
     async getPurpose(request, response) {
-
-        checkGetOptions(request);
         if (!request.params.code) throw BadRequest('The code is not specified');
 
         response.json(await service.getPurpose(request.params.code));
+    }
+     /**
+    * 
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
+     async getE2EParticipition(request, response) {
+        if (!request.params.code) throw BadRequest('The code is not specified');
+
+        response.json(await service.getE2EParticipition(request.params.code));
     }
 }
 

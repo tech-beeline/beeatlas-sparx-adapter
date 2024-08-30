@@ -82,7 +82,7 @@ export class Container {
         this.version = version;
         this.tags = tags;
         this.interfaces = interfaces;
-        this.description = description??undefined;
+        this.description = description ?? undefined;
     }
     addInterface(i) {
         if (!(i instanceof APIInterface)) i = new APIInterface(i)
@@ -91,6 +91,66 @@ export class Container {
     }
     interfaceByCode(code) {
         return this.interfaces?.find(i => i.code === code);
+    }
+}
+
+export class E2EProcessContext {
+    process;
+    process_uid;
+    bi;
+    bi_name;
+    bi_uid;
+    diagram;
+    diagram_uid;
+    seqno;
+    message;
+    component;
+    method;
+    operation_guid;
+    interface;
+    interface;
+    system;
+    constructor(obj = {}) {
+        this.process = {
+            name: obj.process,
+            uid: obj.process_uid
+        }
+        this.bi = {
+            name: obj.bi_name,
+            uid: obj.bi_uid
+        }
+        this.diagram = {
+            name: obj.diagram,
+            uid: obj.diagram_uid
+        }
+        this.message = {
+            seqno: obj.seqno,
+            name: obj.message,
+            operation: obj.operation_guid && obj.operation ? {
+                name: obj.operation,
+                uid: obj.operation_guid,
+                interface: {
+                    name: obj.interface,
+                    uid: obj.interface_uid
+                }
+            } : undefined
+        }
+        this.system = {
+            name: obj.sys_name,
+            code: obj.sys_code
+        }
+    }
+}
+
+
+export class SystemE2EParticipition {
+    /** @type {ProcessRef} */
+    process;
+    /** @type {MethodRef} */
+    method;
+    constructor(processRef, methodRef) {
+        this.process = processRef;
+        this.method = methodRef;
     }
 }
 
@@ -117,7 +177,7 @@ export default class System {
         this.tags = tags;
         this.containers = containers ?? this.containers;
         this.author = author;
-        this.description = description??undefined;
+        this.description = description ?? undefined;
         this.ea_guid = ea_guid;
         this.FQName = FQName;
         this.package = packageName;

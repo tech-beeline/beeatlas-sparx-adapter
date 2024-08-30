@@ -2,6 +2,7 @@ import { Alarm, CorporateFare, Domain, ExpandMore, KeyboardArrowDown, KeyboardAr
 import { Accordion, AccordionDetails, AccordionSummary, Box, Paper } from "@mui/material";
 import { TreeItem, TreeView } from "@mui/x-tree-view";
 import { useEffect, useState } from "react";
+import { sys } from "typescript";
 
 
 /**
@@ -19,10 +20,15 @@ function CapabilityItem({ capability }) {
 }
 
 export function SystemCapabilitiesAccordion({ system }) {
+
     const [capabilityTree, setCapabilityTree] = useState(null);
     const [error, setError] = useState(null)
+    const [loading, setLoading] = useState(false);
+
+
     const loadCapability = async () => {
         try {
+            setLoading(true);
             const response = await fetch(`/api/v4/systems/${system.code}/purpose`);
             if (response.status != 200) {
                 throw Error(response.body)
@@ -30,28 +36,38 @@ export function SystemCapabilitiesAccordion({ system }) {
             setCapabilityTree(await response.json());
         } catch (error) {
             setError(error.message);
+        } finally {
+            setLoading(false);
         }
     }
 
-    useEffect(() => { loadCapability() }, [])
+    const loadingDetails = loading ? <AccordionDetails>Loading ...</AccordionDetails> : null;
+    const purposeDetails = (
+        capabilityTree && !loading ?
+            capabilityTree.children && capabilityTree.children.length ?
+                <AccordionDetails>
+                    <TreeView component={Paper} defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
+                        {capabilityTree.children?.map((c, i) => <CapabilityItem key={i} capability={c} />)}
+                    </TreeView>
+                </AccordionDetails> :
+                <AccordionDetails>
+                    Возможностей, связанных с системой не найдено
+                </AccordionDetails> : null
+    )
+
+    useEffect(() => { loadCapability() }, [system])
+
     return (
         <Accordion>
             <AccordionSummary component={Paper} expandIcon={<ExpandMore />}><CorporateFare />
                 <Box fontWeight='fontWeightMedium' display='inline'>Позиционирование продукта в ФДМ</Box>
             </AccordionSummary>
+            {loadingDetails}
             {error ?
                 <AccordionDetails color="red">
                     <Alarm />{error}
                 </AccordionDetails> :
-                capabilityTree ?
-                    <AccordionDetails>
-                        <TreeView component={Paper} defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
-                            {capabilityTree.children?.map((c, i) => <CapabilityItem key={i} capability={c} />)}
-                        </TreeView>
-                    </AccordionDetails> :
-                    <AccordionDetails>
-                        <LocalActivity />Идет загрузка
-                    </AccordionDetails>
+                purposeDetails
             }
         </Accordion>
     )

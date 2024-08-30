@@ -171,8 +171,9 @@ class Repository {
     }
 
     async delete(type, condition) {
-        const text = `DELETE FROM ${type.name} WHERE ${Object.entries(condition).map(([k, v], i) => `${k} = $${i + 1 + field_values.length}`).join(' AND ')}`;
-        this.queryOne(text, condition_list.map(([k, v]) => v))
+        const condition_list = Object.entries(condition);
+        const text = `DELETE FROM ${type.name} WHERE ${condition_list.map(([k, v], i) => `${k} = $${i + 1}`).join(' AND ')}`;
+        return this.queryOne(text, condition_list.map(([k, v]) => v))
     }
 
     async find(type, condition) {
@@ -291,8 +292,6 @@ class Repository {
         if (stereotype_template) {
             Object.assign(condition, stereotype_template.properties)
         }
-
-        NotImplemented();
         return this.delete(t_connector, condition)
     }
 

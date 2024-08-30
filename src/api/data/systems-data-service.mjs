@@ -103,36 +103,78 @@ cte_capability AS (
 		JOIN t_object bc ON bc.object_id=rel.parent_id AND (bc.stereotype='ArchiMate_Capability' OR bc.object_type='Package')
 )
 SELECT distinct name, code, object_id, child_id,stereotype FROM cte_capability`;
-/*
-const SYSTEM_REALIZATION_LIST = `with recursive app_catalog as (
-    select package_id, package_id as parent_id, name , name::text as "fullName", ea_guid
-        from t_package where ea_guid='${applicationCatalog.APP_CATALOG_ROOT}'
-    union distinct
-    select c.package_id, p.parent_id, c.name, p."fullName"::text || '/' || c.name, c.ea_guid
-        from app_catalog p
-        join t_package c on c.parent_id=p.package_id
-), rel as ( select 
-    distinct r.start_object_id, c.*
-    from t_connector r 
-        join t_object c on c.object_id=r.end_object_id
-    where r.connector_type='Realisation'
+
+const SELECT_SYSTEM_PARTICIPITION = `WITH RECURSIVE
+cte_sys_catalog AS (
+	SELECT package_id, package_id AS parent_id, name 
+		FROM t_package WHERE ea_guid='${APP_CATALOG_ROOT}'
+	UNION DISTINCT
+	SELECT c.package_id, p.parent_id, c.name
+		FROM cte_sys_catalog p
+		JOIN t_package c ON c.parent_id=p.package_id
+),
+cte_sys AS (
+	SELECT sys.name, sys.ea_guid, sys.alias as code, sys.object_id as sys_id
+	FROM cte_sys_catalog cat
+		JOIN t_object sys ON sys.package_id=cat.package_id AND sys.alias = $1 AND sys.object_type='Component'
+),
+cte_realization AS ( 
+	SELECT DISTINCT r.start_object_id, c.*
+    FROM t_connector r 
+        JOIN t_object c ON  c.object_id=r.end_object_id
+    WHERE r.connector_type='Realisation'),
+cte_sys_obj AS (
+    SELECT  sys.name as sys_name, sys.name, sys.code AS sys_code, sys.ea_guid, sys.code, sys.sys_id, sys.sys_id as object_id
+    FROM cte_sys sys
+    UNION -- Provided interfaces
+    SELECT sys.name, it.name, sys.code, it.ea_guid, it.alias, sys.sys_id, it.object_id
+    FROM cte_sys sys
+        JOIN t_object it ON it.parentid=sys.sys_id AND it.object_type='ProvidedInterface'
+    UNION DISTINCT -- containers from structurizr
+    SELECT sys.name, c.name, sys.code, c.ea_guid, c.alias, sys.sys_id, c.object_id
+    FROM cte_sys sys
+        JOIN cte_realization c ON c.start_object_id=sys.sys_id AND c.stereotype='C2'
+    UNION DISTINCT -- interfaces from structurizr
+    SELECT sys.name, it.name, sys.code, it.ea_guid, it.alias, sys.sys_id, it.object_id
+    FROM cte_sys sys
+        JOIN cte_realization c ON c.start_object_id=sys.sys_id AND c.stereotype='C2'
+        JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface'
+),
+cte_bi AS (
+	SELECT e2e.name as process, e2e.ea_guid as process_uid, bi.name as bi_name, bi.ea_guid as bi_uid, bi.pdata1::integer as bi_id
+	FROM t_diagram e2e
+		JOIN t_diagramobjects bi_do ON bi_do.diagram_id=e2e.diagram_id
+		JOIN t_object bi ON bi.object_id=bi_do.object_id AND bi.object_type='InteractionOccurrence'
+	WHERE e2e.stereotype='e2e_diagram'
+),
+cte_dia_ref AS (
+	SELECT od.diagram_id, d.name , d.ea_guid, d.diagram_id AS child_id
+	FROM t_xref x
+		JOIN t_object o ON o.ea_guid=x.client
+		JOIN t_diagram d ON d.ea_guid=x.supplier AND d.diagram_type='Sequence'
+		JOIN t_diagramobjects od ON od.object_id=o.object_id AND od.diagram_id <> d.diagram_id
+	where x.name='DefaultDiagram'
+),
+cte_bi_dia AS (
+	SELECT bi.process, bi.process_uid, bi.bi_name, bi.bi_uid, bi.bi_id, bi.bi_id as diagram_id, bi.bi_uid as diagram_uid, bi.bi_name as diagram, bi.bi_id as child_id
+	FROM cte_bi bi
+	UNION DISTINCT
+	SELECT bi.process, bi.process_uid, bi.bi_name, bi.bi_uid, bi.bi_id,ref.diagram_id, ref.ea_guid, ref.name, ref.child_id
+	FROM cte_bi_dia bi
+		JOIN cte_dia_ref ref ON ref.diagram_id=bi.child_id
+), cte_sys_msg AS (
+    SELECT 
+        o.sys_code, o.sys_name, o.name as component,
+        msg.seqno, msg.name as message, mtd.name as operation, it.name as interface, it.ea_guid as interface_uid, op.value as operation_guid,
+        d.*
+    FROM cte_bi_dia d
+        JOIN t_connector msg ON msg.diagramid=d.diagram_id
+        JOIN cte_sys_obj o ON o.object_id=msg.end_object_id
+        LEFT JOIN t_connectortag op ON op.elementid=msg.connector_id AND op.property='operation_guid'
+        LEFT JOIN t_operation mtd ON mtd.ea_guid=op.value
+        LEFT JOIN t_object it ON it.object_id=mtd.object_id
 )
-select 
-cat.ea_guid as pguid, cat.name as "packageName", cat."fullName" || '/' || app.name as "fullName", app.author, app.modifiedDate as "modifiedDate",   app.status,
-app.name as system, app.alias as cmdb, app.version as sys_version, app.note as sys_description, app.ea_guid,
-container.name as container, container.alias as container_code, container.version as container_version, container.note as container_description,
-i.name as interface, i.alias as interface_code, i.version as interface_version, i.note as interface_description, i.object_id as i_id,
-(select api_url.value from t_objectproperties api_url where api_url.object_id=i.object_id and api_url.property='${API_SPECIFICATION_URL_TAG}' limit 1) as ${API_SPECIFICATION_URL_TAG},
-(select api_url.value from t_objectproperties api_url where api_url.object_id=i.object_id and api_url.property='${PROTOCOL_TAG}' limit 1) as ${PROTOCOL_TAG},
-(select alias from rel tc where tc.start_object_id=i.object_id and tc.stereotype='ArchiMate_TechnicalCapability' limit 1) as "capabilityCode"
-from app_catalog cat
-join t_object app on app.package_id=cat.package_id and object_type='Component' and alias is not null and stereotype is null
-left join rel container on container.start_object_id=app.object_id and container.object_type='Component' and container.alias is not null and container.stereotype='${applicationCatalog.CONTAINER_STEREOTYPE}'
-    left join rel i on i.start_object_id=container.object_id and i.object_type='Interface' and i.alias is not null and i.alias <> ''
-`;
-const SYSTEM_REALIZATION_BY_CODE = `${SYSTEM_REALIZATION_LIST}
-where app.alias=$1`
-*/
+SELECT * FROM cte_sys_msg`
 
 
 class SystemsDataService {
@@ -170,6 +212,15 @@ class SystemsDataService {
      */
     async selectSystemCapabilities(code) {
         return Repository.queryRows(SELECT_SYSTEM_CAPABILITIES, [code]);
+    }
+
+    /**
+     * 
+     * @param {string} code 
+     * @returns {Promise}
+     */
+    async selectSystemE2EParticipition(code) {
+        return Repository.queryRows(`${SELECT_SYSTEM_PARTICIPITION} WHERE operation IS NOT NULL`, [code]);
     }
 }
 

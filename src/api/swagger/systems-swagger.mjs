@@ -8,6 +8,7 @@ export const BC_DESCRIPTION = "Поиск, получение и изменен�
 export const SYSTEM_LIST_RESOURCE = '/api/v4/systems';
 export const SYSTEM_RESOURCE = '/api/v4/systems/{code}';
 export const SYSTEM_PURPOSE_RESOURCE = '/api/v4/systems/{code}/purpose';
+export const SYSTEM_E2E_RESOURCE = '/api/v4/systems/{code}/e2e';
 
 export const GET_ALL_SPEC = {
     tags: [BC_NAME],
@@ -154,6 +155,32 @@ const GET_CAPABILITIES = {
     }
 }
 
+const GET_SYSTEM_E2E = {
+    tags: [BC_NAME],
+    summary: "Список е2е процессов, в котороых участвует система",
+    parameters: [
+        {
+            name: "code",
+            in: "path",
+            required: true,
+            description: "Код системы",
+            example: "FDMSHOWCASEAPP"
+        }],
+    responses: {
+        200: {
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "array",
+                        items: schemasRef('SystemE2EParticipation')
+                    }
+                }
+            }
+        },
+        400: { $ref: "#/components/responses/400" }
+    }
+
+}
 
 const PATHS = {
     [SYSTEM_LIST_RESOURCE]: {
@@ -165,6 +192,9 @@ const PATHS = {
     },
     [SYSTEM_PURPOSE_RESOURCE]: {
         get: GET_CAPABILITIES
+    },
+    [SYSTEM_E2E_RESOURCE]: {
+        get: GET_SYSTEM_E2E
     }
 }
 
@@ -173,18 +203,25 @@ const SYSTEM_PURPOSE_SCHEMA = {
     type: "object",
     properties: {
         tc: schemasRef('TechnicalCapability'),
-        bcList : {
-            type : "array",
+        bcList: {
+            type: "array",
             items: schemasRef('Capability')
         }
     }
 }
 
+const SYSTEM_E2E_PARTICIPATION = {
+    type: "object",
+    properties: {
+    }
+}
+
 
 const SCHEMAS = {
+    SystemE2EParticipation: SYSTEM_E2E_PARTICIPATION,
     Capability: CAPABILITY_SCHEMA,
-    TechnicalCapability : TC_SCHEMA,
-    SystemPurpose : SYSTEM_PURPOSE_SCHEMA,
+    TechnicalCapability: TC_SCHEMA,
+    SystemPurpose: SYSTEM_PURPOSE_SCHEMA,
     Method: {
         type: "object"
     },

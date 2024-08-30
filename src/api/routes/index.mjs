@@ -2,6 +2,9 @@ import express from 'express'
 import capabilitiesRoutes from './capabilities-routes.mjs'
 import tcRoutes from './tc-routes.mjs';
 import systemsRoutes from './systems-routes.mjs';
+import monitoringSourceReoutes from './monitiring-source-routes.mjs';
+import { NotImplemented } from '../../utils/errors.mjs';
+import e2eProcessRoutes from './e2e-process-routes.mjs';
 
 const apiRouter = express.Router();
 
@@ -26,7 +29,9 @@ function preparePath(path) {
 const API_ROUTES = {
     "capability-service": capabilitiesRoutes,
     "tc-service": tcRoutes,
-    "system-service": systemsRoutes
+    "system-service": systemsRoutes,
+    "monitoring-source-service": monitoringSourceReoutes,
+    "e2e-service": e2eProcessRoutes
 }
 
 /**
@@ -35,6 +40,7 @@ const API_ROUTES = {
  * @returns 
  */
 function createControllerDecorator(controller) {
+    controller = controller ?? (() => NotImplemented());
     return async (request, response, next) => {
         try {
             await controller(request, response, next)
@@ -53,7 +59,7 @@ for (const service_name in API_ROUTES) {
     const service = API_ROUTES[service_name];
     const specification = service.swagger;
     apiRouter.use(`/swagger-ui/${service_name}/swagger.json`, (_, res) => res.json(specification));
-    
+
     service.routes.forEach(route => {
         apiRouter[route.method](preparePath(route.path), createControllerDecorator(route.controller))
     });

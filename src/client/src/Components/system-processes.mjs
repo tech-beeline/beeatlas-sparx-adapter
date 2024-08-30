@@ -7,7 +7,7 @@ import { Autocomplete, Box, FormControl, InputLabel, List, ListItem, MenuItem, P
 import { E2EProcessSummary_URI } from "./dashboards/e2e-process/e2e-process-page.mjs";
 
 
-function SystemSelect({ onSelect }) {
+export function SystemSelect({ onSelect }) {
     const [app_list, setAppList] = useState(null)
 
     const loadApplications = async () => {
@@ -36,7 +36,7 @@ function SystemSelect({ onSelect }) {
 }
 
 
-export default function SystemProcesses() {
+export default function SystemE2EParticipion() {
     const [process_list, setProcessList] = useState(null)
     const [app, setApp] = useState(null)
 

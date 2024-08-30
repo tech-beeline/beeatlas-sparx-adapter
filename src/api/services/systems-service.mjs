@@ -1,6 +1,6 @@
 import { NotFound, NotImplemented } from "../../utils/errors.mjs";
 import dataService from '../data/systems-data-service.mjs'
-import System, { Container } from "../model/system.mjs";
+import System, { Container, E2EProcessContext } from "../model/system.mjs";
 
 const STEREOTYPE_MAP = {
     ArchiMate_TechnicalCapability: "TechnicalCapability",
@@ -92,9 +92,11 @@ class SystemService {
             (capability.children ?? (capability.children = [])).push(child);
         }
 
-        return Object.values(capabilityMap).find( r=>r.code='GRP.000')??{children:[]}
-        console.log(rows)
-        NotImplemented();
+        return Object.values(capabilityMap).find(r => r.code = 'GRP.000') ?? { children: [] }
+    }
+    async getE2EParticipition(systemCode) {
+        return (await dataService.selectSystemE2EParticipition(systemCode))
+            .map( r=>new E2EProcessContext(r));
     }
 }
 

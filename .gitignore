@@ -13,3 +13,4 @@ dashboard.code-workspace
 .env
 .env copy
 show.ps1
+c4-language-server.log

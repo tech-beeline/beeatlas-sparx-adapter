@@ -15,6 +15,7 @@ import E2EProcessSummary, { E2EProcessSummary_URI } from './Components/dashboard
 import SystemProcesses from './Components/system-processes.mjs';
 import SearchSystemPage from './Components/dashboards/system/search-system-page.mjs';
 import SystemPage from './Components/dashboards/system/system-page.mjs';
+import SystemE2EParticipionPage from './Components/dashboards/system/system-e2e.mjs';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -34,6 +35,7 @@ root.render(
       <Route path='/e2e/systems' element={<SystemProcesses/>} />
       <Route path='/systems' element={<SearchSystemPage/>} />
       <Route path='/systems/:code' element={<SystemPage/>} />
+      <Route path='/systems/:code/e2e' element={<SystemE2EParticipionPage/>} />
       <Route path='/e2e' element={<E2EDashboardMainPage/>}/>
     </Routes>
   </Router>

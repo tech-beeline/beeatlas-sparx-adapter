@@ -50,7 +50,7 @@ const CAPABILITY_QUERY =
 		cap.ea_guid,
 		cap.package_id
 	from t_connector rel
-		join capabilities p on p.id=rel.start_object_id and rel.stereotype='ArchiMate_Aggregation'
+		join capabilities p on p.id=rel.start_object_id and rel.stereotype in ('ArchiMate_Aggregation', 'ArchiMate_Composition')
 		join t_object cap on cap.object_id=rel.end_object_id and cap.stereotype='ArchiMate_Capability'
         where cap.alias is not null
 )

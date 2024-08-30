@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 export function MainBar({ contextMenu, title, barContent }) {
     const [menuOpen, setMenuOpen] = useState(false);
-    console.log(contextMenu)
+
     return (
         <Box sx={{ flexGrow: 1 }}>
             <AppBar position="static">
