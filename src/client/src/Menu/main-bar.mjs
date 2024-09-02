@@ -1,7 +1,53 @@
 import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, MenuItem, Toolbar, Typography } from "@mui/material";
-import { KeyboardArrowDown, KeyboardArrowUp, Label, Title, Menu as MenuIcon, ExpandMore, SettingsApplications, Signpost } from "@mui/icons-material";
+import { KeyboardArrowDown, KeyboardArrowUp, Label, Title, Menu as MenuIcon, ExpandMore, SettingsApplications, Signpost, Home } from "@mui/icons-material";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+
+export function HomeLink() {
+    return (
+        <NavLink underline="hover"
+            sx={{ display: 'flex', alignItems: 'center' }}
+            color="inherit"
+            className="link"
+            to="/"><Home />Архитектура
+        </NavLink>
+    )
+}
+
+export function SystemCatalogLink() {
+    return (<NavLink underline="hover"
+        sx={{ display: 'flex', alignItems: 'center' }}
+        color="inherit"
+        className="link"
+        to="/systems"><SettingsApplications />Каталог систем
+    </NavLink>);
+}
+
+export function E2ECatalogLink() {
+    return (
+        <NavLink underline="hover"
+            sx={{ display: 'flex', alignItems: 'center' }}
+            className="link"
+            color="inherit"
+            to="/e2e">
+            <Signpost />
+            Каталог E2E процессов
+        </NavLink>
+    )
+}
+
+
+export function E2EProcessLink({ title, uid }) {
+    return (
+        <NavLink underline="hover"
+            sx={{ display: 'flex', alignItems: 'center' }}
+            className="link"
+            color="inherit"
+            to={`/e2e/${encodeURIComponent(uid)}`}>
+            <Signpost />{title}
+        </NavLink>
+    )
+}
 
 export function MainBar({ contextMenu, title, barContent }) {
     const [menuOpen, setMenuOpen] = useState(false);

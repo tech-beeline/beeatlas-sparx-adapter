@@ -34132,3 +34132,4 @@
 16:49:44.661 [pool-2-thread-1] INFO  d.s.c.ls.service.C4LanguageServer - setTrace off
 16:50:21.292 [pool-2-thread-1] INFO  d.s.c.ls.service.C4LanguageServer - setTrace off
 16:50:21.335 [pool-2-thread-1] INFO  d.s.c.ls.service.C4LanguageServer - setTrace off
+18:15:05.234 [main] INFO  d.s.c.ls.C4LanguageServerLauncher - Launching C4LanguageServer finished

@@ -1,0 +1,1 @@
+export const E2E_API_RESOURCE = '/api/v4/e2e';

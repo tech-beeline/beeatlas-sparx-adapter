@@ -1,60 +1,139 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from "react-router-dom";
-import { E2EScenarioDashboard_URI } from './e2e-scenarios-page.mjs';
+import { NavLink, useNavigate, useParams } from "react-router-dom";
 import { WebEANaviLine, webEALink } from '../../utils.mjs';
+import { E2ECatalogLink, HomeLink, MainBar } from '../../../Menu/main-bar.mjs';
+import { Commit, ExpandMore, Home, HourglassBottom, Signpost } from '@mui/icons-material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Breadcrumbs, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { E2EProcessSelect } from '../../../e2e/e2e-process-select.mjs';
+import { E2E_API_RESOURCE } from '../../../const.mjs';
 
 
 export const E2EProcessSummary_URI = "/e2e/processes";
 
-function E2ESummary({ summary , uid}) {
-    console.log(summary)
-    return summary ? <div>
-        <h1>{summary.name} <WebEANaviLine uid={uid}/></h1>
-    </div> : <div>Loading ...</div>
+function E2ESummaryAccordion({ process, uid }) {
+    return (
+        <Accordion>
+            <AccordionSummary component={Paper} expandIcon={<ExpandMore />}>
+                <Signpost />
+                <Box fontWeight='fontWeightMedium' display='inline'>Информация о Е2Е процессе</Box></AccordionSummary>
+            <TableContainer component={Paper}>
+                <Table size='small'>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell>Название</TableCell>
+                            <TableCell>{process?.name}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>Процесс в WebEA</TableCell>
+                            <TableCell><WebEANaviLine text={process?.name} uid={uid} /></TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>Дашборд наблюдаемости</TableCell>
+                            <TableCell>Здесь будет ссылка на витрину в графане</TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            <AccordionDetails></AccordionDetails>
+        </Accordion>
+    )
 }
 
 
-function BusinessInteractionList({ interactions , process_uid}) {
+function BusinessInteractionList({ interactions, process_uid }) {
+    console.log(interactions);
 
-    console.log( interactions)
-    return interactions?<div>
-        <h2>Business Interactions</h2>
-        {interactions.map(it => <h3><a href={`${E2EProcessSummary_URI}/${process_uid}/bi/${encodeURIComponent(it.ea_guid)}`}>{it.bi_name}</a>
-        {it.alert?<h4>{it.alert}</h4>:null}
-        </h3>)}
-    </div>:<div>Loading ...</div>
+    return (
+        <Accordion>
+            <AccordionSummary component={Paper} expandIcon={<ExpandMore />}><Commit /><Box fontWeight='fontWeightMedium' display='inline'>Business Interactions</Box></AccordionSummary>
+            <AccordionDetails component={Paper}>
+                {interactions ?
+                    (
+                        interactions.length ?
+                            <Table size='small'>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Название</TableCell>
+                                        <TableCell>Бизнес взаимодействие в WebEA</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {interactions.map(it => (
+                                        <TableRow key={it.ea_guid}>
+                                            <TableCell><NavLink to={`/e2e/${encodeURIComponent(process_uid)}/bi/${encodeURIComponent(it.ea_guid)}`}>{it.name}</NavLink></TableCell>
+                                            <TableCell><WebEANaviLine text={it.name} uid={it.ea_guid} /></TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table> :
+                            <Box>Бизнес взаимодействия не найдены</Box>
+                    ) :
+                    <Box><HourglassBottom />Loading....</Box>
+                }
+            </AccordionDetails>
+        </Accordion>
+    )
 }
-export default function E2EProcessSummary() {
+
+export default function E2EProcessPage() {
 
     const { uid } = useParams();
+    const navigate = useNavigate();
 
 
-    const [summary, setSummary] = useState(null);
+    const [process, setProcess] = useState(null);
 
     const [businessIneractions, setBusinessIneractions] = useState(null);
 
 
-    const featchInteractions = async () => {
-        const response = await fetch(`/api/v1/e2e-processes/${encodeURIComponent(uid)}/business-interactions`)
+    const featchInteractions = async (processUID) => {
+        const response = await fetch(`/api/v1/e2e-processes/${encodeURIComponent(processUID)}/business-interactions`)
         if (response.status !== 200) {
             return setBusinessIneractions({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() });
         }
         setBusinessIneractions(await response.json())
     }
 
-    const featchSummary = async () => {
-        const response = await fetch(`/api/v1/e2e-processes/${encodeURIComponent(uid)}`)
+    const featchProcess = async (processUID) => {
+        const response = await fetch(`${E2E_API_RESOURCE}/${encodeURIComponent(processUID)}`)
         if (response.status !== 200) {
-            return setSummary({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() });
+            return setProcess({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() });
         }
-        setSummary(await response.json())
+        setProcess(await response.json())
     }
 
     useEffect(() => {
-        featchInteractions();
-        featchSummary();
+        featchProcess(uid);
     }, [])
-    return <div><E2ESummary summary={summary} uid={uid}> </E2ESummary>
-        <BusinessInteractionList interactions={businessIneractions} process_uid={uid}/>
+    useEffect(() => {
+        featchInteractions(uid);
+    }, [process]);
+
+    const handleChangeProcess = (process) => {
+        if (process) {
+            navigate(`/e2e/${encodeURIComponent(process.uid)}`);
+            featchProcess(process.uid);
+            featchInteractions(process.uid);
+        }
+    }
+
+    return <div>
+        <MainBar
+            barContent={
+                <Breadcrumbs aria-label="breadcrumb">
+                    <HomeLink />
+                    <E2ECatalogLink />
+                    <E2EProcessSelect process={process} onSelect={handleChangeProcess} />
+                </Breadcrumbs>
+            }
+        />
+        <E2ESummaryAccordion
+            process={process}
+            uid={process?.uid ?? uid}
+        />
+        <BusinessInteractionList
+            interactions={businessIneractions}
+            process_uid={process?.uid ?? uid}
+        />
     </div>
 }

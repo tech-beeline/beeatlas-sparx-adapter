@@ -1,15 +1,19 @@
 import { NotFound, NotImplemented } from "../../utils/errors.mjs";
 import dataService from "../data/e2e-data-service.mjs";
 
+
+function E2EProcess(r) {
+    return { name: r.name, uid: r.uid, version: r.version };
+}
 class E2EProcessService {
     async getE2EList() {
         const rows = await dataService.selectAllE2E();
-        return rows.map(r => ({ name: r.name, uid: r.uid }))
+        return rows.map(r => E2EProcess(r))
     }
     async getE2E(uid) {
         const e2e = await dataService.selectE2EByUID(uid);
         if (!e2e) throw NotFound(`Process with uid = "${uid}" not found`);
-        return { name: e2e.name, uid: e2e.uid }
+        return E2EProcess(e2e);
     }
     async getE2EBusinessInteractions(uid) {
         NotImplemented();

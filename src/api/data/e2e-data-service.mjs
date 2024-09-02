@@ -54,7 +54,8 @@ SELECT group_name,
 		pkg_name as package_name, 
 		sd.package_id,
         sd.name AS name, 
-        sd.ea_guid as uid
+        sd.ea_guid as uid,
+		sd.version
 FROM cte_e2e_pkg
 	JOIN t_diagram sd ON sd.package_id=cte_e2e_pkg.package_id AND sd.stereotype='e2e_diagram'`;
 

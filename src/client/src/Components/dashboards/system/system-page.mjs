@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { SystemContainers } from "./system-api.mjs";
 import CreateSystemDashboard from "./system-create-dashboard.mjs";
-import { MainBar } from "../../../Menu/main-bar.mjs";
+import { HomeLink, MainBar, SystemCatalogLink } from "../../../Menu/main-bar.mjs";
 import { SystemCapabilitiesAccordion } from "./system-capabilities.mjs";
 import { SystemSelect } from "./system-select.mjs";
 import { SystemSummary } from "./system-summary.mjs";
@@ -12,23 +12,6 @@ import { SystemE2EParticipion } from './system-e2e.mjs'
 import GrafanaSourceMenuItem from "./grafana-sources/system-grafana-source.mjs";
 
 
-function MethodRow({ method }) {
-    return <TableRow>
-        <TableCell></TableCell><TableCell>{method.name}</TableCell><TableCell>{method.rps}</TableCell><TableCell>{method.latency}</TableCell><TableCell>{method.error_rate}</TableCell>
-    </TableRow>
-}
-function MethodsTable({ methods }) {
-    return <TableContainer>
-        <Table>
-            <TableHead>
-                <TableRow>
-                    <TableCell></TableCell><TableCell>Имя</TableCell><TableCell>RPS</TableCell><TableCell>Latency</TableCell><TableCell>Error Rate</TableCell>
-                </TableRow>
-            </TableHead>
-            <TableBody>{methods.map(m => <MethodRow key={m.name} method={m} />)}</TableBody>
-        </Table>
-    </TableContainer>
-}
 
 export default function SystemPage() {
     const [system, setSystem] = React.useState(null)
@@ -53,23 +36,6 @@ export default function SystemPage() {
     }
 
 
-    const breadcrumbs = <Breadcrumbs aria-label="breadcrumb">
-        <Link underline="hover"
-            sx={{ display: 'flex', alignItems: 'center' }}
-            color="inherit"
-            to="/"><Home />Архитектура
-        </Link>
-        <Link underline="hover"
-            sx={{ display: 'flex', alignItems: 'center' }}
-            color="inherit"
-            to="/systems">
-            <SettingsApplications />
-            Каталог систем
-        </Link>
-        <SystemSelect system={{ label: system?.name, code: system?.code }} onSelect={handleSelectSystem} />
-    </Breadcrumbs>
-
-
     useEffect(() => {
         loadData();
     }, [])
@@ -87,13 +53,25 @@ export default function SystemPage() {
         {dashboardDialogOpen ? <CreateSystemDashboard system={system} setOpen={setDashboardDialogOpen} /> : null}
     </List>
 
-    return system ?
-        system.error ? <Box>Ошибка при загрузке данных: {system.error}</Box> :
-            <Box component={Paper}>
-                <MainBar barContent={breadcrumbs} contextMenu={contextMenu} />
-                <SystemSummary system={system} />
-                <SystemCapabilitiesAccordion system={system} />
-                <SystemContainers system={system} />
-                <SystemE2EParticipion systemCode={system.code} />
-            </Box> : <Box>Данные загружаются</Box>
+    return <>
+        <MainBar
+            barContent={
+                <Breadcrumbs aria-label="breadcrumb">
+                    <HomeLink />
+                    <SystemCatalogLink />
+                    <SystemSelect system={system} onSelect={handleSelectSystem} />
+                </Breadcrumbs>
+            }
+            contextMenu={contextMenu} />
+        {
+            system ?
+                system.error ? <Box>Ошибка при загрузке данных: {system.error}</Box> :
+                    <Box component={Paper}>
+
+                        <SystemSummary system={system} />
+                        <SystemCapabilitiesAccordion system={system} />
+                        <SystemContainers system={system} />
+                        <SystemE2EParticipion systemCode={system.code} />
+                    </Box> : <Box>Данные загружаются</Box>}
+    </>
 }

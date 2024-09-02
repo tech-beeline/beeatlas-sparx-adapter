@@ -1,6 +1,6 @@
 import { Link, NavLink, useParams } from "react-router-dom";
+import '../../css/e2e-scenario.css'
 import React, { useEffect, useState } from 'react';
-//import '../../css/e2e-scenario.css'
 import { Interaction2, Scenario } from "./scenario-model.mjs";
 import Table from '@mui/material/Table/Table.js';
 import TableBody from '@mui/material/TableBody/TableBody.js';
@@ -11,18 +11,18 @@ import TableRow from '@mui/material/TableRow/TableRow.js';
 import Paper from '@mui/material/Paper/Paper.js';
 import { FilterState, InteractionFilter } from "./interactions-filter.mjs";
 import IconButton from '@mui/material/IconButton/IconButton.js';
-import { KeyboardArrowDown, KeyboardArrowUp, EditNote, ExpandMore, Menu as MenuIcon } from '@mui/icons-material';
+import { KeyboardArrowDown, KeyboardArrowUp, Home, Signpost, AddCard } from '@mui/icons-material';
 import Collapse from '@mui/material/Collapse/Collapse.js';
-import { Accordion, AccordionDetails, AccordionSummary, AppBar, Box, Button, List, ListItem, Menu, MenuItem, Toolbar, Typography } from "@mui/material";
+import { Box, Breadcrumbs, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from "@mui/material";
 import { TreeView, TreeItem } from '@mui/x-tree-view';
 import MessageEditForm from "./message-form.mjs";
 import { WebEANaviLine, webEALink } from "../../utils.mjs";
-import { E2EDashboardMainPage_URI } from "./scenarios-main-page.mjs";
-import { E2EProcessSummary_URI } from "./e2e-process-page.mjs";
 import { ApplicationSection } from "./e2e-application-section.mjs";
 import { CallTraceSection } from "./e2e-call-trace-section.mjs";
 import { CreateDashboardDialog } from "./e2e-create-dashboard.mjs";
 import { InteractionsSection } from "./e2e-interactions-section.mjs";
+import { E2ECatalogLink, E2EProcessLink, HomeLink, MainBar } from "../../../Menu/main-bar.mjs";
+import { E2E_API_RESOURCE } from "../../../const.mjs";
 
 function ScenarioHeader({ scenario, process_uid }) {
     const [e2e, setE2E] = React.useState(null)
@@ -30,7 +30,7 @@ function ScenarioHeader({ scenario, process_uid }) {
     const [showCreateDashboard, setShowCreateDashboard] = useState(false);
 
     const loadE2E = async () => {
-        const response = await fetch(`/api/v1/e2e-processes/${encodeURIComponent(process_uid)}`)
+        const response = await fetch(`${E2E_API_RESOURCE}/${encodeURIComponent(process_uid)}`)
         if (response.status !== 200) {
             setE2E({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() })
             return;
@@ -48,43 +48,30 @@ function ScenarioHeader({ scenario, process_uid }) {
         setAnchorMenu(null);
     }
 
-    return (<Box sx={{ flexGrow: 1 }}><CreateDashboardDialog open={showCreateDashboard} setOpen={setShowCreateDashboard} scenario={scenario} />
-        <AppBar position="static">
-            <Toolbar>
-                <div>
-                    <IconButton
-                        size="large"
-                        edge="start"
-                        color="inherit"
-                        aria-label="menu"
-                        sx={{ mr: 2 }}
-                        onClick={e => setAnchorMenu(e.currentTarget)}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Menu id='menu-appbar' anchorEl={anchorMenu} open={Boolean(anchorMenu)}
-                        sx={{ mt: '45px' }}
-                        onClose={() => setAnchorMenu(null)}
-                        anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }}
-                        keepMounted
-                        transformOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }}>
-                        <MenuItem onClick={createScenarioDashboard}>Создать дашборд наблюдемости сценария</MenuItem>
-                        <MenuItem component={Link} to={`${E2EProcessSummary_URI}/${encodeURIComponent(process_uid)}`}>На строницу Е2Е процесса</MenuItem>
-                        <MenuItem component={Link} to={webEALink(scenario.guid)} target="_blank" onClick={() => setAnchorMenu(null)}>Открыть сценарий в WebEA </MenuItem>
-                    </Menu>
-                </div>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                    {e2e ? e2e.error ? 'Ошибка при загрузке информации о процессе' : `${e2e.name}: ${scenario.name}` : `[Загрузка информации о процессе...]/ ${scenario.name}`}
-                </Typography>
-            </Toolbar>
-        </AppBar>
-    </Box>)
+    return (
+        <Box sx={{ flexGrow: 1 }}>
+            {scenario ? <CreateDashboardDialog open={showCreateDashboard} setOpen={setShowCreateDashboard} scenario={scenario} /> : null}
+            <MainBar
+                barContent={
+                    <Breadcrumbs aria-label="breadcrumb">
+                        <HomeLink />
+                        <E2ECatalogLink />
+                        <E2EProcessLink title={e2e?.name} uid={e2e?.uid} />
+                        <Typography>{scenario?.name}</Typography>
+                    </Breadcrumbs>}
+                contextMenu={
+                    <List>
+                        <ListItem key="create-dashboard" disablePadding>
+                            <ListItemButton onClick={() => { createScenarioDashboard(true) }}>
+                                <ListItemIcon>
+                                    <AddCard />
+                                </ListItemIcon>
+                                <ListItemText primary="Создать дашборд сценария" />
+                            </ListItemButton>
+                        </ListItem>
+                    </List>
+                } />
+        </Box>)
 }
 
 function alertText(txt, color = "red") {
@@ -295,12 +282,14 @@ export default function E2EScenarioDashboard() {
 
     const { process_uid, uid } = useParams();
 
-    return e2eScenario ?
-        e2eScenario.error ? <div><h3>Ошибка при загрузке данных<br />{e2eScenario?.error}</h3><p>{e2eScenario.errorBody}</p></div> :
-            <div>
-                <ScenarioHeader scenario={e2eScenario.info} process_uid={process_uid}></ScenarioHeader>
-                <ApplicationSection applications={e2eScenario.applications} />
-                <CallTraceSection callTree={e2eScenario.callTrace}></CallTraceSection>
-                <InteractionsSection scenario={e2eScenario} />
-            </div> : <img src="/images/loading.gif" style={{ display: "block", marginLeft: "auto", marginRight: "auto" }} />
+    return <>
+        <ScenarioHeader scenario={e2eScenario?.info} process_uid={process_uid}></ScenarioHeader>
+        {e2eScenario ?
+            e2eScenario.error ? <div><h3>Ошибка при загрузке данных<br />{e2eScenario?.error}</h3><p>{e2eScenario.errorBody}</p></div> :
+                <div>
+                    <ApplicationSection applications={e2eScenario.applications} />
+                    <CallTraceSection callTree={e2eScenario.callTrace}></CallTraceSection>
+                    <InteractionsSection scenario={e2eScenario} />
+                </div> : <img src="/images/loading.gif" style={{ display: "block", marginLeft: "auto", marginRight: "auto" }} />}
+    </>
 }
