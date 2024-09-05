@@ -1,13 +1,14 @@
 import { API_VERSION, CONTACT } from "../../resources/const.mjs"
 import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
 
-export const BC_NAME = "Управление бизнес-возможностями"
-export const BC_DESCRIPTION = "Управление возможностями и доменами"
-export const CAPABILITIES_RESOURCE = "/api/v4/capabilities";
+export const CAPABILITY_SERVICE_NAME = "Управление бизнес-возможностями"
+export const CAPABILITY_SERVICE_DESCRIPTION = "Управление возможностями и доменами"
+
+export const CAPABILITY_LIST_RESOURCE = "/api/v4/capabilities";
 export const CAPABILITY_RESOURCE = "/api/v4/capabilities/{code}";
 
 export const GET_ALL_SPEC = {
-    tags: [BC_NAME],
+    tags: [CAPABILITY_SERVICE_NAME],
     summary: "Получение списка бизнес-воможностей",
     responses: {
         200: {
@@ -24,7 +25,7 @@ export const GET_ALL_SPEC = {
 }
 
 export const GET_BY_CODE_SPEC = {
-    tags: [BC_NAME],
+    tags: [CAPABILITY_SERVICE_NAME],
     summary: "Получение информации о бизнес-возможнорсти по коду",
     parameters: [
         {
@@ -47,7 +48,7 @@ export const GET_BY_CODE_SPEC = {
 }
 
 const PATHS = {
-    [CAPABILITIES_RESOURCE]: {
+    [CAPABILITY_LIST_RESOURCE]: {
         get: GET_ALL_SPEC
     },
     [CAPABILITY_RESOURCE]: {
@@ -85,6 +86,6 @@ const SCHEMAS = {
     }
 }
 
-const SWAGGER = buildServiceSwagger(BC_NAME, BC_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })
+const SWAGGER = buildServiceSwagger(CAPABILITY_SERVICE_NAME, CAPABILITY_SERVICE_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })
 
 export default SWAGGER;

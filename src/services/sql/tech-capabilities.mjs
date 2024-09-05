@@ -19,7 +19,7 @@ const ALL_TECH_CAPABILITITES_QUERY = `with recursive bc_catalog as (
 		join t_diagramobjects oo on oo.diagram_id=d.diagram_id
 		join t_object c on c.object_id=oo.object_id and c.stereotype ='ArchiMate_TechnicalCapability'
 		join t_connector r on r.end_object_id=c.object_id
-		join t_object bc on bc.object_id= r.start_object_id and bc.stereotype='ArchiMate_Capability' and bc.alias is not null
+		join t_object bc on bc.object_id= r.start_object_id and (bc.stereotype='ArchiMate_Capability' or bc.object_type='Package')  and bc.alias is not null
 		join t_diagramobjects obc on obc.diagram_id=d.diagram_id and obc.object_id=bc.object_id
 ), app_catalog as (
 	select p.package_id, p.package_id as parent_id, p.name, o.alias

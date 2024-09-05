@@ -72,7 +72,7 @@ class TechnicalCapabilityService {
 			if (!TechnicalCapabilityService.app_package) throw Error(`Не удалось найти корневую папку (ea_guid=${APP_PACKAGE}) для создания папки приложения ${capability.targetSystemCode}`);
 			const app_catalog = await applicationService.getApplications();
 			const system_name = app_catalog.applications[capability.targetSystemCode]?.name ?? capability.targetSystemCode;
-			system_package = await Repository.createPackage({ name: system_name, alias: capability.targetSystemCode, parent_id: TechnicalCapability.app_package.package_id })
+			system_package = await Repository.createPackage({ name: system_name, alias: capability.targetSystemCode, parent_id: TechnicalCapabilityService.app_package.package_id })
 		}
 
 		let parents_bc = (await Repository.queryRows('select * from t_object where alias = ANY($1)', [capability.parents]));
@@ -149,12 +149,12 @@ class TechnicalCapabilityService {
 
 		const asis_tc = await this.getTechnicalCapability({ code: code });
 		if (!asis_tc) {
-			let parents_bc = (await Repository.queryRows('select distinct object_id from t_object where alias = ANY($1)', [capability.parents]));
+			let parents_bc = (await Repository.queryRows('select * from t_object where alias = ANY($1)', [capability.parents]));
 			for (const bc of parents_bc) {
-				await this.addParentBC(asis_tc, { object_id: bc.object_id });
+				await this.addParentBC(ea_capability, bc);
 			}
 			return this.getTechnicalCapability(capability);
-		} 
+		}
 
 		if (asis_tc.targetSystemCode !== capability.targetSystemCode) {
 			NotImplemented('Изменение целевой системы для ТС');
@@ -207,14 +207,27 @@ class TechnicalCapabilityService {
 		await Repository.queryOne(`delete from t_connector where connector_id=$1`, [connector.connectorid]);
 	}
 
+	async #prepareBCDiagram(bc) {
+		if (bc.object_type === 'Package') { // BC является доменом
+			const pkg = await Repository.first(t_package, { ea_guid: bc.ea_guid });
+			return Repository.putDiagram({ package_id: pkg.package_id, name: TC_QUERY.BC_TC_DIAGRAM_NAME, diagram_type: 'Component', author: 'FDM API' });
+		}
+		const bc_package = await Repository.queryOne(TC_QUERY.BC_PACKAGE_QUERY_BY_ID, [bc.parent_id]);
+		if (!bc_package) throw Error(`Не найдена папка, где лежит диграмма для BC ${bc.name}`);
+
+		// [ ] ДОбавить обработку  отсутсвия диаграммы для BC
+		return Repository.putDiagram({ package_id: bc_package.package_id, name: TC_QUERY.BC_TC_DIAGRAM_NAME, diagram_type: 'Component', author: 'FDM API' });
+	}
+
 	async addParentBC(capability, parent) {
+
 		const parent_id = parent.object_id;
 		if (!parent_id) throw Error('not implemented');
 		const capability_id = capability.object_id;
 		if (!capability_id) throw Error('not implemented');
-		const bc_package = await Repository.queryOne(TC_QUERY.BC_PACKAGE_QUERY_BY_ID, [parent_id]);
+
 		/** @type {t_diagram} */
-		const diagram = await Repository.putDiagram({ package_id: bc_package.package_id, name: TC_QUERY.BC_TC_DIAGRAM_NAME, diagram_type: 'Component', author: 'FDM API' });
+		const diagram = await this.#prepareBCDiagram(parent);
 		let parent_do = await Repository.first(t_diagramobjects, { diagram_id: diagram.diagram_id, object_id: parent_id });
 
 		const max_r = (await Repository.queryOne(' select max(rectright) as max_r from t_diagramobjects where diagram_id=$1', [diagram.diagram_id])).max_r ?? 0;

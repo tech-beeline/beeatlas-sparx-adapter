@@ -330,6 +330,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
                 if (method) {
                     const api = m.server.interfaces[method.api_guid] ?? (m.server.interfaces[method.api_guid] = { name: method.api, code: method.api_code, uid: method.api_guid, methods: {} });
                     api.methods[method.name] = method;
+                    m.method = method;
                 }
             }
             m.client = useSystem(m.client_id);

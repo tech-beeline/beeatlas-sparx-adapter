@@ -328,7 +328,7 @@ class MonitoringService {
                 const title = `${m.client_code} - ${m.server_code}${m.stereotype ? ` ${m.stereotype}` : ""}: ${m.name}`
                 m.interaction = map[title];
                 if (!m.interaction) {
-                    const [method, path] = m.name.split(' ').filter(it => it.length);
+                    const [method, path] = (m.method?.name ?? m.name).split(' ').filter(it => it.length);
                     m.rps = Number(m.rps?.replace(',', '.'));
                     m.latency = Number(m.latency?.replace(',', '.'));
                     m.error_rate = Number(m.error_rate?.replace(',', '.'));
