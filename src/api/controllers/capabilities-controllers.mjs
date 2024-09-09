@@ -18,9 +18,9 @@ class CapabilityControllers {
      * @param {express.Response} response 
      */
     async getByCode(request, response) {
-        if( !request.params.code) throw BadRequest(`The code is not specified`);
+        if (!request.params.code) throw BadRequest(`The code is not specified`);
         const capabilty = await capabilitiesService.getByCode(request.params.code);
-        if( !capabilty) throw NotFound(`The capability with the code ${request.params.code} was not found`)
+        if (!capabilty) throw NotFound(`The capability with the code ${request.params.code} was not found`)
 
         response.json(capabilty);
     }

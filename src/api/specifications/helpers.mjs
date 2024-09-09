@@ -1,8 +1,15 @@
 export const stringProperty = (description, { example, format } = {}) => ({ type: "string", description: description, format: format ?? undefined, example: example ?? undefined });
+export const numberProperty = (description, { example, format } = {}) => ({ type: "number", description: description, format: format ?? undefined, example: example ?? undefined });
+export const integerProperty = (description, { example, format } = {}) => ({ type: "integer", description: description, format: format ?? undefined, example: example ?? undefined });
 export const booleanProperty = (description) => ({ type: "boolean", description: description });
 export const dateTimeProperty = (description) => ({ type: "string", description: description, format: "date-time" });
 
 export const schemasRef = (name) => ({ $ref: `#/components/schemas/${name}` });
+
+export const AUTHOR_PROPERTY = {
+
+}
+
 export const buildServiceSwagger = (title, description, contact, version, paths, components) => (
     {
         openapi: "3.0.3",

@@ -1,3 +1,6 @@
+import { buildHREF } from "../controllers/controller-decorator.mjs";
+import { CAPABILITY_LIST_RESOURCE } from "../specifications/paths.mjs";
+
 export class CapabilityRef {
     domainCode;
     capabilitCode;
@@ -23,9 +26,19 @@ class Capability {
     owner;
     children;
     ea_guid;
+    self;
     constructor(cap) {
         for (const prop in this) {
             this[prop] = cap[prop] ?? undefined;
+        }
+        this.self = buildHREF(`${CAPABILITY_LIST_RESOURCE}/${this.code}`)
+
+        if (this.parent) {
+            this.parent = {
+                code: this.parent,
+                name: cap.parent_name,
+                href: buildHREF(`${CAPABILITY_LIST_RESOURCE}/${this.parent}`)
+            }
         }
         this.getCapabilityId = () => cap.id;
         this.getPackageId = () => cap.package_id

@@ -9,6 +9,7 @@ const SELECT_ALL =
 		true as "isDomain",
 		d.descr as description,
 		po.alias as "parent", 
+		po.name  as parent_name,
 		true as "isParentDomain",
 		d.owner,
 		p.author, 
@@ -29,6 +30,7 @@ const SELECT_ALL =
 		false as "isDomain",
 		cap.note,
 		p.code as parentCode,
+		p.name as parent_name,
 		p."isDomain",
 		coalesce((SELECT DISTINCT obe.name
                    FROM t_connector co,

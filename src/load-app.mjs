@@ -6,7 +6,7 @@ import path from 'path'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import RESTMetric from './metrics/middleware.mjs';
-import API_ROUTES from './api/routes/index.mjs'
+import API_ROUTES from './api/specifications/index.mjs'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

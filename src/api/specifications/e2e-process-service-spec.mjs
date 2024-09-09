@@ -1,8 +1,8 @@
 import { API_VERSION, CONTACT } from "../../resources/const.mjs"
 import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
 
-export const BC_NAME = "Управление информацией о Е2Е процессах"
-export const BC_DESCRIPTION = "Управление информацией о Е2Е процесса"
+export const PROCESS_SERVICE_NAME = "Управление информацией о Е2Е процессах"
+export const PROCESS_SERVICE_DESCRIPTION = "Управление информацией о Е2Е процесса"
 
 export const E2E_LIST_RESOURCE = "/api/v4/e2e"
 export const E2E_RESOURCE = "/api/v4/e2e/{uid}"
@@ -12,7 +12,7 @@ export const E2E_BI_MESSAGES_RESOURCE = "/api/v4/e2e-bi/{uid}/messages"
 export const E2E_BI_SCENARIO_RESOURCE = "/api/v4/e2e-bi/{uid}/scenario"
 
 export const GET_ALL_E2E = {
-    tags: [BC_NAME],
+    tags: [PROCESS_SERVICE_NAME],
     summary: "Получение списка Е2Е процессов",
     responses: {
         200: {
@@ -29,7 +29,7 @@ export const GET_ALL_E2E = {
 }
 
 export const GET_E2E = {
-    tags: [BC_NAME],
+    tags: [PROCESS_SERVICE_NAME],
     summary: "Получение Е2Е процессов по идентификатору",
     parameters: [
         {
@@ -53,7 +53,7 @@ export const GET_E2E = {
 
 
 const GET_E2E_MESSAGES = {
-    tags: [BC_NAME],
+    tags: [PROCESS_SERVICE_NAME],
     summary: "Получение сообщений(вызовов) для Е2Е процесса",
     parameters: [
         {
@@ -112,6 +112,6 @@ const SCHEMAS = {
     E2EMessage: E2E_MESSAGE_SCHEMA
 }
 
-const SWAGGER = buildServiceSwagger(BC_NAME, BC_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })
+const SWAGGER = buildServiceSwagger(PROCESS_SERVICE_NAME, PROCESS_SERVICE_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })
 
 export default SWAGGER;

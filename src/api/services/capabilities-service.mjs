@@ -11,6 +11,11 @@ class CapabiliiesService {
     async getAll() {
         return capabilitiesData.selectAll().then(rows => rows.map(r => new Capability(r)));
     }
+    /**
+     * 
+     * @param {string} code 
+     * @returns {Promise<Capability>}
+     */
     async getByCode(code) {
         return capabilitiesData.selectByCode(code).then(row => row ? new Capability(row) : null);
     }
