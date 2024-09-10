@@ -1,4 +1,5 @@
 import { API_VERSION, CONTACT } from "../../resources/const.mjs"
+import glossaryControllers from "../controllers/glossary-controllers.mjs";
 import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
 
 export const BUSINESS_TERMS_SERVICE_NAME = "Управление информацией о бизнес-терминах"
@@ -22,7 +23,8 @@ export const GLOSSARY_SCHEMA = {
         deleted: booleanProperty("Признак, что словарь удален"),
         self: stringProperty("Ссылка на словарь", { example: `https://company${GLOSSARY_LIST_RESOURCE_V4}/e9a387e2-04b3-4da5-9efc-f670e5af2a08` })
     }
-}
+};
+
 const GLOSSARY_SCHEMA_REF = schemasRef('Glossary')
 
 const TERM_SCHEMA = {
@@ -47,6 +49,7 @@ const GET_GLOSSARY_LIST_SPEC = {
     tags: [BUSINESS_TERMS_SERVICE_NAME],
     summary: "Получение списка бизнес-словарей",
     description: "Получение списка бизнес словарей",
+    controller: glossaryControllers.getGlossaryList,
     responses: {
         200: {
             content: {
@@ -65,6 +68,7 @@ const GET_GLOSSARY_SPEC = {
     tags: [BUSINESS_TERMS_SERVICE_NAME],
     summary: "Получение информации о бизнес-словаре",
     description: "Получение информации о бизнес-словаре",
+    controller: glossaryControllers.getGlossary,
     parameters: [
         {
             name: "id",
@@ -97,6 +101,7 @@ const GET_GLOSSARY_TERMS_SPEC = {
             example: "faf8fe66-a852-4030-81c7-5ef19604ab68"
         }
     ],
+    controller: glossaryControllers.getGlossaryTerms,
     responses: {
         200: {
             content: {

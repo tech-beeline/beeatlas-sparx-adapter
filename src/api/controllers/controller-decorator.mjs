@@ -1,5 +1,6 @@
 import express from 'express'
 import { AsyncLocalStorage } from 'async_hooks'
+import { NotImplemented } from '../../utils/errors.mjs';
 
 const requestLocalStorage = new AsyncLocalStorage();
 

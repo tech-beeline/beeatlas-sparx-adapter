@@ -52,15 +52,35 @@ class SystemsControllers {
 
         response.json(await service.getPurpose(request.params.code));
     }
-     /**
+    /**
+   * 
+   * @param {express.Request} request 
+   * @param {express.Response} response 
+   */
+    async getE2EParticipition(request, response) {
+        if (!request.params.code) throw BadRequest('The code is not specified');
+
+        response.json(await service.getE2EParticipition(request.params.code));
+    }
+
+    /**
     * 
     * @param {express.Request} request 
     * @param {express.Response} response 
     */
-     async getE2EParticipition(request, response) {
-        if (!request.params.code) throw BadRequest('The code is not specified');
+    async getSystemAssessments(request, response) {
+        if( !request.params.code) throw BadRequest('The code is not specified');
+        
+        response.json(await service.getSystemAssessments(request.params.code));
+    }
 
-        response.json(await service.getE2EParticipition(request.params.code));
+    /**
+    * 
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
+    async postSystemAssessment(request, response) {
+        response.json(await service.addAssessmentStatus(request.params.code, request.body));
     }
 }
 

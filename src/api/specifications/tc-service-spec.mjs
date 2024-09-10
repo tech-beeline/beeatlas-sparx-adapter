@@ -1,3 +1,4 @@
+import technicalCapabilitiyesController from "../controllers/tc-controllers.mjs";
 import { API_VERSION, CONTACT } from "../../resources/const.mjs"
 import { BC_LINK_SCHEMA } from "./capabilities-service-spec.mjs";
 import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
@@ -48,6 +49,7 @@ const tcSchemaRef = schemasRef( "TechnicalCapability")
 export const GET_ALL_SPEC = {
     tags: [TC_SERVICE_NAME],
     summary: "Получение списка технических воможностей",
+    controller: technicalCapabilitiyesController.getAll,
     responses: {
         200: {
             content: {
@@ -64,7 +66,8 @@ export const GET_ALL_SPEC = {
 
 export const GET_TC_SPEC = {
     tags: [TC_SERVICE_NAME],
-    summary: "Получение информации о тьехнической возможности по коду",
+    summary: "Получение информации о технической возможности по коду",
+    controller : technicalCapabilitiyesController.getByCode,
     parameters: [
         {
             name: "code",

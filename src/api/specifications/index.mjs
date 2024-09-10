@@ -3,7 +3,7 @@ import { NotImplemented } from '../../utils/errors.mjs';
 import { API_VERSION, CONTACT } from '../../resources/const.mjs';
 
 import capabilityServiceSpec from './capabilities-service-spec.mjs'
-import businessTermServiceSpec from './business-terms-service-spec.mjs'
+import businessTermServiceSpec from './glossary-service-spec.mjs'
 import tcServiceSpec from './tc-service-spec.mjs'
 import interfaceServiceSpec from './interfaces-service-spec.mjs'
 import systemsServiceSpec from './systems-service-spec.mjs'

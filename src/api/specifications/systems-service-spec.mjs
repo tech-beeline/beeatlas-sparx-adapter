@@ -3,11 +3,14 @@ import { BAD_REQUST_RESPONSE, booleanProperty, buildServiceSwagger, dateTimeProp
 import { CAPABILITY_SCHEMA } from "./capabilities-service-spec.mjs";
 import { TC_SCHEMA } from "./tc-service-spec.mjs";
 import { INTERFACE_SCHEMA } from "./interfaces-service-spec.mjs";
+import { SYSTEM_ASSESSMENT_RESOURCE, SYSTEM_LIST_RESOURCE } from "./paths.mjs";
+import { SYSTEM_ASSESSMENT_RESULT_SCHEMA, SYSTEM_ASSESSMENT_RESULT_SCHEMA_NAME, SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF } from "../model/system.mjs";
+import systemsControllers from "../controllers/systems-controllers.mjs";
 
 export const SYSTEM_SERVICE_NAME = "Управление информацией о системах"
 export const SYSTEM_SERVICE_DESCRIPTION = "Поиск, получение и изменение информации о системе"
 
-export const SYSTEM_LIST_RESOURCE = '/api/v4/systems';
+
 export const SYSTEM_RESOURCE = '/api/v4/systems/{code}';
 export const SYSTEM_PURPOSE_RESOURCE = '/api/v4/systems/{code}/purpose';
 export const SYSTEM_E2E_RESOURCE = '/api/v4/systems/{code}/e2e';
@@ -32,6 +35,7 @@ const SYSTEM_SCHEMA = {
     }
 };
 
+
 export const SYSTEM_LINK_SCHEMA = {
     type: "object",
     properties: {
@@ -44,6 +48,7 @@ export const SYSTEM_LINK_SCHEMA = {
 export const GET_ALL_SPEC = {
     tags: [SYSTEM_SERVICE_NAME],
     summary: "Получение списка систем",
+    controller : systemsControllers.getAll,
     parameters: [
         {
             name: "excludeContainers",
@@ -74,6 +79,7 @@ export const GET_ALL_SPEC = {
 const GET_BY_CODE_SPEC = {
     tags: [SYSTEM_SERVICE_NAME],
     summary: "Получение информации о системе",
+    controller : systemsControllers.getByCode,
     parameters: [
         {
             name: "code",
@@ -136,6 +142,7 @@ const GET_BY_CODE_SPEC = {
 const PUT_SYSTEM = {
     tags: [SYSTEM_SERVICE_NAME],
     summary: "Обновление информации о системе и ее API",
+    controller : systemsControllers.putSystem,
     parameters: [
         {
             name: "code",
@@ -163,6 +170,7 @@ const PUT_SYSTEM = {
 const GET_CAPABILITIES = {
     tags: [SYSTEM_SERVICE_NAME],
     summary: "Список бизнес и технических возможностей, в реализации которых участвует система",
+    controller : systemsControllers.getPurpose,
     parameters: [
         {
             name: "code",
@@ -189,6 +197,7 @@ const GET_CAPABILITIES = {
 const GET_SYSTEM_E2E = {
     tags: [SYSTEM_SERVICE_NAME],
     summary: "Список е2е процессов, в котороых участвует система",
+    controller : systemsControllers.getE2EParticipition,
     parameters: [
         {
             name: "code",
@@ -213,6 +222,73 @@ const GET_SYSTEM_E2E = {
 
 }
 
+const GET_ASSESSMENT_SPEC = {
+    tags: [SYSTEM_SERVICE_NAME],
+    summary: "Список е2е процессов, в котороых участвует система",
+    controller: systemsControllers.getSystemAssessments,
+    parameters: [
+        {
+            name: "code",
+            in: "path",
+            required: true,
+            description: "Код системы",
+            example: "FDMSHOWCASEAPP"
+        }],
+    responses: {
+        200: {
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            message: stringProperty("Информация о результате операции")
+                        }
+                    }
+                }
+            }
+        },
+        400: { $ref: "#/components/responses/400" }
+    }
+
+}
+
+const POST_ASSESSMENT_SPEC = {
+    tags: [SYSTEM_SERVICE_NAME],
+    summary: "Публикация результатов архитектурной проверки",
+    controller: systemsControllers.postSystemAssessment,
+    parameters: [
+        {
+            name: "code",
+            in: "path",
+            required: true,
+            description: "Код системы",
+            example: "FDMSHOWCASEAPP"
+        }],
+    requestBody: {
+        content: {
+            "application/json": {
+                schema: SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF
+            }
+        }
+    },
+    responses: {
+        200: {
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            message: stringProperty("Информация о результате операции")
+                        }
+                    }
+                }
+            }
+        },
+        400: { $ref: "#/components/responses/400" }
+    }
+
+}
+
 const PATHS = {
     [SYSTEM_LIST_RESOURCE]: {
         get: GET_ALL_SPEC
@@ -226,9 +302,12 @@ const PATHS = {
     },
     [SYSTEM_E2E_RESOURCE]: {
         get: GET_SYSTEM_E2E
+    },
+    [SYSTEM_ASSESSMENT_RESOURCE]: {
+        get: GET_ASSESSMENT_SPEC,
+        post: POST_ASSESSMENT_SPEC
     }
 }
-
 
 const SYSTEM_PURPOSE_SCHEMA = {
     type: "object",
@@ -269,7 +348,8 @@ const SCHEMAS = {
             }
         }
     },
-    System: SYSTEM_SCHEMA
+    System: SYSTEM_SCHEMA,
+    [SYSTEM_ASSESSMENT_RESULT_SCHEMA_NAME]: SYSTEM_ASSESSMENT_RESULT_SCHEMA
 }
 
 const SWAGGER = buildServiceSwagger(SYSTEM_SERVICE_NAME, SYSTEM_SERVICE_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS, responses: { 400: BAD_REQUST_RESPONSE } })

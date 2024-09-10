@@ -1,5 +1,5 @@
 import TechnicalCapability
-    from "../../api/model/technical-capability.mjs";
+    from "../../model/technical-capability-model-legacy.mjs";
 const TC_SAMPLES = {
     POST_SAMPLE: new TechnicalCapability({
         name: 'Тестовая ТС', targetSystemCode: 'FDMSHOWCASEAPP', description: 'Это описание тестовой ТС',

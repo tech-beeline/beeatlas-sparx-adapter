@@ -1,4 +1,4 @@
-import TechnicalCapability from "../api/model/technical-capability.mjs";
+import TechnicalCapability from "../model/technical-capability-model-legacy.mjs";
 import t_diagram from "../utils/ea-model/t_diagram.mjs";
 import t_diagramobjects from "../utils/ea-model/t_diagramobjects.mjs";
 import t_object from "../utils/ea-model/t_object.mjs";
@@ -11,8 +11,7 @@ import TC_QUERY from './sql/tech-capabilities.mjs'
 import t_diagramlinks from "../utils/ea-model/t_diagramlinks.mjs";
 import t_connector from "../utils/ea-model/t_connector.mjs";
 import applicationService from "./application-service.mjs";
-import t_objectproperties from "../utils/ea-model/t_objectproperties.mjs";
-import ArchMetrics from "../utils/arch-metrics-storage.mjs";
+import ArchMetricsStorage from "../api/data/arch-metrics-storage.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -106,7 +105,7 @@ class TechnicalCapabilityService {
 			version: capability.version
 		});
 
-		ArchMetrics.onTCChanged({ code: capability.code, name: capability.name, change_date: tc.modifieddate });
+		ArchMetricsStorage.onTCChanged({ code: capability.code, name: capability.name, change_date: tc.modifieddate });
 
 		await Repository.insert(t_xref, t_xref.ArchimateElementStereotype({ guid: tc.ea_guid, stereotype: TechnicalCapability.STEREOTYPE }));
 
@@ -142,7 +141,7 @@ class TechnicalCapabilityService {
 
 		if (ea_capability.name !== capability.name || ea_capability.note !== capability.description || ea_capability.version !== capability.version) {
 			await Repository.update(t_object, { name: capability.name, note: capability.description, version: capability.version }, { object_id: ea_capability.object_id })
-			ArchMetrics.onTCChanged({ code: code, name: capability.name })
+			ArchMetricsStorage.onTCChanged({ code: code, name: capability.name })
 		}
 
 		await Repository.updateObjectTags(ea_capability.object_id, capability, TC_TAGS_NAMES);

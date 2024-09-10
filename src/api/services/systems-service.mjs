@@ -1,6 +1,7 @@
 import { NotFound, NotImplemented } from "../../utils/errors.mjs";
+import ArchMetricsStorage from "../data/arch-metrics-storage.mjs";
 import dataService from '../data/systems-data-service.mjs'
-import System, { Container, E2EProcessContext } from "../model/system.mjs";
+import System, { Container, E2EProcessContext, SysemAssessmentStatus } from "../model/system.mjs";
 
 const STEREOTYPE_MAP = {
     ArchiMate_TechnicalCapability: "TechnicalCapability",
@@ -96,7 +97,30 @@ class SystemService {
     }
     async getE2EParticipition(systemCode) {
         return (await dataService.selectSystemE2EParticipition(systemCode))
-            .map( r=>new E2EProcessContext(r));
+            .map(r => new E2EProcessContext(r));
+    }
+
+    /**
+     * 
+     * @param {SysemAssessmentStatus} assessmentStatus 
+     */
+    async addAssessmentStatus(systemCode, assessmentStatus) {
+        await ArchMetricsStorage.upsertSystemAssessment(
+            systemCode,
+            assessmentStatus.fitness_function_code,
+            assessmentStatus.assessment_date ?? Date(),
+            assessmentStatus.assessment_description,
+            assessmentStatus.status,
+            assessmentStatus.result_details);
+
+        return { message: "Архитектурная оценка добавлена" };
+    }
+    /**
+    * 
+    * @param {SysemAssessmentStatus} assessmentStatus 
+    */
+    async getSystemAssessments(systemCode) {
+        return (await ArchMetricsStorage.selectSystemAssessments(systemCode)).map(a => new SysemAssessmentStatus(a));
     }
 }
 

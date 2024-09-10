@@ -116,8 +116,6 @@ for (const tag in tagsSamples) {
                         method: test.method, path: prepared_path,
                         expectedResponse: { status: response, ...test.definition.responses[response] }
                     })
-
-
                     //console.log(`${test.method} ${prepared_path} expected ${test.definition.responses[response].description} `);
                 }
             })

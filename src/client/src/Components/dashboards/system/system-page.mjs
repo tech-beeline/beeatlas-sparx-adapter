@@ -10,6 +10,7 @@ import { SystemSelect } from "./system-select.mjs";
 import { SystemSummary } from "./system-summary.mjs";
 import { SystemE2EParticipion } from './system-e2e.mjs'
 import GrafanaSourceMenuItem from "./grafana-sources/system-grafana-source.mjs";
+import SystemAssessmentsAccordion from "./system-assessments.mjs";
 
 
 
@@ -72,6 +73,7 @@ export default function SystemPage() {
                         <SystemCapabilitiesAccordion system={system} />
                         <SystemContainers system={system} />
                         <SystemE2EParticipion systemCode={system.code} />
+                        <SystemAssessmentsAccordion system={system} />
                     </Box> : <Box>Данные загружаются</Box>}
     </>
 }

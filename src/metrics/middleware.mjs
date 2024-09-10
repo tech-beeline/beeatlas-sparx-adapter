@@ -1,7 +1,7 @@
 import exporess from 'express'
 import client from 'prom-client'
 import { NotImplemented } from '../utils/errors.mjs';
-import ArchMetrics from '../utils/arch-metrics-storage.mjs';
+import ArchMetricsStorage from '../api/data/arch-metrics-storage.mjs';
 
 
 const register = new client.Registry()
@@ -52,13 +52,13 @@ function processPluginUser(user) {
     pluginUsers.inc();
 }
 
-ArchMetrics.initPluginActionCounter((version, action, user, value) => {
+ArchMetricsStorage.initPluginActionCounter((version, action, user, value) => {
     c4StartCounter.inc({ version: version, action: action, user: user }, value);
     processPluginUser(user);
 });
 
 export function registerC4PluginStart(version, action = 'start', user) {
-    ArchMetrics.onPluginAction(version, action, user); // Асинхронно обновляем базу данных метрик
+    ArchMetricsStorage.onPluginAction(version, action, user); // Асинхронно обновляем базу данных метрик
     c4StartCounter.inc({ version: version, action: action, user: user });
     processPluginUser(user);
 }

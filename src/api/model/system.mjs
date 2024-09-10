@@ -1,3 +1,5 @@
+import { integerProperty, schemasRef, stringProperty } from "../specifications/helpers.mjs";
+
 export class APIMethodParameter {
     name;
     type;
@@ -197,5 +199,44 @@ export default class System {
     }
     containerByCode(code) {
         return this.containers?.find(c => c.code === code);
+    }
+}
+
+/**
+ * Результаты архитектурной оценки системы
+ */
+export class SysemAssessmentStatus {
+    /**
+     * @description Код системы (CMDN мнемоника)
+     * @type {string}
+     */
+    system_code;
+    fitness_function_code;
+    assessment_date;
+    assessment_description;
+    status;
+    result_details;
+    constructor(obj){
+        this.system_code = obj.system_code;
+        this.fitness_function_code = obj.fitness_fn_code;
+        this.assessment_date = obj.assessment_date;
+        this.assessment_description = obj.assessment_description;
+        this.status = obj.assessment_status;
+        this.result_details = obj.result_details;
+    }
+}
+
+export const SYSTEM_ASSESSMENT_RESULT_SCHEMA_NAME = 'SystemAssessmentResult';
+export const SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF = schemasRef(SYSTEM_ASSESSMENT_RESULT_SCHEMA_NAME);
+
+export const SYSTEM_ASSESSMENT_RESULT_SCHEMA = {
+    type: "object",
+    properties: {
+        system_code: stringProperty("Код системы (CMDB мнемоника)", { example: "FDMSHOWCASEAPP" }),
+        fitness_function_code: stringProperty("Код выполенной проверки", { example: "TEST-FUNC" }),
+        assessment_date: stringProperty("Время проверки", { example: Date() }),
+        assessment_description: stringProperty("Описание проведенной проверки", {example: "Тестовая проверка для тестирования тестирования"}),
+        status: integerProperty("Статус проверки (1-успешно, 0-проверка не пройдена)", { example: 1 }),
+        result_description: stringProperty("Детальное описание  результатов проверки", { example : "У нас все хорошо"})
     }
 }
