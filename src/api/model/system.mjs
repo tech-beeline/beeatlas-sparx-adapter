@@ -237,6 +237,6 @@ export const SYSTEM_ASSESSMENT_RESULT_SCHEMA = {
         assessment_date: stringProperty("Время проверки", { example: Date() }),
         assessment_description: stringProperty("Описание проведенной проверки", {example: "Тестовая проверка для тестирования тестирования"}),
         status: integerProperty("Статус проверки (1-успешно, 0-проверка не пройдена)", { example: 1 }),
-        result_description: stringProperty("Детальное описание  результатов проверки", { example : "У нас все хорошо"})
+        result_details: stringProperty("Детальное описание  результатов проверки", { example : "У нас все хорошо"})
     }
 }
