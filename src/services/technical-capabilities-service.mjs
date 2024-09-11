@@ -211,7 +211,7 @@ class TechnicalCapabilityService {
 			const pkg = await Repository.first(t_package, { ea_guid: bc.ea_guid });
 			return Repository.putDiagram({ package_id: pkg.package_id, name: TC_QUERY.BC_TC_DIAGRAM_NAME, diagram_type: 'Component', author: 'FDM API' });
 		}
-		const bc_package = await Repository.queryOne(TC_QUERY.BC_PACKAGE_QUERY_BY_ID, [bc.parent_id]);
+		const bc_package = await Repository.queryOne(TC_QUERY.BC_PACKAGE_QUERY_BY_ID, [bc.object_id]);
 		if (!bc_package) throw Error(`Не найдена папка, где лежит диграмма для BC ${bc.name}`);
 
 		// [ ] ДОбавить обработку  отсутсвия диаграммы для BC

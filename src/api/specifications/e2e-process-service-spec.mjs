@@ -1,5 +1,6 @@
 import { API_VERSION, CONTACT } from "../../resources/const.mjs"
 import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
+import e2eControllers from '../controllers/e2e-process-controllers.mjs'
 
 export const PROCESS_SERVICE_NAME = "Управление информацией о Е2Е процессах"
 export const PROCESS_SERVICE_DESCRIPTION = "Управление информацией о Е2Е процесса"
@@ -14,6 +15,7 @@ export const E2E_BI_SCENARIO_RESOURCE = "/api/v4/e2e-bi/{uid}/scenario"
 export const GET_ALL_E2E = {
     tags: [PROCESS_SERVICE_NAME],
     summary: "Получение списка Е2Е процессов",
+    controller: e2eControllers.getE2EList,
     responses: {
         200: {
             content: {
@@ -31,6 +33,7 @@ export const GET_ALL_E2E = {
 export const GET_E2E = {
     tags: [PROCESS_SERVICE_NAME],
     summary: "Получение Е2Е процессов по идентификатору",
+    controller: e2eControllers.getE2E,
     parameters: [
         {
             name: "uid",
@@ -55,6 +58,7 @@ export const GET_E2E = {
 const GET_E2E_MESSAGES = {
     tags: [PROCESS_SERVICE_NAME],
     summary: "Получение сообщений(вызовов) для Е2Е процесса",
+    controller: e2eControllers.getE2EMessages,
     parameters: [
         {
             name: "uid",
