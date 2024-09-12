@@ -1,60 +1,94 @@
-import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, MenuItem, Toolbar, Typography } from "@mui/material";
-import { KeyboardArrowDown, KeyboardArrowUp, Label, Title, Menu as MenuIcon, ExpandMore, SettingsApplications, Signpost, Home } from "@mui/icons-material";
+import {
+    AppBar,
+    Box,
+    Divider,
+    Drawer,
+    IconButton,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Toolbar,
+    Typography,
+} from "@mui/material";
+import {
+    Menu as MenuIcon,
+    SettingsApplications,
+    Signpost,
+    Home,
+} from "@mui/icons-material";
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 
 export function HomeLink() {
     return (
-        <NavLink underline="hover"
-            sx={{ display: 'flex', alignItems: 'center' }}
-            color="inherit"
+        <NavLink
+            underline="hover"
+            sx={{ display: "flex", alignItems: "center" }}
             className="link"
-            to="/"><Home />Архитектура
+            to="/"
+        >
+            <div style={{ display: "flex", alignItems: "center" }}>
+                <Home />
+                Архитектура
+            </div>
         </NavLink>
-    )
+    );
 }
 
 export function SystemCatalogLink() {
-    return (<NavLink underline="hover"
-        sx={{ display: 'flex', alignItems: 'center' }}
-        color="inherit"
-        className="link"
-        to="/systems"><SettingsApplications />Каталог систем
-    </NavLink>);
+    return (
+        <NavLink underline="hover" className="link" to="/systems">
+            <div style={{ display: "flex", alignItems: "center" }}>
+                <SettingsApplications />
+                Каталог систем
+            </div>
+        </NavLink>
+    );
 }
 
 export function E2ECatalogLink() {
     return (
-        <NavLink underline="hover"
-            sx={{ display: 'flex', alignItems: 'center' }}
-            className="link"
-            color="inherit"
-            to="/e2e">
-            <Signpost />
-            Каталог E2E процессов
+        <NavLink underline="hover" className="link" to="/e2e">
+            <div style={{ display: "flex", alignItems: "center" }}>
+                <Signpost />
+                Каталог E2E процессов
+            </div>
         </NavLink>
-    )
+    );
 }
-
 
 export function E2EProcessLink({ title, uid }) {
     return (
-        <NavLink underline="hover"
-            sx={{ display: 'flex', alignItems: 'center' }}
+        <NavLink
+            underline="hover"
             className="link"
             color="inherit"
-            to={`/e2e/${encodeURIComponent(uid)}`}>
-            <Signpost />{title}
+            to={`/e2e/${encodeURIComponent(uid)}`}
+        >
+            <div style={{ display: "flex", alignItems: "center" }}>
+                <Signpost />
+                {title}
+            </div>
         </NavLink>
-    )
+    );
 }
 
 export function MainBar({ contextMenu, title, barContent }) {
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
+        <Box
+            sx={{
+                flexGrow: 1,
+                borderBottom: "1px solid #191c341f",
+            }}
+        >
+            <AppBar
+                position="static"
+                sx={{ backgroundColor: "#fff", color: "rgba(0, 0, 0, 0.87)" }}
+            >
                 <Toolbar>
                     <div>
                         <IconButton
@@ -72,13 +106,18 @@ export function MainBar({ contextMenu, title, barContent }) {
                     {barContent}
                     <Drawer open={menuOpen} onClose={() => setMenuOpen(false)}>
                         <Box sx={{ width: 300 }} role="presentation">
-                            {contextMenu ?
-                                <>{contextMenu}
+                            {contextMenu ? (
+                                <>
+                                    {contextMenu}
                                     <Divider />
-                                </> : null}
+                                </>
+                            ) : null}
                             <List>
                                 <ListItem key="systems" disablePadding>
-                                    <ListItemButton component={Link} to="/systems">
+                                    <ListItemButton
+                                        component={Link}
+                                        to="/systems"
+                                    >
                                         <ListItemIcon>
                                             <SettingsApplications />
                                         </ListItemIcon>
@@ -98,5 +137,6 @@ export function MainBar({ contextMenu, title, barContent }) {
                     </Drawer>
                 </Toolbar>
             </AppBar>
-        </Box>)
+        </Box>
+    );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 const useStyles = makeStyles(theme => ({
     inputRoot: {
-        color: "white"
+        color: "rgba(0, 0, 0, 0.87)"
     }
 }));
 

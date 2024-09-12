@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 const DEFAULT_OPTIONS = {
     headers: { "Content-Type": "application/json" },
-}
+};
 export default function useFetchJSON(url, options, dependencies = []) {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
@@ -10,7 +10,7 @@ export default function useFetchJSON(url, options, dependencies = []) {
 
     const fetchData = async () => {
         try {
-            setLoading(true)
+            setLoading(true);
             const res = await fetch(url, { ...DEFAULT_OPTIONS, ...options });
             if (res.ok) {
                 setData(await res.json());
@@ -22,7 +22,7 @@ export default function useFetchJSON(url, options, dependencies = []) {
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     useEffect(() => {
         fetchData();
@@ -30,3 +30,4 @@ export default function useFetchJSON(url, options, dependencies = []) {
 
     return { loading: loading, data: data, error: error }
 }
+
