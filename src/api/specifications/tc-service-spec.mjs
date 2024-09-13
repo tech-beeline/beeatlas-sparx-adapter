@@ -1,22 +1,23 @@
-import technicalCapabilitiyesController from "../controllers/tc-controllers.mjs";
-import { API_VERSION, CONTACT } from "../../resources/const.mjs"
+import tcController from "../controllers/tc-controllers.mjs";
 import { BC_LINK_SCHEMA } from "./capabilities-service-spec.mjs";
-import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
+import { GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, queryParameter, schemasRef, stringProperty } from "./helpers.mjs"
+import { TC_LIST_RESOURCE, TC_POSITION_RESOURCE, TC_RESOURCE, TC_SEARCH_RESOURCE } from "./paths.mjs";
 
 export const TC_SERVICE_NAME = "Управление техническими возможностями"
 export const TC_SERVICE_DESCRIPTION = "Управление техническими возможностями и их реализацией"
 
-export const TC_LIST_RESOURCE_V4 = '/api/v4/tc';
-export const TC_RESOURCE_V4 = '/api/v4/tc/{code}';
+const SWAGGER = new SimpleServiceSpecification(TC_SERVICE_NAME, TC_SERVICE_DESCRIPTION);
 
-const SYSTEM_LINK_SCHEMA = {
+//#region Определение типов
+
+const SYSTEM_LINK_SCHEMA = SWAGGER.defineEntitySchema("SystemLink", {
     type: "object",
     properties: {
         code: stringProperty("Код системы", { example: "FDMSHOWCASEAPP" }),
         name: stringProperty("Название системы", { example: "Витрина ФДМ" }),
         href: stringProperty("Ссылка на систему", { example: `https://company/api/vX/systems/FDMSHOWCASEAPP` })
     }
-}
+});
 
 export const TC_SCHEMA = {
     type: "object",
@@ -32,65 +33,43 @@ export const TC_SCHEMA = {
             type: "array",
             items: BC_LINK_SCHEMA,
             description: "Список бизнес-возможностей, в автоматизации которых участвует данная техническая возможность",
-            //example: ["BC-0001", "BC-0002"]
         },
-        //targetSystemCode: stringProperty("Код системы, которая отвечает за целевую реализацию технической возможности", "FDMSHOWCASEAPP"),
         system: SYSTEM_LINK_SCHEMA,
         owner: stringProperty("Владелец технической возможности", { example: "John Doe" }),
         version: stringProperty("Версия возможности", { example: "1.0.1" }),
         goal_from: stringProperty("Дата, когда планириуется начать предоставлять техническую возможность", { example: "24Q3" }),
         goal_to: stringProperty("Дата, до которой данная возможность не является устаревшей", { example: "25Q4" })
     }
-}
-const tcSchemaRef = schemasRef( "TechnicalCapability")
+};
 
+const TC_SCHEMA_REF = SWAGGER.defineEntitySchema("TechnicalCapability", TC_SCHEMA);
+//#endregion
 
+//#region Определение параметров
+const TC_CODE_PARAMETER = pathParameter("code", "Код технической возможности", "FDMSHOWCASEAPP.001");
+const SEARCR_TERMS_PARAMETER = queryParameter("terms", "Поисковая строка", true, "проектирование");
+//#endregion
 
-export const GET_ALL_SPEC = {
-    tags: [TC_SERVICE_NAME],
-    summary: "Получение списка технических воможностей",
-    controller: technicalCapabilitiyesController.getAll,
-    responses: {
-        200: {
-            content: {
-                "application/json": {
-                    schema: {
-                        type: "array",
-                        items: schemasRef('TechnicalCapability')
-                    }
-                }
-            }
-        }
-    }
-}
+//#region Определение методов
+SWAGGER
+    .defineGet(TC_SEARCH_RESOURCE,
+        new GetJSONOperation("Поиск технической возможности по названию", [SEARCR_TERMS_PARAMETER], arraySchema(TC_SCHEMA_REF)))
+    .defineGet(TC_LIST_RESOURCE,
+        new GetJSONOperation("Получение списка всех тeхнических возможностей", null, arraySchema(TC_SCHEMA_REF))
+            .setContoller(tcController.getAll))
+    .defineGet(TC_RESOURCE,
+        new GetJSONOperation("Получение описания технической возможности по коду", [TC_CODE_PARAMETER], TC_SCHEMA_REF)
+            .setContoller(tcController.getByCode))
+    .definePut(TC_RESOURCE, new JSONOperation(
+        "Обновление описания технической возможности", [TC_CODE_PARAMETER],
+        TC_SCHEMA_REF, TC_SCHEMA_REF))
+    .defineGet(TC_POSITION_RESOURCE,
+        new GetJSONOperation("Получение информации о позиционировании в ФДМ", [TC_CODE_PARAMETER], TC_SCHEMA_REF));
+//#endregion
 
-export const GET_TC_SPEC = {
-    tags: [TC_SERVICE_NAME],
-    summary: "Получение информации о технической возможности по коду",
-    controller : technicalCapabilitiyesController.getByCode,
-    parameters: [
-        {
-            name: "code",
-            in: "path",
-            description: "Код технической возможности",
-            required: true,
-            example: "FDMSHOWCASEAPP.001"
-        }
-    ],
-    responses: {
-        200: {
-            content: {
-                "application/json": {
-                    schema: {
-                        type: "array",
-                        items: schemasRef('TechnicalCapability')
-                    }
-                }
-            }
-        }
-    }
-}
+export default SWAGGER;
 
+/*
 const PUT_TC_SPEC = {
     tags: [TC_SERVICE_NAME],
     summary: "Обновление инфорации о TC",
@@ -103,7 +82,7 @@ const PUT_TC_SPEC = {
             example: "FDMSHOWCASEAPP.001"
         }
     ],
-    requesBode: {
+    requestBode: {
         content : {
             "application/json" : {
                 schema: tcSchemaRef
@@ -123,22 +102,4 @@ const PUT_TC_SPEC = {
         }
     }
 }
-
-const PATHS = {
-    [TC_LIST_RESOURCE_V4]: {
-        get: GET_ALL_SPEC
-    },
-    [TC_RESOURCE_V4]: {
-        get: GET_TC_SPEC,
-        put: PUT_TC_SPEC
-    }
-}
-
-
-const SCHEMAS = {
-    TechnicalCapability: TC_SCHEMA
-}
-
-const SWAGGER = buildServiceSwagger(TC_SERVICE_NAME, TC_SERVICE_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })
-
-export default SWAGGER;
+*/

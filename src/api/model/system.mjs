@@ -1,4 +1,6 @@
+import { buildHREF } from "../controllers/controller-decorator.mjs";
 import { integerProperty, schemasRef, stringProperty } from "../specifications/helpers.mjs";
+import { E2E_LIST_RESOURCE, E2E_SCENARIO_LIST_RESOURCE, SYSTEM_LIST_RESOURCE } from "../specifications/paths.mjs";
 
 export class APIMethodParameter {
     name;
@@ -98,28 +100,22 @@ export class Container {
 
 export class E2EProcessContext {
     process;
-    process_uid;
     bi;
-    bi_name;
-    bi_uid;
     diagram;
-    diagram_uid;
     seqno;
     message;
-    component;
-    method;
-    operation_guid;
-    interface;
-    interface;
     system;
+
     constructor(obj = {}) {
         this.process = {
             name: obj.process,
-            uid: obj.process_uid
+            uid: obj.process_uid,
+            href: buildHREF(`${E2E_LIST_RESOURCE}/${encodeURIComponent(obj.process_uid)}`)
         }
         this.bi = {
             name: obj.bi_name,
-            uid: obj.bi_uid
+            uid: obj.bi_uid,
+            href: buildHREF(`TBD`) // [ ] добавить сылку на сценарий BI
         }
         this.diagram = {
             name: obj.diagram,
@@ -133,13 +129,16 @@ export class E2EProcessContext {
                 uid: obj.operation_guid,
                 interface: {
                     name: obj.interface,
-                    uid: obj.interface_uid
-                }
+                    uid: obj.interface_uid,
+                    href: "TBD"
+                },
+                href: "TBD"
             } : undefined
         }
         this.system = {
             name: obj.sys_name,
-            code: obj.sys_code
+            code: obj.sys_code,
+            href: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(obj.sys_code)}`)
         }
     }
 }
@@ -154,6 +153,150 @@ export class SystemE2EParticipition {
         this.process = processRef;
         this.method = methodRef;
     }
+}
+
+const SYSTEM_PURPOSE_EXAMPLE = {
+    "name": "Каталог Возможностей (Capability Catalog)",
+    "code": "GRP.000",
+    "type": "Domain",
+    "href": "https://company/api/v4/capabilities/GRP.000",
+    "children": [
+        {
+            "name": "Сервисы ИТ-ландшафта ВК",
+            "code": "GRP.011",
+            "type": "Domain",
+            "href": "https://company/api/v4/capabilities/GRP.011",
+            "children": [
+                {
+                    "name": "Сервисы производства",
+                    "code": "GRP.012",
+                    "type": "Domain",
+                    "href": "https://company/api/v4/capabilities/GRP.012",
+                    "children": [
+                        {
+                            "name": "Проектирование технического решения ИТ-продукта",
+                            "code": "DMN.153",
+                            "type": "Domain",
+                            "href": "https://company/api/v4/capabilities/DMN.153",
+                            "children": [
+                                {
+                                    "name": "Высокоуровневое проектирование продукта",
+                                    "code": "BC-018364",
+                                    "type": "Capability",
+                                    "href": "https://company/api/v4/capabilities/BC-018364",
+                                    "children": [
+                                        {
+                                            "name": "Возможность заведения новой технической возможности",
+                                            "code": "FDMSHOWCASEAPP.0003",
+                                            "type": "TechnicalCapability",
+                                            "href": "https://company/api/v4/tc/FDMSHOWCASEAPP.0003"
+                                        },
+                                        {
+                                            "name": "Возможность получения данных о business capability",
+                                            "code": "FDMSHOWCASEAPP.001",
+                                            "type": "TechnicalCapability",
+                                            "href": "https://company/api/v4/tc/FDMSHOWCASEAPP.001"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "Детальное проектирование продукта",
+                                    "code": "BC-018365",
+                                    "type": "Capability",
+                                    "href": "https://company/api/v4/capabilities/BC-018365",
+                                    "children": [
+                                        {
+                                            "name": "Возможность заведения новой технолгии в технорадаре",
+                                            "code": "FDMSHOWCASEAPP.002",
+                                            "type": "TechnicalCapability",
+                                            "href": "https://company/api/v4/tc/FDMSHOWCASEAPP.002"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "Позиционирование продукта на карте бизнес-возможностей",
+                                    "code": "BC-018367",
+                                    "type": "Capability",
+                                    "href": "https://company/api/v4/capabilities/BC-018367",
+                                    "children": [
+                                        {
+                                            "name": "Получение перечня бизнес-возможностей",
+                                            "code": "BC-018369",
+                                            "type": "TechnicalCapability",
+                                            "href": "https://company/api/v4/tc/BC-018369"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Управление ИТ",
+            "code": "GRP.010",
+            "type": "Domain",
+            "href": "https://company/api/v4/capabilities/GRP.010",
+            "children": [
+                {
+                    "name": "Управление знаниями в ИТ",
+                    "code": "DMN.109",
+                    "type": "Domain",
+                    "href": "https://company/api/v4/capabilities/DMN.109",
+                    "children": [
+                        {
+                            "name": "Возможность моделирования предметных областей на основе общих моделей на уровне домена и ИТ-ландшафта",
+                            "code": "BC-000137",
+                            "type": "Capability",
+                            "href": "https://company/api/v4/capabilities/BC-000137",
+                            "children": [
+                                {
+                                    "name": "Тестовая ТС",
+                                    "code": "TC-SAMPLE-CODE",
+                                    "type": "TechnicalCapability",
+                                    "href": "https://company/api/v4/tc/TC-SAMPLE-CODE"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Возможность управления и использования общекорпоративного глоссария",
+                            "code": "BC-000135",
+                            "type": "Capability",
+                            "href": "https://company/api/v4/capabilities/BC-000135",
+                            "children": [
+                                {
+                                    "name": "Тестовая ТС",
+                                    "code": "TC-SAMPLE-CODE",
+                                    "type": "TechnicalCapability",
+                                    "href": "https://company/api/v4/tc/TC-SAMPLE-CODE"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+export const SYSTEM_PURPOSE_SCHEMA = {
+    type: "object",
+    properties: {
+        name: stringProperty("Название возможности", "Каталог Возможностей (Capability Catalog)"),
+        name: stringProperty("Код возможности", "Каталог Возможностей (Capability Catalog)"),
+        type: stringProperty("Тип возможности (Domain,Capability,TechnicalCapability)"),
+        children: {
+            type: "array",
+            description: "Дочерние возможности, в которых участвтует техническая возможность, приндалежэащая системе",
+            items: {
+                type: "object",
+                schema: { $ref: "#/components/schemas/SystemPuprose" }
+            }
+        },
+        href: stringProperty("Ссылка на описание возможности", { example: "https://company/api/entity/XXX" })
+    },
+    example: SYSTEM_PURPOSE_EXAMPLE
 }
 
 export default class System {
@@ -172,6 +315,8 @@ export default class System {
      * @type {Container[]}
      */
     containers = [];
+    links = {};
+
     constructor({ name, code, version, tags, containers, author, description, ea_guid, FQName, packageName, status, modifiedDate } = {}) {
         this.name = name;
         this.code = code;
@@ -185,6 +330,12 @@ export default class System {
         this.package = packageName;
         this.status = status;
         this.modifiedDate = modifiedDate;
+        this.links = {
+            self: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}`),
+            purpose: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}/purpose`),
+            e2e: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}/e2e`),
+            assessments: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}/e2e`)
+        }
     }
     /**
      * 
@@ -216,7 +367,7 @@ export class SysemAssessmentStatus {
     assessment_description;
     status;
     result_details;
-    constructor(obj){
+    constructor(obj) {
         this.system_code = obj.system_code;
         this.fitness_function_code = obj.fitness_fn_code;
         this.assessment_date = obj.assessment_date;
@@ -226,17 +377,14 @@ export class SysemAssessmentStatus {
     }
 }
 
-export const SYSTEM_ASSESSMENT_RESULT_SCHEMA_NAME = 'SystemAssessmentResult';
-export const SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF = schemasRef(SYSTEM_ASSESSMENT_RESULT_SCHEMA_NAME);
-
 export const SYSTEM_ASSESSMENT_RESULT_SCHEMA = {
     type: "object",
     properties: {
         system_code: stringProperty("Код системы (CMDB мнемоника)", { example: "FDMSHOWCASEAPP" }),
         fitness_function_code: stringProperty("Код выполенной проверки", { example: "TEST-FUNC" }),
         assessment_date: stringProperty("Время проверки", { example: Date() }),
-        assessment_description: stringProperty("Описание проведенной проверки", {example: "Тестовая проверка для тестирования тестирования"}),
-        status: integerProperty("Статус проверки (1-успешно, 0-проверка не пройдена)", { example: 1 }),
-        result_details: stringProperty("Детальное описание  результатов проверки", { example : "У нас все хорошо"})
+        assessment_description: stringProperty("Описание проведенной проверки", { example: "Тестовая проверка для тестирования тестирования" }),
+        status: integerProperty("Статус проверки (0- проверка прошла успешно)", { example: 1 }),
+        result_details: stringProperty("Детальное описание  результатов проверки", { example: "У нас все хорошо" })
     }
 }

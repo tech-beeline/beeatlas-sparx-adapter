@@ -22,7 +22,7 @@ class E2EProcessService {
         const e2e = await dataService.selectE2EByUID(uid);
         if (!e2e) throw NotFound(`Process with uid = "${uid}" not found`);
         const biList = await dataService.selectE2E_BI(uid);
-        console.log(biList);
+        
         const biMessages = await Promise.all(biList.map(bi =>
             this.getBIMessages(bi.uid)
                 .then(ml => ({ bi: bi, messages: ml }))));
@@ -31,7 +31,6 @@ class E2EProcessService {
     async getBIMessages(uid) {
         return (await dataService.selectBIMessages(uid))
             .filter(m => m.name);
-        NotImplemented();
     }
     async getBIScenario(uid) {
         NotImplemented();

@@ -1,13 +1,13 @@
 import controllers from "../controllers/capabilities-controllers.mjs";
-import { API_VERSION, CONTACT } from "../../resources/const.mjs"
-import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
-import { CAPABILITY_LIST_RESOURCE_V4, CAPABILITY_RESOURCE_V4 } from "./paths.mjs";
+import { GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, queryParameter, schemasRef, stringProperty } from "./helpers.mjs"
+import { CAPABILITY_LIST_RESOURCE, CAPABILITY_LIST_RESOURCE_V4, CAPABILITY_RESOURCE, CAPABILITY_RESOURCE_V4, CAPABILITY_SEARCH_RESOURCE } from "./paths.mjs";
 
 export const CAPABILITY_SERVICE_NAME = "Управление бизнес-возможностями"
 export const CAPABILITY_SERVICE_DESCRIPTION = "Управление возможностями и доменами"
 
+const SWAGGER = new SimpleServiceSpecification(CAPABILITY_SERVICE_NAME, CAPABILITY_SERVICE_DESCRIPTION);
 
-
+//#region Определение сущностей
 
 export const BC_LINK_SCHEMA = {
     type: "object",
@@ -17,9 +17,6 @@ export const BC_LINK_SCHEMA = {
         href: stringProperty("Ссылка на бизнес-возможность", { example: `http://company${CAPABILITY_LIST_RESOURCE_V4}/DMN.153` })
     }
 }
-
-export const CAPABILITY_SCHEMA_NAME = 'Capability'
-export const CAPABILITY_REF = schemasRef(CAPABILITY_SCHEMA_NAME)
 
 export const CAPABILITY_SCHEMA = {
     type: "object",
@@ -37,74 +34,41 @@ export const CAPABILITY_SCHEMA = {
         children: {
             type: "array",
             items: {
-                type: "object",
-                schema: CAPABILITY_REF
+                type: "object"
             },
             description: "Дочерние бизнес-возможности"
         },
-        self: stringProperty("Ссылка на роадительскую бизнес-возможность", { example: `http://company${CAPABILITY_LIST_RESOURCE_V4}/BC-018364` })
+        self: stringProperty("Ссылка на бизнес-возможность", { example: `http://company${CAPABILITY_LIST_RESOURCE}/BC-018364` })
     }
 };
+const CAPABILITY_SCHEMA_REF = SWAGGER.defineEntitySchema("Capability", CAPABILITY_SCHEMA);
+//#endregion
 
+//#region параметры запросов
+const CAPABILITY_CODE_PARAMETER = pathParameter("code", "Код бизнес возможности", "GRP.001")
+const SEARCH_TERMS_PARAMETER = queryParameter("terms", "Строка поиска", false, "процесс")
+//#endregion
 
-
-export const GET_ALL_SPEC = {
-    tags: [CAPABILITY_SERVICE_NAME],
-    summary: "Получение списка бизнес-воможностей",
-    controller: controllers.getAll,
-    responses: {
-        200: {
-            content: {
-                "application/json": {
-                    schema: {
-                        type: "array",
-                        items: CAPABILITY_REF
-                    }
-                }
-            }
-        }
-    }
-}
-
-export const GET_BY_CODE_SPEC = {
-    tags: [CAPABILITY_SERVICE_NAME],
-    summary: "Получение информации о бизнес-возможнорсти по коду",
-    controller: controllers.getByCode,
-    parameters: [
-        {
-            name: "code",
-            in: "path",
-            description: "Код бизнес-возможности",
-            required: true,
-            example: "GRP.001"
-        }
-    ],
-    responses: {
-        200: {
-            content: {
-                "application/json": {
-                    schema: CAPABILITY_REF
-                }
-            }
-        }
-    }
-}
-
-const PATHS = {
-    [CAPABILITY_LIST_RESOURCE_V4]: {
-        get: GET_ALL_SPEC
-    },
-    [CAPABILITY_RESOURCE_V4]: {
-        get: GET_BY_CODE_SPEC
-    }
-}
-
-
-
-const SCHEMAS = {
-    Capability: CAPABILITY_SCHEMA
-}
-
-const SWAGGER = buildServiceSwagger(CAPABILITY_SERVICE_NAME, CAPABILITY_SERVICE_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })
+SWAGGER
+    .defineGet(CAPABILITY_SEARCH_RESOURCE,
+        new GetJSONOperation("Поиск бизнес-возможности по имени", [SEARCH_TERMS_PARAMETER], arraySchema(CAPABILITY_SCHEMA_REF))
+            .setContoller(controllers.searchByName))
+    .defineGet(CAPABILITY_LIST_RESOURCE,
+        new GetJSONOperation("Получение списка бизнес-возможностей", null, arraySchema(CAPABILITY_SCHEMA_REF))
+            .setContoller(controllers.getAll))
+    .definePost(CAPABILITY_LIST_RESOURCE,
+        new JSONOperation("Регистрация новой бизнес возможности", null, CAPABILITY_SCHEMA_REF, CAPABILITY_SCHEMA_REF))
+    .defineGet(CAPABILITY_RESOURCE,
+        new GetJSONOperation("Получение описания бизнес-возможности по коду",
+            [CAPABILITY_CODE_PARAMETER]
+            , CAPABILITY_SCHEMA_REF)
+            .setContoller(controllers.getByCode)
+    )
+    .definePut(CAPABILITY_RESOURCE,
+        new JSONOperation("Получение описания бизнес-возможности по коду",
+            [CAPABILITY_CODE_PARAMETER],
+            CAPABILITY_SCHEMA_REF
+            , CAPABILITY_SCHEMA_REF)
+    );
 
 export default SWAGGER;

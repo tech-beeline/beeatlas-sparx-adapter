@@ -1,7 +1,7 @@
 import Repository from '../../utils/ea-repo.mjs'
 
 const SELECT_ALL =
-    `with recursive capabilities as (
+	`with recursive capabilities as (
 	select
 		p.object_id as id,
 		d.alias as code,
@@ -51,19 +51,26 @@ const SELECT_ALL =
 select * from capabilities`
 
 const SELECT_BY_CODE = `${SELECT_ALL} where code=$1`;
-class CapabilitiesData {
-    async selectAll() {
-        return Repository.queryRows(SELECT_ALL)
-    }
+const SEARCH_BY_NAME = `${SELECT_ALL} WHERE name LIKE ANY ($1)`
 
-    /**
-     * 
-     * @param {string} code Код возможности
-     * @returns 
-     */
-    async selectByCode(code) {
-        return Repository.queryOne(SELECT_BY_CODE, [code]);
-    }
+class CapabilitiesData {
+	async selectAll() {
+		return Repository.queryRows(SELECT_ALL)
+	}
+
+	async searchByName(terms) {
+		const termsArray = Array.isArray(terms) ? terms.map(t => `%${t}%`) : [`${terms}`]
+		return Repository.queryRows(SEARCH_BY_NAME, [termsArray]);
+	}
+
+	/**
+	 * 
+	 * @param {string} code Код возможности
+	 * @returns 
+	 */
+	async selectByCode(code) {
+		return Repository.queryOne(SELECT_BY_CODE, [code]);
+	}
 }
 
 export default new CapabilitiesData();

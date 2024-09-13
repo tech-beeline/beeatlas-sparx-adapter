@@ -1,121 +1,55 @@
 import { API_VERSION, CONTACT } from "../../resources/const.mjs"
-import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
+import { GetJSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, schemasRef, stringProperty } from "./helpers.mjs"
 import e2eControllers from '../controllers/e2e-process-controllers.mjs'
+import { E2E_LIST_RESOURCE, E2E_RESOURCE } from "./paths.mjs"
 
 export const PROCESS_SERVICE_NAME = "Управление информацией о Е2Е процессах"
 export const PROCESS_SERVICE_DESCRIPTION = "Управление информацией о Е2Е процесса"
 
-export const E2E_LIST_RESOURCE = "/api/v4/e2e"
-export const E2E_RESOURCE = "/api/v4/e2e/{uid}"
+
+const GET_E2E_SUMMARY = 'Получение списка Е2Е процессов';
+
 export const E2E_MESSAGES_RESOURCE = "/api/v4/e2e/{uid}/messages"
 export const E2E_BI_RESOURCE = "/api/v4/e2e/{uid}/bi"
 export const E2E_BI_MESSAGES_RESOURCE = "/api/v4/e2e-bi/{uid}/messages"
 export const E2E_BI_SCENARIO_RESOURCE = "/api/v4/e2e-bi/{uid}/scenario"
 
-export const GET_ALL_E2E = {
-    tags: [PROCESS_SERVICE_NAME],
-    summary: "Получение списка Е2Е процессов",
-    controller: e2eControllers.getE2EList,
-    responses: {
-        200: {
-            content: {
-                "application/json": {
-                    schema: {
-                        type: "array",
-                        items: schemasRef('E2EProcess')
-                    }
-                }
-            }
-        }
-    }
-}
-
-export const GET_E2E = {
-    tags: [PROCESS_SERVICE_NAME],
-    summary: "Получение Е2Е процессов по идентификатору",
-    controller: e2eControllers.getE2E,
-    parameters: [
-        {
-            name: "uid",
-            in: "path",
-            description: "Идентификатор Е2Е процесса",
-            required: true,
-            example: "{5DE220EF-4CC4-4adb-AB5B-C49223DB7ED4}"
-        }
-    ],
-    responses: {
-        200: {
-            content: {
-                "application/json": {
-                    schema: schemasRef('E2EProcess')
-                }
-            }
-        }
-    }
-}
-
-
-const GET_E2E_MESSAGES = {
-    tags: [PROCESS_SERVICE_NAME],
-    summary: "Получение сообщений(вызовов) для Е2Е процесса",
-    controller: e2eControllers.getE2EMessages,
-    parameters: [
-        {
-            name: "uid",
-            in: "path",
-            description: "Идентификатор Е2Е процесса",
-            required: true,
-            example: "{5DE220EF-4CC4-4adb-AB5B-C49223DB7ED4}"
-        }
-    ],
-    responses: {
-        200: {
-            content: {
-                "application/json": {
-                    schema: {
-                        type: "array",
-                        items: schemasRef('E2EProcess')
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-const PATHS = {
-    [E2E_LIST_RESOURCE]: {
-        get: GET_ALL_E2E
-    },
-    [E2E_RESOURCE]: {
-        get: GET_E2E
-    },
-    [E2E_MESSAGES_RESOURCE]: {
-        get: GET_E2E_MESSAGES
-    }
-}
-
-export const E2E_SCHEMA = {
+const SWAGGER = new SimpleServiceSpecification(PROCESS_SERVICE_NAME,
+    PROCESS_SERVICE_DESCRIPTION, API_VERSION, CONTACT
+);
+//#region Определение типов
+const E2E_PROCESS_SCHEMA = SWAGGER.defineEntitySchema("E2EProcess", {
     type: "object",
     properties: {
         uid: stringProperty("Идентификатор Е2Е процесса", { example: "{5DE220EF-4CC4-4adb-AB5B-C49223DB7ED4}" }),
         name: stringProperty("Название Е2Е процесса", { example: "Я, как ..." }),
     }
-}
+});
 
-export const E2E_MESSAGE_SCHEMA = {
+const E2E_MESSAGE_SCHEMA = SWAGGER.defineEntitySchema("E2EProcessMessage", {
     type: "object",
     properties: {
         uid: stringProperty("Идентфиикатор сообщения"),
         name: stringProperty("Название сообщения")
     }
-}
+});
 
-const SCHEMAS = {
-    E2EProcess: E2E_SCHEMA,
-    E2EMessage: E2E_MESSAGE_SCHEMA
-}
+//#endregion
 
-const SWAGGER = buildServiceSwagger(PROCESS_SERVICE_NAME, PROCESS_SERVICE_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })
+//#region Определение параметров
+const PROCESS_UID_PARAMETER = pathParameter("uid", "Идентификатор Е2Е процесса", "{5DE220EF-4CC4-4adb-AB5B-C49223DB7ED4}");
+//#endregion
+
+//#region Определение методов
+SWAGGER
+    .defineGet(E2E_LIST_RESOURCE,
+        new GetJSONOperation(GET_E2E_SUMMARY, null, arraySchema(E2E_PROCESS_SCHEMA))
+            .setContoller(e2eControllers.getE2EList)
+    ).defineGet(E2E_RESOURCE,
+        new GetJSONOperation("Получение информаци о процессе по идентификатору",
+            [PROCESS_UID_PARAMETER],
+            E2E_PROCESS_SCHEMA)
+            .setContoller(e2eControllers.getE2E));
+//#endregion
 
 export default SWAGGER;

@@ -14,19 +14,20 @@ export const METHOD_SCHEMA = {
         name: stringProperty("Имя метода")
     }
 }
+
 export const METHOD_SCHEMA_REF = schemasRef("Method");
 
 export const INTERFACE_SCHEMA = {
     type: "object",
     properties: {
-        code: stringProperty("Код интерфейса"),
-        name: stringProperty("Имия интерфейса"),
+        code: stringProperty("Код интерфейса", { example: "SEARCH-API" }),
+        name: stringProperty("Имя интерфейса", { example: "API поиска чего-нибудь" }),
         description: stringProperty("Описание интерфейса", { example: "Подробно о" }),
         version: stringProperty("Версия интерфейса", { example: "1.0.0" }),
         protocol: stringProperty("Протокол", { example: "rest" }),
         specification: stringProperty("Ссылка на спецификацию"),
         methods: {
-            type : "array",
+            type: "array",
             items: METHOD_SCHEMA_REF
         },
         self: stringProperty("Ссылка на интерфейс")

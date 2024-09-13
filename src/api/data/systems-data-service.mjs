@@ -1,5 +1,6 @@
 import Repository from '../../utils/ea-repo.mjs'
 import { APP_CATALOG_ROOT } from '../../resources/const.mjs';
+import { NotImplemented } from '../../utils/errors.mjs';
 
 const CTE_SYSTEM_CATALOG = `cte_sys_catalog AS (
     SELECT package_id, package_id AS parent_id, name , name::text AS "FQName", ea_guid
@@ -36,6 +37,31 @@ FROM cte_systems sys
 	LEFT JOIN cte_realization c ON c.start_object_id=sys.object_id AND c.object_type='Component' AND c.alias is not null and c.stereotype='C2'
 	LEFT JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface' AND it.alias is not null AND it.alias <> ''`
 
+const SELECT_SYSTEM_CONTAINERS = `WITH ${CTE_REALIZATION}
+    SELECT
+        sys.alias as sys_code,
+        sys.name as sys_name,
+        cn.alias as code,
+        cn.name,
+        cn.note as description,
+        cn.version,
+        cn.status
+    FROM t_object sys
+        JOIN cte_realization cn ON cn.start_object_id=sys.object_id AND cn.stereotype='C2'
+    WHERE sys.object_type='Component'`
+
+const SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE = `WITH ${CTE_REALIZATION}
+    SELECT
+        sys.alias as sys_code,
+        sys.name as sys_name,
+        cn.alias as code,
+        cn.name,
+        cn.note as description,
+        cn.version,
+        cn.status
+    FROM t_object sys
+        JOIN cte_realization cn ON cn.start_object_id=sys.object_id AND cn.stereotype='C2'
+    WHERE sys.object_type='Component' AND sys.alias=$1`
 
 const SELECT_SYSTEM_CAPABILITIES = `WITH RECURSIVE cte_sys AS(
 	SELECT object_id
@@ -206,6 +232,15 @@ class SystemsDataService {
     async selectSystemByCode(code) {
         return Repository.queryRows(`${SELECT_ALL} WHERE sys_code=$1`, [code]);
     }
+
+    /**
+     * 
+     * @param {string} systemCode 
+     * @returns {Promise<Array<{sys_code, sys_name, code, name, description,version, status}>>}
+     */
+    async selectSystemContainers(systemCode) {
+        return Repository.queryRows(SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE, [systemCode])
+    }
     /**
      * 
      * @returns {Promise}
@@ -221,6 +256,24 @@ class SystemsDataService {
      */
     async selectSystemE2EParticipition(code) {
         return Repository.queryRows(`${SELECT_SYSTEM_PARTICIPITION} WHERE operation IS NOT NULL`, [code]);
+    }
+
+    /**
+     * 
+     * @param {{sys_code,code,name,version}} code 
+     * @returns {Promise}
+     */
+    async insertContainer(containers) {
+        NotImplemented();
+    }
+
+    /**
+     * 
+     * @param {Array<{sys_code,code,name,version}>} code 
+     * @returns {Promise}
+     */
+    async bulkInsertContainers(containers) {
+        NotImplemented();
     }
 }
 

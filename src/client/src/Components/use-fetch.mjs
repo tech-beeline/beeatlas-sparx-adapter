@@ -19,12 +19,14 @@ export default function useFetchJSON(url, options, dependencies = []) {
             setError(await res.json());
         } catch (error) {
             setError(error);
-        } finally{
+        } finally {
             setLoading(false);
         }
     }
 
-    useEffect(() => fetchData(), dependencies);
-    
+    useEffect(() => {
+        fetchData();
+    }, dependencies);
+
     return { loading: loading, data: data, error: error }
 }

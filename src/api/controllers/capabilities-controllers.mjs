@@ -13,6 +13,16 @@ class CapabilityControllers {
     }
 
     /**
+     * Поиск возможности по имени
+     * @param {express.Request} request 
+     * @param {express.Response} response 
+     */
+    async searchByName(request, response) {
+        if (!request.query.terms || !request.query.terms.length) throw BadRequest(`Terms is not specified`);
+        response.json(await capabilitiesService.searchByName(request.query.terms));
+    }
+
+    /**
      * 
      * @param {express.Request} request 
      * @param {express.Response} response 

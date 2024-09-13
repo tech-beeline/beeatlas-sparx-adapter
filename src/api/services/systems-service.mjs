@@ -1,7 +1,9 @@
-import { NotFound, NotImplemented } from "../../utils/errors.mjs";
+import { BadRequest, NotFound, NotImplemented } from "../../utils/errors.mjs";
+import { buildHREF } from "../controllers/controller-decorator.mjs";
 import ArchMetricsStorage from "../data/arch-metrics-storage.mjs";
 import dataService from '../data/systems-data-service.mjs'
 import System, { Container, E2EProcessContext, SysemAssessmentStatus } from "../model/system.mjs";
+import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../specifications/paths.mjs";
 
 const STEREOTYPE_MAP = {
     ArchiMate_TechnicalCapability: "TechnicalCapability",
@@ -48,6 +50,9 @@ function buildSystems(rows, methods = []) {
     return systems;
 }
 class SystemService {
+    constructor() {
+        this.getByCode = this.getByCode.bind(this);
+    }
     async getAll(options = {}) {
         const { excludeContainers, includeMethods } = options;
         if (includeMethods)
@@ -62,22 +67,53 @@ class SystemService {
         return Object.values(systems);
     }
 
+    /**
+     * 
+     * @param {string} code 
+     * @param {*} options 
+     * @returns {Promise<System>}
+     */
     async getByCode(code, options = {}) {
+        // [ ] Изменить логику получения (уйти от денормализованных запросов)
         const { excludeContainers, includeMethods } = options;
         if (includeMethods)
             NotImplemented();
 
         if (excludeContainers) {
             const row = await dataService.selectOnlySystemByCode(code);
-            if (!row) NotFound(`The system with the ${code} code was not found`)
+            if (!row) throw NotFound(`The system with the ${code} code was not found`)
             return new System(row);
         };
 
         const rows = await dataService.selectSystemByCode(code);
+        if (!rows.length) return null;
         const systems = buildSystems(rows);
         return systems[code];
     }
-    async putSystem(system) {
+    async getSystemContainers(systemCode) {
+        return dataService.selectSystemContainers(systemCode)
+            .then(rows => rows.map(row => new Container(row)));
+    }
+    /**
+     * 
+     * @param {string} code 
+     * @param {System} system 
+     */
+    async putSystem(code, system) {
+        if (!code) throw BadRequest('Code parameter is not specified');
+        if (!system) throw BadRequest('System is not specified');
+        const containerWithoutCode = system.containers.find(c => !c.code);
+        if (containerWithoutCode) {
+            throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`)
+        }
+
+        const currentSystem = await this.getByCode(code, { excludeContainers: true });
+        if (!currentSystem) throw NotFound(`System with code=${code} was not found`);
+
+        const containerMap = (await this.getSystemContainers(code)).reduce((acc, v) => Object.assign(acc, { [v.code]: { current: v } }), {})
+        system.containers.forEach(c => (containerMap[c.code] ?? (containerMap[c.code] = {})).target = c);
+        const newContianers = Object.values(containerMap).filter( c=>!c.current)
+
         NotImplemented();
     }
     async getPurpose(systemCode) {
@@ -86,7 +122,12 @@ class SystemService {
         const capabilityMap = {};
 
         for (const row of rows) {
-            const capability = Object.assign(capabilityMap[row.object_id] ?? (capabilityMap[row.object_id] = {}), { name: row.name, code: row.code, type: STEREOTYPE_MAP[row.stereotype] })
+            const type = STEREOTYPE_MAP[row.stereotype];
+            const capability = Object.assign(capabilityMap[row.object_id] ?? (capabilityMap[row.object_id] = {}),
+                {
+                    name: row.name, code: row.code, type: type,
+                    href: buildHREF(`${type === 'TechnicalCapability' ? TC_LIST_RESOURCE : CAPABILITY_LIST_RESOURCE}/${row.code}`)
+                })
             if (row.child_id == row.object_id)
                 continue;
             const child = capabilityMap[row.child_id] ?? (capabilityMap[row.child_id] = {});
