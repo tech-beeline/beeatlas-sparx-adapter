@@ -15,7 +15,9 @@ import { useFetchJSON } from "../../utils/index.mjs";
 
 export default function SystemAssessmentsAccordion({ system }) {
     const { data, loading, error } = useFetchJSON(
-        `/api/v4/systems/${encodeURIComponent(system.code)}/assessments`
+        `/api/v4/systems/${encodeURIComponent(system.code)}/assessments`,
+        {},
+        [system]
     );
     return (
         <Accordion>
@@ -29,7 +31,7 @@ export default function SystemAssessmentsAccordion({ system }) {
             {error ? (
                 <AccordionDetails color="red">
                     <Alarm />
-                    {error}
+                    {error.message}
                 </AccordionDetails>
             ) : null}
             {data ? (
@@ -50,8 +52,8 @@ export default function SystemAssessmentsAccordion({ system }) {
                                     key={(ar) => ar.fitness_function_code}
                                     sx={{
                                         backgroundColor: ar.status
-                                            ? "green"
-                                            : "red",
+                                            ? "#FFEBEE"
+                                            : "#E8F5E9",
                                     }}
                                 >
                                     <TableCell>
@@ -62,7 +64,7 @@ export default function SystemAssessmentsAccordion({ system }) {
                                     </TableCell>
                                     <TableCell>{ar.assessment_date}</TableCell>
                                     <TableCell>
-                                        {ar.status ? "Успешно" : "Ошибка"}
+                                        {ar.status ? "Есть ошибки" : "Успешно"}
                                     </TableCell>
                                     <TableCell>{ar.result_details}</TableCell>
                                 </TableRow>
