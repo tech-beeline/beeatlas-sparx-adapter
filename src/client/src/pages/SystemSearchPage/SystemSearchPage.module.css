@@ -1,0 +1,11 @@
+.smallColumn {
+    width: 5%;
+}
+
+.bigColumn {
+    width: 30%;
+}
+
+.pointer {
+    cursor: pointer;
+}

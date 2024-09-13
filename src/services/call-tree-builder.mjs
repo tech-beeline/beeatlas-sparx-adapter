@@ -1,4 +1,4 @@
-import { ERROR_INFO, OPERATION_GUID_NOT_FOUND } from "../client/src/Components/message-validate-errors.mjs";
+import { ERROR_INFO, OPERATION_GUID_NOT_FOUND } from "../client/src/pages/E2EScenarioDashboardPage/message-validate-errors.mjs";
 import { NotImplemented } from "../utils/errors.mjs";
 
 
