@@ -296,6 +296,9 @@ class Repository {
     }
 
     async putConnector(start_object_id, end_object_id, connector_type, additionalProperties) {
+        if (!start_object_id) throw Error('start_object_id is not specified');
+        if (!end_object_id) throw Error('end_object_id is not specified');
+        
         const stereotype_prop = CONNECTOR_STEREOTYPE[connector_type];
 
         let connector_properties = {
@@ -560,38 +563,38 @@ class Repository {
         }, {});
     }
     async updateObjectTags(object_id, obj, tags) {
-		/**
-		 * @type {t_objectproperties[]}
-		 */
-		let current_tags = await this.queryRows("select * from t_objectproperties where object_id=$1 and property=ANY($2)", [object_id, tags]);
-		for (let name of tags) {
-			const ct = current_tags.find(t => t.property === name);
-			if (ct) {
-				await this.update(t_objectproperties, { value: obj[name]??"" }, { propertyid: ct.propertyid });
-				continue;
-			}
-			if (obj[name]) {
-				await this.insert(t_objectproperties, { object_id: object_id, value: obj[name], property: name });
-			}
-		}
-	}
+        /**
+         * @type {t_objectproperties[]}
+         */
+        let current_tags = await this.queryRows("select * from t_objectproperties where object_id=$1 and property=ANY($2)", [object_id, tags]);
+        for (let name of tags) {
+            const ct = current_tags.find(t => t.property === name);
+            if (ct) {
+                await this.update(t_objectproperties, { value: obj[name] ?? "" }, { propertyid: ct.propertyid });
+                continue;
+            }
+            if (obj[name]) {
+                await this.insert(t_objectproperties, { object_id: object_id, value: obj[name], property: name });
+            }
+        }
+    }
 
     async updateConnectorTags(connector_id, connector, tags) {
-		/**
-		 * @type {t_objectproperties[]}
-		 */
-		let current_tags = await this.queryRows("select * from t_connectortag where elementid=$1 and property=ANY($2)", [connector_id, tags]);
-		for (let name of tags) {
-			const ct = current_tags.find(t => t.property === name);
-			if (ct) {
-				await this.update(t_connectortag, { value: connector[name]??"" }, { propertyid: ct.propertyid });
-				continue;
-			}
-			if (connector[name]) {
-				await this.insert(t_connectortag, { elementid: connector_id, value: connector[name], property: name });
-			}
-		}
-	}
+        /**
+         * @type {t_objectproperties[]}
+         */
+        let current_tags = await this.queryRows("select * from t_connectortag where elementid=$1 and property=ANY($2)", [connector_id, tags]);
+        for (let name of tags) {
+            const ct = current_tags.find(t => t.property === name);
+            if (ct) {
+                await this.update(t_connectortag, { value: connector[name] ?? "" }, { propertyid: ct.propertyid });
+                continue;
+            }
+            if (connector[name]) {
+                await this.insert(t_connectortag, { elementid: connector_id, value: connector[name], property: name });
+            }
+        }
+    }
 }
 
 export default new Repository();

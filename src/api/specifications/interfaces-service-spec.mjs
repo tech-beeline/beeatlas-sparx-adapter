@@ -1,5 +1,5 @@
 import { API_VERSION, CONTACT } from "../../resources/const.mjs"
-import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
+import { booleanProperty, buildServiceSwagger, dateTimeProperty, numberProperty, schemasRef, stringProperty } from "./helpers.mjs"
 
 export const INTERFACES_SERVICE_NAME = "Управление информацией об интерфейсах"
 export const INTERFACES_SERVICE_DESCRIPTION = "Управление информацией об интерфейсах, включая спецификацию и нефункциональные требования"
@@ -11,7 +11,11 @@ export const INTERFACE_RESOURCE_V4 = '/api/v4/interfaces/{code}';
 export const METHOD_SCHEMA = {
     type: "object",
     properties: {
-        name: stringProperty("Имя метода")
+        name: stringProperty("Имя метода"),
+        description: stringProperty("Описание метода"),
+        rps: numberProperty("Максимальная нагрузка (запросов в секунду)"),
+        latency: numberProperty("Максимальное время отклика (ms)"),
+        error_rate: numberProperty("Максимльное количество отказов (%)")
     }
 }
 
@@ -20,7 +24,7 @@ export const METHOD_SCHEMA_REF = schemasRef("Method");
 export const INTERFACE_SCHEMA = {
     type: "object",
     properties: {
-        code: stringProperty("Код интерфейса", { example: "SEARCH-API" }),
+        code: stringProperty("Код интерфейса", { example: "SEARCH-API.BACKEND.SYSTEM_CODE" }),
         name: stringProperty("Имя интерфейса", { example: "API поиска чего-нибудь" }),
         description: stringProperty("Описание интерфейса", { example: "Подробно о" }),
         version: stringProperty("Версия интерфейса", { example: "1.0.0" }),
@@ -28,7 +32,11 @@ export const INTERFACE_SCHEMA = {
         specification: stringProperty("Ссылка на спецификацию"),
         methods: {
             type: "array",
-            items: METHOD_SCHEMA_REF
+            items: METHOD_SCHEMA_REF,
+            example: [
+                { name: "GET /api/entities", rps: 10, latency: 500, error_rate: 1 },
+                { name: "POST /api/entities" }
+            ]
         },
         self: stringProperty("Ссылка на интерфейс")
     }

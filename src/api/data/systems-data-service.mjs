@@ -1,7 +1,7 @@
 import Repository from '../../utils/ea-repo.mjs'
 import { APP_CATALOG_ROOT } from '../../resources/const.mjs';
 import { NotImplemented } from '../../utils/errors.mjs';
-import { PREPARE_SUBPACKAGE } from './sql/system-container-sql.mjs';
+import { PREPARE_CONTAINERS_PACKAGE } from './sql/system-container-sql.mjs';
 import t_object from '../../utils/ea-model/t_object.mjs';
 
 const CONTAINER_STEREOTYPE = 'C2';
@@ -269,13 +269,13 @@ class SystemsDataService {
 	 * @returns {Promise<{container_package_id, sys_package_id, sys_object_id}>}
 	 */
 	async prepareContainerPackage(systemCode) {
-		return Repository.queryOne(PREPARE_SUBPACKAGE, [CONTAINERS_FOLDER, systemCode]);
+		return Repository.queryOne(PREPARE_CONTAINERS_PACKAGE, [CONTAINERS_FOLDER, systemCode]);
 	}
 
 	async insertContainer(systemCode, name, code, author, version, description) {
 		const [packageInfo, system] = await Promise.all([
 			this.prepareContainerPackage(systemCode),
-			Repository.find(t_object, { object_type: 'Component', alias: systemCode })
+			Repository.first(t_object, { object_type: 'Component', alias: systemCode })
 		]);
 		if (!packageInfo) throw Error(`Package with alias=${systemCode} not found`);
 
@@ -292,17 +292,13 @@ class SystemsDataService {
 		});
 
 		await Repository.putConnector(system.object_id, container.object_id, 'Realisation');
-		
+
 		return { name: container.name, description: container.note };
 	}
-
-	/**
-	 * 
-	 * @param {Array<{sys_code,code,name,version, description, author}>} code 
-	 * @returns {Promise}
-	 */
-	async bulkInsertContainers(containers) {
-		return Promise.all(containers.map(c => this.insertContainer(c.sys_code, c.name, c.code, c.author, c.version, c.description)));
+	async updateContainer(name, code, author, version, description) {
+		return Repository.update(t_object,
+			{ name: name, author: author, version: version, note: description },
+			{ alias: code, stereotype: "C2" });
 	}
 }
 

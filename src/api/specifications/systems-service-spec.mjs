@@ -30,7 +30,7 @@ const INTERFACE_SCHEMA_REF = SWAGGER.defineEntitySchema("Interface", INTERFACE_S
 const CONTAINER_SCHEMA = SWAGGER.defineEntitySchema("Container", {
     type: "object",
     properties: {
-        code: stringProperty("Код контейнера", { example: "BACKEND" }),
+        code: stringProperty("Код контейнера", { example: "BACKEND.SYSTEM_CODE" }),
         name: stringProperty("Название контейнера", { example: "Backend service" }),
         description: stringProperty("Описание контейнера", { example: "Подробное описание" }),
         version: stringProperty("Версия контейнера", { example: "1.0.0" }),
@@ -44,7 +44,7 @@ const CONTAINER_SCHEMA = SWAGGER.defineEntitySchema("Container", {
 const SYSTEM_SCHEMA = SWAGGER.defineEntitySchema("System", {
     type: "object",
     properties: {
-        code: stringProperty("Код системы в CMDB", { example: "SYSTEM" }),
+        code: stringProperty("Код системы в CMDB", { example: "SYSTEM_CODE" }),
         name: stringProperty("Название системы", { example: "The System" }),
         description: stringProperty("Описание системы", { example: "Oooooops" }),
         version: stringProperty("Версия системы", { example: "1.0.0" }),

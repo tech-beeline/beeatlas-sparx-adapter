@@ -1,7 +1,14 @@
-export const PREPARE_SUBPACKAGE = `WITH cte_sys AS (
-	SELECT package_id , $1 as name FROM t_object WHERE object_type='Component' AND alias=$2
-),
-cte_new_package AS (
+const SELECT_CONTAINER_SYS_CTE = `cte_sys AS (
+SELECT package_id , $1 as name FROM t_object WHERE object_type='Component' AND alias=$2 )`;
+
+const SELECT_INTERFACE_SYS_CTE = `cte_sys AS (
+SELECT s.package_id , $1 as name 
+FROM t_object o
+	JOIN t_package p ON p.package_id=o.package_id
+	JOIN t_package s ON s.package_id=p.parent_id
+WHERE stereotype='C2' AND alias=$2)`
+
+const PREPARE_EXPR = `cte_new_package AS (
 	INSERT INTO t_package(
 		name, parent_id
 	)
@@ -40,5 +47,13 @@ FROM cte_new_obj n
 UNION DISTINCT
 SELECT p.package_id 
 FROM cte_sys s
-	JOIN t_package p ON p.parent_id=s.package_id AND p.name=s.name
-`;
+	JOIN t_package p ON p.parent_id=s.package_id AND p.name=s.name`;
+
+export const PREPARE_CONTAINERS_PACKAGE = `WITH 
+${SELECT_CONTAINER_SYS_CTE},
+${PREPARE_EXPR}`;
+
+export const PREPARE_INTERFACES_PACKAGE
+ = `WITH 
+${SELECT_INTERFACE_SYS_CTE},
+${PREPARE_EXPR}`;
