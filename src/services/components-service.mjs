@@ -33,6 +33,7 @@ select p.ea_guid as pguid, c.ea_guid, p.name as package, c.name, p."fullName" ||
 	from packages p
 	join t_object c on c.package_id=p.id and c.object_type='Component'`;
 
+
 const CONSTANTS = {
 	CONTAINERS_FOLDER: "Containers",
 	INTERFACES_FOLDER: "Interfaces"

@@ -1,6 +1,7 @@
 import { BadRequest, NotFound, NotImplemented } from "../../utils/errors.mjs";
 import { buildHREF } from "../controllers/controller-decorator.mjs";
 import ArchMetricsStorage from "../data/arch-metrics-storage.mjs";
+import interfaceDataService from "../data/interface-data-service.mjs";
 import dataService from '../data/systems-data-service.mjs'
 import System, { Container, E2EProcessContext, SysemAssessmentStatus } from "../model/system.mjs";
 import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../specifications/paths.mjs";
@@ -94,6 +95,87 @@ class SystemService {
         return dataService.selectSystemContainers(systemCode)
             .then(rows => rows.map(row => new Container(row)));
     }
+
+    /**
+     * 
+     * @param {string} systemCode 
+     * @param {Array<Container>} containers 
+     */
+    async addContianers(systemCode, containers) {
+        const results = await Promise.all(containers
+            .map(async c => {
+                try {
+                    const container = await dataService.insertContainer(
+                        systemCode,
+                        c.name,
+                        c.code,
+                        c.author,
+                        c.version,
+                        c.description);
+
+                    const results = await Promise.all(c.interfaces.map(async it => {
+                        try {
+                            await interfaceDataService.insertInterface(
+                                systemCode,
+                                c.code,
+                                it.name,
+                                it.code,
+                                it.version,
+                                it.description,
+                                it.protocol,
+                                it.specification
+                            );
+                        } catch (error) {
+                            console.error(error)
+                            return { error: error };
+                        }
+                    }));
+
+                    console.log(results)
+
+                } catch (error) {
+                    console.error(error);
+                    return { error: error };
+                }
+            }));
+
+        console.log(results)
+        NotImplemented();
+    }
+    /**
+     * 
+     * @param {string} systemCode 
+     * @param {Array<Container>} containers 
+     */
+    async updateContainers(systemCode, containers) {
+        //NotImplemented();
+    }
+    /**
+     * 
+     * @param {string} systemCode 
+     * @param {Array<Container>} containers 
+     */
+    async markContainersRemoved(systemCode, containers) {
+        //NotImplemented();
+    }
+
+    async changeContainers(systemCode, containers) {
+        const isContainersEqual = (a, b) =>
+            a && b && a.name === b.name && a.version === b.version && a.description === b.description;
+
+        const containerMap = (await this.getSystemContainers(systemCode)).reduce((acc, v) => Object.assign(acc, { [v.code]: { current: v } }), {})
+        containers.forEach(c => (containerMap[c.code] ?? (containerMap[c.code] = {})).target = c);
+        const containersDiff = Object.values(containerMap);
+
+        const newConatiners = containersDiff.filter(c => !c.current);
+        const changedConainers = containersDiff.filter(c => c.target && c.current && !isContainersEqual(c.target, c.current))
+        const removedContainers = containersDiff.filter(c => !c.target);
+        await Promise.all([
+            this.addContianers(systemCode, newConatiners.map(c => c.target)),
+            this.updateContainers(systemCode, changedConainers.map(c => c.target)),
+            this.markContainersRemoved(systemCode, removedContainers.map(c => c.current))
+        ])
+    }
     /**
      * 
      * @param {string} code 
@@ -110,9 +192,7 @@ class SystemService {
         const currentSystem = await this.getByCode(code, { excludeContainers: true });
         if (!currentSystem) throw NotFound(`System with code=${code} was not found`);
 
-        const containerMap = (await this.getSystemContainers(code)).reduce((acc, v) => Object.assign(acc, { [v.code]: { current: v } }), {})
-        system.containers.forEach(c => (containerMap[c.code] ?? (containerMap[c.code] = {})).target = c);
-        const newContianers = Object.values(containerMap).filter( c=>!c.current)
+        await this.changeContainers(code, system.containers);
 
         NotImplemented();
     }

@@ -1,6 +1,10 @@
 import Repository from '../../utils/ea-repo.mjs'
 import { APP_CATALOG_ROOT } from '../../resources/const.mjs';
 import { NotImplemented } from '../../utils/errors.mjs';
+import { PREPARE_SUBPACKAGE } from './sql/system-container-sql.mjs';
+import t_object from '../../utils/ea-model/t_object.mjs';
+
+const CONTAINER_STEREOTYPE = 'C2';
 
 const CTE_SYSTEM_CATALOG = `cte_sys_catalog AS (
     SELECT package_id, package_id AS parent_id, name , name::text AS "FQName", ea_guid
@@ -202,79 +206,104 @@ cte_bi_dia AS (
 )
 SELECT * FROM cte_sys_msg`
 
+const CONTAINERS_FOLDER = "Containers";
 
 class SystemsDataService {
-    /**
-     * 
-     * @returns {Promise}
-     */
-    async selectOnlySystems() {
-        return Repository.queryRows(SELECT_ONLY_SYSTEMS);
-    }
-    /**
-     * 
-     * @returns {Promise}
-     */
-    async selectOnlySystemByCode(code) {
-        return Repository.queryOne(`${SELECT_ONLY_SYSTEMS} WHERE sys_code=$1`, [code]);
-    }
-    /**
-     * 
-     * @returns {Promise}
-     */
-    async selectSystems() {
-        return Repository.queryRows(SELECT_ALL);
-    }
-    /**
-     * 
-     * @returns {Promise}
-     */
-    async selectSystemByCode(code) {
-        return Repository.queryRows(`${SELECT_ALL} WHERE sys_code=$1`, [code]);
-    }
+	/**
+	 * 
+	 * @returns {Promise}
+	 */
+	async selectOnlySystems() {
+		return Repository.queryRows(SELECT_ONLY_SYSTEMS);
+	}
+	/**
+	 * 
+	 * @returns {Promise}
+	 */
+	async selectOnlySystemByCode(code) {
+		return Repository.queryOne(`${SELECT_ONLY_SYSTEMS} WHERE sys_code=$1`, [code]);
+	}
+	/**
+	 * 
+	 * @returns {Promise}
+	 */
+	async selectSystems() {
+		return Repository.queryRows(SELECT_ALL);
+	}
+	/**
+	 * 
+	 * @returns {Promise}
+	 */
+	async selectSystemByCode(code) {
+		return Repository.queryRows(`${SELECT_ALL} WHERE sys_code=$1`, [code]);
+	}
 
-    /**
-     * 
-     * @param {string} systemCode 
-     * @returns {Promise<Array<{sys_code, sys_name, code, name, description,version, status}>>}
-     */
-    async selectSystemContainers(systemCode) {
-        return Repository.queryRows(SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE, [systemCode])
-    }
-    /**
-     * 
-     * @returns {Promise}
-     */
-    async selectSystemCapabilities(code) {
-        return Repository.queryRows(SELECT_SYSTEM_CAPABILITIES, [code]);
-    }
+	/**
+	 * 
+	 * @param {string} systemCode 
+	 * @returns {Promise<Array<{sys_code, sys_name, code, name, description,version, status}>>}
+	 */
+	async selectSystemContainers(systemCode) {
+		return Repository.queryRows(SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE, [systemCode])
+	}
+	/**
+	 * 
+	 * @returns {Promise}
+	 */
+	async selectSystemCapabilities(code) {
+		return Repository.queryRows(SELECT_SYSTEM_CAPABILITIES, [code]);
+	}
 
-    /**
-     * 
-     * @param {string} code 
-     * @returns {Promise}
-     */
-    async selectSystemE2EParticipition(code) {
-        return Repository.queryRows(`${SELECT_SYSTEM_PARTICIPITION} WHERE operation IS NOT NULL`, [code]);
-    }
+	/**
+	 * 
+	 * @param {string} code 
+	 * @returns {Promise}
+	 */
+	async selectSystemE2EParticipition(code) {
+		return Repository.queryRows(`${SELECT_SYSTEM_PARTICIPITION} WHERE operation IS NOT NULL`, [code]);
+	}
 
-    /**
-     * 
-     * @param {{sys_code,code,name,version}} code 
-     * @returns {Promise}
-     */
-    async insertContainer(containers) {
-        NotImplemented();
-    }
+	/**
+	 * 
+	 * @param {string} systemCode 
+	 * @returns {Promise<{container_package_id, sys_package_id, sys_object_id}>}
+	 */
+	async prepareContainerPackage(systemCode) {
+		return Repository.queryOne(PREPARE_SUBPACKAGE, [CONTAINERS_FOLDER, systemCode]);
+	}
 
-    /**
-     * 
-     * @param {Array<{sys_code,code,name,version}>} code 
-     * @returns {Promise}
-     */
-    async bulkInsertContainers(containers) {
-        NotImplemented();
-    }
+	async insertContainer(systemCode, name, code, author, version, description) {
+		const [packageInfo, system] = await Promise.all([
+			this.prepareContainerPackage(systemCode),
+			Repository.find(t_object, { object_type: 'Component', alias: systemCode })
+		]);
+		if (!packageInfo) throw Error(`Package with alias=${systemCode} not found`);
+
+		const container = await Repository.createObject({
+			package_id: packageInfo.package_id,
+			name: name,
+			object_type: "Component",
+			author: author,
+			alias: code,
+			version: version,
+			note: description,
+			stereotype: CONTAINER_STEREOTYPE,
+			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
+		});
+
+		await Repository.putConnector(system.object_id, container.object_id, 'Realisation');
+		
+		return { name: container.name, description: container.note };
+	}
+
+	/**
+	 * 
+	 * @param {Array<{sys_code,code,name,version, description, author}>} code 
+	 * @returns {Promise}
+	 */
+	async bulkInsertContainers(containers) {
+		return Promise.all(containers.map(c => this.insertContainer(c.sys_code, c.name, c.code, c.author, c.version, c.description)));
+	}
 }
 
 
