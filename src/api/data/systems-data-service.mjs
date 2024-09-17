@@ -35,8 +35,8 @@ SELECT * FROM cte_systems`
 const SELECT_ALL = `WITH RECURSIVE ${CTE_SYSTEMS},
 ${CTE_REALIZATION}
 SELECT sys.*, 
-	c.name AS container,c.alias AS container_code, c.version as container_version, c.note as container_description, c.object_id as container_id,
-	it.name as interface, it.alias as interface_code, it.version as interface_version, it.note as interface_description, it.object_id as interface_id
+	c.name AS container,c.alias AS container_code, c.version as container_version, c.note as container_description, c.object_id as container_id, c.status as container_status,
+	it.name as interface, it.alias as interface_code, it.version as interface_version, it.note as interface_description, it.object_id as interface_id, it.status as interface_status
 FROM cte_systems sys
 	LEFT JOIN cte_realization c ON c.start_object_id=sys.object_id AND c.object_type='Component' AND c.alias is not null and c.stereotype='C2'
 	LEFT JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface' AND it.alias is not null AND it.alias <> ''`
@@ -246,6 +246,15 @@ class SystemsDataService {
 	async selectSystemContainers(systemCode) {
 		return Repository.queryRows(SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE, [systemCode])
 	}
+	async selectContainerByCode(containerCode) {
+		return Repository.first(t_object, { stereotype: "C2", alias: containerCode })
+			.then(r => r ? {
+				code: r.alias,
+				name: r.name,
+				description: r.note,
+				version: r.version
+			} : null);
+	}
 	/**
 	 * 
 	 * @returns {Promise}
@@ -298,6 +307,12 @@ class SystemsDataService {
 	async updateContainer(name, code, author, version, description) {
 		return Repository.update(t_object,
 			{ name: name, author: author, version: version, note: description },
+			{ alias: code, stereotype: "C2" });
+	}
+
+	async markContainerRemoved(name, code) {
+		return Repository.update(t_object,
+			{ name: `[REMOVED!]${name}`, status: "REMOVED"},
 			{ alias: code, stereotype: "C2" });
 	}
 }

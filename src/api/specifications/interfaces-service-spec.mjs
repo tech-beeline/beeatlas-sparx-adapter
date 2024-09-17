@@ -28,6 +28,7 @@ export const INTERFACE_SCHEMA = {
         name: stringProperty("Имя интерфейса", { example: "API поиска чего-нибудь" }),
         description: stringProperty("Описание интерфейса", { example: "Подробно о" }),
         version: stringProperty("Версия интерфейса", { example: "1.0.0" }),
+        status: stringProperty("Статус интерфейса", { example: "Proposed" }),
         protocol: stringProperty("Протокол", { example: "rest" }),
         specification: stringProperty("Ссылка на спецификацию"),
         methods: {

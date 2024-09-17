@@ -44,12 +44,13 @@ export class APIInterface {
     api_url;
     capabilityCode;
     description;
+    status;
     protocol;
     /**
      * @type {APIMethod[]}
      */
     methods = [];
-    constructor({ name, code, version, type, api_url, capabilityCode, methods, description, i_id, protocol } = {}) {
+    constructor({ name, code, version, type, api_url, capabilityCode, methods, description, i_id, protocol , status} = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
@@ -59,6 +60,8 @@ export class APIInterface {
         this.description = description;
         this.methods = methods ?? [];
         this.protocol = protocol;
+        this.status =  status;
+
         this.ea_id = () => i_id;
     }
     /**
@@ -76,22 +79,25 @@ export class Container {
     version;
     tags;
     description;
+    status;
     /**
      * @type {APIInterface[]}
      */
     interfaces;
-    constructor({ name, code, version, tags, interfaces, description } = {}) {
+    constructor({ name, code, version, tags, interfaces, description , status} = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
         this.tags = tags;
         this.interfaces = interfaces;
+        this.status = status;
         this.description = description ?? undefined;
     }
     addInterface(i) {
         if (!(i instanceof APIInterface)) i = new APIInterface(i)
         if (!this.interfaces) this.interfaces = [];
         this.interfaces.push(i);
+        return i;
     }
     interfaceByCode(code) {
         return this.interfaces?.find(i => i.code === code);

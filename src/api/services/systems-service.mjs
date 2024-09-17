@@ -1,4 +1,5 @@
 import { BadRequest, NotFound, NotImplemented } from "../../utils/errors.mjs";
+import patchArray from "../../utils/patch-array.mjs";
 import { buildHREF } from "../controllers/controller-decorator.mjs";
 import ArchMetricsStorage from "../data/arch-metrics-storage.mjs";
 import interfaceDataService from "../data/interface-data-service/index.mjs";
@@ -7,6 +8,8 @@ import dataService from '../data/systems-data-service.mjs'
 import System, { Container, E2EProcessContext, SysemAssessmentStatus } from "../model/system.mjs";
 import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../specifications/paths.mjs";
 import interfacesService from "./interfaces-service/index.mjs";
+
+const REMOVED_STATUS = 'REMOVED';
 
 const STEREOTYPE_MAP = {
     ArchiMate_TechnicalCapability: "TechnicalCapability",
@@ -19,9 +22,11 @@ function sliceCode(code, postfixCode) {
     return code.slice(0, - postfixCode.length - 1);
 }
 
-function buildSystems(rows, methods = []) {
+function buildSystems(rows, methods = [], addRemoved = false) {
     const systems = {}
-    for (const row of rows) {
+    const rowToBuild = addRemoved?rows:rows.filter( r=>r.container_status!==REMOVED_STATUS && r.interface_status !== REMOVED_STATUS);
+    
+    for (const row of rowToBuild) {
         /** @type {System} */
         const system = systems[row.sys_code] ?? (systems[row.sys_code] = new System({
             name: row.system, code: row.sys_code,
@@ -38,14 +43,18 @@ function buildSystems(rows, methods = []) {
                 name: row.container,
                 code: container_code,
                 version: row.container_version,
-                description: row.container_description
+                description: row.container_description,
+                status: row.container_status
             });
-            const interface_code = sliceCode(row.interface_code, row.container_code);
-            if (interface_code) {
-                const api = container.interfaceByCode(interface_code) ?? container.addInterface({
+
+            //const interface_code = sliceCode(row.interface_code, row.container_code);
+            if (row.interface_code) {
+                const api = container.interfaceByCode(row.interface_code) ?? container.addInterface({
                     name: row.interface,
-                    code: interface_code, version: row.interface_version,
-                    ...row
+                    code: row.interface_code,
+                    version: row.interface_version,
+                    status: row.interface_status,
+                    description: row.interface_description
                 });
             }
         }
@@ -101,21 +110,23 @@ class SystemService {
     /**
      * 
      * @param {string} systemCode 
-     * @param {Array<Container>} containers 
+     * @param {Container} container
      */
-    async addContianers(systemCode, containers) {
-        for (const container of containers) {
-            await dataService.insertContainer(
-                systemCode,
-                container.name,
-                container.code,
-                container.author,
-                container.version,
-                container.description);
+    async addContainer(systemCode, container) {
 
-            for (const interfaceData of container.interfaces) {
-                await interfacesService.addInterface(interfaceData, container.code);
-            }
+        const currentContainer = await dataService.selectContainerByCode(container.code);
+        if (currentContainer) throw Error(`Container with code=${container.code} already exists`)
+
+        await dataService.insertContainer(
+            systemCode,
+            container.name,
+            container.code,
+            container.author,
+            container.version,
+            container.description);
+
+        for (const interfaceData of container.interfaces) {
+            await interfacesService.addInterface(interfaceData, container.code);
         }
     }
     /**
@@ -123,91 +134,74 @@ class SystemService {
      * @param {string} systemCode 
      * @param {Array<{current:Container,target: Container}>} containers 
      */
-    async updateContainers(systemCode, containers) {
-        const isContainersEqual = (a, b) =>
-            a && b && a.name === b.name && a.version === b.version && a.description === b.description;
+    async updateContainer(systemCode, current, target) {
+        const isContainersEqual = (a, b) => a.name === b.name && a.version === b.version && a.description === b.description;
 
-        if (!containers || !containers.length) return;
-
-
-        for (const container of containers) {
-            if (!isContainersEqual(container.current, container.target)) {
-                await systemsDataService.updateContainer(
-                    container.target.name,
-                    container.target.code,
-                    container.target.author,
-                    container.target.version,
-                    container.target.description);
-            }
-
-            const interfaceMap = (container.target.interfaces ?? [])
-                .reduce((acc, it) => Object.assign(acc, { [it.code]: { target: it } }), {});
-
-            const currentInterfaces = await interfaceDataService.selectContainerInterfaces(container.target.code);
-            currentInterfaces.forEach(it => {
-                (interfaceMap[it.code] ?? (interfaceMap[it.code] = {})).current = it;
-            })
-            const interfaces = Object.values(interfaceMap);
-
-            const newInterfaces = interfaces.filter(it => !it.current).map(it => it.target);
-            for (const it of newInterfaces) {
-                await interfacesService.addInterface(it, container.target.code);
-            }
-            const interfacesToUpdate = interfaces.filter(it => it.current && it.target);
-            for (const it of interfacesToUpdate) {
-                await interfacesService.changeInterface(it);
-            }
-            const removedInterfaces = interfaces.filter(it => !it.target);
-            for (const it of removedInterfaces) {
-                NotImplemented();
-            }
+        if (!isContainersEqual(current, target)) {
+            await systemsDataService.updateContainer(
+                target.name,
+                target.code,
+                target.author,
+                target.version,
+                target.description);
         }
+
+        await patchArray(
+            target.interfaces ?? [],
+            await interfaceDataService.selectContainerInterfaces(target.code),
+            it => it.code,
+            (it) => interfacesService.addInterface(it, target.code),
+            (currentInterface, targetInterface) => interfacesService.updateInterface(currentInterface, targetInterface),
+            (it) => interfacesService.markInterfaceRemoved(it)
+        )
     }
     /**
      * 
      * @param {string} systemCode 
-     * @param {Array<Container>} containers 
+     * @param {Container} container
      */
-    async markContainersRemoved(systemCode, containers) {
-        if (!containers || !containers.length) return;
-        NotImplemented('Mark containers removed');
+    async markContainerRemoved(systemCode, container) {
+        if (container.status === 'REMOVED') {
+            console.info(`Pass remove for removed container ${container.code}`);
+            return;
+        }
+
+        await dataService.markContainerRemoved(container.name, container.code);
+        // [ ] -проработать вопрос пакетной маркировки интерфейсов как удаленными
+        for (const it of container.interfaces ?? []) {
+            await interfacesService.markInterfaceRemoved(it);
+        }
     }
 
-    async changeContainers(systemCode, containers) {
-
-        const containerMap = (await this.getSystemContainers(systemCode)).reduce((acc, v) => Object.assign(acc, { [v.code]: { current: v } }), {})
-        containers.forEach(c => (containerMap[c.code] ?? (containerMap[c.code] = {})).target = c);
-        const containersDiff = Object.values(containerMap);
-
-        const newConatiners = containersDiff.filter(c => !c.current);
-        const changedConainers = containersDiff.filter(c => c.target && c.current)
-        const removedContainers = containersDiff.filter(c => !c.target);
-
-        await Promise.all([
-            this.addContianers(systemCode, newConatiners.map(c => c.target)),
-            this.updateContainers(systemCode, changedConainers.map(c => c)),
-            this.markContainersRemoved(systemCode, removedContainers.map(c => c.current))
-        ])
-    }
     /**
      * 
-     * @param {string} code 
+     * @param {string} systemCode 
      * @param {System} system 
      */
-    async putSystem(code, system) {
-        if (!code) throw BadRequest('Code parameter is not specified');
+    async putSystem(systemCode, system) {
+        if (!systemCode) throw BadRequest('Code parameter is not specified');
         if (!system) throw BadRequest('System is not specified');
         const containerWithoutCode = system.containers.find(c => !c.code);
         if (containerWithoutCode) {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`)
         }
 
-        const currentSystem = await this.getByCode(code, { excludeContainers: true });
-        if (!currentSystem) throw NotFound(`System with code=${code} was not found`);
+        const currentSystemInfo = await this.getByCode(systemCode, { excludeContainers: true });
+        if (!currentSystemInfo) throw NotFound(`System with code=${systemCode} was not found`);
 
-        await this.changeContainers(code, system.containers);
-        return this.getByCode(code);
+        await patchArray(
+            system.containers ?? [],
+            await this.getSystemContainers(systemCode),
+            c => c.code,
+            (c) => this.addContainer(systemCode, c),
+            (current, target) => this.updateContainer(systemCode, current, target),
+            (c) => this.markContainerRemoved(systemCode, c)
+        )
+
+        return this.getByCode(systemCode);
     }
+
+
     async getPurpose(systemCode) {
         const rows = await dataService.selectSystemCapabilities(systemCode);
 

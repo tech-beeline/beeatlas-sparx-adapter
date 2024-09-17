@@ -1,4 +1,5 @@
 import { NotImplemented } from "../../../utils/errors.mjs";
+import patchArray from "../../../utils/patch-array.mjs";
 import interfaceDataService from "../../data/interface-data-service/index.mjs";
 import { APIInterface, APIMethod } from "../../model/system.mjs";
 
@@ -6,7 +7,6 @@ class InterfacesService {
 
     async addMethod(interfaceCode, method) {
         if (!method) throw Error('Method parameter is not specified');
-
         const { name, description, returnType, rps, latency, error_rate } = method;
         if (!name) throw Error(`Method name is not specified`);
 
@@ -17,12 +17,13 @@ class InterfacesService {
      * @param {string} interfaceCode 
      * @param {{current: APIMethod,target:APIMethod}} method 
      */
-    async changeMethod(interfaceCode, method) {
+    async updateMethod(interfaceCode, currentMethod, targetMethod) {
         const isMethodsEqual = (a, b) =>
             a.name === b.name &&
             a.description === b.description &&
             a.returnType === b.returnType;
-        if (!isMethodsEqual(method.current, method.target)) {
+
+        if (!isMethodsEqual(currentMethod, targetMethod)) {
             NotImplemented('Update Method');
         }
         // [ ] Добавить обработку параметров
@@ -33,12 +34,17 @@ class InterfacesService {
      * @param {string} containerCode 
      */
     async addInterface(interfaceData, containerCode) {
+        if (!interfaceData.code) throw Error(`One of interfaces for container with code=${containerCode} haven't code property`);
+        const currentInterface = await interfaceDataService.selectInterfaceByCode(interfaceData.code);
+        if (currentInterface) throw Error(`Interface with code=${interfaceData.code} already exists`);
+
         await interfaceDataService.insertInterface(
             containerCode,
             interfaceData.name,
             interfaceData.code,
             interfaceData.version,
             interfaceData.description,
+            interfaceData.status,
             interfaceData.protocol,
             interfaceData.api_url);
 
@@ -49,35 +55,45 @@ class InterfacesService {
 
     /**
      * 
-     * @param {{current: APIInterface, target: APIInterface}} interfaceData 
+     * @param {APIInterface} currentInterface 
+     * @param {APIInterface} targetInterface 
      */
-    async changeInterface(interfaceData) {
-        const isInterfacesEqual = (a, b) =>
-            a && b && a.name === b.name && a.version === b.version && a.description === b.description;
-        if (!isInterfacesEqual(interfaceData.current, interfaceData.target)) {
-            NotImplemented();
+    async updateInterface(currentInterface, targetInterface) {
+        const isInterfacesEqual = (a, b) => a.name === b.name && a.version === b.version && a.description === b.description;
+        if (!isInterfacesEqual(currentInterface, targetInterface)) {
+            await interfaceDataService.updateInterface(targetInterface.name,
+                currentInterface.code,
+                targetInterface.version,
+                targetInterface.description,
+                targetInterface.status,
+                targetInterface.protocol,
+                targetInterface.specification
+            )
         }
 
-        const methodsMap = (interfaceData.target.methods ?? [])
-            .reduce((acc, m) => Object.assign(acc, { [m.name]: { target: m } }), {});
-        const currentMethods = await interfaceDataService.selectMethods(interfaceData.target.code);
-        currentMethods.forEach(m => {
-            (methodsMap[m.name] ?? (methodsMap[m.name] = {})).current = m
-        });
+        await patchArray(
+            targetInterface.methods ?? [],
+            await interfaceDataService.selectMethods(targetInterface.code),
+            m => m.name,
+            (m) => this.addMethod(targetInterface.code, m),
+            (currentMethod, targetMethod) => this.updateMethod(targetInterface.code, currentMethod, targetMethod),
+            (m) => NotImplemented()
+        );
+    }
 
-        const methods = Object.values(methodsMap);
+    /**
+    * 
+    * @param {APIInterface} currentInterface 
+    */
+    async markInterfaceRemoved(currentInterface) {
+        if (currentInterface.status === 'REMOVED') {
+            console.info('Skip removed interface')
+            return;
+        }
 
-        const newMethods = methods.filter(m => !m.current).map(m => m.target);
-        for (const method of newMethods) {
-            await this.addMethod(interfaceData.target.code, method);
-        }
-        const methodsToUpdate = methods.filter(m => m.current && m.target);
-        for (const method of methodsToUpdate) {
-            await this.changeMethod(interfaceData.code, method);
-        }
-        const removedMethods = methods.filter(m => !m.target).map(m => m.current);
-        for (const method of removedMethods) {
-            NotImplemented();
+        await interfaceDataService.markInterfaceRemoved(`[REMOVED!]${currentInterface.name}`, currentInterface.code);
+        for (const method of currentInterface.methods ?? []) {
+            NotImplemented('Remove Methods');
         }
     }
 }

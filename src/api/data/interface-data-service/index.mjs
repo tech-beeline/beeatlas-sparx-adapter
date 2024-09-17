@@ -9,6 +9,14 @@ import { INSERT_INTERFACE_METHOD, SELECT_INTERFACE_METHODS } from './methods-que
 const INTERFACES_FOLDER = 'Interfaces'
 
 class InterfaceDataService {
+    /**
+     * 
+     * @param {string} interfaceCode 
+     */
+    async selectInterfaceByCode(interfaceCode) {
+        return Repository.first(t_object, { object_type: 'Interface', alias: interfaceCode })
+            .then(it => it ? { name: it.name, code: it.code, description: it.note, version: it.version } : null);
+    }
     async selectContainerInterfaces(containerCode) {
         return Repository.queryRows(SELECT_CONTAINER_INTERFACES, [containerCode]);
     }
@@ -32,7 +40,7 @@ class InterfaceDataService {
         return Repository.queryOne(PREPARE_INTERFACES_PACKAGE, [INTERFACES_FOLDER, containerCode]);
     }
 
-    async insertInterface(containerCode, name, code, version, description, protocol, specification) {
+    async insertInterface(containerCode, name, code, version, description, status, protocol, specification) {
         const [packageInfo, container] = await Promise.all([
             this.prepareInterfacesPackage(containerCode),
             Repository.first(t_object, { stereotype: 'C2', alias: containerCode })]
@@ -48,11 +56,28 @@ class InterfaceDataService {
             object_type: 'Interface',
             author: "FDM API",
             note: description,
+            status: status,
             backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
         });
 
         await Repository.putConnector(container.object_id, it.object_id, 'Realisation');
         return { name: it.name, code: it.alias, description: it.note };
+    }
+
+    async updateInterface(name, code, version, description, status, protocol, specification) {
+        return Repository.update(t_object,
+            {
+                name: name,
+                status: status,
+                version : version,
+                note: description,
+                status: status
+            },
+            { alias: code, object_type: 'Interface' });
+    }
+
+    async markInterfaceRemoved(name, code) {
+        return Repository.update(t_object, { name: name, status: 'REMOVED' }, { alias: code, object_type: 'Interface' });
     }
 
     async insertMethod(interfaceCode, name, description, returnType, rps, latency, error_rate) {

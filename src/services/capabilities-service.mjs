@@ -2,11 +2,10 @@ import { xml2js } from "xml-js";
 import Repository, { ARCHIMATE_CAPABILITY, CONNECTOR_STEREOTYPES } from "../utils/ea-repo.mjs";
 import OSLC from "../utils/oslc.mjs";
 import domainsService, { DomainNotFoundException } from "./domains-service.mjs";
-import Capability from "../api/model/capability.mjs";
+import Capability from "../model/capability-legacy.mjs";
 import { BadRequest, NotImplemented } from "../utils/errors.mjs";
 import t_package from "../utils/ea-model/t_package.mjs";
 import t_object from "../utils/ea-model/t_object.mjs";
-import t_connector from "../utils/ea-model/t_connector.mjs";
 
 const CAPABILITY_QUERY =
     `with recursive capabilities as (
