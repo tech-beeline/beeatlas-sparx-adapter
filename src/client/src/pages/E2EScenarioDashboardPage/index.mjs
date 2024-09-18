@@ -1,4 +1,5 @@
 import { Link, NavLink, useParams } from "react-router-dom";
+
 import React, { useEffect, useState } from "react";
 import { Interaction2, Scenario } from "./scenario-model.mjs";
 import Table from "@mui/material/Table/Table.js";
@@ -41,6 +42,9 @@ import {
     HomeLink,
     MainBar,
 } from "../../components/index.mjs";
+import { Progress } from '@beeline/design-system-react';
+
+
 import { E2E_API_RESOURCE } from "../../const.mjs";
 
 function ScenarioHeader({ scenario, process_uid }) {
@@ -471,14 +475,13 @@ export function E2EScenarioDashboardPage() {
                     </div>
                 )
             ) : (
-                <img
-                    src="/images/loading.gif"
-                    style={{
+                <div>
+                    <Progress cycled style={{
                         display: "block",
                         marginLeft: "auto",
                         marginRight: "auto",
-                    }}
-                />
+                    }} />
+                </div>
             )}
         </>
     );

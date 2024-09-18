@@ -24,7 +24,6 @@ import {
 } from "@mui/material";
 import { E2EProcessSelect } from "../../components/index.mjs";
 import { E2E_API_RESOURCE } from "../../const.mjs";
-
 export const E2EProcessSummary_URI = "/e2e/processes";
 
 function E2ESummaryAccordion({ process, uid }) {
@@ -64,7 +63,6 @@ function E2ESummaryAccordion({ process, uid }) {
 }
 
 function BusinessInteractionList({ interactions, process_uid }) {
-    console.log(interactions);
 
     return (
         <Accordion>

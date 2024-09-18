@@ -35,7 +35,7 @@ import {
     TableRow,
     Typography,
 } from "@mui/material";
-import { withStyles } from "@mui/styles";
+import { styled } from "@mui/system";
 import { TreeItem, TreeView } from "@mui/x-tree-view";
 import React, { useEffect, useState } from "react";
 import { WebEANaviLine, formatWebEALink } from "../../utils/index.mjs";
@@ -210,28 +210,25 @@ function CallItem({ call }) {
     ) : (
         <Check />
     );
-    const CallTreeItem = call.errors
-        ? withStyles({
-              label: {
-                  color: "red",
-              },
-          })(TreeItem)
-        : call.invalidChildren
-        ? TreeItem
-        : withStyles({
-              label: {
-                  color: "green",
-              },
-          })(TreeItem);
+    const CallTreeItem = call.errors || call.invalidChildren ?
+        styled(TreeItem)({
+            label: {
+                color: "red",
+            },
+        }) :
+        styled(TreeItem)({
+            label: {
+                color: "green",
+            },
+        });
 
     return call.errors ? (
         <CallTreeItem
             label={
-                <div>
+                <div style={{color:"red"}}>
                     {LabelIcon}
-                    {`${call.client_code ?? call.client_name}->${
-                        call.server_code ?? call.server_name
-                    } ${call.name}`}
+                    {`${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name
+                        } ${call.name}`}
                 </div>
             }
             nodeId={call.ea_guid}
@@ -244,11 +241,10 @@ function CallItem({ call }) {
     ) : (
         <CallTreeItem
             label={
-                <div>
+                <div style={{ color: "green" }}>
                     {LabelIcon}
-                    {`${call.client_code ?? call.client_name}->${
-                        call.server_code ?? call.server_name
-                    } ${call.name}`}
+                    {`${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name
+                        } ${call.name}`}
                 </div>
             }
             nodeId={call.ea_guid}
@@ -284,7 +280,7 @@ export function CallTraceSection({ callTree }) {
                         defaultExpandIcon={<KeyboardArrowDown />}
                     >
                         {(callTree.length > 1 ||
-                        callTree[0].children?.length === 0
+                            callTree[0].children?.length === 0
                             ? callTree
                             : callTree[0].children
                         ).map((it, i) => (

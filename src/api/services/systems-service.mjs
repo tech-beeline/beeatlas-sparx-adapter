@@ -3,8 +3,8 @@ import patchArray from "../../utils/patch-array.mjs";
 import { buildHREF } from "../controllers/controller-decorator.mjs";
 import ArchMetricsStorage from "../data/arch-metrics-storage.mjs";
 import interfaceDataService from "../data/interface-data-service/index.mjs";
-import systemsDataService from "../data/systems-data-service.mjs";
-import dataService from '../data/systems-data-service.mjs'
+import systemsDataService from "../data/systems-data-service/index.mjs";
+import dataService from '../data/systems-data-service/index.mjs'
 import System, { Container, E2EProcessContext, SysemAssessmentStatus } from "../model/system.mjs";
 import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../specifications/paths.mjs";
 import interfacesService from "./interfaces-service/index.mjs";
@@ -24,8 +24,8 @@ function sliceCode(code, postfixCode) {
 
 function buildSystems(rows, methods = [], addRemoved = false) {
     const systems = {}
-    const rowToBuild = addRemoved?rows:rows.filter( r=>r.container_status!==REMOVED_STATUS && r.interface_status !== REMOVED_STATUS);
-    
+    const rowToBuild = addRemoved ? rows : rows.filter(r => r.container_status !== REMOVED_STATUS && r.interface_status !== REMOVED_STATUS);
+
     for (const row of rowToBuild) {
         /** @type {System} */
         const system = systems[row.sys_code] ?? (systems[row.sys_code] = new System({
@@ -61,20 +61,58 @@ function buildSystems(rows, methods = [], addRemoved = false) {
     }
     return systems;
 }
+
+export const GET_ALL_HANDLERS = {
+    systems: () => dataService.selectSystems()
+        .then(rows => rows.map(s => new System(s))),
+    containers: async () => {
+        const [systemsRows, containersRows] = await Promise.all([
+            dataService.selectSystems(),
+            dataService.selectSystemsContainers()
+        ])
+        const systemsMap = systemsRows.reduce((acc, v) => (acc[v.code] = new System(v), acc), {});
+        containersRows.forEach(row => {
+            systemsMap[row.sys_code]?.addContainer(row);
+        })
+        return Object.values(systemsMap);
+    },
+    interfaces: async () => {
+        const [systemsRows, containersRows, interfacesRows] = await Promise.all([
+            dataService.selectSystems(),
+            dataService.selectSystemsContainers(),
+            interfaceDataService.selectAllContainersInterfaces()
+        ])
+        const systemsMap = systemsRows.reduce((acc, v) => (acc[v.code] = new System(v), acc), {});
+        const containersMap = {}
+        containersRows.forEach(row => {
+            systemsMap[row.sys_code]?.addContainer(containersMap[row.code] = new Container(row));
+        });
+        interfacesRows.forEach( row=>{
+            containersMap[row.container_code]?.addInterface( row );
+        });
+        return Object.values(systemsMap);
+    },
+    methods: async ()=>{
+        NotImplemented();
+    }
+}
+
 class SystemService {
     constructor() {
         this.getByCode = this.getByCode.bind(this);
     }
     async getAll(options = {}) {
-        const { excludeContainers, includeMethods } = options;
-        if (includeMethods)
-            NotImplemented();
+        const { level = 'systems' } = options;
 
-        if (excludeContainers) {
-            return (await dataService.selectOnlySystems()).map(s => new System({ name: s.system, ...s }));
+        const handleLevel = GET_ALL_HANDLERS[level] ?? (() => { throw Error(`Invalid level parameter (${level})`) });
+        return handleLevel();
+
+        if ('systems' === level) {
+            return (await dataService.selectSystems()).map(s => new System({ name: s.system, ...s }));
         };
 
-        const rows = await dataService.selectSystems();
+        NotImplemented();
+        const rows = await dataService.selectSystemsLegacy();
         const systems = buildSystems(rows);
         return Object.values(systems);
     }
@@ -87,20 +125,14 @@ class SystemService {
      */
     async getByCode(code, options = {}) {
         // [ ] Изменить логику получения (уйти от денормализованных запросов)
-        const { excludeContainers, includeMethods } = options;
-        if (includeMethods)
-            NotImplemented();
-
-        if (excludeContainers) {
-            const row = await dataService.selectOnlySystemByCode(code);
+        const { level = 'systems' } = options;
+        if ("systems" === level) {
+            const row = await dataService.selectSystemByCode(code);
             if (!row) throw NotFound(`The system with the ${code} code was not found`)
             return new System(row);
         };
-
-        const rows = await dataService.selectSystemByCode(code);
-        if (!rows.length) return null;
-        const systems = buildSystems(rows);
-        return systems[code];
+        if ("containers")
+            NotImplemented();
     }
     async getSystemContainers(systemCode) {
         return dataService.selectSystemContainers(systemCode)

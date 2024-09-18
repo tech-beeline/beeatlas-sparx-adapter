@@ -1,33 +1,13 @@
-import Repository from '../../utils/ea-repo.mjs'
-import { APP_CATALOG_ROOT } from '../../resources/const.mjs';
-import { NotImplemented } from '../../utils/errors.mjs';
-import { PREPARE_CONTAINERS_PACKAGE } from './sql/system-container-sql.mjs';
-import t_object from '../../utils/ea-model/t_object.mjs';
+import Repository from '../../../utils/ea-repo.mjs'
+import { NotImplemented } from '../../../utils/errors.mjs';
+import { PREPARE_CONTAINERS_PACKAGE } from '../sql/system-container-sql.mjs';
+import t_object from '../../../utils/ea-model/t_object.mjs';
+import { CTE_REALIZATION, CTE_SYSTEMS } from './systems-cte.mjs';
+import { SELECT_SYSTEMS } from './systems-queries.mjs';
+import { SELECT_SYSTEM_CONTAINERS, SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE } from './systems-containers-queries.mjs';
+import { APP_CATALOG_ROOT } from '../../../resources/const.mjs';
 
 const CONTAINER_STEREOTYPE = 'C2';
-
-const CTE_SYSTEM_CATALOG = `cte_sys_catalog AS (
-    SELECT package_id, package_id AS parent_id, name , name::text AS "FQName", ea_guid
-        FROM t_package WHERE ea_guid='${APP_CATALOG_ROOT}'
-    UNION DISTINCT
-    SELECT c.package_id, p.parent_id, c.name, p."FQName"::text || '/' || c.name, c.ea_guid
-            FROM cte_sys_catalog p
-            JOIN t_package c ON c.parent_id=p.package_id
-)`;
-
-const CTE_SYSTEMS = `${CTE_SYSTEM_CATALOG}, 
-cte_systems AS (
-    SELECT sys.object_id, sys.name as system, sys.ea_guid, sys.alias AS sys_code, sys.note AS sys_description, sys.author, sys.status, sys.modifiedDate AS "modifiedDate", sys.version,
-		cat."FQName" || '/' || sys.name AS "FQName", cat.name AS "packageName"
-		FROM cte_sys_catalog cat
-		JOIN t_object sys ON sys.package_id=cat.package_id AND sys.object_type='Component' AND sys.alias is not null AND sys.stereotype IS null)
-`;
-
-const CTE_REALIZATION = `cte_realization AS ( select 
-    DISTINCT r.start_object_id, c.*
-    FROM t_connector r 
-        JOIN t_object c ON  c.object_id=r.end_object_id
-    WHERE r.connector_type='Realisation')`
 
 const SELECT_ONLY_SYSTEMS = `WITH RECURSIVE ${CTE_SYSTEMS}
 SELECT * FROM cte_systems`
@@ -41,31 +21,9 @@ FROM cte_systems sys
 	LEFT JOIN cte_realization c ON c.start_object_id=sys.object_id AND c.object_type='Component' AND c.alias is not null and c.stereotype='C2'
 	LEFT JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface' AND it.alias is not null AND it.alias <> ''`
 
-const SELECT_SYSTEM_CONTAINERS = `WITH ${CTE_REALIZATION}
-    SELECT
-        sys.alias as sys_code,
-        sys.name as sys_name,
-        cn.alias as code,
-        cn.name,
-        cn.note as description,
-        cn.version,
-        cn.status
-    FROM t_object sys
-        JOIN cte_realization cn ON cn.start_object_id=sys.object_id AND cn.stereotype='C2'
-    WHERE sys.object_type='Component'`
 
-const SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE = `WITH ${CTE_REALIZATION}
-    SELECT
-        sys.alias as sys_code,
-        sys.name as sys_name,
-        cn.alias as code,
-        cn.name,
-        cn.note as description,
-        cn.version,
-        cn.status
-    FROM t_object sys
-        JOIN cte_realization cn ON cn.start_object_id=sys.object_id AND cn.stereotype='C2'
-    WHERE sys.object_type='Component' AND sys.alias=$1`
+
+
 
 const SELECT_SYSTEM_CAPABILITIES = `WITH RECURSIVE cte_sys AS(
 	SELECT object_id
@@ -211,30 +169,38 @@ const CONTAINERS_FOLDER = "Containers";
 class SystemsDataService {
 	/**
 	 * 
-	 * @returns {Promise}
-	 */
-	async selectOnlySystems() {
-		return Repository.queryRows(SELECT_ONLY_SYSTEMS);
-	}
-	/**
-	 * 
-	 * @returns {Promise}
-	 */
-	async selectOnlySystemByCode(code) {
-		return Repository.queryOne(`${SELECT_ONLY_SYSTEMS} WHERE sys_code=$1`, [code]);
-	}
-	/**
-	 * 
-	 * @returns {Promise}
+	 * @returns {Promise<Array<{ code,name, description, version, status, FQName, modifiedDate}>>}
 	 */
 	async selectSystems() {
-		return Repository.queryRows(SELECT_ALL);
+		return Repository.queryRows(SELECT_SYSTEMS);
 	}
 	/**
 	 * 
 	 * @returns {Promise}
 	 */
 	async selectSystemByCode(code) {
+		return Repository.queryOne(`${SELECT_SYSTEMS} WHERE sys_code=$1`, [code]);
+	}
+
+	/**
+	 * @returns {Promise<Array<{ sys_code, sys_name, code, name, description, version, status}>>}
+	 */
+	async selectSystemsContainers() {
+		return Repository.queryRows(SELECT_SYSTEM_CONTAINERS)
+	}
+
+	/**
+	 * 
+	 * @returns {Promise}
+	 */
+	async selectSystemsLegacy() {
+		return Repository.queryRows(SELECT_ALL);
+	}
+	/**
+	 * 
+	 * @returns {Promise}
+	 */
+	async selectSystemByCodeLegacy(code) {
 		return Repository.queryRows(`${SELECT_ALL} WHERE sys_code=$1`, [code]);
 	}
 
@@ -312,7 +278,7 @@ class SystemsDataService {
 
 	async markContainerRemoved(name, code) {
 		return Repository.update(t_object,
-			{ name: `[REMOVED!]${name}`, status: "REMOVED"},
+			{ name: `[REMOVED!]${name}`, status: "REMOVED" },
 			{ alias: code, stereotype: "C2" });
 	}
 }

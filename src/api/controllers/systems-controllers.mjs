@@ -1,11 +1,14 @@
 import express from 'express'
-import systemsService from '../services/systems-service.mjs';
+import systemsService, { GET_ALL_HANDLERS } from '../services/systems-service.mjs';
 import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
 
-
+/**
+ * 
+ * @param {express.Request} request 
+ */
 function checkGetOptions(request) {
-    if (request.query.excludeContainers && request.query.excludeContainers !== "true" && request.query.excludeContainers !== "false") {
-        throw BadRequest(`Invalid excludeContainers parameter value ${request.query.excludeContainers}. The value must be of the boolean type`)
+    if (request.query.level && !GET_ALL_HANDLERS[request.query.level]) {
+        throw BadRequest(`Wrong level parameter value (${request.query.level})`);
     }
 }
 class SystemsControllers {
@@ -17,7 +20,7 @@ class SystemsControllers {
     async getAll(request, response) {
         checkGetOptions(request);
 
-        response.json(await systemsService.getAll({ excludeContainers: request.query.excludeContainers === "true" }));
+        response.json(await systemsService.getAll({ level: request.query.level }));
     }
 
     /**
@@ -29,7 +32,7 @@ class SystemsControllers {
         checkGetOptions(request);
         if (!request.params.code) throw BadRequest('Parameter "code" is not specified')
 
-        response.json(await systemsService.getByCode(request.params.code, { excludeContainers: request.query.excludeContainers === "true" }));
+        response.json(await systemsService.getByCode(request.params.code, { level: request.query.level }));
     }
     /**
      * 
@@ -39,7 +42,7 @@ class SystemsControllers {
     async putSystem(request, response) {
         const system = request.body;
         const code = request.params.code;
-        if( !code) throw BadRequest(`Parameter "code" is not specified`);
+        if (!code) throw BadRequest(`Parameter "code" is not specified`);
 
         response.json(await systemsService.putSystem(code, system));
     }

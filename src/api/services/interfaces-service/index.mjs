@@ -92,7 +92,8 @@ class InterfacesService {
         }
 
         await interfaceDataService.markInterfaceRemoved(`[REMOVED!]${currentInterface.name}`, currentInterface.code);
-        for (const method of currentInterface.methods ?? []) {
+        const currentMethods = interfaceDataService.selectMethods(currentInterface.code);
+        for (const method of currentMethods) {
             NotImplemented('Remove Methods');
         }
     }

@@ -3,12 +3,20 @@ import t_operationtag from '../../../utils/ea-model/t_operationtag.mjs';
 import Repository from '../../../utils/ea-repo.mjs'
 import { NotImplemented } from '../../../utils/errors.mjs';
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
-import { SELECT_CONTAINER_INTERFACES } from './interfaces-queries.mjs';
+import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_CONTAINER_INTERFACES } from './interfaces-queries.mjs';
 import { INSERT_INTERFACE_METHOD, SELECT_INTERFACE_METHODS } from './methods-queries.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
 class InterfaceDataService {
+    /**
+     * 
+     * @returns {Promise<Array<{ container_code, code,name, derscription,version, status}>>}
+     */
+    async selectAllContainersInterfaces() {
+        return Repository.queryRows(SELECT_ALL_CONTAINERS_INTERFACES);
+    }
+
     /**
      * 
      * @param {string} interfaceCode 
@@ -69,7 +77,7 @@ class InterfaceDataService {
             {
                 name: name,
                 status: status,
-                version : version,
+                version: version,
                 note: description,
                 status: status
             },

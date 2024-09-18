@@ -5,7 +5,8 @@ import { MainBar, SearchBox } from "../../components/index.mjs";
 import { E2E_API_RESOURCE } from "../../const.mjs";
 
 import { E2EProcessList } from "./components/index.mjs";
-import styles from "./E2EProcessesListPage.module.css";
+import { Progress } from '@beeline/design-system-react';
+
 
 export function E2EProcessesListPage() {
     const [e2eProcessList, setE2eProcessList] = useState(null);
@@ -13,7 +14,7 @@ export function E2EProcessesListPage() {
 
     const loadProcessList = async () => {
         let response = await fetch(E2E_API_RESOURCE);
-        if (response.status !== 200) {
+        if (!response.ok) {
             let body = await response.text();
             setE2eProcessList({
                 error: `Ошибка при загрузке данных ${response.status} ${body}`,
@@ -51,7 +52,7 @@ export function E2EProcessesListPage() {
                     />
                 )
             ) : (
-                <img src="/images/loading.gif" alt="" className={styles.image} />
+                <Progress shape="circle"/>
             )}
         </>
     );

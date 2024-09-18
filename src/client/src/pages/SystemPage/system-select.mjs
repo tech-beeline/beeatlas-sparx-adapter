@@ -1,12 +1,6 @@
 import { Autocomplete, Popper, TextField } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/system";
 import { useEffect, useState } from "react";
-
-const useStyles = makeStyles(theme => ({
-    inputRoot: {
-        color: "rgba(0, 0, 0, 0.87)"
-    }
-}));
 
 
 const CustomPopper = (props) => {
@@ -24,7 +18,6 @@ const CustomPopper = (props) => {
 
 export function SystemSelect({ onSelect, system }) {
 
-    const classes = useStyles();
 
     const [app_list, setAppList] = useState(null)
 
@@ -57,7 +50,6 @@ export function SystemSelect({ onSelect, system }) {
             componentsProps={{ popper: { style: { width: 'fit-content' } } }}
             disablePortal
             PopperComponent={CustomPopper}
-            classes={classes}
             fullWidth
             isOptionEqualToValue={(o, v) => o.code === v.code}
             options={app_list?.map?.((o, i) => ({ label: o.name, code: o.code })) ?? []}

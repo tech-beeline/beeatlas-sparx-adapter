@@ -129,18 +129,38 @@ const SYSTEM_E2E_PARTICIPATION_SCHEMA = SWAGGER.defineEntitySchema("SystemE2EЗa
 })
 
 const SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF = SWAGGER.defineEntitySchema("SystemAssessmentResult", SYSTEM_ASSESSMENT_RESULT_SCHEMA)
+
+const GET_OPERATION_LEVEL_SCHEMA = SWAGGER.defineEntitySchema("SystemQueryLevel", {
+    type: "string",
+    enum: ["systems", "containers", "interfaces", "methods"]
+})
 //#endregion
 
 //#region Определение параметров
 const SEARCH_TERMS_PARAMETER = queryParameter("terms", "Поисковая строка", true, "system")
 const SYSTEM_CODE_PARAMETER = pathParameter("code", "Код системы", "SYSTEM_CODE");
+const GET_SYSTEMS_LEVEL_PARAMETER = {
+    name: "level",
+    in: "query",
+    description: `Данный параметр определяет на какую глубину загружать информацию о системе
+### Возможные значения:
+* systems - загружать только системы
+* contianers - загружать системы и контейнеры
+* interfaces - загружать системы, контейнеры и интерфейсы
+* methods - загружать системы, контейнеры, интерфейсы и их методы
+    `,
+    required: false,
+    schema: GET_OPERATION_LEVEL_SCHEMA
+}
 //#endregion
+
+
 
 //#region Определение методов
 SWAGGER
     .defineGet(SYSTEM_SEARCH_RESOURCE, new GetJSONOperation(SYSTEM_SEARCH_SUMMARY, [SEARCH_TERMS_PARAMETER], arraySchema(SYSTEM_SCHEMA)))
-    .defineGet(SYSTEM_LIST_RESOURCE, new GetJSONOperation(GET_SYSTEM_LIST_SUMMARY, null, arraySchema(SYSTEM_SCHEMA), systemsControllers.getAll))
-    .defineGet(SYSTEM_RESOURCE, new GetJSONOperation(GET_SYSTEM_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_SCHEMA, systemsControllers.getByCode))
+    .defineGet(SYSTEM_LIST_RESOURCE, new GetJSONOperation(GET_SYSTEM_LIST_SUMMARY, [GET_SYSTEMS_LEVEL_PARAMETER], arraySchema(SYSTEM_SCHEMA), systemsControllers.getAll))
+    .defineGet(SYSTEM_RESOURCE, new GetJSONOperation(GET_SYSTEM_SUMMARY, [SYSTEM_CODE_PARAMETER, GET_SYSTEMS_LEVEL_PARAMETER], SYSTEM_SCHEMA, systemsControllers.getByCode))
     .definePut(SYSTEM_RESOURCE, new JSONOperation(PUT_SYSTEM_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_SCHEMA, SYSTEM_SCHEMA, systemsControllers.putSystem))
     .defineGet(SYSTEM_PURPOSE_RESOURCE, new GetJSONOperation(GET_SYSTEM_PURPOSE_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_PURPOSE_SCHEMA_REF, systemsControllers.getPurpose))
     .defineGet(SYSTEM_E2E_RESOURCE, new GetJSONOperation(GET_SYSTEM_E2E_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_E2E_PARTICIPATION_SCHEMA, systemsControllers.getE2EParticipition))
