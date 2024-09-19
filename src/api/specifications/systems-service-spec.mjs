@@ -138,7 +138,7 @@ const GET_OPERATION_LEVEL_SCHEMA = SWAGGER.defineEntitySchema("SystemQueryLevel"
 
 //#region Определение параметров
 const SEARCH_TERMS_PARAMETER = queryParameter("terms", "Поисковая строка", true, "system")
-const SYSTEM_CODE_PARAMETER = pathParameter("code", "Код системы", "SYSTEM_CODE");
+export const SYSTEM_CODE_PARAMETER = pathParameter("code", "Код системы", "SYSTEM_CODE");
 const GET_SYSTEMS_LEVEL_PARAMETER = {
     name: "level",
     in: "query",

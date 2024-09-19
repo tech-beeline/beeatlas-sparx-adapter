@@ -56,6 +56,7 @@ function SelectGrafanaSource({ sourceList = [], source, setValue, disabled }) {
 }
 
 async function checkResponse(response) {
+    console.log(response)
     if (response.status !== 200) {
         throw Error(await response.text())
     }
@@ -100,27 +101,30 @@ function SystemSourceDialog({ system, open, setOpen }) {
     const [edit, setEdit] = useState(null);
 
     const loadData = async () => {
-        const loadSystemSource = async () => {
-            const response = await fetch(`/api/v4/monitoring/systems/${encodeURIComponent(system.code)}/source`);
-            await checkResponse(response);
-            let source = await response.json();
-            if (!source.uid) {
-                source = null;
-            }
-            return source;
-        }
-
-        const loadSourceList = async () => {
-            const response = await fetch(MON_SOURCES_URL);
-            await checkResponse(response);
-            return await response.json();
-        }
-
         try {
+            const loadSystemSource = async () => {
+                const response = await fetch(`/api/v4/monitoring/systems/${encodeURIComponent(system.code)}/source`);
+                await checkResponse(response);
+                let source = await response.json();
+                if (!source.uid) {
+                    source = null;
+                }
+                return source;
+            }
+
+            const loadSourceList = async () => {
+                const response = await fetch(MON_SOURCES_URL);
+                await checkResponse(response);
+                return await response.json();
+            }
+
+
+            console.log('start load')
             const [system_source, source_list] = await Promise.all([
                 loadSystemSource(),
                 loadSourceList()
             ]);
+            console.log('end load')
             setSourceList(source_list);
             setSystemSource(system_source);
             setSelectedSource(system_source);
@@ -180,8 +184,6 @@ function SystemSourceDialog({ system, open, setOpen }) {
         loadData();
     }, []);
 
-
-
     return (
         <Dialog
             open={open}
@@ -213,7 +215,7 @@ function SystemSourceDialog({ system, open, setOpen }) {
                             setSource={setSelectedSource} />
                         {error ? <DialogContentText color="red"><Alarm />{error}</DialogContentText> : null}
                     </Box> : <Box component={Paper}>
-                        Данные загружаются
+                        {error ? <DialogContentText color="red"><Alarm />{error}</DialogContentText> : <Typography>Данные загружаются</Typography>}
                     </Box>
                 }
             </DialogContent>

@@ -1,10 +1,27 @@
-import { API_VERSION, CONTACT } from "../../resources/const.mjs"
-import { booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
+import monitiringSourcesControllers from "../controllers/monitiring-sources-controllers.mjs";
+import { GetJSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
+import { SYSTEM_CODE_PARAMETER } from "./systems-service-spec.mjs";
 
 export const BC_NAME = "Управление источниками мониторинга"
 export const BC_DESCRIPTION = "Управление техническими возможностями и их реализацией"
 export const SOURCE_LIST_RESOURCE = '/api/v4/monitoring/sources';
 export const SYSTEM_SOURCE_RESOURCE = '/api/v4/monitoring/systems/{code}/source';
+
+
+const SWAGGER = new SimpleServiceSpecification(BC_NAME, BC_DESCRIPTION);
+
+//#region схемы сущностей
+const GRAFANA_SOURCE_SCHEME = SWAGGER.defineEntitySchema("GrafanaSource", {
+    type: "object",
+    properties: {
+        name: stringProperty("Название настройки"),
+        uid: stringProperty("Идентификатор")
+    }
+})
+//#endregion
+
+SWAGGER.defineGet(SOURCE_LIST_RESOURCE, new GetJSONOperation("Получение списка источников", null, arraySchema(GRAFANA_SOURCE_SCHEME), monitiringSourcesControllers.getAll))
+    .defineGet(SYSTEM_SOURCE_RESOURCE, new GetJSONOperation("Получение источника для системы", [SYSTEM_CODE_PARAMETER], GRAFANA_SOURCE_SCHEME, monitiringSourcesControllers.getSystemSource))
 
 export const GET_SOURCES = {
     tags: [BC_NAME],
@@ -144,28 +161,5 @@ export const POST_SOURCE = {
 
 
 
-const PATHS = {
-    [SOURCE_LIST_RESOURCE]: {
-        get: GET_SOURCES,
-        post: POST_SOURCE
-    },
-    [SYSTEM_SOURCE_RESOURCE]: {
-        get: GET_SYSTEM_SOURCE,
-        post: POST_SYSTEM_SOURCE
-    }
-}
-
-const GrafanaSourceSchema = {
-    type: "object",
-    properties: {
-        "name": stringProperty("Название метрики")
-    }
-}
-
-const SCHEMAS = {
-    GrafanaSource: GrafanaSourceSchema
-}
-
-const SWAGGER = buildServiceSwagger(BC_NAME, BC_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })
 
 export default SWAGGER;

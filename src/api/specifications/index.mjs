@@ -8,6 +8,7 @@ import tcServiceSpec from './tc-service-spec.mjs'
 import interfaceServiceSpec from './interfaces-service-spec.mjs'
 import systemsServiceSpec from './systems-service-spec.mjs'
 import processServiceSpec from './e2e-process-service-spec.mjs'
+import monitoringServiceSpec from './monitoring-source-spec.mjs'
 import observabilityServiceSpec from './observability-service-spec.mjs'
 import techRadarServiceSpec from './tech-radar-service-spec.mjs'
 import { createControllerDecorator } from '../controllers/controller-decorator.mjs';
@@ -43,6 +44,7 @@ const API_ROUTES = {
     "interfaces-service" : interfaceServiceSpec,
     "system-service": systemsServiceSpec,
     "e2e-service": processServiceSpec,
+    "monitoring" : monitoringServiceSpec,
     "observability-service" : observabilityServiceSpec,
     "tech-radar-service" : techRadarServiceSpec,
     /*
