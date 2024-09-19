@@ -151,7 +151,16 @@ const GET_SYSTEMS_LEVEL_PARAMETER = {
     `,
     required: false,
     schema: GET_OPERATION_LEVEL_SCHEMA
-}
+};
+const LOAD_REMOVED_PARAMETER = {
+    name: "add-removed",
+    in: "query",
+    description: `Загружать информацию об удаленных обьектах ( контейнеры, интерфейсы)`,
+    required: false,
+    schema: {
+        type: "boolean"
+    }
+};
 //#endregion
 
 
@@ -159,8 +168,8 @@ const GET_SYSTEMS_LEVEL_PARAMETER = {
 //#region Определение методов
 SWAGGER
     .defineGet(SYSTEM_SEARCH_RESOURCE, new GetJSONOperation(SYSTEM_SEARCH_SUMMARY, [SEARCH_TERMS_PARAMETER], arraySchema(SYSTEM_SCHEMA)))
-    .defineGet(SYSTEM_LIST_RESOURCE, new GetJSONOperation(GET_SYSTEM_LIST_SUMMARY, [GET_SYSTEMS_LEVEL_PARAMETER], arraySchema(SYSTEM_SCHEMA), systemsControllers.getAll))
-    .defineGet(SYSTEM_RESOURCE, new GetJSONOperation(GET_SYSTEM_SUMMARY, [SYSTEM_CODE_PARAMETER, GET_SYSTEMS_LEVEL_PARAMETER], SYSTEM_SCHEMA, systemsControllers.getByCode))
+    .defineGet(SYSTEM_LIST_RESOURCE, new GetJSONOperation(GET_SYSTEM_LIST_SUMMARY, [GET_SYSTEMS_LEVEL_PARAMETER, LOAD_REMOVED_PARAMETER], arraySchema(SYSTEM_SCHEMA), systemsControllers.getAll))
+    .defineGet(SYSTEM_RESOURCE, new GetJSONOperation(GET_SYSTEM_SUMMARY, [SYSTEM_CODE_PARAMETER, GET_SYSTEMS_LEVEL_PARAMETER, LOAD_REMOVED_PARAMETER], SYSTEM_SCHEMA, systemsControllers.getByCode))
     .definePut(SYSTEM_RESOURCE, new JSONOperation(PUT_SYSTEM_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_SCHEMA, SYSTEM_SCHEMA, systemsControllers.putSystem))
     .defineGet(SYSTEM_PURPOSE_RESOURCE, new GetJSONOperation(GET_SYSTEM_PURPOSE_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_PURPOSE_SCHEMA_REF, systemsControllers.getPurpose))
     .defineGet(SYSTEM_E2E_RESOURCE, new GetJSONOperation(GET_SYSTEM_E2E_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_E2E_PARTICIPATION_SCHEMA, systemsControllers.getE2EParticipition))

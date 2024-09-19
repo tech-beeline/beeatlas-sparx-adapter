@@ -88,8 +88,6 @@ function ScenarioHeader({ scenario, process_uid }) {
             <MainBar
                 barContent={
                     <Breadcrumbs aria-label="breadcrumb">
-                        <HomeLink />
-                        <E2ECatalogLink />
                         <E2EProcessLink title={e2e?.name} uid={e2e?.uid} />
                         <Typography>{scenario?.name}</Typography>
                     </Breadcrumbs>

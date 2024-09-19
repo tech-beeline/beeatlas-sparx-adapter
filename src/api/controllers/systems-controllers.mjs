@@ -1,6 +1,7 @@
 import express from 'express'
-import systemsService, { GET_ALL_HANDLERS } from '../services/systems-service.mjs';
+import systemsService from '../services/systems-serivice/index.mjs';
 import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
+import { GET_ALL_HANDLERS } from '../services/systems-serivice/get-all-systems.mjs';
 
 /**
  * 
@@ -10,7 +11,10 @@ function checkGetOptions(request) {
     if (request.query.level && !GET_ALL_HANDLERS[request.query.level]) {
         throw BadRequest(`Wrong level parameter value (${request.query.level})`);
     }
+    if (request.query["add-removed"] && request.query["add-removed"] !== 'false' && request.query["add-removed"] != "true")
+        throw BadRequest(`Wrong add-remove parameter value (${request.query["add-removed"]})`);
 }
+
 class SystemsControllers {
     /**
      * 
@@ -20,7 +24,11 @@ class SystemsControllers {
     async getAll(request, response) {
         checkGetOptions(request);
 
-        response.json(await systemsService.getAll({ level: request.query.level }));
+        response.json(await systemsService.getAll(
+            {
+                level: request.query.level,
+                addRemoved: request.query["add-removed"] === "true"
+            }));
     }
 
     /**
@@ -32,7 +40,11 @@ class SystemsControllers {
         checkGetOptions(request);
         if (!request.params.code) throw BadRequest('Parameter "code" is not specified')
 
-        response.json(await systemsService.getByCode(request.params.code, { level: request.query.level }));
+        response.json(await systemsService.getByCode(request.params.code,
+            {
+                level: request.query.level,
+                addRemoved: request.query["add-removed"] === "true"
+            }));
     }
     /**
      * 

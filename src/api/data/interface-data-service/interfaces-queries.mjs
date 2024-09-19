@@ -5,6 +5,7 @@ export const SELECT_ALL_CONTAINERS_INTERFACES = `WiTH cte_realization AS ( selec
     WHERE r.connector_type='Realisation')
 SELECT 
 	cn.alias as container_code,
+	cn.name as container_name,
 	it.alias as code,
 	it.name,
 	it.note as description,

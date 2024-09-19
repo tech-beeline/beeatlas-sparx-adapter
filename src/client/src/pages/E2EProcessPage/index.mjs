@@ -177,15 +177,10 @@ export function E2EProcessPage() {
         <div>
             <MainBar
                 barContent={
-                    <Breadcrumbs aria-label="breadcrumb">
-                        <HomeLink />
-                        <E2ECatalogLink />
-                        <E2EProcessSelect
-                            process={process}
-                            onSelect={handleChangeProcess}
-                        />
-                    </Breadcrumbs>
-                }
+                    <E2EProcessSelect
+                        process={process}
+                        onSelect={handleChangeProcess}
+                    />}
             />
             <E2ESummaryAccordion process={process} uid={process?.uid ?? uid} />
             <BusinessInteractionList

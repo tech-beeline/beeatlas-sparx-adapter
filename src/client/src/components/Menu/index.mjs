@@ -80,7 +80,7 @@ export function MainBar({ contextMenu, title, barContent }) {
             <AppBar position="static" elevation={0} className={styles.appBar}>
                 <Toolbar>
                     <div>
-                        <IconButton
+                        {contextMenu ? <IconButton
                             size="large"
                             edge="start"
                             color="inherit"
@@ -89,41 +89,15 @@ export function MainBar({ contextMenu, title, barContent }) {
                             onClick={() => setMenuOpen(true)}
                         >
                             <MenuIcon />
-                        </IconButton>
+                        </IconButton> : null}
                     </div>
                     <Typography variant="h6">{title}</Typography>
                     {barContent}
-                    <Drawer open={menuOpen} onClose={() => setMenuOpen(false)}>
+                    {contextMenu ? <Drawer open={menuOpen} onClose={() => setMenuOpen(false)}>
                         <Box sx={{ width: 300 }} role="presentation">
-                            {contextMenu ? (
-                                <>
-                                    {contextMenu}
-                                    <Divider />
-                                </>
-                            ) : null}
-                            <List>
-                                <ListItem key="systems" disablePadding>
-                                    <ListItemButton
-                                        component={Link}
-                                        to="/systems"
-                                    >
-                                        <ListItemIcon>
-                                            <SettingsApplications />
-                                        </ListItemIcon>
-                                        <ListItemText primary="Каталог систем" />
-                                    </ListItemButton>
-                                </ListItem>
-                                <ListItem key="e2e" disablePadding>
-                                    <ListItemButton component={Link} to="/e2e">
-                                        <ListItemIcon>
-                                            <Signpost />
-                                        </ListItemIcon>
-                                        <ListItemText primary="Каталог E2E процессов" />
-                                    </ListItemButton>
-                                </ListItem>
-                            </List>
+                            {contextMenu}
                         </Box>
-                    </Drawer>
+                    </Drawer> : null}
                 </Toolbar>
             </AppBar>
         </Box>

@@ -46,7 +46,7 @@ class InterfacesService {
             interfaceData.description,
             interfaceData.status,
             interfaceData.protocol,
-            interfaceData.api_url);
+            interfaceData.specification);
 
         for (const method of interfaceData.methods ?? []) {
             await this.addMethod(interfaceData.code, method);
@@ -73,7 +73,7 @@ class InterfacesService {
 
         await patchArray(
             targetInterface.methods ?? [],
-            await interfaceDataService.selectMethods(targetInterface.code),
+            await interfaceDataService.selectInterfaceMethods(targetInterface.code),
             m => m.name,
             (m) => this.addMethod(targetInterface.code, m),
             (currentMethod, targetMethod) => this.updateMethod(targetInterface.code, currentMethod, targetMethod),
@@ -92,7 +92,7 @@ class InterfacesService {
         }
 
         await interfaceDataService.markInterfaceRemoved(`[REMOVED!]${currentInterface.name}`, currentInterface.code);
-        const currentMethods = interfaceDataService.selectMethods(currentInterface.code);
+        const currentMethods = interfaceDataService.selectInterfaceMethods(currentInterface.code);
         for (const method of currentMethods) {
             NotImplemented('Remove Methods');
         }

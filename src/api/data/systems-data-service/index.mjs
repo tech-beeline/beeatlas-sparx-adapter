@@ -179,7 +179,7 @@ class SystemsDataService {
 	 * @returns {Promise}
 	 */
 	async selectSystemByCode(code) {
-		return Repository.queryOne(`${SELECT_SYSTEMS} WHERE sys_code=$1`, [code]);
+		return Repository.queryOne(`${SELECT_SYSTEMS} WHERE code=$1`, [code]);
 	}
 
 	/**
@@ -212,6 +212,7 @@ class SystemsDataService {
 	async selectSystemContainers(systemCode) {
 		return Repository.queryRows(SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE, [systemCode])
 	}
+	
 	async selectContainerByCode(containerCode) {
 		return Repository.first(t_object, { stereotype: "C2", alias: containerCode })
 			.then(r => r ? {

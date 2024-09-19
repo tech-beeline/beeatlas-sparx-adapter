@@ -4,7 +4,7 @@ import Repository from '../../../utils/ea-repo.mjs'
 import { NotImplemented } from '../../../utils/errors.mjs';
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_CONTAINER_INTERFACES } from './interfaces-queries.mjs';
-import { INSERT_INTERFACE_METHOD, SELECT_INTERFACE_METHODS } from './methods-queries.mjs';
+import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS } from './methods-queries.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
@@ -28,12 +28,21 @@ class InterfaceDataService {
     async selectContainerInterfaces(containerCode) {
         return Repository.queryRows(SELECT_CONTAINER_INTERFACES, [containerCode]);
     }
+
+    /**
+     * 
+     * @param {string} interfaceCode 
+     * @returns {Promise<Array<{ interface_code, interface_name,name, description, return_value, uid}>>}
+     */
+    async selectAllMethods() {
+        return Repository.queryRows(SELECT_ALL_METHODS);
+    }
     /**
      * 
      * @param {string} interfaceCode 
      * @returns {Promise<Array<{ name, description, return_value, uid}>>}
      */
-    async selectMethods(interfaceCode) {
+    async selectInterfaceMethods(interfaceCode) {
         return Repository.queryRows(SELECT_INTERFACE_METHODS, [interfaceCode]);
     }
 

@@ -30,9 +30,10 @@ export class APIMethod {
         this.name = name;
         this.returnType = returnType;
         this.desciption = description ?? notes;
+        this.rps = rps;
+        this.latency = latency;
+        this.error_rate = error_rate;
         this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
-        this.ea_guid = () => ea_guid;
-        this.operationid = () => operationid
     }
 }
 
@@ -41,7 +42,7 @@ export class APIInterface {
     code;
     version;
     type;
-    api_url;
+    specification;
     capabilityCode;
     description;
     status;
@@ -50,17 +51,17 @@ export class APIInterface {
      * @type {APIMethod[]}
      */
     methods = [];
-    constructor({ name, code, version, type, api_url, capabilityCode, methods, description, i_id, protocol , status} = {}) {
+    constructor({ name, code, version, type, api_url: specification, capabilityCode, methods, description, i_id, protocol, status } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
         this.type = type;
-        this.api_url = api_url;
+        this.specification = specification;
         this.capabilityCode = capabilityCode;
         this.description = description;
         this.methods = methods ?? [];
         this.protocol = protocol;
-        this.status =  status;
+        this.status = status;
 
         this.ea_id = () => i_id;
     }
@@ -71,6 +72,9 @@ export class APIInterface {
      */
     methodByUID(uid) {
         return this.methods?.find(m => m.ea_guid() === uid);
+    }
+    addMethod(method) {
+        this.methods.push(new APIMethod(method));
     }
 }
 export class Container {
@@ -84,7 +88,7 @@ export class Container {
      * @type {APIInterface[]}
      */
     interfaces;
-    constructor({ name, code, version, tags, interfaces, description , status} = {}) {
+    constructor({ name, code, version, tags, interfaces, description, status } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;

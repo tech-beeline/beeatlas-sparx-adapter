@@ -81,14 +81,10 @@ export function SystemPage() {
         <>
             <MainBar
                 barContent={
-                    <Breadcrumbs aria-label="breadcrumb">
-                        <HomeLink />
-                        <SystemCatalogLink />
-                        <SystemSelect
-                            system={system}
-                            onSelect={handleSelectSystem}
-                        />
-                    </Breadcrumbs>
+                    <SystemSelect
+                        system={system}
+                        onSelect={handleSelectSystem}
+                    />
                 }
                 contextMenu={contextMenu}
             />
