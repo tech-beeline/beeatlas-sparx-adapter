@@ -63,9 +63,8 @@ function E2ESummaryAccordion({ process, uid }) {
 }
 
 function BusinessInteractionList({ interactions, process_uid }) {
-
     return (
-        <Accordion>
+        <Accordion defaultExpanded>
             <AccordionSummary component={Paper} expandIcon={<ExpandMore />}>
                 <Commit />
                 <Box fontWeight="fontWeightMedium" display="inline">

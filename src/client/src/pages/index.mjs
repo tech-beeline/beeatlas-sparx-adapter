@@ -1,7 +1,3 @@
-export { E2EFillingStatusPage } from "./E2EFillingStatusPage/index.mjs";
-export { E2EFillingDetailsPage } from "./E2EFillingDetailsPage/index.mjs";
-export { E2EFillingDiagramStatusPage } from "./E2EFillingDiagramStatusPage/index.mjs";
-export { E2EProcessesPage } from "./E2EProcessesPage/index.mjs";
 export { E2EScenarioPage } from "./E2EScenarioPage/index.mjs";
 export { E2EDashboardMainPage } from "./E2EDashboardMainPage/index.mjs";
 export { E2EProcessPage } from "./E2EProcessPage/index.mjs";

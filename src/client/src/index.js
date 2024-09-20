@@ -3,10 +3,15 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import { ThemeProvider } from "@beeline/design-system-react";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
-root.render(<App />);
+
+root.render((
+  <ThemeProvider isRoot theme='light'>
+    <App />
+  </ThemeProvider>));
 /*
 root.render(
   <React.StrictMode>

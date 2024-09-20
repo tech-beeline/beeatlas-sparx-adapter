@@ -33,7 +33,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Typography,
+    Typography
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { TreeItem, TreeView } from "@mui/x-tree-view";
@@ -42,6 +42,7 @@ import { WebEANaviLine, formatWebEALink } from "../../utils/index.mjs";
 import { Link } from "react-router-dom";
 import { ERROR_INFO } from "./message-validate-errors.mjs";
 import webeaLogo from "../../res/images/ea-icon.ico";
+
 
 function MessageDetails({ messageDetails }) {
     const firstMethod = messageDetails.server_methods.find((t) => t);
@@ -225,7 +226,7 @@ function CallItem({ call }) {
     return call.errors ? (
         <CallTreeItem
             label={
-                <div style={{color:"red"}}>
+                <div style={{ color: "red" }}>
                     {LabelIcon}
                     {`${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name
                         } ${call.name}`}
@@ -257,7 +258,6 @@ function CallItem({ call }) {
 }
 
 export function CallTraceSection({ callTree }) {
-    console.log(callTree);
     return (
         <Accordion component={Paper}>
             <AccordionSummary component={Paper} expandIcon={<ExpandMore />}>
@@ -267,27 +267,25 @@ export function CallTraceSection({ callTree }) {
                 </Box>
             </AccordionSummary>
             <AccordionDetails>
-                <Typography variant="h8" component={Paper}>
-                    Легенда: <Warning sx={{ color: "red" }} /> - ошибка
-                    заполнения взаимодействия,{" "}
-                    <WarningAmber sx={{ color: "red" }} /> - Ошибка заполнения в
-                    дочерних вызовах, <Check sx={{ color: "green" }} /> -
-                    корректное заполнение
-                </Typography>
-                <Box component={Paper}>
-                    <TreeView
-                        defaultCollapseIcon={<KeyboardArrowUp />}
-                        defaultExpandIcon={<KeyboardArrowDown />}
-                    >
-                        {(callTree.length > 1 ||
-                            callTree[0].children?.length === 0
-                            ? callTree
-                            : callTree[0].children
-                        ).map((it, i) => (
-                            <CallItem key={i} call={it} />
-                        ))}
-                    </TreeView>
-                </Box>
+                {callTree.length > 0 ? <>
+                    <Typography variant="h8" component={Paper}>
+                        Легенда: <Warning sx={{ color: "red" }} /> - ошибка
+                        заполнения взаимодействия,{" "}
+                        <WarningAmber sx={{ color: "red" }} /> - Ошибка заполнения в
+                        дочерних вызовах, <Check sx={{ color: "green" }} /> -
+                        корректное заполнение
+                    </Typography>
+                    <Box component={Paper}>
+
+                        <TreeView
+                            defaultCollapseIcon={<KeyboardArrowUp />}
+                            defaultExpandIcon={<KeyboardArrowDown />}
+                        >
+                            {(callTree[0].children?.length === 0 ? callTree : callTree[0].children).map((it, i) => (
+                                <CallItem key={i} call={it} />
+                            ))}
+                        </TreeView>
+                    </Box></> : <Typography variant="h5">Вызовы отсутствуют</Typography>}
             </AccordionDetails>
         </Accordion>
     );
