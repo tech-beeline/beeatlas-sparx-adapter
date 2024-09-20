@@ -1,74 +1,23 @@
-import { API_VERSION, CONTACT } from "../../resources/const.mjs"
-import { booleanProperty, buildServiceSwagger, dateTimeProperty, integerProperty, schemasRef, stringProperty } from "./helpers.mjs"
+import techRadarControllers from "../controllers/tech-radar-controllers.mjs";
+import { TECH_RADAR_CATEGORY_SCHEMA, TECH_RADAR_TECHNOLOGY_SCHEMA } from "../model/tech-radar-model.mjs";
+import { GetJSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, integerProperty, schemasRef, stringProperty } from "./helpers.mjs"
+import { TECH_RADAR_CATEGORY_LIST_RESOURCE, TECH_RADAR_TECHNOLOGY_LIST_RESOURCE } from "./paths.mjs";
 
-export const TECH_RADAR_SERVICE_NAME = "Управление информацией о технологиях"
-export const TECH_RADAR_SERVICE_DESCRIPTION = "Управление информацией о технологиях, используемых в компании"
+const TECH_RADAR_SERVICE_NAME = "Управление информацией о технологиях"
+const TECH_RADAR_SERVICE_DESCRIPTION = "Управление информацией о технологиях, используемых в компании"
 
-export const TECH_RADAR_CATEGORY_LIST_RESOURCE = '/api/v4/tech-radar/categories';
-export const TECH_RADAR_TECHNOLOGY_LIST_RESOURCE = '/api/v4/tech-radar/technologies';
+const GET_CATEGORIES_SUMMARY = "Получение списка технологических категорий";
+const GET_TECHOLOGIES_SUMMARY = "Получение списка технологий";
 
-export const GET_ALL_CATEGORY_SPEC = {
-    tags: [TECH_RADAR_SERVICE_NAME],
-    summary: "Получение списка технологических категорий",
-    responses: {
-        200: {
-            content: {
-                "application/json": {
-                    schema: {
-                        type: "array",
-                        items: schemasRef('TechCategory')
-                    }
-                }
-            }
-        }
-    }
-}
+const SWAGGER = new SimpleServiceSpecification(TECH_RADAR_SERVICE_NAME, TECH_RADAR_SERVICE_DESCRIPTION);
 
-export const GET_ALL_TECHNOLOGY_SPEC = {
-    tags: [TECH_RADAR_SERVICE_NAME],
-    summary: "Получение списка технологий",
-    responses: {
-        200: {
-            content: {
-                "application/json": {
-                    schema: {
-                        type: "array",
-                        items: schemasRef('Technology')
-                    }
-                }
-            }
-        }
-    }
-}
+//#region techradar entities schemas
+const TECH_RADAR_CATEGORY_SCHEMA_REF = SWAGGER.defineEntitySchema("TechRadarCategory", TECH_RADAR_CATEGORY_SCHEMA);
+const TECH_RADAR_TECHNOLOGY_SCHEMA_REF = SWAGGER.defineEntitySchema("TechRadarTechnology", TECH_RADAR_TECHNOLOGY_SCHEMA);
+//#endregion
 
-const PATHS = {
-    [TECH_RADAR_CATEGORY_LIST_RESOURCE]: {
-        get: GET_ALL_CATEGORY_SPEC
-    },
-    [TECH_RADAR_TECHNOLOGY_LIST_RESOURCE]: {
-        get: GET_ALL_TECHNOLOGY_SPEC
-    }
-}
-
-const SCHEMAS = {
-    TechCategory: {
-        type: "object",
-        properties: {
-            id: integerProperty("Идентификатор категории"),
-            name: stringProperty("Название технологической категории", { example: "Инфраструктура" })
-        }
-    },
-    Technology: {
-        type: "object",
-        properties: {
-            id: integerProperty("Идентификатор технологии"),
-            category: schemasRef('TechCategory'),
-            createdDate: dateTimeProperty("Дата регистрации технологии"),
-            deletedDate: dateTimeProperty("Дата удаления технологии из тех. радара")
-        }
-    }
-}
-
-const SWAGGER = buildServiceSwagger(TECH_RADAR_SERVICE_NAME, TECH_RADAR_SERVICE_DESCRIPTION, CONTACT, API_VERSION, PATHS, { schemas: SCHEMAS })
+SWAGGER
+    .defineGet(TECH_RADAR_CATEGORY_LIST_RESOURCE, new GetJSONOperation(GET_CATEGORIES_SUMMARY, null, arraySchema(TECH_RADAR_CATEGORY_SCHEMA_REF), techRadarControllers.getCategories))
+    .defineGet(TECH_RADAR_TECHNOLOGY_LIST_RESOURCE, new GetJSONOperation(GET_TECHOLOGIES_SUMMARY, null, arraySchema(TECH_RADAR_TECHNOLOGY_SCHEMA_REF), techRadarControllers.getTechnologies));
 
 export default SWAGGER;

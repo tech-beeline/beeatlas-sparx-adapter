@@ -65,3 +65,11 @@ export const E2E_SCENARIO_MESSAGES_RESOURCE = '/api/v4/e2e/scenarios/{code}/mess
 export const E2E_SCENARIO_CALL_TREE_RESOURCE = '/api/v4/e2e/scenarios/{code}/call-tree'
 export const E2E_SCENARIO_PARTICIPANTS = '/api/v4/e2e/scenarios/{code}/participants'
 //#endregion
+
+//#region techradar paths
+export const TECH_RADAR_CATEGORY_LIST_RESOURCE_V4 = '/api/v4/tech-radar/categories';
+export const TECH_RADAR_TECHNOLOGY_LIST_RESOURCE_V4 = '/api/v4/tech-radar/technologies';
+export const TECH_RADAR_CATEGORY_LIST_RESOURCE = TECH_RADAR_CATEGORY_LIST_RESOURCE_V4;
+export const TECH_RADAR_TECHNOLOGY_LIST_RESOURCE = TECH_RADAR_TECHNOLOGY_LIST_RESOURCE_V4;
+
+//#endregion
