@@ -1,6 +1,6 @@
 
 const APP_CATALOG_ROOT = process.env.APP_CATALOG_ROOT ?? '{7889FE97-8783-4311-B229-3A88F8EFA8E3}';
-export const APP_PACKAGE = process.env.APP_PACKAGE ?? '{043ED25B-5EB6-4b6b-9A30-14C9CF0AD8A2}';
+export const APP_PACKAGE = process.env.APP_PACKAGE ?? '{36DABB03-AF9B-4536-852C-09DAB9221FFA}';
 const CONTAINER_STEREOTYPE = 'C2';
 export const API_SPECIFICATION_URL_TAG = 'api_url';
 export const PROTOCOL_TAG = 'protocol';
