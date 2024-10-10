@@ -1,5 +1,7 @@
-import glossaryDataService from "../data/glossary-data-service.mjs";
+import { GlossariesRepository } from "../repositories/index.mjs";
 import { Glossary, Term } from "../model/glossary-model.mjs";
+
+const glossariesRepository = new GlossariesRepository();
 
 class GlossaryService {
     /**
@@ -7,7 +9,7 @@ class GlossaryService {
      * @returns {Promise<Array<Glossary>>}
      */
     async getGlossaryList() {
-        const glossaries = await glossaryDataService.getGlossaries();
+        const glossaries = await glossariesRepository.getGlossaries();
         return glossaries.map(g => new Glossary(g));
     }
 
@@ -16,7 +18,7 @@ class GlossaryService {
      * @returns {Promise<Array<Glossary>>}
      */
     async getGlossary(id) {
-        const glossaryData = await glossaryDataService.getGlossarById(id);
+        const glossaryData = await glossariesRepository.getGlossarById(id);
         return new Glossary(glossaryData);
     }
     /**
@@ -24,7 +26,7 @@ class GlossaryService {
      * @returns {Promise<Array<Glossary>>}
      */
     async getGlossaryTerms(id) {
-        const termsData = await glossaryDataService.getGlossaryTerms(id);
+        const termsData = await glossariesRepository.getGlossaryTerms(id);
         return termsData.map(t => new Term(t))
     }
 }

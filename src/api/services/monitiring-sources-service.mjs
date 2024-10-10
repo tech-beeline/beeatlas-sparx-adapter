@@ -1,12 +1,15 @@
-import { NotImplemented } from "../../utils/errors.mjs";
-import dataService from "../data/monitoring-data-source.mjs";
+import { MonitoringRepository } from "../repositories/index.mjs";
 import GrafanaSource from "../model/GrafanaSource.mjs";
 
 
 const SKIP_PROPERIES = ["name", "sourceId", "label", "type", "uid"]
+const mointoringRepository = new MonitoringRepository();
+
+
 class MonitiringSourcesServices {
+    
     async getAllSources() {
-        const rows = await dataService.selectSourcesProperties();
+        const rows = await mointoringRepository.selectSourcesProperties();
         const sourceMap = {};
         for (const row of rows) {
             /** @type {GrafanaSource} */
@@ -18,9 +21,9 @@ class MonitiringSourcesServices {
 
     async setSource(source) {
         if (source.uid) {
-            dataService.deleteSourceProperties(source.uid);
+            mointoringRepository.deleteSourceProperties(source.uid);
         } else {
-            const new_source = await dataService.insertSource(source.name);
+            const new_source = await mointoringRepository.insertSource(source.name);
             source.uid = new_source.uid;
         };
 
@@ -28,7 +31,7 @@ class MonitiringSourcesServices {
             .map(([k, v]) => ({ property: k, value: v }));
 
         properties.push({ property: source.type, value: source.sourceId });
-        await dataService.insertSourceProperties(source.uid, properties)
+        await mointoringRepository.insertSourceProperties(source.uid, properties)
         return this.getSource(source.uid);
     }
 
@@ -42,11 +45,11 @@ class MonitiringSourcesServices {
         return source;
     }
     async getSource(uid) {
-        return this.#buildSource(await dataService.selectSourcePropertiesByUID(uid));
+        return this.#buildSource(await mointoringRepository.selectSourcePropertiesByUID(uid));
     }
 
     async getSystemSource(systemCode) {
-        return this.#buildSource(await dataService.selectSystemSource(systemCode));
+        return this.#buildSource(await mointoringRepository.selectSystemSource(systemCode));
     }
     /**
      * 
@@ -59,10 +62,10 @@ class MonitiringSourcesServices {
             return;
         }
         if (currentSource) {
-            await dataService.removeSystemSourceLink(systemCode, currentSource.uid);
+            await mointoringRepository.removeSystemSourceLink(systemCode, currentSource.uid);
         }
         if (source.uid) {
-            await dataService.setSystemSourceLink(systemCode, source.uid);
+            await mointoringRepository.setSystemSourceLink(systemCode, source.uid);
         };
         return this.getSystemSource(systemCode)
     }

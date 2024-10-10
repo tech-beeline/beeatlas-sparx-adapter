@@ -1,6 +1,8 @@
 import express from 'express'
-import { NotImplemented } from '../../utils/errors.mjs';
-import { API_VERSION, CONTACT } from '../../resources/const.mjs';
+import {
+    API_VERSION,
+    CONTACT
+} from '../../resources/const.mjs';
 
 import capabilityServiceSpec from './capabilities-service-spec.mjs'
 import businessTermServiceSpec from './glossary-service-spec.mjs'
@@ -39,14 +41,14 @@ function preparePath(path) {
  */
 const API_ROUTES = {
     "capability-service": capabilityServiceSpec,
-    "business-terms-service" : businessTermServiceSpec,
+    "business-terms-service": businessTermServiceSpec,
     "tc-service": tcServiceSpec,
-    "interfaces-service" : interfaceServiceSpec,
+    "interfaces-service": interfaceServiceSpec,
     "system-service": systemsServiceSpec,
     "e2e-service": processServiceSpec,
-    "monitoring" : monitoringServiceSpec,
-    "observability-service" : observabilityServiceSpec,
-    "tech-radar-service" : techRadarServiceSpec,
+    "monitoring": monitoringServiceSpec,
+    "observability-service": observabilityServiceSpec,
+    "tech-radar-service": techRadarServiceSpec,
     /*
     "monitoring-source-service": monitoringSourceReoutes,
     */
@@ -85,7 +87,7 @@ for (const service_name in API_ROUTES) {
         const pathSpec = SUMMARY_SWAGGER.paths[uri] = serviceSpec.paths[uri];
 
         for (const method in pathSpec) {
-            apiRouter[method](preparePath(uri), createControllerDecorator(pathSpec[method].controller))
+            apiRouter[method](preparePath(uri), createControllerDecorator(pathSpec[method].controller, uri, method))
         }
     }
 }

@@ -1,4 +1,4 @@
-import tcController from "../controllers/tc-controllers.mjs";
+import { TechnicalCapabilitiesControllersInstance as tcController} from "../controllers/index.mjs";
 import { BC_LINK_SCHEMA } from "./capabilities-service-spec.mjs";
 import { GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, queryParameter, schemasRef, stringProperty } from "./helpers.mjs"
 import { TC_LIST_RESOURCE, TC_POSITION_RESOURCE, TC_RESOURCE, TC_SEARCH_RESOURCE } from "./paths.mjs";

@@ -1,4 +1,4 @@
-import glossaryControllers from "../controllers/glossary-controllers.mjs";
+import { GlossaryControllersInstance } from "../controllers/index.mjs";
 import { GetJSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, schemasRef, stringProperty } from "./helpers.mjs"
 import { GLOSSARY_LIST_RESOURCE, GLOSSARY_RESOURCE, GLOSSARY_TERM_LIST_RESOURCE, TERM_RESOURCE } from "./paths.mjs";
 
@@ -48,17 +48,17 @@ const TERM_ID_PARAMETER = pathParameter("id", "Идентификатор биз
 
 SWAGGER.defineGet(GLOSSARY_LIST_RESOURCE,
     new GetJSONOperation("Получение списка словарей бизнес-терминов", null, arraySchema(GLOSSARY_SCHEMA))
-        .setContoller(glossaryControllers.getGlossaryList)
+        .setContoller(GlossaryControllersInstance.getGlossaryList)
 );
 
 SWAGGER.defineGet(GLOSSARY_RESOURCE,
     new GetJSONOperation("Получение информации о бизнес-словаре", [GLOSSARY_ID_PARAMETER], GLOSSARY_SCHEMA)
-        .setContoller(glossaryControllers.getGlossary)
+        .setContoller(GlossaryControllersInstance.getGlossary)
 );
 
 SWAGGER.defineGet(GLOSSARY_TERM_LIST_RESOURCE,
     new GetJSONOperation("Получение списка терминов для словаря", [GLOSSARY_ID_PARAMETER], arraySchema(TERM_SCHEMA))
-        .setContoller(glossaryControllers.getGlossaryTerms)
+        .setContoller(GlossaryControllersInstance.getGlossaryTerms)
 );
 
 SWAGGER.defineGet(TERM_RESOURCE,

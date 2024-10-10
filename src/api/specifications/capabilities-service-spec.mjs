@@ -1,5 +1,5 @@
-import controllers from "../controllers/capabilities-controllers.mjs";
-import { GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, queryParameter, schemasRef, stringProperty } from "./helpers.mjs"
+import { CapabilityControllersInstance } from "../controllers/index.mjs";
+import { GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, queryParameter, stringProperty } from "./helpers.mjs"
 import { CAPABILITY_LIST_RESOURCE, CAPABILITY_LIST_RESOURCE_V4, CAPABILITY_RESOURCE, CAPABILITY_RESOURCE_V4, CAPABILITY_SEARCH_RESOURCE } from "./paths.mjs";
 
 export const CAPABILITY_SERVICE_NAME = "Управление бизнес-возможностями"
@@ -52,20 +52,20 @@ const SEARCH_TERMS_PARAMETER = queryParameter("terms", "Строка поиск�
 SWAGGER
     .defineGet(CAPABILITY_SEARCH_RESOURCE,
         new GetJSONOperation("Поиск бизнес-возможности по имени", [SEARCH_TERMS_PARAMETER], arraySchema(CAPABILITY_SCHEMA_REF))
-            .setContoller(controllers.searchByName))
+            .setContoller(CapabilityControllersInstance.searchByName))
     .defineGet(CAPABILITY_LIST_RESOURCE,
         new GetJSONOperation("Получение списка бизнес-возможностей", null, arraySchema(CAPABILITY_SCHEMA_REF))
-            .setContoller(controllers.getAll))
+            .setContoller(CapabilityControllersInstance.getAll))
     .definePost(CAPABILITY_LIST_RESOURCE,
         new JSONOperation("Регистрация новой бизнес возможности", null, CAPABILITY_SCHEMA_REF, CAPABILITY_SCHEMA_REF))
     .defineGet(CAPABILITY_RESOURCE,
         new GetJSONOperation("Получение описания бизнес-возможности по коду",
             [CAPABILITY_CODE_PARAMETER]
             , CAPABILITY_SCHEMA_REF)
-            .setContoller(controllers.getByCode)
+            .setContoller(CapabilityControllersInstance.getByCode)
     )
     .definePut(CAPABILITY_RESOURCE,
-        new JSONOperation("Получение описания бизнес-возможности по коду",
+        new JSONOperation("Обновление описания бизнс-возможностей",
             [CAPABILITY_CODE_PARAMETER],
             CAPABILITY_SCHEMA_REF
             , CAPABILITY_SCHEMA_REF)

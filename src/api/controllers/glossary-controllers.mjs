@@ -1,8 +1,8 @@
 import express from 'express'
-import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs'
+import { BadRequest, NotFound } from '../../utils/errors.mjs'
 import glossaryService from '../services/glossary-service.mjs';
 
-class GlossaryControllers {
+export class GlossaryControllers {
     /**
      * 
      * @param {express.Request} request 
@@ -42,4 +42,4 @@ class GlossaryControllers {
     }
 }
 
-export default new GlossaryControllers();
+//export default new GlossaryControllers();

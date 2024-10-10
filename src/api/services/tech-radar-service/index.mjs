@@ -1,19 +1,23 @@
-import techRadarDataService from "../../data/tech-radar-data-service/index.mjs";
+import { TechRadarRepository } from "../../repositories/index.mjs";
 import { TechRadarCategory, TechRadarRing, TechRadarSector, TechRadarTechnology } from "../../model/tech-radar-model.mjs";
 
+const techRadarRepository = new TechRadarRepository();
+
+
 class TechRadarService {
+
     /**
      * @returns {Promise<Array<TechRadarCategory>>}
      */
     async getCategories() {
-        return techRadarDataService.selectCategories()
+        return techRadarRepository.selectCategories()
             .then(rows => rows.map(row => new TechRadarCategory(row.id, row.name)))
     }
     /**
      * @returns {Promise<Array<TechRadarTechnology>>}
      */
     async getTechologies() {
-        const rows = await techRadarDataService.selectTechnologies();
+        const rows = await techRadarRepository.selectTechnologies();
         return rows.map(row => new TechRadarTechnology(
             row.id,
             row.label,

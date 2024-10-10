@@ -2,7 +2,7 @@ import express from 'express'
 import capabilitiesService from '../services/capabilities-service.mjs';
 import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
 
-class CapabilityControllers {
+export class CapabilityControllers {
     /**
      * 
      * @param {express.Request} request 

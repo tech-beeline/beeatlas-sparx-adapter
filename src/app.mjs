@@ -1,3 +1,4 @@
+import { bootstrapAPI } from './api/bootstrap.mjs';
 import app from './load-app.mjs'
 
 process.env.API_PORT = process.env.API_PORT ?? 8080;
@@ -8,12 +9,18 @@ async function queryOnStart() {
 
 //queryOnStart();
 
-//throw Error('environment variable API_PORT not set');
-let server = app.listen(process.env.API_PORT, () => {
-    console.log(`Start listen on port ${process.env.API_PORT}`)
-})
+async function start() {
+    await bootstrapAPI.init();
 
-process.on('SIGINT', () => {
-    console.log(`Stop listen and exit`);
-    server.close();
-})
+    let server = app.listen(process.env.API_PORT, () => {
+        console.log(`Start listen on port ${process.env.API_PORT}`)
+    })
+
+    process.on('SIGINT', () => {
+        console.log(`Stop listen and exit`);
+        server.close();
+    })
+}
+
+start();
+

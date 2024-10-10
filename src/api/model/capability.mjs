@@ -10,7 +10,8 @@ export class CapabilityRef {
         this.capabilitCode = capabilityCode ?? undefined;
     }
 }
-class Capability {
+
+export class Capability {
     code;
     /**
      * @type {boolean}
@@ -44,7 +45,6 @@ class Capability {
         this.getPackageId = () => cap.package_id
     }
 }
-
 
 export const CAPABILITY_EXAMPLES = {
     RootDomain: new Capability({

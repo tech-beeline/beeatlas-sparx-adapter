@@ -1,6 +1,7 @@
 import express from 'express'
 import { AsyncLocalStorage } from 'async_hooks'
 import { NotImplemented } from '../../utils/errors.mjs';
+import { registerAPIRequestTelemetry } from '../telemetry/rest-api-telemetry.mjs';
 
 const requestLocalStorage = new AsyncLocalStorage();
 
@@ -23,12 +24,12 @@ export function buildHREF(url) {
 * @param {*} controller 
 * @returns 
 */
-export function createControllerDecorator(controller) {
+export function createControllerDecorator(controller, path, method) {
     controller = controller ?? (() => NotImplemented());
     return async (request, response, next) => {
         try {
             requestLocalStorage.enterWith(request);
-            await controller(request, response, next)
+            await registerAPIRequestTelemetry(request, response, next, controller, path, method);
         } catch (error) {
             console.error(error)
             return response.status(error.status ?? 500).json({ message: error.message })

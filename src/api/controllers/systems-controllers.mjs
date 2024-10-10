@@ -1,14 +1,17 @@
 import express from 'express'
-import systemsService from '../services/systems-serivice/index.mjs';
+import {
+    SystemServiceInstance,
+    GET_ALL_SYSTEMS_HANDLERS
+} from '../services/index.mjs';
+
 import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
-import { GET_ALL_HANDLERS } from '../services/systems-serivice/get-all-systems.mjs';
 
 /**
  * 
  * @param {express.Request} request 
  */
 function checkGetOptions(request) {
-    if (request.query.level && !GET_ALL_HANDLERS[request.query.level]) {
+    if (request.query.level && !GET_ALL_SYSTEMS_HANDLERS[request.query.level]) {
         throw BadRequest(`Wrong level parameter value (${request.query.level})`);
     }
     if (request.query["add-removed"] && request.query["add-removed"] !== 'false' && request.query["add-removed"] != "true")
@@ -24,7 +27,7 @@ class SystemsControllers {
     async getAll(request, response) {
         checkGetOptions(request);
 
-        response.json(await systemsService.getAll(
+        response.json(await SystemServiceInstance.getAll(
             {
                 level: request.query.level,
                 addRemoved: request.query["add-removed"] === "true"
@@ -40,7 +43,7 @@ class SystemsControllers {
         checkGetOptions(request);
         if (!request.params.code) throw BadRequest('Parameter "code" is not specified')
 
-        response.json(await systemsService.getByCode(request.params.code,
+        response.json(await SystemServiceInstance.getByCode(request.params.code,
             {
                 level: request.query.level,
                 addRemoved: request.query["add-removed"] === "true"
@@ -56,7 +59,7 @@ class SystemsControllers {
         const code = request.params.code;
         if (!code) throw BadRequest(`Parameter "code" is not specified`);
 
-        response.json(await systemsService.putSystem(code, system));
+        response.json(await SystemServiceInstance.putSystem(code, system));
     }
     /**
     * 
@@ -66,7 +69,7 @@ class SystemsControllers {
     async getPurpose(request, response) {
         if (!request.params.code) throw BadRequest('The code is not specified');
 
-        response.json(await systemsService.getPurpose(request.params.code));
+        response.json(await SystemServiceInstance.getPurpose(request.params.code));
     }
     /**
    * 
@@ -76,7 +79,7 @@ class SystemsControllers {
     async getE2EParticipition(request, response) {
         if (!request.params.code) throw BadRequest('The code is not specified');
 
-        response.json(await systemsService.getE2EParticipition(request.params.code));
+        response.json(await SystemServiceInstance.getE2EParticipition(request.params.code));
     }
 
     /**
@@ -87,7 +90,7 @@ class SystemsControllers {
     async getSystemAssessments(request, response) {
         if (!request.params.code) throw BadRequest('The code is not specified');
 
-        response.json(await systemsService.getSystemAssessments(request.params.code));
+        response.json(await SystemServiceInstance.getSystemAssessments(request.params.code));
     }
 
     /**
@@ -96,7 +99,7 @@ class SystemsControllers {
     * @param {express.Response} response 
     */
     async postSystemAssessment(request, response) {
-        response.json(await systemsService.addAssessmentStatus(request.params.code, request.body));
+        response.json(await SystemServiceInstance.addAssessmentStatus(request.params.code, request.body));
     }
 }
 

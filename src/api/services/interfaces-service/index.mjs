@@ -1,16 +1,18 @@
 import { NotImplemented } from "../../../utils/errors.mjs";
 import patchArray from "../../../utils/patch-array.mjs";
-import interfaceDataService from "../../data/interface-data-service/index.mjs";
 import { APIInterface, APIMethod } from "../../model/system.mjs";
+import { InterfacesRepository } from "../../repositories/index.mjs";
 
-class InterfacesService {
+const interfacesRepository = new InterfacesRepository();
+
+export class InterfacesService {
 
     async addMethod(interfaceCode, method) {
         if (!method) throw Error('Method parameter is not specified');
         const { name, description, returnType, rps, latency, error_rate } = method;
         if (!name) throw Error(`Method name is not specified`);
 
-        return interfaceDataService.insertMethod(interfaceCode, name, description, returnType, rps, latency, error_rate)
+        return interfacesRepository.insertMethod(interfaceCode, name, description, returnType, rps, latency, error_rate)
     }
     /**
      * 
@@ -35,10 +37,10 @@ class InterfacesService {
      */
     async addInterface(interfaceData, containerCode) {
         if (!interfaceData.code) throw Error(`One of interfaces for container with code=${containerCode} haven't code property`);
-        const currentInterface = await interfaceDataService.selectInterfaceByCode(interfaceData.code);
+        const currentInterface = await interfacesRepository.selectInterfaceByCode(interfaceData.code);
         if (currentInterface) throw Error(`Interface with code=${interfaceData.code} already exists`);
 
-        await interfaceDataService.insertInterface(
+        await interfacesRepository.insertInterface(
             containerCode,
             interfaceData.name,
             interfaceData.code,
@@ -61,7 +63,7 @@ class InterfacesService {
     async updateInterface(currentInterface, targetInterface) {
         const isInterfacesEqual = (a, b) => a.name === b.name && a.version === b.version && a.description === b.description;
         if (!isInterfacesEqual(currentInterface, targetInterface)) {
-            await interfaceDataService.updateInterface(targetInterface.name,
+            await interfacesRepository.updateInterface(targetInterface.name,
                 currentInterface.code,
                 targetInterface.version,
                 targetInterface.description,
@@ -73,7 +75,7 @@ class InterfacesService {
 
         await patchArray(
             targetInterface.methods ?? [],
-            await interfaceDataService.selectInterfaceMethods(targetInterface.code),
+            await interfacesRepository.selectInterfaceMethods(targetInterface.code),
             m => m.name,
             (m) => this.addMethod(targetInterface.code, m),
             (currentMethod, targetMethod) => this.updateMethod(targetInterface.code, currentMethod, targetMethod),
@@ -91,8 +93,8 @@ class InterfacesService {
             return;
         }
 
-        await interfaceDataService.markInterfaceRemoved(`[REMOVED!]${currentInterface.name}`, currentInterface.code);
-        const currentMethods = interfaceDataService.selectInterfaceMethods(currentInterface.code);
+        await interfacesRepository.markInterfaceRemoved(`[REMOVED!]${currentInterface.name}`, currentInterface.code);
+        const currentMethods = interfacesRepository.selectInterfaceMethods(currentInterface.code);
         for (const method of currentMethods) {
             NotImplemented('Remove Methods');
         }

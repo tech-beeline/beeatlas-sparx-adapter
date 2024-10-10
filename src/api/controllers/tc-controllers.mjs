@@ -1,8 +1,8 @@
 import express from 'express'
-import tcService from '../services/tc-serivce.mjs';
+import tcService from '../services/tc-service.mjs';
 import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
 
-class TechnicalCapabilitiesControllers {
+export class TechnicalCapabilitiesControllers {
     /**
      * 
      * @param {express.Request} request 
@@ -22,5 +22,3 @@ class TechnicalCapabilitiesControllers {
         response.json(await tcService.getByCode(request.params.code));
     }
 }
-
-export default new TechnicalCapabilitiesControllers();
