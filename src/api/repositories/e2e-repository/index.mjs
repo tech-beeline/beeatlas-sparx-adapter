@@ -1,4 +1,6 @@
+import { NotImplemented } from '../../../utils/errors.mjs';
 import Repository from '../sparx-ea-repository/index.mjs';
+import { SELECT_ALL_SCENARIOS, SELECT_E2E_SCENARIOS } from './select-scenarios.mjs';
 
 
 const E2E_PACKAGE_UID = process.env.E2E_CATALOG_UID ?? '{F486A191-8D01-471b-AD9B-271B6AD388EB}';
@@ -60,19 +62,6 @@ FROM cte_e2e_pkg
 	JOIN t_diagram sd ON sd.package_id=cte_e2e_pkg.package_id AND sd.stereotype='e2e_diagram'`;
 
 const SELECT_E2E_BY_UID = `${SELECT_ALL_E2E} WHERE sd.ea_guid=$1`;
-
-
-const SELECT_ALL_BI = `SELECT DISTINCT 
-	odd.diagram_id, 
-	d.diagram_id, 
-	d.ea_guid as uid, 
-	d.name AS name
-FROM t_diagram p
-	JOIN t_diagramobjects odd ON odd.diagram_id=p.diagram_id 
-	JOIN t_object ref ON ref.object_id=odd.object_id AND ref.object_type='InteractionOccurrence'
-	JOIN t_diagram d ON d.diagram_id::text=ref.pdata1`;
-
-const SELECT_E2E_BI = `${SELECT_ALL_BI} WHERE p.ea_guid=$1`;
 
 const CTE_DIAGRAM_LINK = `cte_diagram_link AS
 (
@@ -164,14 +153,14 @@ export class E2EProcessRepository {
 	/**
 	* @returns {Promise<>}
 	*/
-	async selectAllBI() {
-		return Repository.queryRows(SELECT_ALL_BI);;
+	async selectAllScenarios() {
+		return Repository.queryRows(SELECT_ALL_SCENARIOS);;
 	}
 	/**
 	* @returns {Promise<>}
 	*/
-	async selectE2E_BI(uid) {
-		return Repository.queryRows(SELECT_E2E_BI, [uid]);
+	async selectE2EScenarios(uid) {
+		return Repository.queryRows(SELECT_E2E_SCENARIOS, [uid]);
 	}
 	/**
 	* @returns {Promise<>}
@@ -192,5 +181,6 @@ export class E2EProcessRepository {
 		return Repository.queryRows(SELECT_DIAGRAMS_SYSTEMS, [diagramIds.map(d => d.diagram_id)])
 	}
 	async selectBIDiagrams(uid) {
+		NotImplemented();
 	}
 }

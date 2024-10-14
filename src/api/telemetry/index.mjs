@@ -21,8 +21,6 @@ register.registerMetric(httpRequestMax)
 register.registerMetric(C4StartCounter)
 register.registerMetric(C4PluginUsersCounter)
 
-
-
 /**
  * 
  * @param {exporess.Request} req 

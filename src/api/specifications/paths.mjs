@@ -1,3 +1,4 @@
+import { buildHREF } from "../controllers/controller-decorator.mjs";
 
 //#region capability service paths
 export const CAPABILITY_LIST_RESOURCE_V4 = "/api/v4/capabilities";
@@ -55,15 +56,25 @@ export const SYSTEM_ASSESSMENTS_RESOURCE = SYSTEM_ASSESSMENT_RESOURCE_V4;
 
 //#region e2e paths
 export const E2E_LIST_RESOURCE_V4 = "/api/v4/e2e";
-export const E2E_RESOURCE_V4 = "/api/v4/e2e/{uid}";
 export const E2E_LIST_RESOURCE = E2E_LIST_RESOURCE_V4;
+export const E2ELink = (uid) => buildHREF(`${E2E_LIST_RESOURCE}/${uid}`);
+export const E2E_RESOURCE_V4 = `${E2E_LIST_RESOURCE_V4}/{uid}`
 export const E2E_RESOURCE = E2E_RESOURCE_V4;
 
-export const E2E_SCENARIO_LIST_RESOURCE = '/api/v4/e2e/{code}/scenarios'
-export const E2E_SCENARIO_RESOURCE = '/api/v4/e2e/scenarios/{code}'
-export const E2E_SCENARIO_MESSAGES_RESOURCE = '/api/v4/e2e/scenarios/{code}/messages'
-export const E2E_SCENARIO_CALL_TREE_RESOURCE = '/api/v4/e2e/scenarios/{code}/call-tree'
-export const E2E_SCENARIO_PARTICIPANTS = '/api/v4/e2e/scenarios/{code}/participants'
+export const E2E_SCENARIO_LIST_RESOURCE_V4 = '/api/v4/e2e/{uid}/scenarios'
+export const E2E_SCENARIO_LIST_RESOURCE = E2E_SCENARIO_LIST_RESOURCE_V4;
+export const E2EScenariosLink = (uid) => buildHREF(`${E2E_LIST_RESOURCE}/${encodeURIComponent(uid)}/scenarios`);
+
+export const SCENARIOS_LIST_RESOURCE = '/api/v4/e2e/scenarios'
+export const SCENARIO_RESOURCE = `${SCENARIOS_LIST_RESOURCE}/{uid}`
+export const ScenarioLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}`);
+
+export const SCENARIO_MESSAGES_RESOURCE = `${SCENARIO_RESOURCE}/messages`;
+export const ScenarioMessagesLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/messages`);
+
+export const SCENARIO_CALL_TREE_RESOURCE = `${SCENARIO_RESOURCE}/call-tree`;
+export const ScenarioCallTreeLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/call-tree`);
+
 //#endregion
 
 //#region techradar paths

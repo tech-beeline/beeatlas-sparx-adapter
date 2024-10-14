@@ -1,31 +1,31 @@
-import { NotFound, NotImplemented } from "../../utils/errors.mjs";
-import { E2EProcessRepository } from "../repositories/index.mjs";
-
+import { NotImplemented } from "../../../utils/errors.mjs";
+import { E2EProcess, ProcessScenario } from "../../model/index.mjs";
+import { E2EProcessRepository } from "../../repositories/index.mjs";
 
 const processesRepository = new E2EProcessRepository();
 
-function E2EProcess(r) {
-    return { name: r.name, uid: r.uid, version: r.version };
-}
-class E2EProcessService {
-    
-
+export class E2EProcessService {
+    /**
+     * 
+     * @returns {Promise<Array<E2EProcess>>}
+     */
     async getE2EList() {
         const rows = await processesRepository.selectAllE2E();
-        return rows.map(r => E2EProcess(r))
+        return rows.map(r => new E2EProcess(r))
     }
     async getE2E(uid) {
         const e2e = await processesRepository.selectE2EByUID(uid);
         if (!e2e) throw NotFound(`Process with uid = "${uid}" not found`);
-        return E2EProcess(e2e);
+        return new E2EProcess(e2e);
     }
-    async getE2EBusinessInteractions(uid) {
-        NotImplemented();
+    async getE2EScenarios(uid) {
+        return processesRepository.selectE2EScenarios(uid)
+            .then(rows => rows.map(row => new ProcessScenario(row)));
     }
     async getE2EMessages(uid) {
         const e2e = await processesRepository.selectE2EByUID(uid);
         if (!e2e) throw NotFound(`Process with uid = "${uid}" not found`);
-        const biList = await processesRepository.selectE2E_BI(uid);
+        const biList = await processesRepository.selectE2EScenarios(uid);
 
         const biMessages = await Promise.all(biList.map(bi =>
             this.getBIMessages(bi.uid)
@@ -36,9 +36,4 @@ class E2EProcessService {
         return (await processesRepository.selectBIMessages(uid))
             .filter(m => m.name);
     }
-    async getBIScenario(uid) {
-        NotImplemented();
-    }
 }
-
-export default new E2EProcessService();

@@ -24,10 +24,6 @@ FROM cte_systems sys
 	LEFT JOIN cte_realization c ON c.start_object_id=sys.object_id AND c.object_type='Component' AND c.alias is not null and c.stereotype='C2'
 	LEFT JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface' AND it.alias is not null AND it.alias <> ''`
 
-
-
-
-
 const SELECT_SYSTEM_CAPABILITIES = `WITH RECURSIVE cte_sys AS(
 	SELECT object_id
 	FROM t_object sys

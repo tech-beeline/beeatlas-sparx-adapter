@@ -9,11 +9,12 @@ import businessTermServiceSpec from './glossary-service-spec.mjs'
 import tcServiceSpec from './tc-service-spec.mjs'
 import interfaceServiceSpec from './interfaces-service-spec.mjs'
 import systemsServiceSpec from './systems-service-spec.mjs'
-import processServiceSpec from './e2e-process-service-spec.mjs'
+import processServiceSpec from './e2e/index.mjs'
 import monitoringServiceSpec from './monitoring-source-spec.mjs'
 import observabilityServiceSpec from './observability-service-spec.mjs'
 import techRadarServiceSpec from './tech-radar-service-spec.mjs'
 import { createControllerDecorator } from '../controllers/controller-decorator.mjs';
+import scenariosServiceSpec from './scenarios-service-spec/index.mjs';
 
 
 const SUMMARY_TITLE = "Полное API управления архитектурными артефактами и представлениями"
@@ -46,6 +47,7 @@ const API_ROUTES = {
     "interfaces-service": interfaceServiceSpec,
     "system-service": systemsServiceSpec,
     "e2e-service": processServiceSpec,
+    "scenarios-service": scenariosServiceSpec,
     "monitoring": monitoringServiceSpec,
     "observability-service": observabilityServiceSpec,
     "tech-radar-service": techRadarServiceSpec,

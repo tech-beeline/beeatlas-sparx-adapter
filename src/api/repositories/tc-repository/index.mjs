@@ -1,6 +1,7 @@
 import Repository from '../sparx-ea-repository/index.mjs'
 
-import { APP_PACKAGE_ROOT_GUID, BC_PACKAGE_ROOT_GUID } from '../sparx-ea-repository/options.mjs';
+import { APP_PACKAGE_ROOT_GUID, SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
+
 
 const SELECT_ALL_TEC = `WITH RECURSIVE 
 cte_app_catalog AS (
@@ -111,7 +112,7 @@ export class TechnicalCapabilitiesRepository {
 	 * @returns {Promise<Array<{ sys_code, sys_name, code, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
 	 */
 	async selectParentBC() {
-		return Repository.queryRows(SELECT_PARENT_BC, [BC_PACKAGE_ROOT_GUID]);
+		return Repository.queryRows(SELECT_PARENT_BC, [SparxRepositoryPackagesOptions.BusinessCapabilitiesCatalogue.ea_guid]);
 	}
 
 	/**
@@ -119,6 +120,6 @@ export class TechnicalCapabilitiesRepository {
 	 * @returns {Promise<Array<{ sys_code, sys_name, code, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
 	 */
 	async selectParentBCForTC(tcCode) {
-		return Repository.queryRows(SELECT_BC_FOR_TC, [BC_PACKAGE_ROOT_GUID, tcCode]);
+		return Repository.queryRows(SELECT_BC_FOR_TC, [SparxRepositoryPackagesOptions.BusinessCapabilitiesCatalogue.ea_guid, tcCode]);
 	}
 }

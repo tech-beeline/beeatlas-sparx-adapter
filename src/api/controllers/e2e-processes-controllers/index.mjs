@@ -1,15 +1,24 @@
 import express from 'express'
-import service from '../services/e2e-process-service.mjs';
-import { BadRequest, NotImplemented } from '../../utils/errors.mjs';
+import { E2EProcessesServiceInstance as e2eService } from '../../services/index.mjs';
+import { BadRequest, NotImplemented } from '../../../utils/errors.mjs';
+import { buildHREF } from '../controller-decorator.mjs';
+import { E2E_LIST_RESOURCE, E2ELink } from '../../specifications/paths.mjs';
 
-class E2EProcessControllers {
+
+const addProcessLinks = (p) => p.links = {
+    self: E2ELink(p.uid),
+    scenarios: buildHREF(`${E2E_LIST_RESOURCE}/${encodeURIComponent(p.uid)}/scenarios`)
+};
+export class E2EProcessControllers {
     /**
      * 
      * @param {express.Request} request 
      * @param {express.Response} response 
      */
     async getE2EList(reques, response) {
-        return response.json(await service.getE2EList());
+        const e2eList = await e2eService.getE2EList();
+        e2eList.forEach(addProcessLinks)
+        return response.json(e2eList);
     }
     /**
      * 
@@ -18,16 +27,16 @@ class E2EProcessControllers {
      */
     async getE2E(request, response) {
         if (!request.params.uid) throw BadRequest('Process uid is not specified');
-        return response.json(await service.getE2E(request.params.uid));
+        return response.json(await e2eService.getE2E(request.params.uid));
     }
     /**
      * 
      * @param {express.Request} request 
      * @param {express.Response} response 
      */
-    async getE2EBusinessInteractions(request, response) {
+    async getE2EScenarios(request, response) {
         if (!request.params.uid) throw BadRequest('Process uid is not specified');
-        response.json(await service.getE2EBusinessInteractions(request.params.uid))
+        response.json(await e2eService.getE2EScenarios(request.params.uid))
     }
     /**
      * 
@@ -35,7 +44,7 @@ class E2EProcessControllers {
      * @param {express.Response} response 
      */
     async getE2EMessages(request, response) {
-        response.json(await service.getE2EMessages(request.params.uid));
+        response.json(await e2eService.getE2EMessages(request.params.uid));
     }
     /**
      * 
