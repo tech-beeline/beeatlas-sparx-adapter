@@ -21,7 +21,6 @@ const STEREOTYPE_MAP = {
     Package: "Domain"
 }
 
-const archMetricsRepository = new ArchMetricsRepository();
 const interfacesRepository = new InterfacesRepository();
 const systemsRepository = new SystemsRepository();
 
@@ -212,7 +211,7 @@ export class SystemService {
      * @param {SysemAssessmentStatus} assessmentStatus 
      */
     async addAssessmentStatus(systemCode, assessmentStatus) {
-        await archMetricsRepository.upsertSystemAssessment(
+        await ArchMetricsRepository.upsertSystemAssessment(
             systemCode,
             assessmentStatus.fitness_function_code,
             assessmentStatus.assessment_date ?? Date(),
@@ -227,7 +226,7 @@ export class SystemService {
     * @param {SysemAssessmentStatus} assessmentStatus 
     */
     async getSystemAssessments(systemCode) {
-        return (await archMetricsRepository.selectSystemAssessments(systemCode)).map(a => new SysemAssessmentStatus(a));
+        return (await ArchMetricsRepository.selectSystemAssessments(systemCode)).map(a => new SysemAssessmentStatus(a));
     }
 }
 
