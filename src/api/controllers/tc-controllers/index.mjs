@@ -1,6 +1,6 @@
 import express from 'express'
-import tcService from '../services/tc-service.mjs';
-import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
+import { TCServiceInstance as tcService } from '../../services/index.mjs';
+import { BadRequest, NotFound, NotImplemented } from '../../../utils/errors.mjs';
 
 export class TechnicalCapabilitiesControllers {
     /**
@@ -20,5 +20,16 @@ export class TechnicalCapabilitiesControllers {
     async getByCode(request, response) {
         if (!request.params.code) throw BadRequest('Code is not specified');
         response.json(await tcService.getByCode(request.params.code));
+    }
+    /**
+     * 
+     * @param {express.Request} request 
+     * @param {express.Response} response 
+     */
+    async putTC(request, response) {
+        if (!request.params.code) throw BadRequest('Code is not specified');
+
+        request.body.code = request.params.code;
+        response.json(await tcService.putTC(request.body));
     }
 }

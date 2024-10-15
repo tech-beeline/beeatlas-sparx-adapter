@@ -1,6 +1,4 @@
 import { BAD_REQUST_RESPONSE, GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, queryParameter, schemasRef, stringProperty } from "./helpers.mjs"
-import { CAPABILITY_SCHEMA } from "./capabilities-service-spec.mjs";
-import { TC_SCHEMA } from "./tc-service-spec.mjs";
 import { INTERFACE_SCHEMA, METHOD_SCHEMA } from "./interfaces-service-spec.mjs";
 import { SYSTEM_ASSESSMENTS_RESOURCE, SYSTEM_E2E_RESOURCE, SYSTEM_LIST_RESOURCE, SYSTEM_PURPOSE_RESOURCE, SYSTEM_RESOURCE, SYSTEM_SEARCH_RESOURCE } from "./paths.mjs";
 import { SYSTEM_ASSESSMENT_RESULT_SCHEMA, SYSTEM_PURPOSE_SCHEMA } from "../model/system.mjs";

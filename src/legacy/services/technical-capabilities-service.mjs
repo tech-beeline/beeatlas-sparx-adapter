@@ -6,7 +6,8 @@ import Repository, {
 	t_diagramobjects,
 	t_xref,
 	t_connector,
-	t_diagramlinks
+	t_diagramlinks,
+	t_package
 } from "../../api/repositories/sparx-ea-repository/index.mjs";
 
 import { BadRequest, ConflictException, NotFound, NotImplemented } from "../../utils/errors.mjs";
@@ -16,6 +17,7 @@ import TC_QUERY from './sql/tech-capabilities.mjs'
 
 import applicationService from "./application-service.mjs";
 import { ArchMetricsRepository } from "../../api/repositories/index.mjs";
+import { TC_TAGS_NAMES } from "../../api/repositories/tc-repository/const.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -23,8 +25,6 @@ const STEREOTYPE_MAP = {
 	ArchiMate_TechnicalCapability: ' TC',
 	type: (s) => STEREOTYPE_MAP[s] ?? 'Unknown'
 }
-
-const TC_TAGS_NAMES = ["goal_from", "goal_to"];
 
 class TechnicalCapabilityService {
 	static app_package;

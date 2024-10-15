@@ -6,7 +6,7 @@ import {
 
 import capabilityServiceSpec from './capabilities-service-spec.mjs'
 import businessTermServiceSpec from './glossary-service-spec.mjs'
-import tcServiceSpec from './tc-service-spec.mjs'
+import tcServiceSpec from './tc-service-spec/index.mjs'
 import interfaceServiceSpec from './interfaces-service-spec.mjs'
 import systemsServiceSpec from './systems-service-spec.mjs'
 import processServiceSpec from './e2e/index.mjs'

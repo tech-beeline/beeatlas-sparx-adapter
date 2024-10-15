@@ -4,14 +4,20 @@ import { v4 as uuid } from 'uuid'
 import {
     t_object,
     t_objectproperties,
-    t_package, 
+    t_package,
     t_connector,
     t_connectortag,
     t_operation,
     t_diagram,
     t_operationtag,
-    t_xref
+    t_xref,
+    t_diagramobjects,
+    t_diagramlinks
 } from './ea-model/index.mjs';
+import { SELECT_DIAGRAMOBJECTS } from '../tc-repository/tc-parents-queries.mjs';
+import { t_diagramobjects_ex } from './ea-model/t_diagramobjects.mjs';
+import { DELETE_CONNECTOR_BY_ID, DELETE_LINK_BY_CONNECTOR_ID } from './ea-queries/diagram-queries.mjs';
+import { SELECT_PACKAGE_BY_ALIAS } from './ea-queries/ea-pacakgies-queries.mjs';
 
 const ENVIROMENT_VARIABLE = {
     user: "DB_EA_USER", password: "DB_EA_PASSWORD", host: "DB_EA_URL", database: "DB_EA_DATABASE"
@@ -596,6 +602,48 @@ export class SparxRepository {
                 await this.insert(t_connectortag, { elementid: connector_id, value: connector[name], property: name });
             }
         }
+    }
+
+    /**
+     * 
+     * @param {string} diagramId 
+     * @returns {Promise<Array<t_diagramobjects_ex>>}
+     */
+    async getDiagramObjects(diagramId) {
+        return this.queryRows(SELECT_DIAGRAMOBJECTS, [diagramId]);
+    }
+
+    /**
+     * 
+     * @param {number} diagramId 
+     * @param {t_diagramobjects} diagramobject 
+     * @returns {Promise<t_diagramobjects}
+     */
+    async putDiagramObject(diagramId, diagramobject) {
+        return (await this.first(t_diagramobjects, { diagram_id: diagramId, object_id: diagramobject.object_id })) ?? this.insert(t_diagramobjects, Object.assign(diagramobject, { diagram_id: diagramId }));
+    }
+    /**
+     * 
+     * @param {number} diagramId 
+     * @param {t_diagramlinks} diagramlink 
+     * @returns {Promise<t_diagramobjects}
+     */
+    async putDiagramLink(diagramId, diagramlink) {
+        const c = await this.first(t_diagramlinks, { diagramid: diagramId, connectorid: diagramlink.connectorid });
+        return c ??
+            this.insert(t_diagramlinks, Object.assign(diagramlink, { diagramid: diagramId }));
+    }
+    async deleteConnector(connector_id) {
+        await this.queryOne(DELETE_LINK_BY_CONNECTOR_ID, [connector_id]);
+        return this.queryOne(DELETE_CONNECTOR_BY_ID, [connector_id]);
+    }
+    /**
+     * 
+     * @param {*} alias 
+     * @returns {Promise<t_package>}
+     */
+    async getPackageByAlias(alias) {
+        return this.queryOne(SELECT_PACKAGE_BY_ALIAS, [alias])
     }
 }
 

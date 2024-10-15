@@ -1,4 +1,5 @@
 import Repository from '../sparx-ea-repository/index.mjs'
+export { BC_PACKAGE_QUERY_BY_ID } from './capability-queries.mjs'
 
 const SELECT_ALL =
 	`with recursive capabilities as (

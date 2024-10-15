@@ -175,7 +175,7 @@ export class SystemsRepository {
 	}
 	/**
 	 * 
-	 * @returns {Promise}
+	 * @returns {Promise<{ code,name, description, version, status, FQName, modifiedDate}>}
 	 */
 	async selectSystemByCode(code) {
 		return Repository.queryOne(`${SELECT_SYSTEMS} WHERE code=$1`, [code]);

@@ -1,10 +1,11 @@
-import { NotFound, NotImplemented } from "../../utils/errors.mjs";
-import { TechnicalCapabilitiesRepository } from '../repositories/index.mjs'
-import TechnicalCapability from "../model/technical-capability-model.mjs";
+import { NotFound, NotImplemented } from "../../../utils/errors.mjs";
+import { TechnicalCapabilitiesRepository } from '../../repositories/index.mjs'
+import TechnicalCapability from "../../model/technical-capability-model.mjs";
+import { createTC, updateTC } from "./put-tc.mjs";
 
 const tcDataService = new TechnicalCapabilitiesRepository();
 
-class TechnicalCapabiliiesService {
+export class TechnicalCapabiliiesService {
     constructor() {
         this.getAll = this.getAll.bind(this);
         this.getByCode = this.getByCode.bind(this);
@@ -20,7 +21,7 @@ class TechnicalCapabiliiesService {
     }
     async getByCode(code) {
         const [tc_row, bc_rows] = await Promise.all([
-            tcDataService.selectTCData(code),
+            tcDataService.selectTCByCode(code),
             tcDataService.selectParentBCForTC(code)
         ]);
 
@@ -30,6 +31,16 @@ class TechnicalCapabiliiesService {
         bc_rows.forEach(bc => tc.addParent({ code: bc.bc_code, name: bc.bc_name }))
         return tc;
     }
-}
+    /**
+     * 
+     * @param {TechnicalCapability} targetTC 
+     * @returns {Promise<TechnicalCapability>}
+     */
+    async putTC(targetTC) {
+        const currentTC = await tcDataService.selectTCByCode(targetTC.code);
+        if (currentTC) currentTC.system = { code: currentTC.sys_code };
 
-export default new TechnicalCapabiliiesService();
+        currentTC ? await updateTC(currentTC, targetTC) : await createTC(targetTC)
+        return this.getByCode(targetTC.code);
+    }
+}
