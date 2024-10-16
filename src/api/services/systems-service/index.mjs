@@ -6,6 +6,7 @@ import System, { Container, E2EProcessContext, SysemAssessmentStatus } from "../
 import {
     ArchMetricsRepository,
     InterfacesRepository,
+    PtrArtifactsRepository,
     SystemsRepository
 } from "../../repositories/index.mjs";
 import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../../specifications/paths.mjs";
@@ -23,6 +24,7 @@ const STEREOTYPE_MAP = {
 
 const interfacesRepository = new InterfacesRepository();
 const systemsRepository = new SystemsRepository();
+const ptrArtifactsRepositoryInstance = new PtrArtifactsRepository();
 
 export class SystemService {
     constructor() {
@@ -218,6 +220,12 @@ export class SystemService {
             assessmentStatus.assessment_description,
             assessmentStatus.status,
             assessmentStatus.result_details);
+            
+        await ptrArtifactsRepositoryInstance.setAssessmentResult(
+            systemCode,
+            assessmentStatus.fitness_function_code,
+            assessmentStatus.status == 0 ? assessmentStatus.result_details : null,
+            assessmentStatus.assessment_date ?? Date());
 
         return { message: "Архитектурная оценка добавлена" };
     }

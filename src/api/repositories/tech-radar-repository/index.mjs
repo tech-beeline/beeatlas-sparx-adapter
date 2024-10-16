@@ -1,6 +1,6 @@
 import fdmStorage from "../fdm-storage.mjs"
 
-const SELECT_TECHNOLOGIES = `SELECT 
+const SELECT_TECHNOLOGIES = `SELECT DISTINCT
     c.name as category_name,
     ring.name as ring_name,
     ring.order as ring_order,
@@ -9,9 +9,10 @@ const SELECT_TECHNOLOGIES = `SELECT
     t.*
 FROM techradar.tech t
     JOIN techradar.ring ON ring.id = t.ringid
-    JOIN techradar.techcategory  tc ON tc.techid = t.id
-    JOIN techradar.category c ON c.id = tc.categoryid
-    JOIN techradar.sector ON sector.id = t.sectorid`
+    JOIN techradar.sector ON sector.id = t.sectorid
+    LEFT JOIN techradar.techcategory  tc ON tc.techid = t.id
+    LEFT JOIN techradar.category c ON c.id = tc.categoryid
+WHERE deleted_date IS NULL`
 
 export class TechRadarRepository {
     /**

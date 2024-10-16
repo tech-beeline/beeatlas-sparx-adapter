@@ -47,7 +47,7 @@ export default function SystemAssessmentsAccordion({ system }) {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {data.map((ar) => (
+                            {data.sort((a, b) => a.fitness_function_code.localeCompare(b.fitness_function_code)).map((ar) => (
                                 <TableRow
                                     key={(ar) => ar.fitness_function_code}
                                     sx={{
@@ -66,7 +66,7 @@ export default function SystemAssessmentsAccordion({ system }) {
                                     <TableCell>
                                         {ar.status ? "Есть ошибки" : "Успешно"}
                                     </TableCell>
-                                    <TableCell>{ar.result_details}</TableCell>
+                                    <TableCell><div dangerouslySetInnerHTML={{ __html: ar.result_details }}></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

@@ -18,6 +18,7 @@ class TechRadarService {
      */
     async getTechologies() {
         const rows = await techRadarRepository.selectTechnologies();
+
         return rows.map(row => new TechRadarTechnology(
             row.id,
             row.label,
@@ -26,7 +27,7 @@ class TechRadarService {
             row.last_modified_date,
             row.deleted_date,
             row.link,
-            new TechRadarCategory(row.category_id, row.category_name),
+            row.category_id?new TechRadarCategory(row.category_id, row.category_name):undefined,
             new TechRadarSector(row.sectorid, row.sector_name, row.sector_order),
             new TechRadarRing(row.ringid, row.ring_name, row.ring_order)));
     }
