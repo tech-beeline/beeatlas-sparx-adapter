@@ -3,7 +3,7 @@ import Repository, { t_object, t_operationtag } from '../sparx-ea-repository/ind
 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_CONTAINER_INTERFACES } from './interfaces-queries.mjs';
-import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, UPDATE_OPERATION } from './methods-queries.mjs';
+import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION } from './methods-queries.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
@@ -42,7 +42,7 @@ export class InterfacesRepository {
      * @returns {Promise<Array<{ name, description, return_value, uid}>>}
      */
     async selectInterfaceMethods(interfaceCode) {
-        return Repository.queryRows(SELECT_INTERFACE_METHODS, [interfaceCode]);
+        return Repository.queryRows(SELECT_INTERFACE_METHODS, [interfaceCode]).then(rows => rows.filter(r => !r.removed_date));
     }
 
     /**
@@ -97,7 +97,12 @@ export class InterfacesRepository {
     }
 
     async insertMethod(interfaceCode, name, description, returnType, rps, latency, error_rate) {
-        const method = await Repository.queryOne(INSERT_INTERFACE_METHOD, [interfaceCode, name, description, returnType]);
+        const existingMethod = await Repository.queryOne(SELECT_METHOD_BY_NAME_INTERFACE_CODE, [interfaceCode, name]);
+        if (existingMethod) {
+            await Repository.updateOperationTags(existingMethod.operationid, { removedDate: null });
+        }
+
+        const method = existingMethod ?? await Repository.queryOne(INSERT_INTERFACE_METHOD, [interfaceCode, name, description, returnType]);
         const tagMap = {
             rps: rps, latency: latency, error_rate: error_rate
         }
@@ -115,6 +120,13 @@ export class InterfacesRepository {
         const updatedMethods = await Repository.queryRows(UPDATE_OPERATION, [interfaceCode, name, description, returnType]);
         for (const method of updatedMethods) {
             await Repository.updateOperationTags(method.operationid, { rps: rps, latency: latency, error_rate: error_rate })
+        }
+    }
+
+    async markMethodRemoved(interfaceCode, name) {
+        const operations = await Repository.queryRows(SELECT_METHOD_BY_NAME_INTERFACE_CODE, [interfaceCode, name])
+        for (const op of operations) {
+            await Repository.updateOperationTags(op.operationid, { removedDate: new Date() });
         }
     }
 }

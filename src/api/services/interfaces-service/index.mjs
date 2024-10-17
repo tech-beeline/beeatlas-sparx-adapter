@@ -86,7 +86,7 @@ export class InterfacesService {
             m => m.name,
             (m) => this.addMethod(targetInterface.code, m),
             (currentMethod, targetMethod) => this.updateMethod(targetInterface.code, currentMethod, targetMethod),
-            (m) => NotImplemented()
+            (m) => interfacesRepository.markMethodRemoved(targetInterface.code, m.name)
         );
     }
 
@@ -103,7 +103,7 @@ export class InterfacesService {
         await interfacesRepository.markInterfaceRemoved(`[REMOVED!]${currentInterface.name}`, currentInterface.code);
         const currentMethods = interfacesRepository.selectInterfaceMethods(currentInterface.code);
         for (const method of currentMethods) {
-            NotImplemented('Remove Methods');
+            await interfacesRepository.markMethodRemoved(currentInterface.code, method.name);
         }
     }
 }
