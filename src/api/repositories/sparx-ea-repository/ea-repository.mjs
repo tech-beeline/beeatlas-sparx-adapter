@@ -604,6 +604,12 @@ export class SparxRepository {
         }
     }
 
+    /**
+     * 
+     * @param {number} operation_id 
+     * @param {*} tags 
+     * @returns {Promise}
+     */
     async updateOperationTags(operation_id, tags) {
         const currentTags = await this.queryRows('SELECT * FROM t_operationtag WHERE elementid=$1 AND property=ANY($2)', [operation_id, Object.keys(tags)]);
         for (const tag in tags) {
@@ -611,7 +617,7 @@ export class SparxRepository {
             const targetValue = tags[tag];
             if (currentTag?.value == targetValue) continue;
             if (!targetValue) {
-                await this.queryOne(`DELETE FROM t_operation WHERE eleemntid=$1 AND property=$2`, [operation_id, tag]);
+                await this.queryOne(`DELETE FROM t_operationtag WHERE elementid=$1 AND property=$2`, [operation_id, tag]);
                 continue;
             }
             if (!currentTag) {

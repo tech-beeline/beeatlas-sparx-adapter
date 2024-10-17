@@ -1,7 +1,7 @@
 
 
 const cte_diagram_tree =
-    `(
+    `cte_child_diagram AS (
 	SELECT 
 		od.diagram_id,
 		o.object_id, 
@@ -49,6 +49,16 @@ cte_diagram_tree AS
 export const SELECT_RELATED_DIAGRAM =
     `WITH RECURSIVE 
 ${cte_diagram_tree} 
-SELECT * FROM cte_diagram_tree
+SELECT 
+	d.name,
+	d.diagram_id,
+	t.parent_id,
+	d.ea_guid, 
+	t.diagram_uid, 
+	d.author, 
+	d.version,
+	d.notes
+FROM cte_diagram_tree t
+	JOIN t_diagram d ON d.diagram_id=t.diagram_id
 WHERE parent_uid=$1`
 

@@ -15,7 +15,6 @@ export class ScenariosService {
     async getScenarioMessages(scenarioUID) {
         const messagesRows = await scenariosRepository.selectScenarioMessages(scenarioUID);
         return messagesRows.map(row => new ScenarioMessage(row));
-        NotImplemented();
     }
 
     async getScnearioSystems() {

@@ -28,11 +28,11 @@ export class APIMethod {
 
     constructor({ name, returnType, description, parameters, notes, ea_guid, operationid, rps, latency, error_rate } = {}) {
         this.name = name;
-        this.returnType = returnType;
+        this.returnType = returnType??undefined;
         this.desciption = description ?? notes;
-        this.rps = rps;
-        this.latency = latency;
-        this.error_rate = error_rate;
+        this.rps = rps??undefined;
+        this.latency = latency??undefined;
+        this.error_rate = error_rate??undefined;
         this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
     }
 }
