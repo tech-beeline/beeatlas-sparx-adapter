@@ -17,7 +17,8 @@ export class InterfacesService {
     /**
      * 
      * @param {string} interfaceCode 
-     * @param {{current: APIMethod,target:APIMethod}} method 
+     * @param { APIMethod} targetMethod 
+     * @param { APIMethod} currentMethod
      */
     async updateMethod(interfaceCode, currentMethod, targetMethod) {
         const isMethodsEqual = (a, b) =>
@@ -26,7 +27,13 @@ export class InterfacesService {
             a.returnType === b.returnType;
 
         if (!isMethodsEqual(currentMethod, targetMethod)) {
-            NotImplemented('Update Method');
+            await interfacesRepository.updateMethod(interfaceCode,
+                targetMethod.name,
+                targetMethod.desciption,
+                targetMethod.returnType,
+                targetMethod.rps,
+                targetMethod.latency,
+                targetMethod.error_rate);
         }
         // [ ] Добавить обработку параметров
     }

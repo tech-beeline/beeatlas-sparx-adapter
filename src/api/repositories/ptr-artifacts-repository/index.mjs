@@ -9,7 +9,7 @@ const COLUMNS_MAP = {
     "ADR.01": {
         link: "adr_link",
         ts: "adr_ts",
-        source: "adr_source="
+        source: "adr_source"
     },
     "CTX.01": {
         link: "context_link",

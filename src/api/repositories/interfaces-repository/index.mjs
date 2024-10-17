@@ -1,8 +1,9 @@
-import Repository,{ t_object, t_operationtag } from '../sparx-ea-repository/index.mjs';
+import { NotImplemented } from '../../../utils/errors.mjs';
+import Repository, { t_object, t_operationtag } from '../sparx-ea-repository/index.mjs';
 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_CONTAINER_INTERFACES } from './interfaces-queries.mjs';
-import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS } from './methods-queries.mjs';
+import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, UPDATE_OPERATION } from './methods-queries.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
@@ -108,6 +109,12 @@ export class InterfacesRepository {
                     property: tag,
                     value: tagMap[tag]
                 });
+        }
+    }
+    async updateMethod(interfaceCode, name, description, returnType, rps, latency, error_rate) {
+        const updatedMethods = await Repository.queryRows(UPDATE_OPERATION, [interfaceCode, name, description, returnType]);
+        for (const method of updatedMethods) {
+            await Repository.updateOperationTags(method.operationid, { rps: rps, latency: latency, error_rate: error_rate })
         }
     }
 }

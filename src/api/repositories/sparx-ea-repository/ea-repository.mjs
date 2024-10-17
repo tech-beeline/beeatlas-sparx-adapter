@@ -604,6 +604,25 @@ export class SparxRepository {
         }
     }
 
+    async updateOperationTags(operation_id, tags) {
+        const currentTags = await this.queryRows('SELECT * FROM t_operationtag WHERE elementid=$1 AND property=ANY($2)', [operation_id, Object.keys(tags)]);
+        for (const tag in tags) {
+            const currentTag = currentTags.find(t => t.property === tag);
+            const targetValue = tags[tag];
+            if (currentTag?.value == targetValue) continue;
+            if (!targetValue) {
+                await this.queryOne(`DELETE FROM t_operation WHERE eleemntid=$1 AND property=$2`, [operation_id, tag]);
+                continue;
+            }
+            if (!currentTag) {
+                await this.insert(t_operationtag, { value: targetValue, elementid: operation_id, property: tag });
+                continue;
+            }
+            await this.update(t_operationtag, { value: targetValue }, { elementid: operation_id, property: tag });
+        }
+    }
+
+
     /**
      * 
      * @param {string} diagramId 

@@ -45,3 +45,16 @@ SELECT
 FROM cte_interface
 RETURNING operationid
 `;
+
+export const UPDATE_OPERATION = `WITH cte_interface AS
+(
+	SELECT object_id FROM t_object WHERE object_type='Interface' AND alias=$1
+)
+UPDATE t_operation
+SET 
+	notes=$3,
+	type=$4
+FROM cte_interface
+WHERE t_operation.object_id=cte_interface.object_id
+	AND t_operation.name=$2
+RETURNING t_operation.operationid`;
