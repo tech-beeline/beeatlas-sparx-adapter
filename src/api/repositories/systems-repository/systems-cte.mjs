@@ -1,5 +1,6 @@
 import { APP_CATALOG_ROOT } from '../../../resources/const.mjs';
 
+
 export const CTE_SYSTEM_CATALOG = `cte_sys_catalog AS (
     SELECT package_id, package_id AS parent_id, name , name::text AS "FQName", ea_guid
         FROM t_package WHERE ea_guid='${APP_CATALOG_ROOT}'

@@ -106,7 +106,7 @@ export class SystemService {
             container.version,
             container.description);
 
-        for (const interfaceData of container.interfaces) {
+        for (const interfaceData of container.interfaces ?? []) {
             await interfacesService.addInterface(interfaceData, container.code);
         }
     }
@@ -220,7 +220,7 @@ export class SystemService {
             assessmentStatus.assessment_description,
             assessmentStatus.status,
             assessmentStatus.result_details);
-            
+
         await ptrArtifactsRepositoryInstance.setAssessmentResult(
             systemCode,
             assessmentStatus.fitness_function_code,
