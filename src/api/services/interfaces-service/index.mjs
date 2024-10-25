@@ -101,7 +101,7 @@ export class InterfacesService {
         }
 
         await interfacesRepository.markInterfaceRemoved(`[REMOVED!]${currentInterface.name}`, currentInterface.code);
-        const currentMethods = interfacesRepository.selectInterfaceMethods(currentInterface.code);
+        const currentMethods = await interfacesRepository.selectInterfaceMethods(currentInterface.code);
         for (const method of currentMethods) {
             await interfacesRepository.markMethodRemoved(currentInterface.code, method.name);
         }
