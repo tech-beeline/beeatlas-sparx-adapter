@@ -312,7 +312,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
         }
 
         let [diagram_rows, api_methods, messages, system_rows, scenario] = await this.#loadBIScenarioData(uid);
-        const methods = api_methods.reduce((res, m) => ((res[m.operation_guid] = m), res), {});
+        const methods = api_methods.reduce((res, m) => m.operation_guid ? ((res[m.operation_guid] = m), res) : res, {});
         const systems = system_rows.reduce((res, s) => Object.assign(res, { [s.object_id]: Object.assign({ interfaces: {} }, s) }), {})
 
         const diagrams = { byUID: {}, byContainerId: {} };
@@ -326,9 +326,17 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
 
         for (const m of messages) {
             if (m.server = useSystem(m.server_id)) {
-                const method = methods[m.operation_guid]
+                const method = methods[m.operation_guid];
+                
                 if (method) {
-                    const api = m.server.interfaces[method.api_guid] ?? (m.server.interfaces[method.api_guid] = { name: method.api, code: method.api_code, uid: method.api_guid, methods: {} });
+                    const api = m.server.interfaces[method.api_guid] ?? (m.server.interfaces[method.api_guid] =
+                    {
+                        name: method.api,
+                        code: method.api_code,
+                        uid: method.api_guid,
+                        protocol: method.protocol,
+                        methods: {}
+                    });
                     api.methods[method.name] = method;
                     m.method = method;
                 }

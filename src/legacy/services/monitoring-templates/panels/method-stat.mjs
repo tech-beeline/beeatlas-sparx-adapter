@@ -1,3 +1,5 @@
+import { NotImplemented } from "../../../../utils/errors.mjs";
+import LEGEND_PANEL from "./legend.mjs";
 import { expr } from "./primitive-panels.mjs";
 import { OpensearchApiSource } from "./source-options/opensearch.mjs";
 import { PrometheusApiSource } from "./source-options/prometheus.mjs";
@@ -26,12 +28,32 @@ export function createGrafanaSource(src) {
 }
 
 
+function createDBStatPanel(interaction, seq, yPos = 13) {
+    const { index, uri, method, host, client, server, sla, grafanaSource, protocol } = interaction;
+    return interaction.statPanel = LEGEND_PANEL(seq, `${index + 1}`, "state, name\r\n-2, DB", { h: 2, w: 1, x: index % 24, y: yPos + Math.floor(index / 23) });
+}
 
+function createRestApiStatPanel(interaction, seq, yPos = 13) {
+    const { index, uri, method, host, client, server, sla, grafanaSource, protocol } = interaction;
+}
 
-export default function createInteractionStatPanel(interfaction, seq, yPos = 13) {
-    const { index, uri, method, host, client, server, sla, grafanaSource } = interfaction;
+function TBDStatPanel(interaction, seq, yPos = 13) {
+    const { index, uri, method, host, client, server, sla, grafanaSource, protocol } = interaction;
+    return interaction.statPanel = LEGEND_PANEL(seq, `${index + 1}`, "state, name\r\n-1, TBD", { h: 2, w: 1, x: index % 24, y: yPos + Math.floor(index / 23) });
+}
 
-    return interfaction.statPanel = {
+export default function createInteractionStatPanel(interaction, seq, yPos = 13) {
+    const { index, uri, method, host, client, server, sla, grafanaSource, protocol } = interaction;
+    if (!protocol) {
+        return TBDStatPanel(interaction, seq, yPos);
+    }
+    switch (protocol.toUpperCase()) {
+        case "DB": {
+            return createDBStatPanel(interaction, seq, yPos);
+        }
+    }
+
+    return interaction.statPanel = {
         id: seq.next(),
         gridPos: { h: 2, w: 1, x: index % 24, y: yPos + Math.floor(index / 23) },
         type: "stat",

@@ -52,12 +52,14 @@ class Interaction {
     name;
     messages = [];
     order;
+    protocol;
     constructor(obj = {}) {
         this.title = obj.title;
         this.client_code = obj.client_code;
         this.server_code = obj.server_code;
         this.name = obj.name;
         this.order = obj.order;
+        this.protocol = obj.method?.protocol;
     }
     get notDefinedIACount() {
         return this.messages.filter(m => !(m.ia && m.ia.content)).length

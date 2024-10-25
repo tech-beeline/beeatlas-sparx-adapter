@@ -223,13 +223,15 @@ function CallItem({ call }) {
             },
         });
 
+
+    const callLabel = `${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name} ${call.name}, [protocol:${call.method?.protocol ?? "Не указан"}]`;
+
     return call.errors ? (
         <CallTreeItem
             label={
                 <div style={{ color: "red" }}>
                     {LabelIcon}
-                    {`${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name
-                        } ${call.name}`}
+                    {callLabel}
                 </div>
             }
             nodeId={call.ea_guid}
@@ -244,8 +246,7 @@ function CallItem({ call }) {
             label={
                 <div style={{ color: "green" }}>
                     {LabelIcon}
-                    {`${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name
-                        } ${call.name}`}
+                    {callLabel}
                 </div>
             }
             nodeId={call.ea_guid}

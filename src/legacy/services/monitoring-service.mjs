@@ -336,12 +336,13 @@ class MonitoringService {
                     m.interaction = map[title] =
                     {
                         title: title, message: m.message, index: map.count++, count: 0, method: method, uri: path,
-                        grafanaSource: m.stereotype === "via MAPIC" ? MAPIC_DEFAULT_API_SOURCE : grafana_sources[m.server_code] ?? DEFAULT_OPENSEARCH_API_SOURCE,
+                        grafanaSource: m.stereotype === "via MAPIC" ? MAPIC_DEFAULT_API_SOURCE : grafana_sources[m.server_code],
                         sla: {
                             rps: Number.isNaN(m.rps) ? 10 : m.rps,
                             latency: Number.isNaN(m.latency) ? 1 : m.latency,
                             errorRate: Number.isNaN(m.error_rate) ? 0.1 : m.error_rate
-                        }
+                        },
+                        protocol: m.method?.protocol
                     }
                     ret.push(m.interaction);
                 }
@@ -359,10 +360,13 @@ class MonitoringService {
         const panelIdSequence = new Sequence();
 
         const interactions = await this.getInteractions(scenario.callTrace);
+
         const legendPanel = LEGEND_PANEL(panelIdSequence);
         const systemHealthHeaderPanel = SYSTEMS_HEALTH_HEADER_PANEL(panelIdSequence, process.name);
         const apiStateHeaderPanel = API_STATE_HEADER_PANEL(panelIdSequence, process.name);
+
         const interactionStatPanels = interactions.map(it => createInteractionStatPanel(it, panelIdSequence));
+
         const sequenceCallTreePanel = callTreePanel(panelIdSequence, scenario.callTrace, Math.max(...interactions.map(it => it.statPanel?.gridPos.y ?? 0)) + 1);
         const maxY = sequenceCallTreePanel.panels[sequenceCallTreePanel.panels.length - 1].gridPos.y + 1
         const interactionDetailsPanels = interactions.reduce((r, v) => [...r, ...createInteractionPanels(panelIdSequence, v, maxY)], [])

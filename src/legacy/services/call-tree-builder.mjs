@@ -1,4 +1,4 @@
-import { ERROR_INFO, OPERATION_GUID_NOT_FOUND } from "../../client/src/pages/E2EScenarioDashboardPage/message-validate-errors.mjs";
+import { ERROR_INFO, OPERATION_GUID_NOT_FOUND, PROTOCOL_NOT_SPECIFIED } from "../../client/src/pages/E2EScenarioDashboardPage/message-validate-errors.mjs";
 import { NotImplemented } from "../../utils/errors.mjs";
 
 
@@ -83,7 +83,7 @@ export default class CallTreeBuilder {
      * @param {{ name, d_uid, childDiagram, operation_guid, server : { name, code, object_type}, client : {code, name}}} message 
      */
     static build(message, lastOperationGuid) {
-        const { name, operation_guid, server, client, child, childDiagram, d_uid } = message;
+        const { name, operation_guid, server, client, child, childDiagram, d_uid, method } = message;
         if (childDiagram && server?.object_type == 'Object' && childDiagram.diagram_uid !== d_uid) {
             const op_guid = operation_guid ?? lastOperationGuid;
             if (!op_guid) {
@@ -95,6 +95,8 @@ export default class CallTreeBuilder {
                 onError(message, 'На дочерней диаграмме не найден метод ')
                 return [new CallMessage(message)]
             }
+
+
             if (method.server?.code == client.code) {
                 // Внутренний вызов системы с переносом на другую диаграмму (на поддиаграмме первый вызов той же системы)
                 return method.child.reduce((ret, v) => [...ret, ...this.build(v, op_guid)], []);
@@ -102,19 +104,22 @@ export default class CallTreeBuilder {
 
             if (method.server != server) {
                 //onError(message, 'На родительской диаграмме объект не явля')
-                console.warn( 'method.server != server')
+                console.warn('method.server != server')
                 // Вызов при котором на дочерней диаграмме первый вызов того же обьекта, что и последний на родительской
             }
             let child_of_child = method.child.reduce((res, v) => [...res, ...v.child], [])
             return child_of_child.reduce((ret, v) => [...ret, ...this.build(v, op_guid)], []);
-
-            NotImplemented();
         }
+
         if (client?.code != server?.code) {
             const tmp = child.reduce((ret, v) => [...ret, ...this.build(v, operation_guid ?? lastOperationGuid)], []);
             if (!operation_guid) {
                 onError(message, OPERATION_GUID_NOT_FOUND);
             }
+            if (!method?.protocol) {
+                onError(message, PROTOCOL_NOT_SPECIFIED);
+            }
+            
             return [new CallMessage(Object.assign({}, message, { children: tmp }))]
         }
         if (client?.code == server?.code) {

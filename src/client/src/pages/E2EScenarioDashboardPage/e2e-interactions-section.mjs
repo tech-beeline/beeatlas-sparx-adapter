@@ -102,6 +102,8 @@ function InteractionCard({ interaction }) {
     const [showDetails, setShowDetails] = useState(false);
     const [open, setOpen] = React.useState(false);
 
+    console.log(interaction);
+
     return (<React.Fragment>
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
             <TableCell>
@@ -115,6 +117,9 @@ function InteractionCard({ interaction }) {
             </TableCell>
             <TableCell scope="row">
                 {interaction.title}
+            </TableCell>
+            <TableCell scope="row">
+                {interaction.protocol ? alertText(interaction.protocol, "green") : alertText('---')}
             </TableCell>
             <TableCell scope="row">
                 {interaction.notDefinedIACount ? alertText('---') : alertText('+', "green")}
@@ -179,12 +184,13 @@ export function InteractionsSection({ scenario }) {
                         <col style={{ width: '5%' }} />
                         <col style={{ width: '5%' }} />
                         <col style={{ width: '5%' }} />
+                        <col style={{ width: '5%' }} />
                     </colgroup>
                     <TableHead>
                         <TableRow key={0}>
                             <TableCell size="small">No</TableCell>
-                            <TableCell>Взаимодействие</TableCell>
-
+                            <TableCell>Название</TableCell>
+                            <TableCell>Протокол</TableCell>
                             <TableCell>IA</TableCell>
                             <TableCell>RPS</TableCell>
                             <TableCell>Latency</TableCell>

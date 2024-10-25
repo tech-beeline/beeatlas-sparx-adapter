@@ -1,3 +1,5 @@
+import LEGEND_PANEL from "./legend.mjs"
+
 function row(id, title, index, panels) {
   return {
     "collapsed": true,
@@ -221,8 +223,6 @@ function consumerSuccess(seq, interaction, y = 26) {
       },
       "overrides": []
     },
-
-    "links": [],
     "options": {
       "colorMode": "background",
       "graphMode": "none",
@@ -903,6 +903,15 @@ function description(seq, interaction, y) {
     "type": "text"
   };
 }
+
+function DBPanel(seq, interaction, y = 0) {
+  return LEGEND_PANEL(seq, "DATABASE", "state, name\r\n-2, DB", { h: 10, w: 24, x: 0, y: y + interaction.index * 15 });
+}
+
+
+function TBDPanel(seq, interaction, y = 0) {
+  return LEGEND_PANEL(seq, "Отсутствует протокол", "state, name\r\n-1, TBD", { h: 10, w: 24, x: 0, y: y + interaction.index * 15 });
+}
 /**
  * 
  * @param {{ title: string, message: string, index:number, count: 0, method: string, path:string }} interaction 
@@ -912,15 +921,20 @@ export default function createInteractionPanels(seq, interaction, y = 0) {
   const rowId = seq.next();
   return [
     row(rowId, `${interaction.index + 1}. ${interaction.title}`, y + interaction.index,
-      [
-        consumerSuccess(seq, interaction, y), consumerLatency(seq, interaction, y),
-        errorRate(seq, interaction, y), errorTimeline(seq, interaction, y),
-        traffic(seq, interaction, y), trafficTimeline(seq, interaction, y), description(seq, interaction, y)
-        /*
-        errorRate(interaction), errorTimeline(interaction),
-        traffic(interaction), trafficTimeline(interaction), description(interaction)
-        */
-      ]),
+      !interaction.protocol ? [
+        TBDPanel(seq, interaction, y),
+        description(seq, interaction, y)] :
+        interaction.protocol === "DB" ? [
+          DBPanel(seq, interaction, y),
+          description(seq, interaction, y)] : [
+          consumerSuccess(seq, interaction, y), consumerLatency(seq, interaction, y),
+          errorRate(seq, interaction, y), errorTimeline(seq, interaction, y),
+          traffic(seq, interaction, y), trafficTimeline(seq, interaction, y), description(seq, interaction, y)]
+      /*
+      errorRate(interaction), errorTimeline(interaction),
+      traffic(interaction), trafficTimeline(interaction), description(interaction)
+      */
+    ),
 
   ];
 }
