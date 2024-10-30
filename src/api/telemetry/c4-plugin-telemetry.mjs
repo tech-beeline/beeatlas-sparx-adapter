@@ -24,7 +24,7 @@ export function processPluginUser(user) {
 
 export function registerC4PluginStart(version, action = 'start', user) {
     ArchMetricsRepository.onPluginAction(version, action, user); // Асинхронно обновляем базу данных метрик
-    c4StartCounter.inc({ version: version, action: action, user: user });
+    C4StartCounter.inc({ version: version, action: action, user: user });
     processPluginUser(user);
 }
 
