@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate, useParams } from "react-router-dom";
 import { WebEANaviLine } from "../../components/index.mjs";
-import { E2ECatalogLink, HomeLink, MainBar } from "../../components/index.mjs";
+import { MainBar } from "../../components/index.mjs";
 import {
     Commit,
     ExpandMore,
@@ -13,7 +13,6 @@ import {
     AccordionDetails,
     AccordionSummary,
     Box,
-    Breadcrumbs,
     Paper,
     Table,
     TableBody,

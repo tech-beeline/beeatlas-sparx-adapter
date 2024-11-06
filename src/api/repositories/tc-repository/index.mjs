@@ -8,7 +8,6 @@ import { SELECT_BC_FOR_TC, SELECT_PARENT_BC, prepareBcRealizationDiagram, DELETE
 import { SELECT_ALL_TEC, SELECT_TC_BY_CODE } from './tc-queries.mjs';
 
 
-
 export class TechnicalCapabilitiesRepository {
 	/**
 	 * 
@@ -114,7 +113,7 @@ export class TechnicalCapabilitiesRepository {
 	async insertTC(tc) {
 		let sys_package = await Repository.getPackageByAlias(tc.system.code);
 		if (!sys_package) {
-			const tc_catalogue_package = await Repository.find(t_package, { ea_guid: SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue.ea_guid });
+			const tc_catalogue_package = await Repository.first(t_package, { ea_guid: SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue.ea_guid });
 			const system = new SystemsRepository().selectSystemByCode(tc.system.code);
 			const system_name = system?.name ?? tc.system.code;
 			sys_package = await Repository.createPackage({ name: system_name, alias: tc.system.code, parent_id: tc_catalogue_package.package_id });
