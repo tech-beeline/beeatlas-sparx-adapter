@@ -44,10 +44,12 @@ function TBDStatPanel(interaction, seq, yPos = 13) {
 
 export default function createInteractionStatPanel(interaction, seq, yPos = 13) {
     const { index, uri, method, host, client, server, sla, grafanaSource, protocol } = interaction;
+    /*
     if (!protocol) {
         return TBDStatPanel(interaction, seq, yPos);
-    }
-    switch (protocol.toUpperCase()) {
+    }*/
+
+    switch (protocol?.toUpperCase()) {
         case "DB": {
             return createDBStatPanel(interaction, seq, yPos);
         }

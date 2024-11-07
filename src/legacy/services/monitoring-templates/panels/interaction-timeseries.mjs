@@ -921,15 +921,16 @@ export default function createInteractionPanels(seq, interaction, y = 0) {
   const rowId = seq.next();
   return [
     row(rowId, `${interaction.index + 1}. ${interaction.title}`, y + interaction.index,
-      !interaction.protocol ? [
-        TBDPanel(seq, interaction, y),
-        description(seq, interaction, y)] :
-        interaction.protocol === "DB" ? [
-          DBPanel(seq, interaction, y),
-          description(seq, interaction, y)] : [
-          consumerSuccess(seq, interaction, y), consumerLatency(seq, interaction, y),
-          errorRate(seq, interaction, y), errorTimeline(seq, interaction, y),
-          traffic(seq, interaction, y), trafficTimeline(seq, interaction, y), description(seq, interaction, y)]
+      /*      !interaction.protocol ? [
+              TBDPanel(seq, interaction, y),
+              description(seq, interaction, y)] :
+              interaction.protocol === "DB" ? [
+                DBPanel(seq, interaction, y),
+                description(seq, interaction, y)] : */
+      [
+        consumerSuccess(seq, interaction, y), consumerLatency(seq, interaction, y),
+        errorRate(seq, interaction, y), errorTimeline(seq, interaction, y),
+        traffic(seq, interaction, y), trafficTimeline(seq, interaction, y), description(seq, interaction, y)]
       /*
       errorRate(interaction), errorTimeline(interaction),
       traffic(interaction), trafficTimeline(interaction), description(interaction)

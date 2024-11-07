@@ -336,7 +336,7 @@ class MonitoringService {
                     m.interaction = map[title] =
                     {
                         title: title, message: m.message, index: map.count++, count: 0, method: method, uri: path,
-                        grafanaSource: m.stereotype === "via MAPIC" ? MAPIC_DEFAULT_API_SOURCE : grafana_sources[m.server_code],
+                        grafanaSource: m.stereotype === "via MAPIC" ? MAPIC_DEFAULT_API_SOURCE : grafana_sources[m.server_code] ?? DEFAULT_OPENSEARCH_API_SOURCE,
                         sla: {
                             rps: Number.isNaN(m.rps) ? 10 : m.rps,
                             latency: Number.isNaN(m.latency) ? 1 : m.latency,
