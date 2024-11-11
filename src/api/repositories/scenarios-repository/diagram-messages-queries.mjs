@@ -1,4 +1,4 @@
-export const SELECT_MESSAGESBY_DIAGRAM_ID_LIST = `SELECT
+export const SELECT_MESSAGES_BY_DIAGRAM_ID_LIST = `SELECT
 	msg.diagramid as diagram_id,
 	msg.name,
 	msg.connector_id,

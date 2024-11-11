@@ -32,6 +32,7 @@ export class E2EProcessService {
                 .then(ml => ({ bi: bi, messages: ml }))));
         return biMessages;
     }
+    
     async getBIMessages(uid) {
         return (await processesRepository.selectBIMessages(uid))
             .filter(m => m.name);

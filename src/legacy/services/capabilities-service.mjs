@@ -10,55 +10,9 @@ import Repository,
     t_package,
     t_object
 } from "../../api/repositories/sparx-ea-repository/index.mjs";
+import { CapabilitiesRepository } from "../../api/repositories/index.mjs";
 
-const CAPABILITY_QUERY =
-    `with recursive capabilities as (
-	select
-		p.object_id as id,
-		d.alias as code,
-		d.name as name, 
-		true as "isDomain",
-		d.descr as description,
-		po.alias as "parent", 
-		true as "isParentDomain",
-		d.owner,
-		p.author, 
-		p.status, 
-		p.createddate as "createdDate", 
-		p.modifieddate as "modifiedDate",
-		p.ea_guid,
-		p.package_id
-	from v_domains d
-		inner join t_object p on p.ea_guid=d.ea_guid
-		left join  t_package parent on parent.package_id=d.parent_id
-		left join  t_object po on po.ea_guid=parent.ea_guid
-	union
-	select 
-		cap.object_id,
-		cap.alias,
-		cap.name,
-		false as "isDomain",
-		cap.note,
-		p.code as parentCode,
-		p."isDomain",
-		coalesce((SELECT DISTINCT obe.name
-                   FROM t_connector co,
-                    t_object obe
-                  WHERE co.end_object_id = cap.object_id AND obe.object_id = co.start_object_id AND co.stereotype = 'Responsibility' 
-		 			AND obe.stereotype = 'ArchiMate_BusinessActor' limit 1), p.owner ),
-		cap.author,
-		cap.status,
-		cap.createddate,
-		cap.modifieddate,
-		cap.ea_guid,
-		cap.package_id
-	from t_connector rel
-		join capabilities p on p.id=rel.start_object_id and rel.stereotype in ('ArchiMate_Aggregation', 'ArchiMate_Composition')
-		join t_object cap on cap.object_id=rel.end_object_id and cap.stereotype='ArchiMate_Capability'
-        where cap.alias is not null
-)
-select * from capabilities
-`
+const capabilitiesRepository = new CapabilitiesRepository();
 
 class CapabiliiesService {
 
@@ -70,7 +24,7 @@ class CapabiliiesService {
      * }>>}
      */
     async getCapabitiesAsFlatList() {
-        return (await Repository.queryRows(CAPABILITY_QUERY))
+        return (await capabilitiesRepository.selectAll())
             .map(c => {
                 return new Capability(c);
             })
@@ -100,14 +54,12 @@ class CapabiliiesService {
      * @returns {Promise<Capability>}
      */
     async getCapabilityByCode(code) {
-        const caps = await Repository.queryRows({
-            text:
-                `${CAPABILITY_QUERY}
-    where code=$1`, values: [code]
-        });
-        if (caps.length === 0)
+        const caps = await capabilitiesRepository.selectByCode(code);
+
+        if (!caps)
             return null;
-        return new Capability(caps[0]);
+
+        return new Capability(caps);
     }
     /**
      * 
@@ -115,10 +67,7 @@ class CapabiliiesService {
      * @returns {Promise<Capability[]>}
      */
     async getCapabilityChildren(code) {
-        return (await Repository.queryRows({
-            text: `${CAPABILITY_QUERY}
-            where "parent" = $1`, values: [code]
-        }))
+        return (await capabilitiesRepository.selectChildren(code))
             .map(c => new Capability(c));
     }
 
