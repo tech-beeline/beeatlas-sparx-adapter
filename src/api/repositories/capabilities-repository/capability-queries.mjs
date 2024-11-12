@@ -83,6 +83,6 @@ export const SELECT_ALL_BC =
 		JOIN t_diagram dd ON dd.package_id=d.package_id
 		JOIN t_diagramlinks l ON l.diagramid=dd.diagram_id
 		JOIN t_connector c ON c.connector_id=l.connectorid AND c.start_object_id=d.object_id
-		JOIN t_object bc ON bc.object_id=c.end_object_id
+		JOIN t_object bc ON bc.object_id=c.end_object_id AND bc.stereotype='ArchiMate_Capability'
 )
 SELECT * FROM cte_bc`;
