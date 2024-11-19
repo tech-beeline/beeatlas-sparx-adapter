@@ -34,7 +34,13 @@ export const SELECT_ALL_BC =
 		p.package_id,
 		0 AS parent_id,
 		NULL::text AS parent_code,
-		o.object_id
+		o.object_id,
+		(SELECT obe.name 
+	 		FROM t_connector co,  t_object obe 
+	 		WHERE co.end_object_id = o.object_id
+	 		AND obe.object_id = co.start_object_id
+	 		AND co.stereotype = 'Responsibility'
+	 		AND obe.stereotype = 'ArchiMate_BusinessActor' limit 1) as owner
 	FROM t_object o
 		JOIN t_package p ON p.ea_guid=o.ea_guid
 	WHERE o.stereotype='BusinessCapabilitiesCatalogue'
@@ -49,7 +55,13 @@ export const SELECT_ALL_BC =
 		p.package_id,
 		p.parent_id,
 		d.code,
-		o.object_id
+		o.object_id,
+		coalesce((SELECT obe.name 
+	 		FROM t_connector co,  t_object obe 
+	 		WHERE co.end_object_id = o.object_id
+	 		AND obe.object_id = co.start_object_id
+	 		AND co.stereotype = 'Responsibility'
+	 		AND obe.stereotype = 'ArchiMate_BusinessActor' limit 1),  d.owner)
 	FROM cte_domains d
 		JOIN t_package p ON p.parent_id=d.package_id
 		JOIN t_object o ON o.ea_guid=p.ea_guid AND (o.alias LIKE 'DMN%' OR o.alias LIKE 'GRP%')
@@ -65,7 +77,8 @@ export const SELECT_ALL_BC =
 		d.parent_code as parent,
 		d.description,
 		d.package_id,
-		d.object_id
+		d.object_id,
+		d.owner
 	FROM cte_domains d
 	UNION 
 	SELECT
@@ -78,7 +91,13 @@ export const SELECT_ALL_BC =
 		d.code,
 		bc.note,
 		d.package_id,
-		bc.object_id
+		bc.object_id,
+		coalesce((SELECT obe.name 
+	 		FROM t_connector co,  t_object obe 
+	 		WHERE co.end_object_id = bc.object_id
+	 		AND obe.object_id = co.start_object_id
+	 		AND co.stereotype = 'Responsibility'
+	 		AND obe.stereotype = 'ArchiMate_BusinessActor' limit 1),  d.owner)
 	FROM cte_bc d
 		JOIN t_diagram dd ON dd.package_id=d.package_id
 		JOIN t_diagramlinks l ON l.diagramid=dd.diagram_id
