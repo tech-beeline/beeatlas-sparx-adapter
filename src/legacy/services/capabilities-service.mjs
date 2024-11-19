@@ -76,7 +76,7 @@ class CapabiliiesService {
         if (!parent.isDomain) throw BadRequest(`Объект с кодом ${capability.parent} не является доменом (при создании домена)`)
         if (!code.startsWith('DMN') && !code.startsWith('GRP')) throw BadRequest(`Код домена должен начинаться на DMN или на GRP`);
 
-        const ea_parent = await Repository.first(t_package, { ea_guid: parent.ea_guid })
+        const ea_parent = await Repository.first(t_package, { ea_guid: parent.ea_guid });
         const new_pkg = await Repository.createPackage({
             name: capability.name, notes: capability.description, alias: code, parent_id: ea_parent.package_id,
             author: capability.author, status: capability.status
@@ -138,7 +138,7 @@ class CapabiliiesService {
 
             if (capability.isDomain) {
                 //Создаем домен
-                return this.#createDomain(capability, parent);
+                //return this.#createDomain(capability, parent);
             }
             // Создание возможности
             return this.#createBC(capability, parent);

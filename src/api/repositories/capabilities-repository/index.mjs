@@ -1,3 +1,4 @@
+import { NotImplemented } from '../../../utils/errors.mjs';
 import Repository from '../sparx-ea-repository/index.mjs'
 import { SELECT_ALL_BC } from './capability-queries.mjs';
 export { BC_PACKAGE_QUERY_BY_ID } from './capability-queries.mjs'
@@ -28,6 +29,12 @@ export class CapabilitiesRepository {
 	}
 	async selectChildren(code) {
 		return Repository.queryRows(SELECT_CHILDREN_BY_NAME, [code]);
+	}
+	async createDomain(parentCode, code, name, description, author, status) {
+		NotImplemented();
+	}
+	async setCapabilityOwner(code, owner) {
+		NotImplemented();
 	}
 }
 

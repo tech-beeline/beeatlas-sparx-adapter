@@ -157,25 +157,6 @@ const CAPABILITY_METHODS = {
                     }
                 }
             }
-        },
-        "/api/capabilities-tree/": {
-            get: {
-                operation: capabilitiesController.getCapabilitiesTree,
-                summary: "Получение иерархии возможностей",
-                description: "Получение иерархии возможностей (домены и бизнес-возможности)",
-                responses: {
-                    200: {
-                        description: "OK",
-                        content: {
-                            "application/json": {
-                                examples: {
-                                    "Домен с поддоменами": CAPABILITY_EXAMPLES.DomainWithChildren
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 }
