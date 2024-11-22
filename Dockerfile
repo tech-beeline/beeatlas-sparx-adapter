@@ -32,6 +32,7 @@ RUN npm install --omit=dev --force && \
 
 WORKDIR /usr/src/app
 COPY package.json /usr/src/app
+COPY package-lock.json /usr/src/app
 RUN npm install --omit=dev && mv node_modules ../ && \
     rm -fr /tmp/* && \
     npm cache clean --force
