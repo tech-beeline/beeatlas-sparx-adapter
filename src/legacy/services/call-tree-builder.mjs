@@ -116,9 +116,11 @@ export default class CallTreeBuilder {
             if (!operation_guid) {
                 onError(message, OPERATION_GUID_NOT_FOUND);
             }
+            /*
             if (!method?.protocol) {
                 onError(message, PROTOCOL_NOT_SPECIFIED);
             }
+                */
             
             return [new CallMessage(Object.assign({}, message, { children: tmp }))]
         }

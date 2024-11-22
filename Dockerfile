@@ -1,8 +1,8 @@
 FROM harbor.vimpelcom.ru/dockerhub/library/node@sha256:d234c1b72dedaa91b896e86d435425e6738a8dd1338ad118ebb0e0dc551f3872
 WORKDIR /usr/src/app
 #COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
-RUN npm config set registry https://nexus.vimpelcom.ru/repository/proxy__npm__group/
-RUN npm config set @beeline:registry https://nexus.vimpelcom.ru/repository/npm-all/
+RUN npm config set registry https://nexus.vimpelcom.ru/repository/npm-all/
+#RUN npm config set @beeline:registry https://nexus.vimpelcom.ru/repository/npm-all/
 RUN npm config set strict-ssl false
 
 #build react application

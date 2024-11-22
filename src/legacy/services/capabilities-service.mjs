@@ -55,7 +55,6 @@ class CapabiliiesService {
      */
     async getCapabilityByCode(code) {
         const caps = await capabilitiesRepository.selectByCode(code);
-
         if (!caps)
             return null;
 
@@ -108,42 +107,51 @@ class CapabiliiesService {
      */
     async #updateBC(capability_asis, capability, parent) {
         if (capability_asis.isDomain !== capability.isDomain) throw BadRequest('Нельзя менять тип возможности (Домен на BC и ИС на Домен');
+
         await Repository.update(t_object, { name: capability.name, note: capability.description, status: capability.status, author: capability.author }, { ea_guid: capability_asis.ea_guid });
         if (capability.isDomain) await Repository.update(t_package, { name: capability.name, notes: capability.description }, { ea_guid: capability.ea_guid });
+        if (capability.owner !== capability_asis.owner) {
+            await capabilitiesRepository.setCapabilityOwner(capability.code, capability.owner);
+        }
 
         if (capability_asis.parent != capability.parent) {
-            NotImplemented('Изменение родителя пока не реализовано');
+            NotImplemented('Изменение родителя не реализовано');
         }
         return this.getCapabilityByCode(capability.code);
     }
     /**
      * 
      * @param {string} code 
-     * @param {Capability} capability 
+     * @param {Capability} capabilityData 
      */
-    async putCapability(code, capability) {
-        if (!capability) {
+    async putCapability(code, capabilityData) {
+        if (!capabilityData) {
             throw BadRequest('В теле не передается capability')
         }
-        capability.code = code;
-        const parent = await this.getCapabilityByCode(capability.parent);
-        if (!parent) throw BadRequest(`Не найден родительская возможность/домен с кодом ${capability.parent}`);
+        if (!capabilityData.parent) {
+            throw BadRequest('Capability parent is not specified');
+        }
+
+        capabilityData.code = code;
+        const parent = await this.getCapabilityByCode(capabilityData.parent);
+
+        if (!parent) throw BadRequest(`Не найден родительская возможность/домен с кодом ${capabilityData.parent}`);
         const capability_asis = await this.getCapabilityByCode(code);
 
         if (!capability_asis) {
-            //Создание новой возможности
-            if (!capability.parent) {
-                throw BadRequest(`для capability не указан parent`);
-            }
-
-            if (capability.isDomain) {
+            if (capabilityData.isDomain) {
                 //Создаем домен
-                //return this.#createDomain(capability, parent);
+                const domainDTO = await capabilitiesRepository.createDomain(capabilityData.parent, code, capabilityData.name, capabilityData.description, capabilityData.author, capabilityData.status);
+                if (capabilityData.owner) {
+                    await capabilitiesRepository.setCapabilityOwner(code, capabilityData.owner);
+                    domainDTO.owner = capabilityData.owner;
+                }
+                return new Capability(domainDTO);
             }
             // Создание возможности
-            return this.#createBC(capability, parent);
+            return this.#createBC(capabilityData, parent);
         }
-        return this.#updateBC(capability_asis, capability, parent);
+        return this.#updateBC(capability_asis, capabilityData, parent);
     }
 
     async getCapabilityOwners(capability) {

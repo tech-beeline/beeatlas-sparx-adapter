@@ -1,0 +1,1 @@
+export const apiSystemsPath = (code) => `/api/v4/systems/${encodeURIComponent(code)}?level=methods`;

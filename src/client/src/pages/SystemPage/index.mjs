@@ -20,6 +20,7 @@ import { SystemSummary } from "./system-summary.mjs";
 import { SystemE2EParticipion } from "./system-e2e.mjs";
 import GrafanaSourceMenuItem from "./grafana-sources/system-grafana-source.mjs";
 import SystemAssessmentsAccordion from "./system-assessments.mjs";
+import { apiSystemsPath } from "../../resources/services.mjs";
 
 export function SystemPage() {
     const [system, setSystem] = React.useState(null);
@@ -30,9 +31,7 @@ export function SystemPage() {
     console.log(system);
 
     async function loadData(systemCode = code) {
-        const response = await fetch(
-            `/api/v1/systems/${systemCode}?loadMethods=1`
-        );
+        const response = await fetch(apiSystemsPath(code));
         if (response.status !== 200) {
             setSystem({
                 error: `HTTP STATUS: ${response.status} ( ${response.statusText})`,

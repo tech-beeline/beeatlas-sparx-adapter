@@ -1,8 +1,8 @@
-import Capability, { CapabilityRef } from "../../../api/model/capability.mjs";
+import Capability from "../../model/capability-legacy.mjs"
 
 class CAPABILITY_EXAMPLES {
     get RootDomain() {
-        return  new Capability({
+        return new Capability({
             "code": "GRP.000",
             "isDomain": true,
             "name": "Каталог Возможностей (Capability Catalog)",
@@ -14,7 +14,7 @@ class CAPABILITY_EXAMPLES {
         })
     }
     get DomainGroup() {
-        return  new Capability({
+        return new Capability({
             "code": "GRP.010",
             "isDomain": true,
             "name": "Управление ИТ",
@@ -27,7 +27,7 @@ class CAPABILITY_EXAMPLES {
         })
     }
     get Capability() {
-        return  new Capability({
+        return new Capability({
             "code": "BC-000134",
             "isDomain": false,
             "name": "Возможность спроектировать и разработать функциональные Capability готовые к изоляции и управляемой интеграции ",
@@ -40,7 +40,7 @@ class CAPABILITY_EXAMPLES {
         })
     }
     get ChildCapability() {
-        return  new Capability({
+        return new Capability({
             "code": "BC-014056",
             "isDomain": false,
             "name": "Создание запроса на внесение изменений на ИТ-ландшафт",
@@ -79,7 +79,13 @@ class CAPABILITY_EXAMPLES {
     }
     get PutCapabilitySample() {
         return new Capability({
-            isDomain: false, name: "Возможность посадить денежное дерево", description: `Пример для создания/изменения возможности.`, parent: "DMN.WONDERS", owner: "Карабас Барабас", author: "Алексей Толстой", status: "Черновик"
+            isDomain: false,
+            name: "Возможность посадить денежное дерево",
+            description: `Пример для создания/изменения возможности.`,
+            parent: "DMN.WONDERS",
+            owner: "Карабас Барабас",
+            author: "Алексей Толстой",
+            status: "Черновик"
         })
     }
     get PutDomainSample() {

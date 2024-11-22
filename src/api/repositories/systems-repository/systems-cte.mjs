@@ -2,12 +2,15 @@ import { APP_CATALOG_ROOT } from '../../../resources/const.mjs';
 
 
 export const CTE_SYSTEM_CATALOG = `cte_sys_catalog AS (
-    SELECT package_id, package_id AS parent_id, name , name::text AS "FQName", ea_guid
-        FROM t_package WHERE ea_guid='${APP_CATALOG_ROOT}'
-    UNION DISTINCT
-    SELECT c.package_id, p.parent_id, c.name, p."FQName"::text || '/' || c.name, c.ea_guid
-            FROM cte_sys_catalog p
-            JOIN t_package c ON c.parent_id=p.package_id
+	SELECT 
+		p.package_id, p.parent_id, p.name, p.name::text as "FQName"
+	FROM t_object o
+		JOIN t_package p ON p.ea_guid=o.ea_guid
+	WHERE o.stereotype='ApplicationCatalogue'
+	UNION
+	SELECT c.package_id, p.parent_id, c.name, p."FQName"::text || '/' || c.name
+    FROM cte_sys_catalog p
+    	JOIN t_package c ON c.parent_id=p.package_id
 )`;
 
 export const CTE_SYSTEMS = `${CTE_SYSTEM_CATALOG}, 

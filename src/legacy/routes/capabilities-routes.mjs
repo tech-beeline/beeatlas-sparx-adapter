@@ -85,10 +85,10 @@ const CAPABILITY_METHODS = {
                         description: "Код обновляемой/создаваемой возможности",
                         examples: {
                             "Страна дураков": {
-                                value: CAPABILITY_EXAMPLES.PutDomainSample2.parent
+                                value: "DMN.FOOLS"
                             },
                             "Поле Чудес": {
-                                value: CAPABILITY_EXAMPLES.PutCapabilitySample.parent
+                                value: "DMN.WONDERS"
                             },
                             "Возможность посадить денежное дерево": {
                                 value: "BC-MONEY.TREE"
