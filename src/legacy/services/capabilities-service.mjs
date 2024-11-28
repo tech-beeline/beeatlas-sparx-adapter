@@ -85,22 +85,6 @@ class CapabiliiesService {
 
     /**
      * 
-     * @param {Capability} capability 
-     * @param {Capability} parent 
-     * @returns {Promise<Capability>}
-     */
-    async #createBC(capability, parent) {
-        const parent_package_id = parent.isDomain ? (await Repository.first(t_package, { ea_guid: parent.ea_guid })).package_id : parent.getPackageId();
-        const bc_package = await Repository.putPackage({ parent_id: parent_package_id, name: "BC" });
-
-        let ea_cap = await Repository.createObject({ name: capability.name, note: capability.description, alias: capability.code ?? undefined, package_id: bc_package.package_id, object_type: ARCHIMATE_CAPABILITY })
-
-        await Repository.putConnector(parent.getCapabilityId(), ea_cap.object_id, ARCHIMATE_AGGREGATION);
-
-        return this.getCapabilityByCode(capability.code);
-    }
-    /**
-     * 
      * @param {Capability} capability_asis 
      * @param {Capability} capability 
      * @param {Capability} parent 
@@ -150,6 +134,11 @@ class CapabiliiesService {
             }
             // Создание возможности
             const capabilityDTO = await capabilitiesRepository.createCapability(capabilityData.parent, code, capabilityData.name, capabilityData.description, capabilityData.author, capabilityData.status);
+            if (capabilityData.owner && capabilityData.owner.length) {
+                await capabilitiesRepository.setCapabilityOwner(code, capabilityData.owner);
+                capabilityDTO.owner = capabilityData.owner;
+            }
+            return new Capability( capabilityDTO);
         }
         return this.#updateBC(capability_asis, capabilityData, parent);
     }

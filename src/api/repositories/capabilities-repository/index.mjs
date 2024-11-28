@@ -198,8 +198,7 @@ export class CapabilitiesRepository {
 		)
 
 		await Promise.all(Object.values(diagramTree).map(c => Repository.queryOne(INSERT_DIAGRAM_LINK, [domainDiagram.diagram_id, c.connector_id])));
-
-		NotImplemented();
+		return this.selectByCode( code );
 	}
 
 	async setCapabilityOwner(code, owner) {
