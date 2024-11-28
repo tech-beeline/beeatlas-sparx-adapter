@@ -1,6 +1,6 @@
 import TechnicalCapability from "../model/technical-capability-model-legacy.mjs";
 import Repository, {
-	CONNECTOR_STEREOTYPES,
+	ARCHIMATE_AGGREGATION,
 	t_object,
 	t_diagram,
 	t_diagramobjects,
@@ -253,7 +253,7 @@ class TechnicalCapabilityService {
 				});
 		}
 		/** @type {t_connector} */
-		const connector = await Repository.putConnector(parent_id, capability_id, CONNECTOR_STEREOTYPES.ARCHIMATE_AGGREGATION);
+		const connector = await Repository.putConnector(parent_id, capability_id, ARCHIMATE_AGGREGATION);
 		await Repository.insert(t_diagramlinks, { diagramid: diagram.diagram_id, connectorid: connector.connector_id, geometry: 'EDGE=3;$LLB=;LLT=;LMT=;LMB=;LRT=;LRB=;IRHS=;ILHS=;' });
 	}
 }

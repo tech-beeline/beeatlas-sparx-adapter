@@ -2,9 +2,10 @@ import express from 'express'
 import {
     SystemServiceInstance,
     GET_ALL_SYSTEMS_HANDLERS
-} from '../services/index.mjs';
+} from '../../services/index.mjs';
 
-import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
+import { BadRequest, NotFound, NotImplemented } from '../../../utils/errors.mjs';
+import { logRequestDecorator } from '../log-request-decorator.mjs';
 
 /**
  * 
@@ -18,7 +19,13 @@ function checkGetOptions(request) {
         throw BadRequest(`Wrong add-remove parameter value (${request.query["add-removed"]})`);
 }
 
-class SystemsControllers {
+export class SystemsControllers {
+    /**
+     *
+     */
+    constructor() {
+        this.putSystem = logRequestDecorator(this.putSystem.bind(this));
+    }
     /**
      * 
      * @param {express.Request} request 

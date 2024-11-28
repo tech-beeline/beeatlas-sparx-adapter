@@ -9,6 +9,7 @@ import { CTE_REALIZATION, CTE_SYSTEMS } from './systems-cte.mjs';
 import { SELECT_SYSTEMS } from './systems-queries.mjs';
 import { SELECT_SYSTEM_CONTAINERS, SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE } from './systems-containers-queries.mjs';
 import { APP_CATALOG_ROOT } from '../../../resources/const.mjs';
+import { SystemDTO } from './model.mjs';
 
 const CONTAINER_STEREOTYPE = 'C2';
 
@@ -168,17 +169,22 @@ const CONTAINERS_FOLDER = "Containers";
 export class SystemsRepository {
 	/**
 	 * 
-	 * @returns {Promise<Array<{ code,name, description, version, status, FQName, modifiedDate}>>}
+	 * @returns {Promise<Array<SystemDTO>>}
 	 */
 	async selectSystems() {
-		return Repository.queryRows(SELECT_SYSTEMS);
+		return Repository.queryRows(SELECT_SYSTEMS)
+			.then(r => new SystemDTO(r));
 	}
 	/**
 	 * 
-	 * @returns {Promise<{ code,name, description, version, status, FQName, modifiedDate}>}
+	 * @returns {Promise<SystemDTO | null>}
 	 */
 	async selectSystemByCode(code) {
-		return Repository.queryOne(`${SELECT_SYSTEMS} WHERE code=$1`, [code]);
+		const rows = await Repository.queryRows(`${SELECT_SYSTEMS} WHERE code=$1`, [code]);
+		if (rows.length > 1) {
+			throw Error(`Too many system with code="${code}"`);
+		}
+		return rows.length ? new SystemDTO(rows[0]) : null;
 	}
 
 	/**

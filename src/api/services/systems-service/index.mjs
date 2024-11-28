@@ -162,7 +162,7 @@ export class SystemService {
     async putSystem(systemCode, system) {
         if (!systemCode) throw BadRequest('Code parameter is not specified');
         if (!system) throw BadRequest('System is not specified');
-        const containerWithoutCode = system.containers.find(c => !c.code);
+        const containerWithoutCode = system.containers?.find(c => !c.code);
         if (containerWithoutCode) {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`)
         }

@@ -18,16 +18,19 @@ import { SELECT_DIAGRAMOBJECTS } from '../tc-repository/tc-parents-queries.mjs';
 import { t_diagramobjects_ex } from './ea-model/t_diagramobjects.mjs';
 import { DELETE_CONNECTOR_BY_ID, DELETE_LINK_BY_CONNECTOR_ID } from './ea-queries/diagram-queries.mjs';
 import { SELECT_PACKAGE_BY_ALIAS } from './ea-queries/ea-pacakgies-queries.mjs';
+import { OBJECT_STEREOTYPES } from './stereotypes/index.mjs';
+import { REMOVE_CONNECTOR_TXREF_BY_START_END_STEREOTYPE } from './ea-queries/remove-t_xref.mjs';
 
 const ENVIROMENT_VARIABLE = {
     user: "DB_EA_USER", password: "DB_EA_PASSWORD", host: "DB_EA_URL", database: "DB_EA_DATABASE"
 }
 
-export const CONNECTOR_STEREOTYPES = {
-    ARCHIMATE_AGGREGATION: 'ArchiMate3::ArchiMate_Aggregation'
-}
+export const ARCHIMATE_AGGREGATION = 'ArchiMate3::ArchiMate_Aggregation';
+
+export const UML_RESPONSIBILITY = 'UML Standart Profile::Responsibility';
+
 const CONNECTOR_STEREOTYPE = {
-    [CONNECTOR_STEREOTYPES.ARCHIMATE_AGGREGATION]: {
+    [ARCHIMATE_AGGREGATION]: {
         properties: {
             connector_type: 'Association', stereotype: 'ArchiMate_Aggregation',
             direction: 'Unspecified',
@@ -40,31 +43,25 @@ const CONNECTOR_STEREOTYPE = {
                 description: '@STEREO;Name=ArchiMate_Aggregation;FQName=ArchiMate3::ArchiMate_Aggregation;@ENDSTEREO;', supplier: '<none>',
             }
         }
-    }
-}
-
-export const ARCHIMATE_CAPABILITY = "ArchiMate_Capability"
-
-const OBJECT_STEREOTYPES = {
-    [ARCHIMATE_CAPABILITY]: {
+    },
+    [UML_RESPONSIBILITY]: {
         properties: {
-            object_type: 'Class', stereotype: ARCHIMATE_CAPABILITY,
-            scope: 'Public', parentid: '0', classifier: '0', pdata4: '0',
-            stereotype: ARCHIMATE_CAPABILITY,
-            backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
+            connector_type: 'Usage', stereotype: 'Responsibility',
+            direction: 'Source -> Destination',
+            destaccess: 'Public',
+            sourceisaggregate: 0
         },
         t_xref: {
             Stereotypes: {
-                type: "element property", supplier: '<none>', visibility: "Public", partition: '0',
-                description: '@STEREO;Name=ArchiMate_Capability;FQName=ArchiMate3::ArchiMate_Capability;@ENDSTEREO;'
-            },
-            CustomProperties: {
-                type: "element property", supplier: '<none>', visibility: "Public", partition: '0',
-                description: '@PROP=@NAME=_HideUmlLinks@ENDNAME;@TYPE=string@ENDTYPE;@VALU=True@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;@PROP=@NAME=_defaultDiagramType@ENDNAME;@TYPE=string@ENDTYPE;@VALU=ArchiMate3::Motivation@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;'
+                type: 'connector property',
+                visibility: 'Public',
+                description: '@STEREO;Name=Responsibility;FQName=StandardProfileL2::Responsibility;@ENDSTEREO;', supplier: '<none>',
             }
         }
     }
 }
+
+
 
 export class SparxRepository {
     #config;
@@ -256,7 +253,7 @@ export class SparxRepository {
         try {
             await client.query('BEGIN');
             const xref = this.#processStereotype(obj);
-            this.#prepareObjectAlias(obj);
+            await this.#prepareObjectAlias(obj, client);
             obj = await this.insert(t_object, obj, client);
             if (xref) {
                 for (let name in xref) {
@@ -298,7 +295,8 @@ export class SparxRepository {
         let condition = { start_object_id: start_object_id, end_object_id: end_object_id, connector_type: connector_type };
         const stereotype_template = CONNECTOR_STEREOTYPE[connector_type];
         if (stereotype_template) {
-            Object.assign(condition, stereotype_template.properties)
+            Object.assign(condition, stereotype_template.properties);
+            await this.queryOne(REMOVE_CONNECTOR_TXREF_BY_START_END_STEREOTYPE, [start_object_id, end_object_id, stereotype_template.properties.stereotype]);
         }
         return this.delete(t_connector, condition)
     }
@@ -311,10 +309,10 @@ export class SparxRepository {
 
         let connector_properties = {
             start_object_id: start_object_id, end_object_id: end_object_id,
-            connector_type: stereotype_prop?.connector_type ?? connector_type
+            connector_type: stereotype_prop?.properties?.connector_type ?? connector_type
         };
 
-        let connector = await this.find(t_connector, connector_properties).then(rows => rows.find(r => r));
+        let connector = await this.first(t_connector, connector_properties);
 
         if (!connector) {
             connector_properties = Object.assign({

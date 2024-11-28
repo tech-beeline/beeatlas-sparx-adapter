@@ -27,9 +27,14 @@ export class TechnicalCapabilitiesControllers {
      * @param {express.Response} response 
      */
     async putTC(request, response) {
+        console.info(`start putTC (code="${request.params.code}")`)
+        console.log(request.body);
         if (!request.params.code) throw BadRequest('Code is not specified');
 
         request.body.code = request.params.code;
-        response.json(await tcService.putTC(request.body));
+        const result = await tcService.putTC(request.body);
+        console.info('putTC result:')
+        console.info(result);
+        response.json(result);
     }
 }

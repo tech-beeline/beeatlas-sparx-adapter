@@ -1,0 +1,1 @@
+export const REMOVE_CONNECTOR_TXREF_BY_START_END_STEREOTYPE = `DELETE FROM t_xref WHERE client IN (SELECT ea_guid FROM t_connector WHERE start_object_id=$1 AND end_object_id=$2 AND stereotype=$3)`;

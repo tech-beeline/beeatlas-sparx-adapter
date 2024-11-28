@@ -14,7 +14,9 @@ export {
 } from "./ea-model/index.mjs";
 
 import { SparxRepository } from "./ea-repository.mjs";
-export { ARCHIMATE_CAPABILITY, CONNECTOR_STEREOTYPES } from "./ea-repository.mjs";
+export { ARCHIMATE_CAPABILITY } from "./stereotypes/index.mjs";
+export { ARCHIMATE_AGGREGATION } from "./ea-repository.mjs";
+
 export { SparxRepository }
 
 export const SparxRepositoryInstance = new SparxRepository();

@@ -6,7 +6,7 @@ import { BadRequest, NotImplemented } from "../../utils/errors.mjs";
 import Repository,
 {
     ARCHIMATE_CAPABILITY,
-    CONNECTOR_STEREOTYPES,
+    ARCHIMATE_AGGREGATION,
     t_package,
     t_object
 } from "../../api/repositories/sparx-ea-repository/index.mjs";
@@ -95,7 +95,7 @@ class CapabiliiesService {
 
         let ea_cap = await Repository.createObject({ name: capability.name, note: capability.description, alias: capability.code ?? undefined, package_id: bc_package.package_id, object_type: ARCHIMATE_CAPABILITY })
 
-        await Repository.putConnector(parent.getCapabilityId(), ea_cap.object_id, CONNECTOR_STEREOTYPES.ARCHIMATE_AGGREGATION);
+        await Repository.putConnector(parent.getCapabilityId(), ea_cap.object_id, ARCHIMATE_AGGREGATION);
 
         return this.getCapabilityByCode(capability.code);
     }
@@ -106,7 +106,7 @@ class CapabiliiesService {
      * @param {Capability} parent 
      */
     async #updateBC(capability_asis, capability, parent) {
-        if (capability_asis.isDomain !== capability.isDomain) throw BadRequest('Нельзя менять тип возможности (Домен на BC и ИС на Домен');
+        if (capability_asis.isDomain !== capability.isDomain) throw BadRequest('Нельзя менять тип возможности (Домен на BC и BC на Домен');
 
         await Repository.update(t_object, { name: capability.name, note: capability.description, status: capability.status, author: capability.author }, { ea_guid: capability_asis.ea_guid });
         if (capability.isDomain) await Repository.update(t_package, { name: capability.name, notes: capability.description }, { ea_guid: capability.ea_guid });
@@ -149,7 +149,7 @@ class CapabiliiesService {
                 return new Capability(domainDTO);
             }
             // Создание возможности
-            return this.#createBC(capabilityData, parent);
+            const capabilityDTO = await capabilitiesRepository.createCapability(capabilityData.parent, code, capabilityData.name, capabilityData.description, capabilityData.author, capabilityData.status);
         }
         return this.#updateBC(capability_asis, capabilityData, parent);
     }

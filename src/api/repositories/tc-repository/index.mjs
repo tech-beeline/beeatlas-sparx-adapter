@@ -1,6 +1,6 @@
 import { NotImplemented } from '../../../utils/errors.mjs';
 import { SystemsRepository } from '../index.mjs';
-import Repository, { CONNECTOR_STEREOTYPES, t_diagramobjects, t_object, t_package, t_xref } from '../sparx-ea-repository/index.mjs'
+import Repository, { ARCHIMATE_AGGREGATION, t_diagramobjects, t_object, t_package, t_xref } from '../sparx-ea-repository/index.mjs'
 
 import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
 import { TC_PACKAGE_NAME, TC_TAGS_NAMES, TECH_CAPABILITY_STEREOTYPE } from './const.mjs';
@@ -92,7 +92,7 @@ export class TechnicalCapabilitiesRepository {
 			await Repository.putDiagramObject(diagramInfo.diagram_id, { object_id: bc_object.object_id, recttop: -35, rectleft: maxRight + 50, rectbottom: -105, rectright: maxRight + 150 });
 			await Repository.putDiagramObject(diagramInfo.diagram_id, { object_id: tc_object.object_id, recttop: -275, rectleft: maxRight + 50, rectbottom: -350, rectright: maxRight + 150 });
 
-			const connector = await Repository.putConnector(bc_object.object_id, tc_object.object_id, CONNECTOR_STEREOTYPES.ARCHIMATE_AGGREGATION);
+			const connector = await Repository.putConnector(bc_object.object_id, tc_object.object_id, ARCHIMATE_AGGREGATION);
 			await Repository.putDiagramLink(diagramInfo.diagram_id, { connectorid: connector.connector_id, geometry: 'EDGE=3;$LLB=;LLT=;LMT=;LMB=;LRT=;LRB=;IRHS=;ILHS=;' })
 		}
 	}
