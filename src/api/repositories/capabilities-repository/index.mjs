@@ -1,7 +1,7 @@
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import { ARCHIMATE_AGGREGATION, UML_RESPONSIBILITY } from '../sparx-ea-repository/ea-repository.mjs';
 import Repository, { ARCHIMATE_CAPABILITY, t_object } from '../sparx-ea-repository/index.mjs'
-import { INSERT_DOMAIN_DIAGRAM, SELECT_ALL_BC, SELECT_BC_DOMAIN, SELECT_DIAGRAM_HIERARCHY, SELECT_DOMAIN_DIAGRAM_BY_CODE, SELECT_DOMAIN_DIAGRAM_BY_PACKAGE_ID } from './capability-queries.mjs';
+import { INSERT_DIAGRAM_LINK, INSERT_DIAGRAM_OBJECTS, INSERT_DOMAIN_DIAGRAM, SELECT_ALL_BC, SELECT_BC_DOMAIN, SELECT_DIAGRAM_HIERARCHY, SELECT_DOMAIN_DIAGRAM_BY_CODE, SELECT_DOMAIN_DIAGRAM_BY_PACKAGE_ID } from './capability-queries.mjs';
 import { CapabilitDTO, CapabilityDTOInternal } from './model.mjs';
 import { OwnersCatalogue } from './owners-catalogue.mjs';
 export { BC_PACKAGE_QUERY_BY_ID } from './capability-queries.mjs'
@@ -10,6 +10,10 @@ export { BC_PACKAGE_QUERY_BY_ID } from './capability-queries.mjs'
 const ownersCatalogue = new OwnersCatalogue();
 
 const CAPABILITY_PACKAGE_NAME = "BC";
+const DEFAULT_ELEMENT_WIDTH = 150;
+const DEFAULT_ELEMENT_HEIGHT = 100;
+const LEVEL_OFFSET = 50;
+const X__OFFSET = 50;
 
 const SELECT_BY_CODE = `${SELECT_ALL_BC} where code=$1`;
 const SEARCH_BY_NAME = `${SELECT_ALL_BC} WHERE name LIKE ANY ($1)`
@@ -87,6 +91,27 @@ export class CapabilitiesRepository {
 	}
 
 
+	calcPosition(capability, left = 0, level = 0) {
+		capability.top = level * (DEFAULT_ELEMENT_HEIGHT + LEVEL_OFFSET) + LEVEL_OFFSET;
+		capability.bottom = capability.top + DEFAULT_ELEMENT_HEIGHT;
+
+		if (!capability.children) {
+			capability.left = capability.childrenLeft = left;
+			capability.right = capability.childrenRight = (left + DEFAULT_ELEMENT_WIDTH);
+
+			return capability.childrenRight;
+		}
+		const children = Object.values(capability.children);
+
+		let l = left;
+		for (const child of children) {
+			const r = this.calcPosition(child, l, level + 1);
+			l = r + X__OFFSET;
+		}
+		capability.left = Math.floor( (l - X__OFFSET - DEFAULT_ELEMENT_WIDTH + left) / 2);
+		capability.right = capability.left + DEFAULT_ELEMENT_WIDTH;
+		return l - X__OFFSET;
+	}
 
 	async createCapability(parentCode, code, name, description, author, status) {
 		/** @type {Array<CapabilityDTOInternal>} */
@@ -121,12 +146,12 @@ export class CapabilitiesRepository {
 				|| capabilityRow.note !== description
 				|| capabilityRow.author !== author
 				|| capabilityRow.status !== status)) {
-			// Если есть существующая BC в целевой папке
+			// Если есть существующая BC в целевой папке и ее надо обновить
 			await Repository.update(t_object, { note: description, name: name, author: author, status: status }, { object_id: capabilityRow.object_id });
 		}
 
 		if (!capabilityRow) {
-			// Создаем если нет
+			// Создаем если нет в папке BC
 			capabilityRow = await Repository.createObject({
 				package_id: capabilitiesPackage.package_id,
 				name: name,
@@ -139,7 +164,7 @@ export class CapabilitiesRepository {
 		}
 
 		const connector = await Repository.putConnector(parentRow.object_id, capabilityRow.object_id, ARCHIMATE_AGGREGATION);
-		
+
 		const capability = new CapabilityDTOInternal({
 			name: capabilityRow.name,
 			isDomain: false,
@@ -155,9 +180,24 @@ export class CapabilitiesRepository {
 			package_id: domain.package_id
 		});
 
+		diagramTree[code] = capability;
 		(diagramTree[parentCode].children = (diagramTree[parentCode].children ?? {}))[code] = capability;
 
 		console.log(domain);
+		const r = this.calcPosition(domain);
+
+		await Promise.all([
+			Repository.queryOne('DELETE FROM t_diagramlinks WHERE diagramid=$1', [domainDiagram.diagram_id]),
+			Repository.queryOne('DELETE FROM t_diagramobjects WHERE diagram_id=$1', [domainDiagram.diagram_id])
+		]);
+
+		const diagramObjects = Object.values(diagramTree).map(c => ({ left: c.left, right: c.right, top: -c.top, bottom: -c.bottom, object_id: c.object_id }));
+
+		await Promise.all(
+			diagramObjects.map(r => Repository.queryOne(INSERT_DIAGRAM_OBJECTS, [domainDiagram.diagram_id, r.object_id, r.left, r.right, r.top, r.bottom]))
+		)
+
+		await Promise.all(Object.values(diagramTree).map(c => Repository.queryOne(INSERT_DIAGRAM_LINK, [domainDiagram.diagram_id, c.connector_id])));
 
 		NotImplemented();
 	}

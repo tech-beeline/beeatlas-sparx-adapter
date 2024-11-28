@@ -106,4 +106,34 @@ export const SELECT_DIAGRAM_HIERARCHY = `WITH RECURSIVE cte_domain AS (
 		JOIN t_diagramobjects ob ON ob.object_id=o.object_id AND ob.diagram_id=dm.diagram_id
 )
 SELECT * FROM cte_domain
+`;
+
+export const INSERT_DIAGRAM_OBJECTS = `
+INSERT INTO t_diagramobjects(
+	diagram_id,
+	object_id,
+	rectleft,
+	rectright,
+	recttop,
+	rectbottom,
+	sequence
+)
+VALUES(
+	$1,
+	$2,
+	$3,$4,$5,$6,0
+)
+`;
+
+export const INSERT_DIAGRAM_LINK = `
+INSERT INTO t_diagramlinks(
+	diagramid,
+	connectorid,
+	hidden
+)
+VALUES(
+	$1,
+	$2,
+	0
+)
 `
