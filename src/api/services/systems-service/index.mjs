@@ -14,7 +14,6 @@ import interfacesService from "../interfaces-service/index.mjs";
 import GetAllSystems from "./get-all-systems.mjs";
 import GetSystemByCode, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL } from "./get-system-by-code.mjs";
 
-const REMOVED_STATUS = 'REMOVED';
 
 const STEREOTYPE_MAP = {
     ArchiMate_TechnicalCapability: "TechnicalCapability",
@@ -98,7 +97,7 @@ export class SystemService {
         const currentContainer = await systemsRepository.selectContainerByCode(container.code);
         if (currentContainer) throw Error(`Container with code=${container.code} already exists`)
 
-        await systemsRepository.insertContainer(
+        await systemsRepository.setContainer(
             systemCode,
             container.name,
             container.code,
@@ -160,6 +159,7 @@ export class SystemService {
      * @param {System} system 
      */
     async putSystem(systemCode, system) {
+
         if (!systemCode) throw BadRequest('Code parameter is not specified');
         if (!system) throw BadRequest('System is not specified');
         const containerWithoutCode = system.containers?.find(c => !c.code);
@@ -167,16 +167,11 @@ export class SystemService {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`)
         }
 
-        const currentSystemInfo = await this.getByCode(systemCode, { excludeContainers: true });
-        if (!currentSystemInfo) throw NotFound(`System with code=${systemCode} was not found`);
+        const containers = system.containers ?? [];
 
-        await patchArray(
-            system.containers ?? [],
-            await this.getSystemContainers(systemCode),
-            c => c.code,
-            (c) => this.addContainer(systemCode, c),
-            (current, target) => this.updateContainer(systemCode, current, target),
-            (c) => this.markContainerRemoved(systemCode, c)
+        await systemsRepository.setSystemContainers(systemCode, containers);
+        await Promise.all(
+            containers.map(c => interfacesRepository.setContainerInterfaces(c.code, c.interfaces))
         )
 
         return this.getByCode(systemCode, { level: "methods" });

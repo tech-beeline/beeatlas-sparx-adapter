@@ -15,7 +15,8 @@ export const CTE_SYS_PACKAGE = `cte_sys_package AS (
 	
 )`;
 
-export const CTE_SYS_CATALOG = `cte_sys_catalog AS (
+export const CTE_SYS_CATALOG = `${CTE_SYS_PACKAGE},
+cte_sys_catalog AS (
 	SELECT 
 		p.package_id, p.parent_id, p.name, p.name::text as "FQName"
 	FROM t_object o
@@ -27,20 +28,21 @@ export const CTE_SYS_CATALOG = `cte_sys_catalog AS (
     	JOIN t_package c ON c.parent_id=p.package_id
 )`;
 
-export const CTE_LANDSCAPE = `
-${CTE_SYS_PACKAGE},
-${CTE_SYS_CATALOG},
+export const CTE_LANDSCAPE = `${CTE_SYS_CATALOG},
 cte_landscape AS (
 	SELECT
 		sys.name, 
 		sys.alias as code, 
 		sys.note as description, 
-		sys.status, sys.author,
+		sys.status, 
+		sys.author,
+		c."FQName",
 		sys.modifiedDate AS "modifiedDate", 
 		sys.version, 
-		sp.package_id
+		sp.package_id,
+		sys.object_id
 	FROM cte_sys_catalog c
-		JOIN t_object sys ON sys.package_id=c.package_id AND sys.alias IS NOT NULL
+		JOIN t_object sys ON sys.package_id=c.package_id AND sys.alias IS NOT NULL AND sys.object_type='Component'
 		LEFT JOIN cte_sys_package sp ON sp.code=sys.alias
 )`;
 

@@ -183,7 +183,6 @@ export class CapabilitiesRepository {
 		diagramTree[code] = capability;
 		(diagramTree[parentCode].children = (diagramTree[parentCode].children ?? {}))[code] = capability;
 
-		console.log(domain);
 		const r = this.calcPosition(domain);
 
 		await Promise.all([

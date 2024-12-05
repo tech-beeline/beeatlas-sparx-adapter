@@ -2,10 +2,13 @@ import { NotImplemented } from '../../../utils/errors.mjs';
 import Repository, { t_object, t_operationtag } from '../sparx-ea-repository/index.mjs';
 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
+import { DEFAULT_STATUS, REMOVED_STATUS } from '../systems-repository/const.mjs';
 import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_CONTAINER_INTERFACES } from './interfaces-queries.mjs';
 import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION } from './methods-queries.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
+
+const isAPIEquals = (a, b) => a.name === b.name && a.description === b.description && a.version === b.version && a.status === b.status;
 
 export class InterfacesRepository {
     /**
@@ -77,11 +80,12 @@ export class InterfacesRepository {
         });
 
         await Repository.putConnector(container.object_id, it.object_id, 'Realisation');
+
         return { name: it.name, code: it.alias, description: it.note };
     }
 
     async updateInterface(name, code, version, description, status, protocol, specification) {
-        return Repository.update(t_object,
+        await Repository.update(t_object,
             {
                 name: name,
                 status: status,
@@ -116,10 +120,11 @@ export class InterfacesRepository {
                 });
         }
     }
+
     async updateMethod(interfaceCode, name, description, returnType, rps, latency, error_rate) {
         const updatedMethods = await Repository.queryRows(UPDATE_OPERATION, [interfaceCode, name, description, returnType]);
         for (const method of updatedMethods) {
-            await Repository.updateOperationTags(method.operationid, { rps: rps, latency: latency, error_rate: error_rate })
+            await Repository.updateOperationTags(method.operationid, { rps: rps, latency: latency, error_rate: error_rate, removedDate: null })
         }
     }
 
@@ -127,6 +132,75 @@ export class InterfacesRepository {
         const operations = await Repository.queryRows(SELECT_METHOD_BY_NAME_INTERFACE_CODE, [interfaceCode, name])
         for (const op of operations) {
             await Repository.updateOperationTags(op.operationid, { removedDate: new Date() });
+        }
+    }
+
+    async setInterfaceMethods(interfaceCode, methods) {
+    }
+
+    async setContainerInterfaces(containerCode, interfaces = []) {
+        const currentAPIList = await this.selectContainerInterfaces(containerCode);
+        const newAPIs = [], toUpdate = [];
+        for (const it of interfaces) {
+            if (!it.status) it.status = DEFAULT_STATUS;
+
+            const currentAPI = currentAPIList.find(i => i.code === it.code);
+            if (!currentAPI) {
+                newAPIs.push(it);
+                continue;
+            }
+            if (!isAPIEquals(it, currentAPI))
+                toUpdate.push(it);
+        }
+
+        for (const it of currentAPIList) {
+            if (it.status !== REMOVED_STATUS && !interfaces.find(i => i.code === it.code)) {
+                it.status = REMOVED_STATUS;
+                toUpdate.push(it);
+            }
+        }
+
+        console.group("Планируемые изменения")
+        console.info("Добавить интерфейсы: ", newAPIs)
+        console.info("Обновить интерфейсы: ", toUpdate);
+        console.groupEnd();
+
+        await Promise.all([
+            ...newAPIs.map(it => this.insertInterface(containerCode, it.name, it.code, it.version, it.description, it.status)),
+            ...toUpdate.map(it => this.updateInterface(it.name, it.code, it.version, it.description, it.status))
+        ]);
+
+        for (const it of interfaces) {
+            const methods = it.methods ?? [];
+            await this.setInterfaceMethods( it.code, methods);
+        }
+
+        for (const it of toUpdate) {
+            const currentMethods = await this.selectInterfaceMethods(it.code);
+            if (it.status === REMOVED_STATUS) {
+                console.info(`Помечаем удаленными методы для интерфейса [${it.code} ${it.name}]`);
+                await Promise.all(currentMethods.map(m => this.markMethodRemoved(it.code, m.name)));
+                continue;
+            };
+        }
+
+        NotImplemented();
+    }
+
+    async setInterfaceMethods(interfaceCode, methods = []) {
+        const currentMethods = await Repository.queryRows(SELECT_INTERFACE_METHODS, [interfaceCode]);
+        const methodsToRemove = currentMethods.filter(cm => !cm.removed_date && !methods.find(m => m.name === cm.name));
+        console.info(`Удаление методов`, methodsToRemove);
+        await Promise.all(methodsToRemove.map(m => this.markMethodRemoved(interfaceCode, m.name)));
+        console.log(`Добавление и обновление методов`, methods);
+        for (const m of methods) {
+            const currentMethod = currentMethods.find(cm => cm.name === m.name);
+            if (currentMethod) {
+                await this.updateMethod(interfaceCode, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
+                console.info('Обновляем метод', m);
+                continue;
+            }
+            await this.insertMethod(interfaceCode, m.name, m.description, m.returnType, m.rpos, m.latency, m.error_rate);
         }
     }
 }

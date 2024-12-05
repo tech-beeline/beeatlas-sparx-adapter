@@ -10,10 +10,9 @@ export function logRequestDecorator(fn) {
     * @param {*} next 
      */
     return async (request, response, next) => {
-        console.log(`${request.method} ${request.path}`);
-        console.log(request.body);
+        console.info(`${request.method} ${request.path}`);
+        console.log('body', request.body);
         await fn(request, response, next);
-        console.log(`response body:`)
-        console.log(response)
+        console.log('resultStatus', response.status);
     };
 }

@@ -3,13 +3,15 @@ import Repository,
 	t_object
 } from '../sparx-ea-repository/index.mjs';
 
-import { NotImplemented } from '../../../utils/errors.mjs';
+import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import { PREPARE_CONTAINERS_PACKAGE } from '../sql/system-container-sql.mjs';
 import { CTE_REALIZATION, CTE_SYSTEMS } from './systems-cte.mjs';
-import { SELECT_SYSTEMS } from './systems-queries.mjs';
+import { SELECT_SYSTEM_SUBPACKAGES, SELECT_SYSTEMS } from './systems-queries.mjs';
 import { SELECT_SYSTEM_CONTAINERS, SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE } from './systems-containers-queries.mjs';
 import { APP_CATALOG_ROOT } from '../../../resources/const.mjs';
-import { SystemDTO } from './model.mjs';
+import { SystemDTO, SystemDTOInternal } from './model.mjs';
+import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
+import { DEFAULT_STATUS, REMOVED_STATUS, SYSTEM_SUBPACKAGES as SYSTEM_SUBPACKAGES_NAMES } from './const.mjs';
 
 const CONTAINER_STEREOTYPE = 'C2';
 
@@ -32,10 +34,9 @@ const SELECT_SYSTEM_CAPABILITIES = `WITH RECURSIVE cte_sys AS(
 ),
 cte_sys_pack AS( 
 	SELECT
-		tcp.package_id
+		rp.package_id
 	FROM t_object ro 
 		JOIN t_package rp ON rp.ea_guid=ro.ea_guid
-		JOIN t_package tcp ON tcp.parent_id=rp.package_id
 	WHERE ro.alias=$1 AND object_type='Package'
 	UNION ALL
 	SELECT c.package_id
@@ -166,6 +167,8 @@ SELECT * FROM cte_sys_msg`
 
 const CONTAINERS_FOLDER = "Containers";
 
+const isContainersEqual = (a, b) => a.name === b.name && a.description === b.description && a.status === b.status && a.version === b.version;
+
 export class SystemsRepository {
 	/**
 	 * 
@@ -173,7 +176,7 @@ export class SystemsRepository {
 	 */
 	async selectSystems() {
 		return Repository.queryRows(SELECT_SYSTEMS)
-			.then(r => new SystemDTO(r));
+			.then(r => new SystemDTOInternal(r));
 	}
 	/**
 	 * 
@@ -184,7 +187,47 @@ export class SystemsRepository {
 		if (rows.length > 1) {
 			throw Error(`Too many system with code="${code}"`);
 		}
-		return rows.length ? new SystemDTO(rows[0]) : null;
+		return rows.length ? new SystemDTOInternal(rows[0]) : null;
+	}
+
+	async setSystem(code, name, description, author, version, status) {
+		const systemDTO = await this.selectSystemByCode(code);
+		if (!systemDTO) throw NotFound(`System with code=${code} not found`);
+
+		let techPackageId = systemDTO.package_id;
+
+
+		const subpackages = techPackageId ? (await Repository.queryRows(SELECT_SYSTEM_SUBPACKAGES, [techPackageId, SYSTEM_SUBPACKAGES_NAMES])) : [];
+
+		if (!techPackageId) {
+			console.info('Technical package for system not found');
+			if (!SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue) {
+				throw Error('TechCapabilitiesCatalogue not found');
+			}
+
+			const newPackage = await Repository.createPackage({
+				parent_id: SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue.package_id,
+				name: systemDTO.name,
+				alias: code
+			});
+			console.info(`Technical package for system with code=${code} created`);
+			techPackageId = newPackage.package_id;
+		}
+
+		const packageToCreate = SYSTEM_SUBPACKAGES_NAMES.filter(n => !subpackages.find(r => r.name === n));
+		if (packageToCreate.length) {
+			console.info('start create system subpackages:', packageToCreate);
+			const newPackages = await Promise.all(packageToCreate.map(subpackageName => Repository.createPackage({
+				parent_id: techPackageId,
+				name: subpackageName
+			})));
+
+			subpackages.push(...newPackages.map(p => ({ name: p.name, package_id: p.package_id })));
+			console.info('Packages created');
+		}
+
+		return new SystemDTOInternal({ ...systemDTO, package_id: techPackageId, subpackages: subpackages, package_id: systemDTO.package_id, object_id: systemDTO.object_id });
+
 	}
 
 	/**
@@ -253,32 +296,78 @@ export class SystemsRepository {
 		return Repository.queryOne(PREPARE_CONTAINERS_PACKAGE, [CONTAINERS_FOLDER, systemCode]);
 	}
 
-	async insertContainer(systemCode, name, code, author, version, description) {
-		const [packageInfo, system] = await Promise.all([
-			this.prepareContainerPackage(systemCode),
-			Repository.first(t_object, { object_type: 'Component', alias: systemCode })
-		]);
-		if (!packageInfo) throw Error(`Package with alias=${systemCode} not found`);
-
+	async #insertContainer(system_id, containerPackageId, name, code, author, version, description, status) {
 		const container = await Repository.createObject({
-			package_id: packageInfo.package_id,
+			package_id: containerPackageId,
 			name: name,
 			object_type: "Component",
 			author: author,
 			alias: code,
 			version: version,
 			note: description,
+			status: status,
 			stereotype: CONTAINER_STEREOTYPE,
 			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
 		});
 
-		await Repository.putConnector(system.object_id, container.object_id, 'Realisation');
+		await Repository.putConnector(system_id, container.object_id, 'Realisation');
 
-		return { name: container.name, description: container.note };
+		return { name: container.name, description: container.note, container_id: container.object_id, code: container.alias };
 	}
-	async updateContainer(name, code, author, version, description) {
+
+	async setSystemContainers(systemCode, containers = []) {
+
+		/** @type {SystemDTOInternal} */
+		const systemDTO = await this.setSystem(systemCode);
+
+		const containersDiffMap = (await this.selectSystemContainers(systemCode)).reduce((cm, c) => ((cm[c.code] = { current: c }), cm), {});
+		for (const tc of containers) {
+			if (!tc.status) tc.status = DEFAULT_STATUS;
+			const containerDiff = containersDiffMap[tc.code] ?? (containersDiffMap[tc.code] = {});
+			containerDiff.target = tc;
+			containerDiff.needUpdate = containerDiff.current && !isContainersEqual(containerDiff.current, tc);
+		}
+
+		// Не удаляем, а устанавливаем статус в удаленный
+		Object.values(containersDiffMap).filter(c => !c.target && c.current.status !== REMOVED_STATUS).forEach(diff => {
+			diff.target = diff.current;
+			diff.target.status = REMOVED_STATUS;
+			diff.needUpdate = true;
+		});
+
+		/** @type {Array<{current, target, needUpdate}>} */
+		const containersToInsert = Object.values(containersDiffMap).filter(c => !c.current);
+		const containersToUpdate = Object.values(containersDiffMap).filter(c => c.needUpdate);
+
+		if (containersToInsert.length) console.log('add new containers:', containersToInsert.map(c => c.target));
+
+		const newContainers = await Promise.all(containersToInsert.map(diff => this.#insertContainer(
+			systemDTO.object_id,
+			systemDTO.containerPackageId,
+			diff.target.name,
+			diff.target.code,
+			diff.target.author,
+			diff.target.version,
+			diff.target.description,
+			diff.target.status
+		)));
+
+		if (containersToUpdate.length) console.log('update containers:', containersToUpdate);
+
+		await Promise.all(
+			containersToUpdate.map(diff => this.updateContainer(
+				diff.target.name,
+				diff.target.code,
+				diff.target.author,
+				diff.target.version,
+				diff.target.description,
+				diff.target.status))
+		);
+	}
+
+	async updateContainer(name, code, author, version, description, status) {
 		return Repository.update(t_object,
-			{ name: name, author: author, version: version, note: description },
+			{ name: name, author: author, version: version, note: description, status: status },
 			{ alias: code, stereotype: "C2" });
 	}
 

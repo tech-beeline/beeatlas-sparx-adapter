@@ -4,6 +4,7 @@ import {
     InterfacesRepository,
     SystemsRepository
 } from "../../repositories/index.mjs";
+import { REMOVED_STATUS } from "../../repositories/systems-repository/const.mjs";
 
 export const SYSTEM_LEVEL = "systems";
 export const CONTAINERS_LEVEL = "containers";
@@ -33,10 +34,7 @@ class GetSystemByCode {
         return { system: system, containersMap: containersMap };
     }
     async withInterfaces(code, addRemoved) {
-        const [{ system, containersMap }, containersRows] = await Promise.all([
-            this.withContainers(code, addRemoved),
-            systemDataService.selectSystemContainers(code)
-        ]);
+        const { system, containersMap } = await this.withContainers(code, addRemoved);
 
         const interfacesMap = {}
 
@@ -44,7 +42,9 @@ class GetSystemByCode {
             .map(code => interfaceDataService.selectContainerInterfaces(code)
                 .then(rows => {
                     rows.forEach(row => {
-                        interfacesMap[row.code] = containersMap[code].addInterface(row);
+                        if (row.status !== REMOVED_STATUS || addRemoved) {
+                            interfacesMap[row.code] = containersMap[code].addInterface(row);
+                        }
                     })
                 })));
 
