@@ -176,7 +176,7 @@ export class SystemsRepository {
 	 */
 	async selectSystems() {
 		return Repository.queryRows(SELECT_SYSTEMS)
-			.then(r => new SystemDTOInternal(r));
+			.then(rows=>rows.map(r => new SystemDTOInternal(r)));
 	}
 	/**
 	 * 

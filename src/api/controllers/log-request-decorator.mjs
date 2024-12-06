@@ -13,6 +13,5 @@ export function logRequestDecorator(fn) {
         console.info(`${request.method} ${request.path}`);
         console.log('body', request.body);
         await fn(request, response, next);
-        console.log('resultStatus', response.status);
     };
 }

@@ -183,8 +183,6 @@ export class InterfacesRepository {
                 continue;
             };
         }
-
-        NotImplemented();
     }
 
     async setInterfaceMethods(interfaceCode, methods = []) {
