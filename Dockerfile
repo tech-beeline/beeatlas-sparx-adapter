@@ -14,11 +14,11 @@ RUN npm config set strict-ssl false
 # [ ] Поменять, когда react build починится
 COPY ./src/client/deploy /usr/src/app/src/client/build
 WORKDIR /usr/src/app/src/client
-COPY ./src/client/package.json  /usr/src/app/src/client
-COPY ./src/client/package-lock.json  /usr/src/app/src/client
+#COPY ./src/client/package.json  /usr/src/app/src/client
+#COPY ./src/client/package-lock.json  /usr/src/app/src/client
 
-COPY ./src/client/src /usr/src/app/src/client/src
-COPY ./src/client/public /usr/src/app/src/client/public
+#COPY ./src/client/src /usr/src/app/src/client/src
+#COPY ./src/client/public /usr/src/app/src/client/public
 
 
 #RUN npm ci --omit=dev && \
