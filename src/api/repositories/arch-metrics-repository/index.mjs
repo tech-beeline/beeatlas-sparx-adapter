@@ -3,9 +3,9 @@ import fdmStorage from '../fdm-storage.mjs';
 
 const METRIC_QUERIES = {
     SELECT_PLUGIN_METRICS: "SELECT * FROM arch_metrics.plugin_actions",
-    INCREASE_PLUGIN_ACTIONS_COUNTER: `INSERT INTO arch_metrics.plugin_actions (version,action,plugin_user,count)
-    VALUES($1, $2, $3, 1)
-    ON CONFLICT (version,action,plugin_user)
+    INCREASE_PLUGIN_ACTIONS_COUNTER: `INSERT INTO arch_metrics.plugin_actions (version,action,plugin_user,template,count)
+    VALUES($1, $2, $3, $4, 1)
+    ON CONFLICT (version,action,template,plugin_user)
     DO UPDATE SET count=arch_metrics.plugin_actions.count + 1`,
     LOG_TC_CHANGE: `INSERT INTO arch_metrics.tc_change_log (code,name, change_date) VALUES($1,$2,$3)`,
     SELECT_SYSTEM_ASSESSMENTS: `SELECT 
@@ -46,23 +46,23 @@ WHERE system_code=$1`,
 
 export class ArchMetricsRepository {
 
-    static async onPluginAction(version, action, user) {
+    static async onPluginAction(version, action, user, template) {
         try {
-            await fdmStorage.query(METRIC_QUERIES.INCREASE_PLUGIN_ACTIONS_COUNTER, version, action, user);
+            await fdmStorage.query(METRIC_QUERIES.INCREASE_PLUGIN_ACTIONS_COUNTER, version, action, user, template);
         } catch (error) {
             console.error(error);
         }
     }
     /**
      * 
-     * @param {(version,action,user,count)=>void} action_cb 
+     * @param {(version,action,user,template,count)=>void} action_cb 
      * @param {(users)=>void} users_cb
      */
     static async initPluginActionCounter(action_cb) {
         try {
             console.info('Init C4 plugin counters: start')
             for (const row of await fdmStorage.query(METRIC_QUERIES.SELECT_PLUGIN_METRICS)) {
-                action_cb(row.version, row.action, row.plugin_user ?? "FDM API", Number(row.count));
+                action_cb(row.version, row.action, row.plugin_user ?? "FDM API", row.template, Number(row.count));
             }
             console.info('Init C4 plugin counters: done')
         } catch (error) {

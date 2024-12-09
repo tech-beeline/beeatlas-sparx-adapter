@@ -16,6 +16,8 @@ const LEVEL_OFFSET = 50;
 const X__OFFSET = 50;
 
 const SELECT_BY_CODE = `${SELECT_ALL_BC} where code=$1`;
+const SELECT_BY_CODE_LIST = `${SELECT_ALL_BC} where code=ANY($1)`;
+
 const SEARCH_BY_NAME = `${SELECT_ALL_BC} WHERE name LIKE ANY ($1)`
 const SELECT_CHILDREN_BY_NAME = `${SELECT_ALL_BC} where parent=$1`;
 const throwCapabilityNotFound = (code) => {
@@ -43,6 +45,11 @@ export class CapabilitiesRepository {
 	async selectByCode(code) {
 		const data = await Repository.queryOne(SELECT_BY_CODE, [code]); // [ ] Добавить проверку на уникальность кода ( alias )
 		return data ? new CapabilityDTOInternal(data) : null;
+	}
+
+	async selectCapabilityList(codes) {
+		const rows = await Repository.queryRows(SELECT_BY_CODE_LIST, [codes]);
+		return rows.map(r => new CapabilityDTOInternal(r));
 	}
 	async selectChildren(code) {
 		return Repository.queryRows(SELECT_CHILDREN_BY_NAME, [code]);
@@ -108,7 +115,7 @@ export class CapabilitiesRepository {
 			const r = this.calcPosition(child, l, level + 1);
 			l = r + X__OFFSET;
 		}
-		capability.left = Math.floor( (l - X__OFFSET - DEFAULT_ELEMENT_WIDTH + left) / 2);
+		capability.left = Math.floor((l - X__OFFSET - DEFAULT_ELEMENT_WIDTH + left) / 2);
 		capability.right = capability.left + DEFAULT_ELEMENT_WIDTH;
 		return l - X__OFFSET;
 	}
@@ -197,7 +204,7 @@ export class CapabilitiesRepository {
 		)
 
 		await Promise.all(Object.values(diagramTree).map(c => Repository.queryOne(INSERT_DIAGRAM_LINK, [domainDiagram.diagram_id, c.connector_id])));
-		return this.selectByCode( code );
+		return this.selectByCode(code);
 	}
 
 	async setCapabilityOwner(code, owner) {

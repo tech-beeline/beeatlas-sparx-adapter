@@ -7,7 +7,8 @@ const systemDataService = new SystemsRepository();
 
 
 export const GET_ALL_SYSTEMS_HANDLERS = {
-
+    systems:{
+    },
     containers: async (addRemoved) => {
         const [systemsRows, containersRows] = await Promise.all([
             systemDataService.selectSystems(),

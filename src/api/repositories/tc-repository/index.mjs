@@ -1,5 +1,5 @@
-import { NotImplemented } from '../../../utils/errors.mjs';
-import { SystemsRepository } from '../index.mjs';
+import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
+import { CapabilitiesRepository, SystemsRepository } from '../index.mjs';
 import Repository, { ARCHIMATE_AGGREGATION, t_diagramobjects, t_object, t_package, t_xref } from '../sparx-ea-repository/index.mjs'
 
 import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
@@ -7,6 +7,7 @@ import { TC_PACKAGE_NAME, TC_TAGS_NAMES, TECH_CAPABILITY_STEREOTYPE } from './co
 import { SELECT_BC_FOR_TC, SELECT_PARENT_BC, prepareBcRealizationDiagram, DELETE_BC_TC_LINKS, DELETE_BC_TC_CONNECTOR } from './tc-parents-queries.mjs';
 import { SELECT_ALL_TEC, SELECT_TC_BY_CODE } from './tc-queries.mjs';
 
+const capabilityRepository = new CapabilitiesRepository();
 
 export class TechnicalCapabilitiesRepository {
 	/**
@@ -80,6 +81,7 @@ export class TechnicalCapabilitiesRepository {
 		const tc_object = await Repository.first(t_object, { alias: tcCode, stereotype: TECH_CAPABILITY_STEREOTYPE }) // [ ] Можно оптимизировать, если перейти на внутренние идентификаторы sparx
 		if (!tc_object) throw Error(`TC with code ${tcCode} not found`);
 
+
 		for (const bcCode of bcCodes) {
 			/** @type {t_object} */
 			const bc_object = await Repository.first(t_object, { alias: bcCode });
@@ -105,6 +107,13 @@ export class TechnicalCapabilitiesRepository {
 		const currentBCs = (await this.selectParentBCForTC(tcCode)).map(v => v.bc_code)
 		const newParents = bcCodeList.filter(bc => !currentBCs.includes(bc));
 		const parentsForRemove = currentBCs.filter(bc => !bcCodeList.includes(bc));
+
+		const parentBCList  = await capabilityRepository.selectCapabilityList( bcCodeList );
+		// check all parents exists
+		for( const code of bcCodeList){
+			if( ! parentBCList.find(c=>c.code===code)) throw NotFound(`BC with code = '${code}' not found`);
+		}
+
 		return Promise.all([
 			this.setParentsBCForTC(tcCode, newParents),
 			this.removeParentsBCForTC(tcCode, parentsForRemove)

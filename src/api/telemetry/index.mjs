@@ -4,6 +4,7 @@ import {
     httpRequestDurationMicroseconds,
     httpRequestMax
 } from './rest-api-telemetry.mjs';
+
 import {
     C4PluginUsersCounter,
     C4StartCounter

@@ -114,7 +114,8 @@ WHERE connector_id IN (
 		JOIN t_object tc ON tc.alias=$1 AND tc.object_id=c.end_object_id
 		JOIN t_object bc ON bc.alias = ANY($2) AND bc.object_id=c.start_object_id
 	WHERE c.stereotype='ArchiMate_Aggregation')
-`
+`;
+
 
 /**
  * 
