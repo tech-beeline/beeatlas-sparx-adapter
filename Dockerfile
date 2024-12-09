@@ -34,7 +34,7 @@ WORKDIR /usr/src/app/src/client
 WORKDIR /usr/src/app
 COPY package.json /usr/src/app
 COPY package-lock.json /usr/src/app
-RUN npm cache clean --force && npm install --omit=dev && mv node_modules ../ && \
+RUN npm remove node_modules && npm cache clean --force && npm install --omit=dev && mv node_modules ../ && \
     rm -fr /tmp/* && \
     npm cache clean --force
 
