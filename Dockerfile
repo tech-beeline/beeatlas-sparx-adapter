@@ -1,4 +1,4 @@
-FROM harbor.vimpelcom.ru/dockerhub/library/node@sha256:d234c1b72dedaa91b896e86d435425e6738a8dd1338ad118ebb0e0dc551f3872
+FROM harbor.vimpelcom.ru/dockerhub/library/node@sha256:0952d404a44c0c1f10423b7f9a7a373427a2fca5704afe2d46fe152524b8a403
 WORKDIR /usr/src/app
 #COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
 RUN npm config set registry https://nexus.vimpelcom.ru/repository/npm-all/
