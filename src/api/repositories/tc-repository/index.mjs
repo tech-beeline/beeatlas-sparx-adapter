@@ -104,18 +104,18 @@ export class TechnicalCapabilitiesRepository {
 	}
 
 	async updateParentBcForTC(tcCode, bcCodeList) {
-		const currentBCs = (await this.selectParentBCForTC(tcCode)).map(v => v.bc_code)
-		const newParents = bcCodeList.filter(bc => !currentBCs.includes(bc));
-		const parentsForRemove = currentBCs.filter(bc => !bcCodeList.includes(bc));
+		const currentParentCodes = (await this.selectParentBCForTC(tcCode)).map(v => v.bc_code)
+		const newParentCodes = bcCodeList.filter(bc => !currentParentCodes.includes(bc));
+		const parentsForRemove = currentParentCodes.filter(bc => !bcCodeList.includes(bc));
 
-		const parentBCList  = await capabilityRepository.selectCapabilityList( bcCodeList );
+		const parentBCList  = await capabilityRepository.selectCapabilityList( newParentCodes );
 		// check all parents exists
-		for( const code of bcCodeList){
+		for( const code of newParentCodes){
 			if( ! parentBCList.find(c=>c.code===code)) throw NotFound(`BC with code = '${code}' not found`);
 		}
 
 		return Promise.all([
-			this.setParentsBCForTC(tcCode, newParents),
+			this.setParentsBCForTC(tcCode, newParentCodes),
 			this.removeParentsBCForTC(tcCode, parentsForRemove)
 		])
 	}
