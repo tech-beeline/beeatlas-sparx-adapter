@@ -20,7 +20,8 @@ COPY ./src/client/package-lock.json  /usr/src/app/src/client
 COPY ./src/client/src /usr/src/app/src/client/src
 COPY ./src/client/public /usr/src/app/src/client/public
 
-RUN npm run build && \
+RUN npm install --omit=dev && \
+    npm run build && \
     rm -r node_modules && \
     rm -rf /var/cache/apk/* && \
     rm -fr /tmp/* && \
