@@ -184,9 +184,11 @@ export class SystemsRepository {
 	 */
 	async selectSystemByCode(code) {
 		const rows = await Repository.queryRows(`${SELECT_SYSTEMS} WHERE code=$1`, [code]);
+		/* [ ] Изменить обработку множественных записей с одним кодом (несколько папок)
 		if (rows.length > 1) {
 			throw Error(`Too many system with code="${code}"`);
 		}
+			*/
 		return rows.length ? new SystemDTOInternal(rows[0]) : null;
 	}
 

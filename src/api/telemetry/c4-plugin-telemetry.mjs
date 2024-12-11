@@ -7,7 +7,7 @@ const PLUGIN_USERS = {}
 export const C4StartCounter = new client.Counter({
     name: 'vscode_c4_plugin_start',
     help: 'Количество запусков плагина',
-    labelNames: ['version', 'action', 'user', 'template']
+    labelNames: ['version', 'action', 'user', 'template_id']
 });
 
 export const C4PluginUsersCounter = new client.Counter({
@@ -22,16 +22,16 @@ export function processPluginUser(user) {
     C4PluginUsersCounter.inc();
 }
 
-export function registerC4PluginStart(version, action = 'start', user, template) {
-    ArchMetricsRepository.onPluginAction(version, action, user, template); // Асинхронно обновляем базу данных метрик
-    C4StartCounter.inc({ version: version, action: action, user: user, template: template });
+export function registerC4PluginStart(version, action = 'start', user, template_id) {
+    ArchMetricsRepository.onPluginAction(version, action, user, template_id); // Асинхронно обновляем базу данных метрик
+    C4StartCounter.inc({ version: version, action: action, user: user, template_id: template_id });
     processPluginUser(user);
 }
 
 
 bootstrapAPI.addTask(() => {
-    ArchMetricsRepository.initPluginActionCounter((version, action, user, template, value) => {
-        C4StartCounter.inc({ version: version, action: action, user: user, template: template }, value);
+    ArchMetricsRepository.initPluginActionCounter((version, action, user, template_id, value) => {
+        C4StartCounter.inc({ version: version, action: action, user: user, template_id: template_id }, value);
         processPluginUser(user);
     });
 });

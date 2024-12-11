@@ -3,9 +3,9 @@ import fdmStorage from '../fdm-storage.mjs';
 
 const METRIC_QUERIES = {
     SELECT_PLUGIN_METRICS: "SELECT * FROM arch_metrics.plugin_actions",
-    INCREASE_PLUGIN_ACTIONS_COUNTER: `INSERT INTO arch_metrics.plugin_actions (version,action,plugin_user,template,count)
+    INCREASE_PLUGIN_ACTIONS_COUNTER: `INSERT INTO arch_metrics.plugin_actions (version,action,plugin_user,template_id,count)
     VALUES($1, $2, $3, $4, 1)
-    ON CONFLICT (version,action,template,plugin_user)
+    ON CONFLICT (version,action,template_id,plugin_user)
     DO UPDATE SET count=arch_metrics.plugin_actions.count + 1`,
     LOG_TC_CHANGE: `INSERT INTO arch_metrics.tc_change_log (code,name, change_date) VALUES($1,$2,$3)`,
     SELECT_SYSTEM_ASSESSMENTS: `SELECT 
@@ -46,9 +46,9 @@ WHERE system_code=$1`,
 
 export class ArchMetricsRepository {
 
-    static async onPluginAction(version, action, user, template) {
+    static async onPluginAction(version, action, user, template_id) {
         try {
-            await fdmStorage.query(METRIC_QUERIES.INCREASE_PLUGIN_ACTIONS_COUNTER, version, action, user, template);
+            await fdmStorage.query(METRIC_QUERIES.INCREASE_PLUGIN_ACTIONS_COUNTER, version, action, user, template_id);
         } catch (error) {
             console.error(error);
         }

@@ -14,7 +14,7 @@ const INTERFACES_ROUTES = {
                     content: {
                         "application/json": {
                             examples: {
-                                "OK": { version: "1.0.0", action: "start", user: "FDM USER", template: "template" }
+                                "OK": { version: "1.0.0", action: "start", user: "FDM USER", template_id: "template_id" }
                             }
                         }
                     }

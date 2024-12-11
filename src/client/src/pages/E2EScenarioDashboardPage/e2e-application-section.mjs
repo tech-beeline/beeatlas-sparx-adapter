@@ -1,5 +1,5 @@
 import { ApiOutlined, Code, ExpandMore, KeyboardArrowDown, KeyboardArrowUp, SettingsApplications, SettingsApplicationsOutlined } from '@mui/icons-material';
-import { Accordion, AccordionDetails, AccordionSummary, Box, Collapse, IconButton, List, ListItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Paper } from '@mui/material';
 import React, { useState } from 'react';
 import { TreeItem, TreeView } from '@mui/x-tree-view';
 

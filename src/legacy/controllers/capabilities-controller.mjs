@@ -80,7 +80,7 @@ class CapabilitiesController {
             }
             let cap = await capabilitiesService.getCapabilityByCode(request.params.code);
             if (!cap) {
-                return response.status(404).send(`Capability with code ${request.params.code} not found`);
+                return response.status(404).send(`Capability with code = "${request.params.code}" not found`);
             }
             response.json(cap);
         } catch (err) {

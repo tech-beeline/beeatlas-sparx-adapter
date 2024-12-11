@@ -158,10 +158,10 @@ export function E2EProcessPage() {
 
     useEffect(() => {
         featchProcess(uid);
-    }, []);
+    }, [uid]);
     useEffect(() => {
         featchInteractions(uid);
-    }, [process]);
+    }, [uid]);
 
     const handleChangeProcess = (process) => {
         if (process) {

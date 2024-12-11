@@ -6,8 +6,7 @@ import {
     KeyboardArrowUp,
     Warning,
     WarningAmber,
-    Menu as MenuIcon,
-    Handyman,
+    Menu as MenuIcon
 } from "@mui/icons-material";
 import {
     Accordion,
@@ -15,22 +14,18 @@ import {
     AccordionSummary,
     Box,
     Button,
-    Collapse,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
     IconButton,
-    List,
-    ListItem,
     Menu,
     MenuItem,
     Paper,
     Table,
     TableBody,
     TableCell,
-    TableContainer,
     TableHead,
     TableRow,
     Typography
@@ -38,7 +33,7 @@ import {
 import { styled } from "@mui/system";
 import { TreeItem, TreeView } from "@mui/x-tree-view";
 import React, { useEffect, useState } from "react";
-import { WebEANaviLine, formatWebEALink } from "../../utils/index.mjs";
+import { formatWebEALink } from "../../utils/index.mjs";
 import { Link } from "react-router-dom";
 import { ERROR_INFO } from "./message-validate-errors.mjs";
 import webeaLogo from "../../res/images/ea-icon.ico";
