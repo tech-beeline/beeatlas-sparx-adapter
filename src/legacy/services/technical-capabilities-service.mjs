@@ -1,4 +1,6 @@
 import TechnicalCapability from "../model/technical-capability-model-legacy.mjs";
+import { TechnicalCapabilitiesRepository } from '../../api/repositories/index.mjs'
+
 import Repository, {
 	ARCHIMATE_AGGREGATION,
 	t_object,
@@ -26,6 +28,8 @@ const STEREOTYPE_MAP = {
 	type: (s) => STEREOTYPE_MAP[s] ?? 'Unknown'
 }
 
+const tcDataService = new TechnicalCapabilitiesRepository();
+
 class TechnicalCapabilityService {
 	static app_package;
 	async #readTags(map) {
@@ -37,10 +41,9 @@ class TechnicalCapabilityService {
 		})
 	}
 	async getTechnicalCapabilities() {
-		const tc_map = (await Repository.queryRows(TC_QUERY.ALL_TECH_CAPABILITITES_QUERY))
+		const tc_map = (await tcDataService.selectTCList())
 			.reduce((acc, v) =>
 				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.bc_code), acc), {})
-		await this.#readTags(tc_map);
 
 		return Object.values(tc_map);
 	}
@@ -53,11 +56,11 @@ class TechnicalCapabilityService {
 	async getTechnicalCapability({ code } = {}) {
 		if (!code) throw BadRequest('Не указан code для получения capability');
 
-		const tc_map = (await Repository.queryRows({ text: TC_QUERY.TECH_CAPABILITITY_QUERY, values: [code] }))
+		const tc_map = (await tcDataService.selectTCByCode(code))
 			.reduce((acc, v) =>
-				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.bc_code), acc), {})
+				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.parent_code), acc), {})
 
-		await this.#readTags(tc_map);
+		//await this.#readTags(tc_map);
 		return tc_map[code];
 	}
 	/**

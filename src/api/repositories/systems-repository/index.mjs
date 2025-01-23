@@ -27,71 +27,96 @@ FROM cte_systems sys
 	LEFT JOIN cte_realization c ON c.start_object_id=sys.object_id AND c.object_type='Component' AND c.alias is not null and c.stereotype='C2'
 	LEFT JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface' AND it.alias is not null AND it.alias <> ''`
 
-const SELECT_SYSTEM_CAPABILITIES = `WITH RECURSIVE cte_sys AS(
-	SELECT object_id
-	FROM t_object sys
-	WHERE sys.alias=$1 and sys.object_type='Component'
-),
-cte_sys_pack AS( 
-	SELECT
-		rp.package_id
-	FROM t_object ro 
-		JOIN t_package rp ON rp.ea_guid=ro.ea_guid
-	WHERE ro.alias=$1 AND object_type='Package'
-	UNION ALL
-	SELECT c.package_id
-	FROM cte_sys_pack p
-		JOIN t_package c ON c.parent_id=p.package_id 
-),
-cte_realization AS ( 
-	SELECT DISTINCT r.start_object_id, c.*
-    FROM t_connector r 
-        JOIN t_object c ON  c.object_id=r.end_object_id
-    WHERE r.connector_type='Realisation'),
-cte_tc as (
-	SELECT DISTINCT
-		tc.name, tc.object_id, tc.alias, tc.stereotype
-	FROM cte_sys sys
-		JOIN t_connector irel ON irel.start_object_id=sys.object_id
-		JOIN t_object it ON it.object_id=irel.end_object_id AND it.object_type='Interface'
-		JOIN t_connector srel ON srel.start_object_id=it.object_id
-		JOIN t_object sr ON sr.object_id=srel.end_object_id
-		JOIN t_connector tcr ON tcr.start_object_id=sr.object_id
-		JOIN t_object tc ON tc.object_id=tcr.end_object_id AND tc.stereotype='ArchiMate_TechnicalCapability'
-	UNION DISTINCT
-	SELECT tc.name, tc.object_id, tc.alias as code, tc.stereotype
-	FROM cte_sys sys
-		JOIN cte_realization c ON c.start_object_id=sys.object_id AND c.object_type='Component' AND c.alias is not null and c.stereotype='C2'
-		JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface' AND it.alias is not null AND it.alias <> ''
-		JOIN cte_realization tc ON tc.start_object_id=it.object_id AND tc.stereotype='ArchiMate_TechnicalCapability' AND tc.alias is not null AND tc.alias <> ''
-	UNION DISTINCT
-	SELECT tc.name, tc.object_id, tc.alias, tc.stereotype
-	FROM cte_sys_pack p
-		JOIN t_object tc ON tc.package_id=p.package_id AND tc.stereotype='ArchiMate_TechnicalCapability' AND tc.alias is not null AND tc.alias <> ''
-),
-cte_aggregation as (
-	SELECT  
-		c.object_id as child_id, p.object_id as parent_id
-	FROM  t_object c
-		JOIN t_package cp ON cp.ea_guid=c.ea_guid
-		JOIN t_package pp on pp.package_id=cp.parent_id
-		JOIN t_object p ON p.ea_guid=pp.ea_guid AND p.alias is not null
-	WHERE c.alias like 'DMN%' or c.alias like 'GRP%'
+const SELECT_SYSTEM_CAPABILITIES = `
+WITH RECURSIVE cte_bc_pkg AS (
+	SELECT 
+		p.package_id, 
+		p.name, 
+		o.alias as code, 
+		NULL::text as parent_code, 
+		o.object_id,
+		o.author,
+		o.status,
+		o.version,
+		o.note as description
+	FROM t_object o
+		JOIN t_package p ON p.ea_guid=o.ea_guid
+	WHERE o.stereotype='BusinessCapabilitiesCatalogue'
 	UNION
-	SELECT end_object_id, start_object_id
-	FROM t_connector
-	WHERE stereotype='ArchiMate_Aggregation'
-),
-cte_capability AS (
-	SELECT tc.name as name, tc.object_id, tc.object_id as tc_id, tc.object_id as child_id, tc.alias as code, tc.stereotype--, tc.name::text as context
-	FROM cte_tc tc 
+	SELECT 
+		p.package_id, p.name, o.alias, parent.code, o.object_id,
+		o.author,
+		o.status,
+		o.version,
+		o.note as description
+	FROM cte_bc_pkg parent
+		JOIN t_package p ON p.parent_id=parent.package_Id
+		JOIN t_object o ON o.ea_guid=p.ea_guid	
+), cte_tbc AS (
+	SELECT 
+		package_id, name, code, code as domain_code, parent_code, object_id, 'Domain' as type,
+		package_id as cap_package_id,
+		author,
+		version,
+		status
+	FROM cte_bc_pkg WHERE code IS NOT NULL
+	UNION
+	SELECT 
+		p.package_id, 
+		bc.name, 
+		bc.alias, 
+		p.domain_code, 
+		p.code, 
+		bc.object_id, 
+		bc.stereotype::text,
+		bc.package_id,
+		bc.author,
+		bc.version,
+		bc.status
+	FROM cte_tbc p
+		JOIN t_diagram d ON d.package_id=p.package_id
+		JOIN t_diagramlinks l ON l.diagramid=d.diagram_id
+		JOIN t_connector c ON c.connector_id=l.connectorid 
+			AND c.stereotype IN ('ArchiMate_Aggregation', 'ArchiMate_Composition')
+			AND c.start_object_id=p.object_id
+		JOIN t_object bc ON bc.object_id=c.end_object_id 
+			AND bc.stereotype IN ('ArchiMate_Capability', 'ArchiMate_TechnicalCapability')
+), cte_sys_package AS (
+	SELECT 
+		p.package_id, p.name, o.alias as code
+	FROM t_object o
+		JOIN t_package p ON p.ea_guid=o.ea_guid
+	WHERE o.stereotype='TechCapabilitiesCatalogue'
+	UNION
+	SELECT 
+		p.package_id, p.name, coalesce( o.alias, parent.code)
+	FROM cte_sys_package parent
+		JOIN t_package p ON p.parent_id=parent.package_Id
+		JOIN t_object o ON o.ea_guid=p.ea_guid	
+), cte_tree AS (
+	SELECT
+		sys.code as sys_code, 
+		tc.code, 
+		tc.parent_code,
+		tc.name,
+		type
+	FROM cte_tbc tc
+		JOIN cte_sys_package sys ON sys.package_id=tc.cap_package_id AND sys.code IS NOT NULL
+	WHERE type='ArchiMate_TechnicalCapability'
 	UNION DISTINCT
-	SELECT bc.name, bc.object_id, ch.tc_id, ch.object_id, bc.alias, coalesce( bc.stereotype, bc.object_type )--, ch.context || '/' || bc.name
-	FROM cte_capability ch
-		JOIN cte_aggregation rel ON rel.child_id=ch.object_id 
-		JOIN t_object bc ON bc.object_id=rel.parent_id AND (bc.stereotype='ArchiMate_Capability' OR bc.object_type='Package')
+	SELECT 
+		ch.sys_code,
+		tc.code,
+		tc.parent_code,
+		tc.name,
+		tc.type
+	FROM cte_tree ch
+		JOIN cte_tbc tc ON tc.code=ch.parent_code
 )
-SELECT distinct name, code, object_id, child_id,stereotype FROM cte_capability`;
+SELECT * 
+FROM cte_tree
+WHERE sys_code=$1
+`;
 
 const SELECT_SYSTEM_PARTICIPITION = `WITH RECURSIVE
 cte_sys_catalog AS (

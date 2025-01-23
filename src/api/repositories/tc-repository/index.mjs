@@ -12,18 +12,18 @@ const capabilityRepository = new CapabilitiesRepository();
 export class TechnicalCapabilitiesRepository {
 	/**
 	 * 
-	 * @returns {Promise<Array<{ sys_code, sys_name, code, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
+	 * @returns {Promise<Array<{ sys_code, code, paretn_code, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
 	 */
 	async selectTCList() {
-		return Repository.queryRows(SELECT_ALL_TEC, [SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue.ea_guid])
+		return Repository.queryRows(SELECT_ALL_TEC)
 	}
 
 	/**
 	 * 
-	 * @returns {Promise<Array<{ sys_code, sys_name, code, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
+	 * @returns {Promise<Array<{ sys_code, code, parent_code, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
 	 */
 	async selectTCByCode(tcCode) {
-		return Repository.queryOne(SELECT_TC_BY_CODE, [SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue.ea_guid, tcCode])
+		return Repository.queryRows(SELECT_TC_BY_CODE, [tcCode]);
 	}
 
 	/**
@@ -108,10 +108,10 @@ export class TechnicalCapabilitiesRepository {
 		const newParentCodes = bcCodeList.filter(bc => !currentParentCodes.includes(bc));
 		const parentsForRemove = currentParentCodes.filter(bc => !bcCodeList.includes(bc));
 
-		const parentBCList  = await capabilityRepository.selectCapabilityList( newParentCodes );
+		const parentBCList = await capabilityRepository.selectCapabilityList(newParentCodes);
 		// check all parents exists
-		for( const code of newParentCodes){
-			if( ! parentBCList.find(c=>c.code===code)) throw NotFound(`BC with code = '${code}' not found`);
+		for (const code of newParentCodes) {
+			if (!parentBCList.find(c => c.code === code)) throw NotFound(`BC with code = '${code}' not found`);
 		}
 
 		return Promise.all([

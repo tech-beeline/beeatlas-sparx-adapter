@@ -15,7 +15,7 @@ function CapabilityItem({ capability }) {
         : capability.type === "Capability" ? <CorporateFare /> : <SmartButton />;
     return (
         <TreeItem nodeId={capability.code} label={<>{icon}{`${capability.code} ${capability.name}`}</>}>
-            {capability.children?.map((c, index) => <CapabilityItem capability={c} key={index} />)}
+            {capability.children?.sort((a, b) => a.code < b.code ? -1 : a.code > b.code ? 1 : 0).map((c, index) => <CapabilityItem capability={c} key={index} />)}
         </TreeItem>)
 }
 
@@ -47,7 +47,7 @@ export function SystemCapabilitiesAccordion({ system }) {
             capabilityTree.children && capabilityTree.children.length ?
                 <AccordionDetails>
                     <TreeView component={Paper} defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
-                        {capabilityTree.children?.map((c, i) => <CapabilityItem key={i} capability={c} />)}
+                        {capabilityTree.children?.sort((a, b) => a.code < b.code ? -1 : a.code > b.code ? 1 : 0).map((c, i) => <CapabilityItem key={i} capability={c} />)}
                     </TreeView>
                 </AccordionDetails> :
                 <AccordionDetails>

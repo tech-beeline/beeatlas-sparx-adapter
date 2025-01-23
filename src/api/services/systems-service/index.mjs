@@ -18,7 +18,8 @@ import GetSystemByCode, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYS
 const STEREOTYPE_MAP = {
     ArchiMate_TechnicalCapability: "TechnicalCapability",
     ArchiMate_Capability: "Capability",
-    Package: "Domain"
+    Package: "Domain",
+    Domain: "Domain"
 }
 
 const interfacesRepository = new InterfacesRepository();
@@ -181,22 +182,25 @@ export class SystemService {
     async getPurpose(systemCode) {
         const rows = await systemsRepository.selectSystemCapabilities(systemCode);
 
+        console.log(rows);
+
         const capabilityMap = {};
 
         for (const row of rows) {
-            const type = STEREOTYPE_MAP[row.stereotype];
-            const capability = Object.assign(capabilityMap[row.object_id] ?? (capabilityMap[row.object_id] = {}),
+            const type = STEREOTYPE_MAP[row.type];
+            const capability = Object.assign(
+                capabilityMap[row.code] ?? (capabilityMap[row.code] = {}),
                 {
                     name: row.name, code: row.code, type: type,
                     href: buildHREF(`${type === 'TechnicalCapability' ? TC_LIST_RESOURCE : CAPABILITY_LIST_RESOURCE}/${row.code}`)
                 })
-            if (row.child_id == row.object_id)
+            if (!row.parent_code)
                 continue;
-            const child = capabilityMap[row.child_id] ?? (capabilityMap[row.child_id] = {});
-            (capability.children ?? (capability.children = [])).push(child);
+            const parent = capabilityMap[row.parent_code] ?? (capabilityMap[row.parent_code] = {});
+            (parent.children ?? (parent.children = [])).push(capability);
         }
 
-        return Object.values(capabilityMap).find(r => r.code = 'GRP.000') ?? { children: [] }
+        return capabilityMap["GRP.000"] ?? {};
     }
     async getE2EParticipition(systemCode) {
         return (await systemsRepository.selectSystemE2EParticipition(systemCode))

@@ -11,25 +11,24 @@ export class TechnicalCapabiliiesService {
         this.getByCode = this.getByCode.bind(this);
     }
     async getAll() {
-        const [tc_rows, bc_rows] = await Promise.all([
-            tcDataService.selectTCList(),
-            tcDataService.selectParentBC()
-        ]);
-        const tc_map = tc_rows.reduce((acc, v) => Object.assign(acc, { [v.code]: new TechnicalCapability(v) }), {})
-        bc_rows.forEach(bc => tc_map[bc.tc_code]?.addParent({ code: bc.bc_code, name: bc.bc_name }))
+        const tc_rows = await tcDataService.selectTCList();
+        const tc_map = {};
+
+        for (const row of tc_rows) {
+            const tc = tc_map[row.code] ?? (tc_map[row.code] = new TechnicalCapability(row));
+            tc.addParent({ code: row.parent_code });
+        }
+
         return Object.values(tc_map);
     }
-    
+
     async getByCode(code) {
-        const [tc_row, bc_rows] = await Promise.all([
-            tcDataService.selectTCByCode(code),
-            tcDataService.selectParentBCForTC(code)
-        ]);
+        const tc_rows = await tcDataService.selectTCByCode(code);
 
-        if (!tc_row) throw NotFound(`TC with code="${code}" not found`);
+        if (!tc_rows.length) throw NotFound(`TC with code="${code}" not found`);
 
-        const tc = new TechnicalCapability(tc_row);
-        bc_rows.forEach(bc => tc.addParent({ code: bc.bc_code, name: bc.bc_name }))
+        const tc = new TechnicalCapability(tc_rows[0]);
+        tc_rows.forEach(bc => tc.addParent({ code: bc.parent_code }));
         return tc;
     }
     /**
