@@ -11,10 +11,11 @@ import interfaceServiceSpec from './interfaces-service-spec.mjs'
 import systemsServiceSpec from './systems-service-spec.mjs'
 import processServiceSpec from './e2e/index.mjs'
 import monitoringServiceSpec from './monitoring-source-spec.mjs'
-import observabilityServiceSpec from './observability-service-spec.mjs'
+//import observabilityServiceSpec from './observability-service-spec.mjs'
 import techRadarServiceSpec from './tech-radar-service-spec.mjs'
 import { createControllerDecorator } from '../controllers/controller-decorator.mjs';
 import scenariosServiceSpec from './scenarios-service-spec/index.mjs';
+import observabilityServiceSpec from './observability/index.mjs';
 
 
 const SUMMARY_TITLE = "Полное API управления архитектурными артефактами и представлениями"

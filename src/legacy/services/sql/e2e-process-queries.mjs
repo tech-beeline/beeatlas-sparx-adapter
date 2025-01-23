@@ -25,7 +25,8 @@ d_tree as
 	select d.e2e_id, r.child_diagram_id, d.e2e_uid, r.child_diagram_uid, r.object_id
 	from d_refs r
 		join d_tree d on d.diagram_id=r.diagram_id
-)`
+)`;
+
 const E2E_MESSAGES_QUERY = `with recursive ${DIAGRAM_TREE_CTE},
 ${applicationCatalog.APPLICATION_CATALOG_CTE}, msg as ( select distinct connector.connector_id, connector.diagramid as diagram_id, connector.seqno, 
 	connector.ea_guid as message_uid,

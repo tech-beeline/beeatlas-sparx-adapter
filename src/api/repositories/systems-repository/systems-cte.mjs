@@ -42,7 +42,7 @@ cte_landscape AS (
 		sp.package_id,
 		sys.object_id
 	FROM cte_sys_catalog c
-		JOIN t_object sys ON sys.package_id=c.package_id AND sys.alias IS NOT NULL AND sys.object_type='Component'
+		JOIN t_object sys ON sys.package_id=c.package_id AND sys.alias IS NOT NULL AND sys.object_type='Component' AND sys.stereotype='softwareSystem'
 		LEFT JOIN cte_sys_package sp ON sp.code=sys.alias
 )`;
 

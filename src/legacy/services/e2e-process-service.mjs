@@ -272,7 +272,7 @@ class E2EProcessService {
             ]); // [ ] Возможно надо добавить фильтрацию при запросе, что бы не тащить все методы
 
         if (!scenario)
-            throw NotFound(`Сценарий с uid=${uid} не найден`)
+            throw NotFound(`Сценарий с uid=${uid} не найден`);
 
         const diagram_uids = diagram_rows.map(d => d.diagram_uid);
 
@@ -399,6 +399,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             applications: applications
         }
     }
+
     async getProcessSystems() {
         let processes = await this.getE2EProcesses();
         console.log(processes)

@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 
 import { MainBar, SearchBox } from "../../components/index.mjs";
 import styles from "./SystemSearchPage.module.css";
+import { SYSTEM_RESOURCE } from "../../resources/services.mjs";
 
 export function SystemSearchPage() {
     const [systems, setSystems] = React.useState(null);
@@ -21,7 +22,7 @@ export function SystemSearchPage() {
     const navigate = useNavigate();
 
     async function loadData() {
-        const response = await fetch(`/api/v1/systems`);
+        const response = await fetch(SYSTEM_RESOURCE);
         if (response.status !== 200) {
             setSystems({
                 error: `HTTP STATUS: ${response.status} ( ${response.statusText})`,
@@ -38,6 +39,14 @@ export function SystemSearchPage() {
     useEffect(() => {
         loadData();
     }, []);
+
+    console.log( filter.length > 0
+        ? systems.filter(
+              (s) =>
+                  s.code.includes(filter) ||
+                  s.name.includes(filter)
+          )
+        : systems);
 
     return systems ? (
         systems.error ? (
@@ -70,10 +79,10 @@ export function SystemSearchPage() {
                                           s.name.includes(filter)
                                   )
                                 : systems
-                            ).map((s) => (
+                            ).map((s,i) => (
                                 <TableRow
                                     className={styles.pointer}
-                                    key={s.code}
+                                    key={i}
                                     hover
                                     onClick={() => {
                                         navigate(`/systems/${s.code}`);

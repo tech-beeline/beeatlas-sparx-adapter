@@ -19,6 +19,7 @@ export class TechnicalCapabiliiesService {
         bc_rows.forEach(bc => tc_map[bc.tc_code]?.addParent({ code: bc.bc_code, name: bc.bc_name }))
         return Object.values(tc_map);
     }
+    
     async getByCode(code) {
         const [tc_row, bc_rows] = await Promise.all([
             tcDataService.selectTCByCode(code),

@@ -28,9 +28,12 @@ export function SystemPage() {
     const [dashboardDialogOpen, setDashboardDialogOpen] = useState(false);
     const navigate = useNavigate();
 
-    console.log(system);
+    console.log(code);
 
     async function loadData(systemCode = code) {
+
+        console.log( systemCode);
+
         const response = await fetch(apiSystemsPath(code));
         if (response.status !== 200) {
             setSystem({
@@ -40,17 +43,21 @@ export function SystemPage() {
             return;
         }
 
-        setSystem(await response.json());
+        const s = await response.json();
+        console.log(s);
+
+        setSystem(s);
     }
 
     const handleSelectSystem = (sys) => {
+        console.log(sys);
         navigate(`/systems/${sys.code}`);
-        loadData(sys.code);
+        //loadData(sys.code);
     };
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [code]);
 
     const contextMenu = (
         <List>
