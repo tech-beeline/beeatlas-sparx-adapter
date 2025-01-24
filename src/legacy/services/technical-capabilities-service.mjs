@@ -43,7 +43,7 @@ class TechnicalCapabilityService {
 	async getTechnicalCapabilities() {
 		const tc_map = (await tcDataService.selectTCList())
 			.reduce((acc, v) =>
-				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.bc_code), acc), {})
+				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.parent_code), acc), {})
 
 		return Object.values(tc_map);
 	}

@@ -12,7 +12,7 @@ const capabilityRepository = new CapabilitiesRepository();
 export class TechnicalCapabilitiesRepository {
 	/**
 	 * 
-	 * @returns {Promise<Array<{ sys_code, code, paretn_code, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
+	 * @returns {Promise<Array<{ sys_code, code, parent_code, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
 	 */
 	async selectTCList() {
 		return Repository.queryRows(SELECT_ALL_TEC)
