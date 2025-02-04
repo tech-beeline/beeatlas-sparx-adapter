@@ -1,4 +1,4 @@
-import { GrafanaApiSource, formatQuery } from "./common.mjs";
+import { GrafanaApiSource, formatQuery } from "../../../../../api/services/observability-service/dashboard/sources/common.mjs";
 
 export const PROMETHEUS_SOURCE_TAG = 'prometheus';
 export const PROMETHEUS_API_SUM_TAG = 'prometheus-api-sum';

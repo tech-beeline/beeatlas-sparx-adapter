@@ -25,6 +25,7 @@ export const OPENSEARCH_API_QUERY_TOTAL_TAG = 'opensearch-api-query-total';
 export const OPENSEARCH_REQUEST_TIME_FIELD_TAG = 'opensearch-request-time-field';
 
 export class OpensearchApiSource extends GrafanaApiSource {
+    
     constructor(src) {
         super(src);
         this.datasource = {

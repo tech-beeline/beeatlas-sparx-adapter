@@ -15,12 +15,12 @@ const LEGEND_PANEL = (seq, title = "Легенда панелей монитор
         mode: "absolute",
         steps: [
           {
-            "color": "green",
-            "value": null
+            color: "green",
+            value: null
           },
           {
-            "color": "red",
-            "value": 1
+            color: "red",
+            value: 1
           }
         ]
       },
@@ -39,7 +39,7 @@ const LEGEND_PANEL = (seq, title = "Легенда панелей монитор
         "lastNotNull"
       ],
       fields: "",
-      limit: 6
+      limit: 7
     },
     orientation: "auto",
     textMode: "value_and_name",

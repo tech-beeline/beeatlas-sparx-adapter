@@ -325,10 +325,12 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
         const useSystem = id => usedSystems[id] ?? (usedSystems[id] = systems[id]);
 
         for (const m of messages) {
-            if (m.server = useSystem(m.server_id)) {
+            if ((m.server = useSystem(m.server_id)) && m.operation_guid) {
                 const method = methods[m.operation_guid];
-                
-                if (method) {
+                if (!method) {
+                    const error_message = `Не найден метод с guid=${m.operation_guid}. Сообщение ${m.name}, Диаграмма ${m.diagram}`;
+                    onError(m, error_message)
+                } else {
                     const api = m.server.interfaces[method.api_guid] ?? (m.server.interfaces[method.api_guid] =
                     {
                         name: method.api,
@@ -341,6 +343,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
                     m.method = method;
                 }
             }
+
             m.client = useSystem(m.client_id);
             if (m.ia_path) {
                 if (m.ia_path.endsWith('?ref_type=heads')) m.ia_path = m.ia_path.slice(0, -15)

@@ -1,7 +1,7 @@
 import { NotImplemented } from "../../../../utils/errors.mjs";
 import LEGEND_PANEL from "./legend.mjs";
 import { expr } from "./primitive-panels.mjs";
-import { OpensearchApiSource } from "./source-options/opensearch.mjs";
+import { OpensearchApiSource } from "../../../../api/services/observability-service/dashboard/sources/opensearch.mjs";
 import { PrometheusApiSource } from "./source-options/prometheus.mjs";
 
 
@@ -138,7 +138,7 @@ export default function createInteractionStatPanel(interaction, seq, yPos = 13) 
                         "type": "special"
                     }
                 ],
-                "thresholds": {
+                thresholds: {
                     "mode": "absolute",
                     "steps": [
                         {
@@ -180,9 +180,13 @@ export default function createInteractionStatPanel(interaction, seq, yPos = 13) 
             grafanaSource.percentileTarget(method, uri, 95),
             grafanaSource.totalCountTarget(method, uri),
             grafanaSource.errorCountTarget(method, uri),
-            expr("$A75 * 1", "Latency75"), expr("$A95 * 1", "Latency95"),
-            expr(sla.latency * 1000 + '/1000', "LatencyThreshold1"), expr(sla.errorRate.toString(), "ErrorThreshold1"), expr(sla.rps.toString(), "TPSThreshold1"),
-            expr("$C/$B * 100", "Error"), expr("$B / (60 * 5)", "TPS"),
+            expr("$A75 * 1", "Latency75"), 
+            expr("$A95 * 1", "Latency95"),
+            expr(sla.latency * 1000 + '/1000', "LatencyThreshold1"), 
+            expr(sla.errorRate.toString(), "ErrorThreshold1"), 
+            expr(sla.rps.toString(), "TPSThreshold1"),
+            expr("$C/$B * 100", "Error"), 
+            expr("$B / (60 * 5)", "TPS"),
             expr("(${Latency75} > ${LatencyThreshold1}) / 2 + (${Latency95} > ${LatencyThreshold1}) / 2", "LatencyState"),
             expr("($Error > 0) / 2 +\n($Error > $ErrorThreshold1) / 2", "ErrorState"),
             expr("($Latency95 < ${LatencyThreshold1}) * 95 + ($Latency75 < ${LatencyThreshold1}) * ($Latency95 > ${LatencyThreshold1}) * 75", "LatencyPercent")

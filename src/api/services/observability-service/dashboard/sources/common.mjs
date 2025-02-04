@@ -23,16 +23,17 @@ export function uriRegex(path) {
 
 export class GrafanaApiSource {
     sourceOptions;
+    datasource;
     constructor(sourceOptions) {
         Object.assign(this, sourceOptions);
     }
-    percentileTarget() {
+    percentileTarget(method,path,percentile) {
         NotImplemented();
     }
-    errorCountTarget() {
+    errorCountTarget(method,path) {
         NotImplemented();
     }
-    totalCountTarget() {
+    totalCountTarget(method,path) {
         NotImplemented();
     }
 }

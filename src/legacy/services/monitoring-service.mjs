@@ -16,12 +16,15 @@ import createInteractionStatPanel, { createGrafanaSource } from "./monitoring-te
 import { ERROR_RATE_THRESHOLD_TAG, LATENCY_THRESHOLD_TAG, RPS_THRESHOLD_TAG } from "./sql/interfaces-queries.mjs";
 import createInteractionPanels from "./monitoring-templates/panels/interaction-timeseries.mjs";
 import { selectGrafanaSources } from "./sql/monitoring-source.mjs";
-import { DEFAULT_OPENSEARCH_API_SOURCE, MAPIC_DEFAULT_API_SOURCE } from "./monitoring-templates/panels/source-options/opensearch.mjs";
+import { DEFAULT_OPENSEARCH_API_SOURCE, MAPIC_DEFAULT_API_SOURCE } from "../../api/services/observability-service/dashboard/sources/opensearch.mjs";
 import { getJSON, postJSON } from "../../utils/http-request-promise.mjs";
 import callTreePanel from "./monitoring-templates/panels/call-tree.mjs";
 import { DEFAULT_FOLDER_NAME, DEFAULT_FOLDER_UID } from "./monitoring-templates/const.mjs";
 import SystemDashboard from "./monitoring-templates/system-dashboard.mjs";
 import Sequence from "./monitoring-templates/sequence.mjs";
+import { ScenarioDashboard } from "../../api/services/observability-service/dashboard/scenario-dashboard.mjs";
+import { MonitoringRepository } from "../../api/repositories/index.mjs";
+import { SourceFactory } from "../../api/services/observability-service/dashboard/sources/index.mjs";
 
 const GRAFANA_URL = process.env.GRAFANA_URL ?? "https://inside-dev.beeline.ru"
 const GRAFANA_TOKEN = process.env.GRAFANA_TOKEN;
@@ -30,6 +33,7 @@ const DASHBOARD_API_PATH = "/api/dashboards/db"
 
 const GRAFANA_HTTP_OPTIONS = { headers: { 'Authorization': `Bearer ${GRAFANA_TOKEN}` }, rejectUnauthorized: false };
 
+const monitoringRepository = new MonitoringRepository();
 
 const BI_UID_PREFIX = 'archops-bi-'
 
@@ -356,6 +360,11 @@ class MonitoringService {
     async getScenarioJSON(code, process) {
 
         const scenario = await E2EProcessService.getBIScenario(code);
+        const sources = new SourceFactory();
+        const methodsSources = await monitoringRepository.selectMethodsSources().then(rows => rows.reduce((acc, v) =>
+            (acc[v.operation_guid] = sources.getSource(v), acc), {}));
+
+        const dashboard = new ScenarioDashboard(scenario, methodsSources);
 
         const panelIdSequence = new Sequence();
 
@@ -370,7 +379,8 @@ class MonitoringService {
         const sequenceCallTreePanel = callTreePanel(panelIdSequence, scenario.callTrace, Math.max(...interactions.map(it => it.statPanel?.gridPos.y ?? 0)) + 1);
         const maxY = sequenceCallTreePanel.panels[sequenceCallTreePanel.panels.length - 1].gridPos.y + 1
         const interactionDetailsPanels = interactions.reduce((r, v) => [...r, ...createInteractionPanels(panelIdSequence, v, maxY)], [])
-
+        const ret = dashboard.getPanels();
+        return ret;
         return [
             legendPanel, systemHealthHeaderPanel, apiStateHeaderPanel,
             ...interactionStatPanels,
