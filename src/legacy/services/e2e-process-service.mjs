@@ -13,6 +13,14 @@ import QUERIES from './sql/e2e-process-queries.mjs'
 import { TC_API_QUERY } from './sql/interfaces-queries.mjs';
 
 
+function safeDecode(url, msg) {
+    try {
+        return decodeURIComponent(url);
+    } catch (error) {
+        console.error(error, msg)
+    }
+    return url;
+}
 class E2EProcessService {
     /**
      * 
@@ -349,7 +357,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
                 if (m.ia_path.endsWith('?ref_type=heads')) m.ia_path = m.ia_path.slice(0, -15)
                 m.ia = {
                     path: m.ia_path,
-                    content: await IARepository.Instance.byPath(decodeURIComponent(m.ia_path))
+                    content: await IARepository.Instance.byPath(safeDecode(m.ia_path, m))
                 }
             }
             //m.method = methods[m.operation_guid];

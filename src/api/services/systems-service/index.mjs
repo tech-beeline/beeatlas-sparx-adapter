@@ -182,8 +182,6 @@ export class SystemService {
     async getPurpose(systemCode) {
         const rows = await systemsRepository.selectSystemCapabilities(systemCode);
 
-        console.log(rows);
-
         const capabilityMap = {};
 
         for (const row of rows) {
