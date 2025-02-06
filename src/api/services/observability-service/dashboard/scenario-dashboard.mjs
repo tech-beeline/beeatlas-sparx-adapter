@@ -1,10 +1,11 @@
 import { API_STATE_HEADER_PANEL, SYSTEMS_HEALTH_HEADER_PANEL } from "../../../../legacy/services/monitoring-templates/panels/headers.mjs";
 import LEGEND_PANEL from "../../../../legacy/services/monitoring-templates/panels/legend.mjs";
+import { expr } from "../../../../legacy/services/monitoring-templates/panels/primitive-panels.mjs";
 import Sequence from "../../../../legacy/services/monitoring-templates/sequence.mjs";
 import { NotImplemented } from "../../../../utils/errors.mjs";
 import { GrafanaRow } from "./panels/call-tree-row.mjs";
 import { HEADER_Y_OFFSET, STAT_COLUMNS_COUNT } from "./panels/const.mjs";
-import { InteractionRow } from "./panels/interaction-row.mjs";
+import { InteractionRow } from "./panels/index.mjs";
 import { InteractionStat } from "./panels/stat-panel.mjs";
 
 const formatTitle = (msg) => `${msg.client_code} - ${msg.server_code}${msg.stereotype ? ` ${msg.stereotype}` : ""}: ${msg.method?.name ?? msg.name}`
@@ -18,10 +19,17 @@ class IneractionStatPanel {
     constructor(interaction) {
     }
 }
+
+function parseNumber(s, defaultValue = 0) {
+    if (s) {
+        s = Number(s?.replace(',', '.'));
+        if (!isNaN(s)) return s;
+    }
+    return defaultValue;
+}
+
 export class Interaction {
-    rps;
-    latency;
-    error_rate;
+
     title;
     index;
     method;
@@ -31,9 +39,10 @@ export class Interaction {
     methodUID;
     interfaceUID
     count = 0;
-    statPanel;
-    interactionPanel;
+    sla;
     source;
+    statPanel;
+    interactionRow;
     /**
      *
      */
@@ -55,16 +64,25 @@ export class Interaction {
 
         this.method = method;
         this.path = path;
-        if (message.rps) this.rps = Number(message.rps?.replace(',', '.'));
-        if (message.latency) this.latency = Number(message.latency?.replace(',', '.'));
-        if (message.error_rate) this.error_rate = Number(message.error_rate?.replace(',', '.'));
+        this.sla = {
+            rps: parseNumber(message.rps),
+            latency: parseNumber(message.latency),
+            errorRate: parseNumber(message.error_rate)
+        }
+
+
 
         this.statPanel = this.source ? new InteractionStat(
             sequence.next(),
             index,
             method, path,
-            this.source) :
-            LEGEND_PANEL(sequence, `${index + 1}`, "state, name\r\n-1, TDB", { h: 2, w: 1, x: index % STAT_COLUMNS_COUNT, y: yPos + Math.floor(index / 23) });
+            this.sla,
+            this.source) : this.tbdPanel(sequence,yPos);
+    }
+    tbdPanel(sequence, yPos) {
+        const ret = LEGEND_PANEL(sequence, `${this.index + 1}`, "state", { h: 2, w: 1, x: this.index % 24, y: yPos + Math.floor(this.index / 23) })
+        ret.targets.push(expr("-1", "ErrorState"));
+        return ret;
     }
 }
 
@@ -111,13 +129,149 @@ export class ScenarioDashboard {
     messagePanel(message, x, y) {
         return {
             id: this.panelSequence.next(),
-            title: message.interaction.title,
             gridPos: { h: 1, w: 19 - x, x: x, y: y },
             type: "stat",
+            fieldConfig: {
+                "defaults": {
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "green",
+                                    "index": 0,
+                                    "text": "OK"
+                                },
+                                "1": {
+                                    "color": "red",
+                                    "index": 1,
+                                    "text": "CRITICAL"
+                                },
+                                "-1": {
+                                    "color": "#c9c9c9",
+                                    "index": 4,
+                                    "text": "TBD"
+                                }
+                            },
+                            "type": "value"
+                        },
+                        {
+                            "options": {
+                                "from": 0,
+                                "result": {
+                                    "color": "orange",
+                                    "index": 2,
+                                    "text": "WARNING"
+                                },
+                                "to": 1
+                            },
+                            "type": "range"
+                        },
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "color": "yellow",
+                                    "index": 3,
+                                    "text": "NO DATA"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    thresholds: {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 1
+                            }
+                        ]
+                    },
+                    color: {
+                        fixedColor: "transparent",
+                        mode: "continuous-GrYlRd"
+                    },
+                    displayName: `${message.interaction.index + 1} ${message.interaction.title}`,
+                    "max": 1,
+                    "min": 0
+                }
+            },
             datasource: {
                 type: "datasource",
                 uid: "-- Dashboard --"
-            }
+            },
+            options: {
+                "reduceOptions": {
+                    "values": false,
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "limit": 3
+                },
+                "orientation": "auto",
+                "textMode": "value_and_name",
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "text": {
+                    "titleSize": 14,
+                    "valueSize": 18
+                }
+            },
+            targets: [
+                {
+                    datasource: {
+                        "type": "datasource",
+                        "uid": "-- Dashboard --"
+                    },
+                    panelId: message.interaction.statPanel.id,
+                    refId: "A"
+                }
+            ],
+            transformations: [
+                {
+                    id: "filterByRefId",
+                    options: {
+                        include: "LatencyState|ErrorState|State"
+                    }
+                },
+                {
+                    id: "reduce",
+                    options: {
+                        includeTimeField: false,
+                        mode: "reduceFields",
+                        reducers: [
+                            "lastNotNull"
+                        ]
+                    }
+                },
+                {
+                    id: "concatenate",
+                    options: {}
+                },
+                {
+                    id: "calculateField",
+                    options: {
+                        alias: "",
+                        binary: {
+                            left: "LatencyState 1",
+                            reducer: "sum",
+                            right: "LatencyState 2"
+                        },
+                        mode: "reduceRow",
+                        reduce: {
+                            include: [],
+                            reducer: "max"
+                        },
+                        replaceFields: true
+                    }
+                }
+            ]
         }
     }
 
@@ -147,16 +301,15 @@ export class ScenarioDashboard {
         const messagesOffset = HEADER_Y_OFFSET + Math.floor(interactions.length / STAT_COLUMNS_COUNT);
         const interactionsOffset = messagesOffset + sequencePanels.length + 1;
 
-        const interactionPanels = interactions.map((it, i) => new InteractionRow(it, interactionsOffset + i * 15))
+        const interactionPanels = interactions.map((it, i) => it.source ? new InteractionRow(this.panelSequence, it.title, it.statPanel.id, interactionsOffset + i * 15) :
+            new GrafanaRow(interactionsOffset + i * 15, it.title, [LEGEND_PANEL(this.panelSequence, "Нет настроек источников данных для получения метрик", "state,name\r\n-1,TBD")])
+        )
 
         return [
             this.legendPanel,
             this.systemHealthPanel,
-            //this.interactionHeaderPanel,
-            new GrafanaRow(HEADER_Y_OFFSET,
-                `Состояние здоровья взаимодействий участвующих в шаге \"${this.scenario.info.name}\"`
-                , interactions.map(it => it.statPanel)
-            ),
+            this.interactionHeaderPanel,
+            ...interactions.map(it => it.statPanel),
             new GrafanaRow(messagesOffset,
                 "Sequence состояний интерфейсных соглашений",
                 sequencePanels),

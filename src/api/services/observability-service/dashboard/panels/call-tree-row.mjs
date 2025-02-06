@@ -3,7 +3,7 @@ export class GrafanaRow {
     gridPos;//: { h: 1, w: 24, x: 0, y: y },
     //id: headerId,
     panels;
-    title;s
+    title;
     type = "row"
     constructor(yPos, title, panels) {
         this.gridPos = { h: 1, w: 24, x: 0, y: yPos };

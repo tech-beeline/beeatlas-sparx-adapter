@@ -33,7 +33,8 @@ WITH RECURSIVE cte_bc_pkg AS (
 		package_id as cap_package_id,
 		author,
 		version,
-		status
+		status, 
+		description
 	FROM cte_bc_pkg WHERE code IS NOT NULL
 	UNION
 	SELECT 
@@ -47,7 +48,8 @@ WITH RECURSIVE cte_bc_pkg AS (
 		bc.package_id,
 		bc.author,
 		bc.version,
-		bc.status
+		bc.status,
+		bc.note
 	FROM cte_tbc p
 		JOIN t_diagram d ON d.package_id=p.package_id
 		JOIN t_diagramobjects po ON po.diagram_id=d.diagram_id AND po.object_id=p.object_id
@@ -74,6 +76,7 @@ SELECT
 	tc.code, 
 	tc.parent_code,
 	tc.name,
+	tc.description,
 	tc.status,
 	tc.author,
 	tc.version,
@@ -95,6 +98,5 @@ export const SELECT_TC_BY_CODE = `${SELECT_ALL_TEC}
 	AND tc.code=$1
 `
 export const insertTC = async (tc) => {
-	const tc_pacakge = await Repository.find
 	NotImplemented();
 }

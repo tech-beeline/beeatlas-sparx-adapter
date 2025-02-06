@@ -10,6 +10,6 @@ export class SourceFactory {
             return this.map[src.source_id] = new OpensearchApiSource(src.source);
         if( PrometheusApiSource.IsPrometheusSource(src.source)) 
             return this.map[src.source_id] = new PrometheusApiSource(src.source);
-        console.log( src);
+        throw Error('Wrong source', src);
     }
 }

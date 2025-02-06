@@ -14,7 +14,7 @@ import LEGEND_PANEL from "./monitoring-templates/panels/legend.mjs";
 import { API_STATE_HEADER_PANEL, SYSTEMS_HEALTH_HEADER_PANEL } from "./monitoring-templates/panels/headers.mjs";
 import createInteractionStatPanel, { createGrafanaSource } from "./monitoring-templates/panels/method-stat.mjs";
 import { ERROR_RATE_THRESHOLD_TAG, LATENCY_THRESHOLD_TAG, RPS_THRESHOLD_TAG } from "./sql/interfaces-queries.mjs";
-import createInteractionPanels from "./monitoring-templates/panels/interaction-timeseries.mjs";
+import createInteractionPanels from "../../api/services/observability-service/dashboard/panels/interaction-row/interaction-timeseries.mjs";
 import { selectGrafanaSources } from "./sql/monitoring-source.mjs";
 import { DEFAULT_OPENSEARCH_API_SOURCE, MAPIC_DEFAULT_API_SOURCE } from "../../api/services/observability-service/dashboard/sources/opensearch.mjs";
 import { getJSON, postJSON } from "../../utils/http-request-promise.mjs";

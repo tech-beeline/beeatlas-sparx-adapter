@@ -1,4 +1,4 @@
-import LEGEND_PANEL from "./legend.mjs"
+import LEGEND_PANEL from "../../../../../../legacy/services/monitoring-templates/panels/legend.mjs"
 
 function row(id, title, index, panels) {
   return {
@@ -154,7 +154,7 @@ function consumerSummary({ index }, y) {
   }
 }
 
-function consumerSuccess(seq, interaction, y = 26) {
+export function consumerSuccess(seq, interaction, y = 26) {
   return {
     id: seq.next(),
     "gridPos": { h: 4, w: 4, x: 2, y: y + interaction.index * 15 },
@@ -163,7 +163,6 @@ function consumerSuccess(seq, interaction, y = 26) {
       type: "datasource",
       uid: "-- Dashboard --"
     },
-    description: "",
     fieldConfig: {
       defaults: {
         color: {
