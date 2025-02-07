@@ -7,13 +7,15 @@ WITH RECURSIVE cte_bc_pkg AS (
 	SELECT 
 		p.package_id, 
 		p.name, 
-		o.alias as code, 
-		NULL::text as parent_code, 
+		o.alias AS code, 
+		NULL::text AS parent_code, 
 		o.object_id,
 		o.author,
 		o.status,
 		o.version,
-		o.note as description
+		o.note AS description,
+		o.createddate AS "createdDate",
+		o.modifieddate AS "modifiedDate"
 	FROM t_object o
 		JOIN t_package p ON p.ea_guid=o.ea_guid
 	WHERE o.stereotype='BusinessCapabilitiesCatalogue'
@@ -23,7 +25,9 @@ WITH RECURSIVE cte_bc_pkg AS (
 		o.author,
 		o.status,
 		o.version,
-		o.note as description
+		o.note,
+		o.createddate,
+		o.modifieddate
 	FROM cte_bc_pkg parent
 		JOIN t_package p ON p.parent_id=parent.package_Id
 		JOIN t_object o ON o.ea_guid=p.ea_guid	
@@ -34,7 +38,9 @@ WITH RECURSIVE cte_bc_pkg AS (
 		author,
 		version,
 		status, 
-		description
+		description,
+		"createdDate",
+		"modifiedDate"
 	FROM cte_bc_pkg WHERE code IS NOT NULL
 	UNION
 	SELECT 
@@ -49,7 +55,9 @@ WITH RECURSIVE cte_bc_pkg AS (
 		bc.author,
 		bc.version,
 		bc.status,
-		bc.note
+		bc.note,
+		bc.createddate,
+		bc.modifieddate
 	FROM cte_tbc p
 		JOIN t_diagram d ON d.package_id=p.package_id
 		JOIN t_diagramobjects po ON po.diagram_id=d.diagram_id AND po.object_id=p.object_id
@@ -80,6 +88,8 @@ SELECT
 	tc.status,
 	tc.author,
 	tc.version,
+	tc."createdDate",
+	tc."modifiedDate",
 	goal_to.value as goal_to,
 	goal_from.value as goal_from,
 	(SELECT obe.name 
