@@ -6,6 +6,7 @@ import { NotImplemented } from "../../../../utils/errors.mjs";
 import { GrafanaRow } from "./panels/call-tree-row.mjs";
 import { HEADER_Y_OFFSET, STAT_COLUMNS_COUNT } from "./panels/const.mjs";
 import { InteractionRow } from "./panels/index.mjs";
+import { MessageHeader } from "./panels/messages-headers.mjs";
 import { InteractionStat } from "./panels/stat-panel.mjs";
 
 const formatTitle = (msg) => `${msg.client_code} - ${msg.server_code}${msg.stereotype ? ` ${msg.stereotype}` : ""}: ${msg.method?.name ?? msg.name}`
@@ -77,7 +78,7 @@ export class Interaction {
             index,
             method, path,
             this.sla,
-            this.source) : this.tbdPanel(sequence,yPos);
+            this.source) : this.tbdPanel(sequence, yPos);
     }
     tbdPanel(sequence, yPos) {
         const ret = LEGEND_PANEL(sequence, `${this.index + 1}`, "state", { h: 2, w: 1, x: this.index % 24, y: yPos + Math.floor(this.index / 23) })
@@ -129,7 +130,7 @@ export class ScenarioDashboard {
     messagePanel(message, x, y) {
         return {
             id: this.panelSequence.next(),
-            gridPos: { h: 1, w: 19 - x, x: x, y: y },
+            gridPos: { h: 1, w: 13 - x, x: x, y: y },
             type: "stat",
             fieldConfig: {
                 "defaults": {
@@ -275,11 +276,16 @@ export class ScenarioDashboard {
         }
     }
 
-    buildSequenceRows(messages, depth = 0, order = 1) {
+    buildSequenceRows(messages, depth = 0, order = 2) {
         const ret = [];
+        const proccessedInteractions = {};
         for (const m of messages) {
             if (m.interaction) {
+                if (proccessedInteractions[m.interaction.title])
+                    continue;
+
                 ret.push(this.messagePanel(m, depth, order++));
+                proccessedInteractions[m.interaction.title] = true;
             }
 
             if (m.children?.length) {
@@ -296,7 +302,11 @@ export class ScenarioDashboard {
     getPanels() {
         //const ss = Object.values(this.interactions).map(it => it.statPanel);
         const interactions = Object.values(this.interactions);
-        const sequencePanels = this.buildSequenceRows(this.messages);
+        let messages = this.messages;
+        if (messages.length === 1 && !messages[0].client_code)
+            messages = messages[0].children;
+
+        const sequencePanels = [new MessageHeader(this.panelSequence.next(), 1), ...this.buildSequenceRows(messages)];
 
         const messagesOffset = HEADER_Y_OFFSET + Math.floor(interactions.length / STAT_COLUMNS_COUNT);
         const interactionsOffset = messagesOffset + sequencePanels.length + 1;

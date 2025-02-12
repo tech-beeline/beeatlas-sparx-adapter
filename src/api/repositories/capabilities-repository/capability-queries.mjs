@@ -125,7 +125,7 @@ DISTINCT
 	bc."isDomain",
 	bc.description,
 	bc.createddate AS "createdDate",
-	bc.modifieddate AS "modifiedDate",
+	--bc.modifieddate AS "modifiedDate",
 	bc.parent_code as parent,
 	bc.status,
 	bc.author,
