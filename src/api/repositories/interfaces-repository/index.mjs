@@ -62,7 +62,7 @@ export class InterfacesRepository {
     async insertInterface(containerCode, name, code, version, description, status, protocol, specification) {
         const [packageInfo, container] = await Promise.all([
             this.prepareInterfacesPackage(containerCode),
-            Repository.first(t_object, { stereotype: 'C2', alias: containerCode })]
+            Repository.first(t_object, { stereotype: 'C4_Container', alias: containerCode })]
         );
 
         if (!container) throw Error(`Container with code = ${containerCode} not found`)

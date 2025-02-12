@@ -37,6 +37,10 @@ class GrafanaSourceControllers {
         if (!request.params.code) throw BadRequest(`Parameter code is not specified`);
         response.json((await service.setSystemSource(request.params.code, request.body)) ?? {});
     }
+
+    async postObjectSource(request, response) {
+        response.json((await service.setObjectSource(request.body)) ?? {});
+    }
 }
 
 export default new GrafanaSourceControllers();

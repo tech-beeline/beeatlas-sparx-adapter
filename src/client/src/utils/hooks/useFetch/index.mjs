@@ -5,7 +5,7 @@ const DEFAULT_OPTIONS = {
 };
 
 export function useFetchJSON(url, options, dependencies = []) {
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
 

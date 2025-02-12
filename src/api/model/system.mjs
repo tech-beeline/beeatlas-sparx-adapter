@@ -398,3 +398,11 @@ export const SYSTEM_ASSESSMENT_RESULT_SCHEMA = {
         result_details: stringProperty("Детальное описание  результатов проверки", { example: "У нас все хорошо" })
     }
 }
+
+export const SYSTEM_MONITORING_RESULT_SCHEMA = {
+    type: "object",
+    properties: {
+        system_code: stringProperty("Код системы (CMDB мнемоника)", { example: "FDMSHOWCASEAPP" })
+    }
+}
+

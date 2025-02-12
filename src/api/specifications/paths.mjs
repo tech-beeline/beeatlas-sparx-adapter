@@ -43,6 +43,7 @@ export const SYSTEM_RESOURCE_V4 = '/api/v4/systems/{code}';
 export const SYSTEM_PURPOSE_RESOURCE_V4 = '/api/v4/systems/{code}/purpose';
 export const SYSTEM_E2E_RESOURCE_V4 = '/api/v4/systems/{code}/e2e';
 export const SYSTEM_ASSESSMENT_RESOURCE_V4 = '/api/v4/systems/{code}/assessments';
+export const SYSTEM_API_MONITORING_RESOURCE_V4 = '/api/v4/systems/{code}/monitoring';
 
 export const SYSTEM_SEARCH_RESOURCE = SYSTEM_SEARCH_RESOURCE_V4;
 export const SYSTEM_LIST_RESOURCE = SYSTEM_LIST_RESOURCE_V4;
@@ -50,6 +51,8 @@ export const SYSTEM_RESOURCE = SYSTEM_RESOURCE_V4;
 export const SYSTEM_PURPOSE_RESOURCE = SYSTEM_PURPOSE_RESOURCE_V4;
 export const SYSTEM_E2E_RESOURCE = SYSTEM_E2E_RESOURCE_V4;
 export const SYSTEM_ASSESSMENTS_RESOURCE = SYSTEM_ASSESSMENT_RESOURCE_V4;
+
+export const SYSTEM_API_MONITORING_RESOURCE = SYSTEM_API_MONITORING_RESOURCE_V4;
 
 
 //#endregion

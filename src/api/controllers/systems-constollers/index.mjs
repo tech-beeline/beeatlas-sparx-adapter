@@ -108,6 +108,15 @@ export class SystemsControllers {
     async postSystemAssessment(request, response) {
         response.json(await SystemServiceInstance.addAssessmentStatus(request.params.code, request.body));
     }
+
+    /**
+* 
+* @param {express.Request} request 
+* @param {express.Response} response 
+*/
+    async getApiMonitoring(request, response) {
+        response.json(await SystemServiceInstance.getApiMonitoring(request.params.code));
+    }
 }
 
 export default new SystemsControllers();

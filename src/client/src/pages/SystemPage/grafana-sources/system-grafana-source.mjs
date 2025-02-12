@@ -3,6 +3,7 @@ import { Autocomplete, Box, Button, Dialog, DialogActions, DialogContent, Dialog
 import { useEffect, useRef, useState } from "react";
 import { OpenSearchProperties } from "./opensearch-source.mjs";
 import { PrometheusProperties } from "./prometheus-source.mjs";
+import { MON_SOURCES_URL } from "../../../resources/services.mjs";
 
 
 const OPENSEARECH_PROPETIES = {
@@ -66,7 +67,7 @@ async function checkResponse(response) {
     }
 }
 //const SYSTEM_SOURCE_URL = '/api/v4/monitoring/systems/source';
-const MON_SOURCES_URL = '/api/v4/monitoring/sources';
+
 
 function SourceProperties({ source, setSource, edit }) {
     if (!source || !source?.uid) { // Источник отсутствует
@@ -92,7 +93,7 @@ function SourceProperties({ source, setSource, edit }) {
     </Box>;
 }
 
-function SystemSourceDialog({ system, open, setOpen }) {
+export function SystemSourceDialog({ system, open, setOpen }) {
     const [error, setError] = useState();
     const [inProgress, setInProgress] = useState(false);
     const [sourceList, setSourceList] = useState(null);
@@ -118,13 +119,11 @@ function SystemSourceDialog({ system, open, setOpen }) {
                 return await response.json();
             }
 
-
-            console.log('start load')
             const [system_source, source_list] = await Promise.all([
                 loadSystemSource(),
                 loadSourceList()
             ]);
-            console.log('end load')
+            
             setSourceList(source_list);
             setSystemSource(system_source);
             setSelectedSource(system_source);
@@ -166,6 +165,7 @@ function SystemSourceDialog({ system, open, setOpen }) {
             await checkResponse(response)
             return response.json();
         }
+        
         try {
             setInProgress(true);
 

@@ -19,7 +19,12 @@ export class TechnicalCapabilitiesControllers {
      */
     async getByCode(request, response) {
         if (!request.params.code) throw BadRequest('Code is not specified');
-        response.json(await tcService.getByCode(request.params.code));
+        const tc = await tcService.getByCode(request.params.code)
+        if (tc) {
+            response.json(await tcService.getByCode(request.params.code));
+            return;
+        }
+        response.status( 404 ).json( { message: `TC with code =${request.params.code} not found`});
     }
     /**
      * 

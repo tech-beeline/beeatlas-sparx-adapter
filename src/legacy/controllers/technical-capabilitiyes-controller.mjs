@@ -13,7 +13,12 @@ class TechnicalCapabilitiesController {
     }
     async getTechnicalCapability(request, response) {
         try {
-            response.json(await TechnicalCapabilityService.getTechnicalCapability({ code: request.params.code }));
+            const tc = await TechnicalCapabilityService.getTechnicalCapability({ code: request.params.code })
+            if (tc) {
+                response.json(tc);
+                return;
+            }
+            response.status(404).json({ message:`TC with code=${request.params.code} not found`});
         } catch (error) {
             console.error(error)
             response.status(500).send(error.message);
@@ -29,8 +34,8 @@ class TechnicalCapabilitiesController {
             const capability = request.body;
             if (!capability) throw BadRequest(`Body is empty`);
             capability.code = request.params.code;
-            
-            response.json(await TechnicalCapabilityService.putTechnicalCapability(request.params.code, capability) )
+
+            response.json(await TechnicalCapabilityService.putTechnicalCapability(request.params.code, capability))
         } catch (error) {
             console.error(error)
             response.status(error.status ?? 500).send(error.message);

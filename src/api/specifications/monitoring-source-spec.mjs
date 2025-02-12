@@ -1,11 +1,12 @@
-import monitiringSourcesControllers from "../controllers/monitiring-sources-controllers.mjs";
-import { GetJSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
-import { SYSTEM_CODE_PARAMETER } from "./systems-service-spec.mjs";
+import monitoringSourcesControllers from "../controllers/monitiring-sources-controllers.mjs";
+import { GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, schemasRef, stringProperty } from "./helpers.mjs"
+import { SYSTEM_CODE_PARAMETER } from "./system-service-spec/index.mjs";
 
 export const BC_NAME = "Управление источниками мониторинга"
 export const BC_DESCRIPTION = "Управление техническими возможностями и их реализацией"
 export const SOURCE_LIST_RESOURCE = '/api/v4/monitoring/sources';
 export const SYSTEM_SOURCE_RESOURCE = '/api/v4/monitoring/systems/{code}/source';
+export const SYSTEM_OBJECTS_RESOURCE = '/api/v4/monitoring/objects/source';
 
 
 const SWAGGER = new SimpleServiceSpecification(BC_NAME, BC_DESCRIPTION);
@@ -20,8 +21,11 @@ const GRAFANA_SOURCE_SCHEME = SWAGGER.defineEntitySchema("GrafanaSource", {
 })
 //#endregion
 
-SWAGGER.defineGet(SOURCE_LIST_RESOURCE, new GetJSONOperation("Получение списка источников", null, arraySchema(GRAFANA_SOURCE_SCHEME), monitiringSourcesControllers.getAll))
-    .defineGet(SYSTEM_SOURCE_RESOURCE, new GetJSONOperation("Получение источника для системы", [SYSTEM_CODE_PARAMETER], GRAFANA_SOURCE_SCHEME, monitiringSourcesControllers.getSystemSource))
+SWAGGER.defineGet(SOURCE_LIST_RESOURCE, new GetJSONOperation("Получение списка источников", null, arraySchema(GRAFANA_SOURCE_SCHEME), monitoringSourcesControllers.getAll))
+    .definePost(SOURCE_LIST_RESOURCE, new JSONOperation("Обновление настроек мониторинга", null, GRAFANA_SOURCE_SCHEME, GRAFANA_SOURCE_SCHEME, monitoringSourcesControllers.postSource))
+    .defineGet(SYSTEM_SOURCE_RESOURCE, new GetJSONOperation("Получение источника для системы", [SYSTEM_CODE_PARAMETER], GRAFANA_SOURCE_SCHEME, monitoringSourcesControllers.getSystemSource))
+    .definePost(SYSTEM_SOURCE_RESOURCE, new JSONOperation("Обновление настроек мониторинга", [SYSTEM_CODE_PARAMETER], GRAFANA_SOURCE_SCHEME, GRAFANA_SOURCE_SCHEME, monitoringSourcesControllers.postSystemSource))
+    .definePost(SYSTEM_OBJECTS_RESOURCE, new JSONOperation("Обновление настроек мониторинга", null, GRAFANA_SOURCE_SCHEME, GRAFANA_SOURCE_SCHEME, monitoringSourcesControllers.postObjectSource))
 
 export const GET_SOURCES = {
     tags: [BC_NAME],

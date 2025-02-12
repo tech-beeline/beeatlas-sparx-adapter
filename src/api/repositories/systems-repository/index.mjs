@@ -13,7 +13,7 @@ import { SystemDTO, SystemDTOInternal } from './model.mjs';
 import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
 import { DEFAULT_STATUS, REMOVED_STATUS, SYSTEM_SUBPACKAGES as SYSTEM_SUBPACKAGES_NAMES } from './const.mjs';
 
-const CONTAINER_STEREOTYPE = 'C2';
+const CONTAINER_STEREOTYPE = 'C4_Container';
 
 const SELECT_ONLY_SYSTEMS = `WITH RECURSIVE ${CTE_SYSTEMS}
 SELECT * FROM cte_systems`
@@ -24,7 +24,7 @@ SELECT sys.*,
 	c.name AS container,c.alias AS container_code, c.version as container_version, c.note as container_description, c.object_id as container_id, c.status as container_status,
 	it.name as interface, it.alias as interface_code, it.version as interface_version, it.note as interface_description, it.object_id as interface_id, it.status as interface_status
 FROM cte_systems sys
-	LEFT JOIN cte_realization c ON c.start_object_id=sys.object_id AND c.object_type='Component' AND c.alias is not null and c.stereotype='C2'
+	LEFT JOIN cte_realization c ON c.start_object_id=sys.object_id AND c.object_type='Component' AND c.alias is not null and c.stereotype='C4_Container'
 	LEFT JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface' AND it.alias is not null AND it.alias <> ''`
 
 const SELECT_SYSTEM_CAPABILITIES = `
@@ -147,11 +147,11 @@ cte_sys_obj AS (
     UNION DISTINCT -- containers from structurizr
     SELECT sys.name, c.name, sys.code, c.ea_guid, c.alias, sys.sys_id, c.object_id
     FROM cte_sys sys
-        JOIN cte_realization c ON c.start_object_id=sys.sys_id AND c.stereotype='C2'
+        JOIN cte_realization c ON c.start_object_id=sys.sys_id AND c.stereotype='C4_Container'
     UNION DISTINCT -- interfaces from structurizr
     SELECT sys.name, it.name, sys.code, it.ea_guid, it.alias, sys.sys_id, it.object_id
     FROM cte_sys sys
-        JOIN cte_realization c ON c.start_object_id=sys.sys_id AND c.stereotype='C2'
+        JOIN cte_realization c ON c.start_object_id=sys.sys_id AND c.stereotype='C4_Container'
         JOIN cte_realization it ON it.start_object_id=c.object_id AND it.object_type='Interface'
 ),
 cte_bi AS (
@@ -289,7 +289,7 @@ export class SystemsRepository {
 	}
 
 	async selectContainerByCode(containerCode) {
-		return Repository.first(t_object, { stereotype: "C2", alias: containerCode })
+		return Repository.first(t_object, { stereotype: "C4_Container", alias: containerCode })
 			.then(r => r ? {
 				code: r.alias,
 				name: r.name,
@@ -395,12 +395,12 @@ export class SystemsRepository {
 	async updateContainer(name, code, author, version, description, status) {
 		return Repository.update(t_object,
 			{ name: name, author: author, version: version, note: description, status: status },
-			{ alias: code, stereotype: "C2" });
+			{ alias: code, stereotype: "C4_Container" });
 	}
 
 	async markContainerRemoved(name, code) {
 		return Repository.update(t_object,
 			{ name: `[REMOVED!]${name}`, status: "REMOVED" },
-			{ alias: code, stereotype: "C2" });
+			{ alias: code, stereotype: "C4_Container" });
 	}
 }

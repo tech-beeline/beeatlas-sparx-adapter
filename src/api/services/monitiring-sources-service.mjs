@@ -7,7 +7,7 @@ const mointoringRepository = new MonitoringRepository();
 
 
 class MonitiringSourcesServices {
-    
+
     async getAllSources() {
         const rows = await mointoringRepository.selectSourcesProperties();
         const sourceMap = {};
@@ -51,6 +51,10 @@ class MonitiringSourcesServices {
     async getSystemSource(systemCode) {
         return this.#buildSource(await mointoringRepository.selectSystemSource(systemCode));
     }
+
+    async getObjectSource(object_id) {
+        return this.#buildSource(await mointoringRepository.selectObjectSource(object_id));
+    }
     /**
      * 
      * @param {string} systemCode 
@@ -59,7 +63,7 @@ class MonitiringSourcesServices {
     async setSystemSource(systemCode, source) {
         const currentSource = await this.getSystemSource(systemCode);
         if (currentSource?.uid === (source.uid ?? undefined)) {
-            return;
+            return currentSource;
         }
         if (currentSource) {
             await mointoringRepository.removeSystemSourceLink(systemCode, currentSource.uid);
@@ -68,6 +72,23 @@ class MonitiringSourcesServices {
             await mointoringRepository.setSystemSourceLink(systemCode, source.uid);
         };
         return this.getSystemSource(systemCode)
+    }
+
+    async setObjectSource({ object_id, uid }) {
+        const currentSource = await this.getObjectSource(object_id);
+        if (currentSource?.uid === uid) {
+            return currentSource;
+        }
+
+        if (currentSource) {
+            await mointoringRepository.removeObjectSourceLink(object_id, currentSource.uid);
+        }
+
+        if (uid) {
+            await mointoringRepository.setObjectSourceLink(object_id, uid);
+        }
+
+        return this.getSource(uid);
     }
 }
 

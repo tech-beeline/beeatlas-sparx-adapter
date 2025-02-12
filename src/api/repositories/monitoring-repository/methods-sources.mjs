@@ -71,7 +71,7 @@ WITH RECURSIVE cte_src AS (
 		JOIN t_connector c ON c.start_object_id=r.object_id
 			AND c.connector_type='Realisation'
 		JOIN t_object ch ON ch.object_id=c.end_object_id
-			AND (ch.object_type = 'Interface' OR ch.stereotype='C2')
+			AND (ch.object_type = 'Interface' OR ch.stereotype='C4_Container')
 		LEFT JOIN cte_src src ON src.target_id=ch.object_id
 ), cte_api AS (
 	SELECT
@@ -99,9 +99,71 @@ FROM cte_api i
 WHERE i.source_id IS NOT NULL`;
 
 export const SELECT_SOURCES_PROPERIES = `SELECT 
+	gs.name,
+	gs.ea_guid AS uid,
 	gs.object_id as source_id,
 	t.property,
 	t.value
 FROM t_object gs
 	JOIN t_objectproperties t ON t.object_id=gs.object_id
-WHERE gs.stereotype='grafana-source'`
+WHERE gs.stereotype='grafana-source'`;
+
+export const SELECT_API_SOURCES = `WITH RECURSIVE cte_src AS (
+	SELECT
+		t.object_id as target_id,
+		src.object_id as source_id
+	FROM t_object t 
+		JOIN t_connector c ON c.end_object_id=t.object_id AND c.connector_type='Realisation'
+		JOIN t_object src ON src.object_id=c.start_object_id AND src.stereotype='grafana-source'
+), cte_r AS (
+	SELECT 
+	 	c.start_object_id,
+		 o.*
+	FROM t_connector c
+		JOIN t_object o ON o.object_id=c.end_object_id AND o.status<>'REMOVED' 
+	WHERE c.connector_type='Realisation'
+)
+SELECT
+	app.alias as app_code,
+	app.name as app, 
+	app_s.source_id as app_source_id,
+	c2.alias as container_code, c2.name,c2.status as c2_status, 
+	c_s.source_id as container_source_id,
+	api.alias as api_code, 
+	api.name AS api_name, 
+	api.status AS api_status,
+	i_s.source_id as api_source_id,
+	tc.alias as tc_code,
+	tc.name as tc
+FROM t_object app
+	LEFT JOIN cte_r c2 ON c2.start_object_id=app.object_id AND c2.stereotype='C4_Container'
+	LEFT JOIN cte_r api ON api.start_object_id=c2.object_id
+	LEFT JOIN t_connector ct ON ct.start_object_id = api.object_id AND ct.connector_type='Realisation'
+	LEFT JOIN t_object tc ON tc.object_id=ct.end_object_id AND tc.stereotype='ArchiMate_TechnicalCapability'
+	LEFT JOIN cte_src app_s ON app_s.target_id=app.object_id
+	LEFT JOIN cte_src c_s ON c_s.target_id=c2.object_id
+	LEFT JOIN cte_src i_s ON i_s.target_id=api.object_id
+WHERE app.alias=$1
+	AND app.stereotype='softwareSystem'`;
+
+export const SELECT_PROVIDED_API_SOURCES = `WITH RECURSIVE cte_src AS (
+	SELECT
+		t.object_id as target_id,
+		src.object_id as source_id
+	FROM t_object t 
+		JOIN t_connector c ON c.end_object_id=t.object_id AND c.connector_type='Realisation'
+		JOIN t_object src ON src.object_id=c.start_object_id AND src.stereotype='grafana-source'
+)
+SELECT 
+		api.name,
+		api.alias as code,
+		api.ea_guid,
+		api.object_id,
+		src.source_id AS api_source_id
+	FROM t_object app
+		JOIN t_object pi ON pi.parentid=app.object_id
+		JOIN t_object api ON api.object_id=pi.classifier
+		LEFT JOIN cte_src src ON src.target_id=api.object_id
+		LEFT JOIN cte_src app_s ON app_s.target_id=app.object_id
+WHERE app.alias=$1
+	AND app.stereotype='softwareSystem'`;

@@ -5,7 +5,7 @@ import Repository,
 } from '../sparx-ea-repository/index.mjs';
 
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
-import { SELECT_METHOD_SOURCES, SELECT_SOURCES_PROPERIES } from './methods-sources.mjs';
+import { SELECT_API_SOURCES, SELECT_METHOD_SOURCES, SELECT_PROVIDED_API_SOURCES, SELECT_SOURCES_PROPERIES } from './methods-sources.mjs';
 
 const SELECT_ALL_SOURCES = `SELECT
 src.object_id, src.ea_guid, src.name, t.property, t.value
@@ -22,12 +22,22 @@ FROM t_object src
 JOIN t_objectproperties t ON t.object_id=src.object_id
 JOIN t_connector rel ON rel.start_object_id=src.object_id
 JOIN t_object sys ON sys.object_id=rel.end_object_id
-WHERE src.stereotype='grafana-source' and sys.alias=$1`
+WHERE src.stereotype='grafana-source' and sys.alias=$1
+	AND sys.stereotype='softwareSystem'
+`;
+
+const SELECT_OBJECT_SOURCE = `SELECT
+sys.name as sys_name, src.object_id, src.ea_guid, src.name, t.property, t.value
+FROM t_object src
+JOIN t_objectproperties t ON t.object_id=src.object_id
+JOIN t_connector rel ON rel.start_object_id=src.object_id
+JOIN t_object sys ON sys.object_id=rel.end_object_id
+WHERE src.stereotype='grafana-source' and sys.object_id=$1`;
 
 const SELECT_SOURCE_AND_SYSTEM_IDS = `SELECT
 object_id, stereotype, alias as code, ea_guid
 FROM t_object
-WHERE ea_guid=$2 OR (alias=$1 and object_type='Component')`;
+WHERE ea_guid=$2 OR (alias=$1 and stereotype='softwareSystem')`;
 
 const SELECT_SOURCE = `SELECT
 name, ea_guid, object_id
@@ -108,6 +118,14 @@ export class MonitoringRepository {
 
     /**
      * 
+     * @returns {Promise<{ object_id:number, name:string, ea_guid:string, property:string, value:string }[]>}
+     */
+    async selectObjectSource(object_id) {
+        return Repository.queryRows(SELECT_OBJECT_SOURCE, [object_id]);
+    }
+
+    /**
+     * 
      * @param {string} systemCode Код системы
      * @param {string} sourceUID Идентификатор источника метрик
      * @returns {Promise<{system_id, source_id}>}
@@ -127,28 +145,76 @@ export class MonitoringRepository {
         return Repository.putConnector(source_id, system_id, 'Realisation');
     }
 
+    async setObjectSourceLink(object_id, sourceUID) {
+        const src = await this.selectSource(sourceUID);
+
+        return Repository.putConnector(src.object_id, object_id, 'Realisation');
+    }
+
     async removeSystemSourceLink(systemCode, sourceUID) {
         const { system_id, source_id } = await this.selectSystemAndSourceIds(systemCode, sourceUID);
         return Repository.removeConnectors(source_id, system_id, 'Realisation');
     }
 
-    async selectSources(){
+    async removeObjectSourceLink(object_id, sourceUID) {
+        const src = await this.selectSource(sourceUID);
+        return Repository.removeConnectors(src.object_id, object_id, 'Realisation');
+    }
+
+    async selectSourcesRows() {
         return Repository.queryRows(SELECT_SOURCES_PROPERIES);
     }
-    async selectMethodsSources() {
-        const [methodsSources, sourceProperties] = await Promise.all(
+
+    async selectSourcesMap() {
+        const sourceProperties = await this.selectSourcesRows();
+        const sourceMap = {};
+        for (const prop of sourceProperties) {
+            const src = sourceMap[prop.source_id] ?? (sourceMap[prop.source_id] = { name: prop.name, uid: prop.uid });
+            src[prop.property] = prop.value;
+            if (prop.property == 'opensearch') {
+                src.type = 'opensearch';
+                src.sourceId = prop.value;
+            }
+        }
+        return sourceMap;
+    }
+
+    async selectApiSources(systemCode) {
+        //return Repository.queryRows(SELECT_API_SOURCES, [systemCode]);
+        const [c4Rows, providedRows, sourceMap] = await Promise.all(
             [
-                Repository.queryRows(SELECT_METHOD_SOURCES),
-                this.selectSources()
+                Repository.queryRows(SELECT_API_SOURCES, [systemCode]),
+                Repository.queryRows(SELECT_PROVIDED_API_SOURCES, [systemCode]),
+                this.selectSourcesMap()
             ]
         )
 
-        const sourceMap = {};
-        for( const prop of sourceProperties){
-            const src = sourceMap[prop.source_id] ?? (sourceMap[prop.source_id] = {});
-            src[prop.property] = prop.value;
+        for (const row of c4Rows) {
+            if (row.app_source_id)
+                row.app_source = sourceMap[row.app_source_id];
+            if (row.container_source_id)
+                row.container_source = sourceMap[row.container_source_id];
+            if (row.api_source_id)
+                row.api_source = sourceMap[row.api_source_id];
         }
-        for( const m of methodsSources){
+
+        for (const row of providedRows) {
+            if (row.api_source_id)
+                row.source = sourceMap[row.api_source_id];
+        }
+        return { c4Rows: c4Rows, providedRows: providedRows };
+    }
+
+
+    async selectMethodsSources() {
+        const [methodsSources, sourceMap] = await Promise.all(
+            [
+                Repository.queryRows(SELECT_METHOD_SOURCES),
+                this.selectSourcesMap()
+            ]
+        )
+
+        for (const m of methodsSources) {
             m.source = sourceMap[m.source_id];
         }
         return methodsSources;

@@ -6,7 +6,7 @@ SELECT s.package_id , $1 as name
 FROM t_object o
 	JOIN t_package p ON p.package_id=o.package_id
 	JOIN t_package s ON s.package_id=p.parent_id
-WHERE stereotype='C2' AND alias=$2)`
+WHERE stereotype='C4_Container' AND alias=$2)`
 
 const PREPARE_EXPR = `cte_new_package AS (
 	INSERT INTO t_package(

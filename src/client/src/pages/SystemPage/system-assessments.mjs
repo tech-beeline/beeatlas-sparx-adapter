@@ -49,7 +49,7 @@ export default function SystemAssessmentsAccordion({ system }) {
                         <TableBody>
                             {data.sort((a, b) => a.fitness_function_code.localeCompare(b.fitness_function_code)).map((ar) => (
                                 <TableRow
-                                    key={(ar) => ar.fitness_function_code}
+                                    key={ar.fitness_function_code}
                                     sx={{
                                         backgroundColor: ar.status
                                             ? "#FFEBEE"

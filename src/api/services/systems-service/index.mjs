@@ -1,11 +1,14 @@
+import monitoringService from "../../../legacy/services/monitoring-service.mjs";
 import { BadRequest, NotFound, NotImplemented } from "../../../utils/errors.mjs";
 import patchArray from "../../../utils/patch-array.mjs";
 import { buildHREF } from "../../controllers/controller-decorator.mjs";
+import SystemApiMonitoring, { ContainerApiMonitoring } from "../../model/observability/system-api-monitoring.mjs";
 
 import System, { Container, E2EProcessContext, SysemAssessmentStatus } from "../../model/system.mjs";
 import {
     ArchMetricsRepository,
     InterfacesRepository,
+    MonitoringRepository,
     PtrArtifactsRepository,
     SystemsRepository
 } from "../../repositories/index.mjs";
@@ -25,6 +28,7 @@ const STEREOTYPE_MAP = {
 const interfacesRepository = new InterfacesRepository();
 const systemsRepository = new SystemsRepository();
 const ptrArtifactsRepositoryInstance = new PtrArtifactsRepository();
+const monitoringRepository = new MonitoringRepository();
 
 export class SystemService {
     constructor() {
@@ -232,6 +236,43 @@ export class SystemService {
     */
     async getSystemAssessments(systemCode) {
         return (await ArchMetricsRepository.selectSystemAssessments(systemCode)).map(a => new SysemAssessmentStatus(a));
+    }
+
+    async getApiMonitoring(systemCode) {
+        const { c4Rows, providedRows } = await monitoringRepository.selectApiSources(systemCode);
+
+        if (!c4Rows.length && !providedRows.length) return { containers: [], providedAPIs: [] };
+
+        const apps = {};
+        for (const row of c4Rows) {
+            /**
+             * @type {SystemApiMonitoring}
+             */
+            const app = apps[row.app_code] ?? (apps[row.app_code] =
+                { systemCode: row.app_code, source: row.app_source, containers: [] });
+            if (row.container_code) {
+                /**
+                 * @type {ContainerApiMonitoring}
+                 */
+                let container = app.containers.find(c => c.code == row.container_code);
+                if (!container) {
+                    app.containers.push(container = {
+                        code: row.container_code,
+                        name: row.container_name,
+                        source: row.container_source,
+                        interfaces: []
+                    });
+                }
+
+                if (row.api_code) {
+                    container.interfaces.push({ code: row.api_code, name: row.api_name, source: row.api_source });
+                }
+            }
+        }
+        const ret = (apps[systemCode]??{ systemCode: systemCode})
+        ret.providedAPIs = providedRows;
+
+        return ret;
     }
 }
 
