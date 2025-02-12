@@ -146,7 +146,7 @@ function MonitoringSettingsDialog({ target, source, open, setOpen, setSource, ha
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>Закрыть</Button>
-                <Button autoFocus type="submit" disabled={edit || selectedSource?.uid == source?.uid} >
+                <Button autoFocus type="submit" disabled={(!edit) && (selectedSource?.uid == source?.uid)} >
                     Сохранить
                 </Button>
             </DialogActions>

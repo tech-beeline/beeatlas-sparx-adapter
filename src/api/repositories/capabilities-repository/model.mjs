@@ -12,8 +12,8 @@ export class CapabilitDTO {
     isDomain;
     code;
     author;
-    createddate;
-    modifieddate;
+    createdDate;
+    modifiedDate;
     status;
     parent;
     description;

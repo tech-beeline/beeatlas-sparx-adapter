@@ -25,9 +25,114 @@ join t_package pp on pp.ea_guid=p.ea_guid`
 export const BC_PACKAGE_QUERY_BY_ID = `${BC_PACKAGE_QUERY} where btc.object_id=$2`;
 
 export const SELECT_ALL_BC =
-`WITH RECURSIVE 
-${CTE_BC}
-SELECT * FROM cte_bc`;
+`-- Список BC
+
+WITH RECURSIVE cte_bc_pkg AS (
+	SELECT 
+		p.package_id, 
+		p.name, 
+		o.alias as code, 
+		NULL::text as parent_code, 
+		o.object_id,
+		o.author,
+		o.status,
+		o.version,
+		o.createddate,
+		o.modifieddate,
+		o.note as description,
+		(SELECT obe.name 
+	 		FROM t_connector co,  t_object obe 
+	 		WHERE co.end_object_id = o.object_id
+	 		AND obe.object_id = co.start_object_id
+	 		AND co.stereotype = 'Responsibility'
+	 		AND obe.stereotype = 'ArchiMate_BusinessActor' limit 1) as owner
+	FROM t_object o
+		JOIN t_package p ON p.ea_guid=o.ea_guid
+	WHERE o.stereotype='BusinessCapabilitiesCatalogue'
+	UNION
+	SELECT 
+		p.package_id, p.name, o.alias, parent.code, o.object_id,
+		o.author,
+		o.status,
+		o.version,
+		o.createddate,
+		o.modifieddate,
+		o.note,
+		coalesce((SELECT obe.name 
+	 		FROM t_connector co,  t_object obe 
+	 		WHERE co.end_object_id = o.object_id
+	 		AND obe.object_id = co.start_object_id
+	 		--AND co.stereotype = 'Responsibility'
+	 		AND obe.stereotype = 'ArchiMate_BusinessActor' limit 1),parent.owner )
+	FROM cte_bc_pkg parent
+		JOIN t_package p ON p.parent_id=parent.package_Id
+		JOIN t_object o ON o.ea_guid=p.ea_guid	
+), cte_tbc AS (
+	SELECT 
+		package_id, 
+		name, 
+		code, 
+		true as "isDomain",
+		code as domain_code, 
+		parent_code, 
+		object_id, 
+		'Domain' as type,
+		package_id as cap_package_id,
+		author,
+		version,
+		status,
+		createddate,
+		modifieddate,
+		description,
+		owner
+	FROM cte_bc_pkg WHERE code IS NOT NULL
+	UNION
+	SELECT 
+		p.package_id, 
+		bc.name, 
+		bc.alias, 
+		false,
+		p.domain_code, 
+		p.code, 
+		bc.object_id, 
+		bc.stereotype::text,
+		bc.package_id,
+		bc.author,
+		bc.version,
+		bc.status,
+		bc.createddate,
+		bc.modifieddate,
+		bc.note,
+		coalesce((SELECT obe.name 
+	 		FROM t_connector co,  t_object obe 
+	 		WHERE co.end_object_id = bc.object_id
+	 		AND obe.object_id = co.start_object_id
+	 		--AND co.stereotype = 'Responsibility'
+	 		AND obe.stereotype = 'ArchiMate_BusinessActor' limit 1), p.owner )
+	FROM cte_tbc p
+		JOIN t_diagram d ON d.package_id=p.package_id
+		JOIN t_diagramobjects po ON po.diagram_id=d.diagram_id AND po.object_id=p.object_id
+		JOIN t_connector c ON c.stereotype IN ('ArchiMate_Aggregation', 'ArchiMate_Composition')
+			AND c.start_object_id=p.object_id
+		JOIN t_object bc ON bc.object_id=c.end_object_id 
+			AND bc.stereotype IN ('ArchiMate_Capability', 'ArchiMate_TechnicalCapability')
+		JOIN t_diagramobjects co ON co.diagram_id=d.diagram_id AND co.object_id=bc.object_id
+)
+SELECT
+DISTINCT
+	bc.code, 
+	bc.name,
+	bc."isDomain",
+	bc.description,
+	bc.createddate AS "createdDate",
+	bc.modifieddate AS "modifiedDate",
+	bc.parent_code as parent,
+	bc.status,
+	bc.author,
+	bc.version,
+	bc.owner
+FROM cte_tbc bc
+WHERE bc.type IN ('ArchiMate_Capability', 'Domain')`;
 
 export const SELECT_BC_DOMAIN = `WITH RECURSIVE
 ${CTE_BC}

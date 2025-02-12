@@ -15,11 +15,11 @@ const DEFAULT_ELEMENT_HEIGHT = 100;
 const LEVEL_OFFSET = 50;
 const X__OFFSET = 50;
 
-const SELECT_BY_CODE = `${SELECT_ALL_BC} where code=$1`;
-const SELECT_BY_CODE_LIST = `${SELECT_ALL_BC} where code=ANY($1)`;
+const SELECT_BY_CODE = `${SELECT_ALL_BC} AND bc.code=$1`;
+const SELECT_BY_CODE_LIST = `${SELECT_ALL_BC} AND bc.code=ANY($1)`;
 
 const SEARCH_BY_NAME = `${SELECT_ALL_BC} WHERE name LIKE ANY ($1)`
-const SELECT_CHILDREN_BY_NAME = `${SELECT_ALL_BC} where parent=$1`;
+const SELECT_CHILDREN_BY_NAME = `${SELECT_ALL_BC} AND bc.parent_code=$1`;
 const throwCapabilityNotFound = (code) => {
 	throw Error(`Capability with code="${code}" not found`);
 };

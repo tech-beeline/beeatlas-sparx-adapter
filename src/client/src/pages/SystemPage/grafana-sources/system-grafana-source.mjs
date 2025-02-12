@@ -123,7 +123,7 @@ export function SystemSourceDialog({ system, open, setOpen }) {
                 loadSystemSource(),
                 loadSourceList()
             ]);
-            
+
             setSourceList(source_list);
             setSystemSource(system_source);
             setSelectedSource(system_source);
@@ -165,7 +165,7 @@ export function SystemSourceDialog({ system, open, setOpen }) {
             await checkResponse(response)
             return response.json();
         }
-        
+
         try {
             setInProgress(true);
 
