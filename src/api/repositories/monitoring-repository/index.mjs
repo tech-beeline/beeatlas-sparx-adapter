@@ -5,7 +5,7 @@ import Repository,
 } from '../sparx-ea-repository/index.mjs';
 
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
-import { SELECT_API_SOURCES, SELECT_METHOD_SOURCES, SELECT_PROVIDED_API_SOURCES, SELECT_SOURCES_PROPERIES } from './methods-sources.mjs';
+import { SELECT_API_SOURCES, SELECT_METHOD_ALL_SOURCES, SELECT_METHOD_SOURCES, SELECT_PROVIDED_API_SOURCES, SELECT_SOURCES_PROPERIES } from './methods-sources.mjs';
 
 const SELECT_ALL_SOURCES = `SELECT
 src.object_id, src.ea_guid, src.name, t.property, t.value
@@ -210,6 +210,20 @@ export class MonitoringRepository {
         const [methodsSources, sourceMap] = await Promise.all(
             [
                 Repository.queryRows(SELECT_METHOD_SOURCES),
+                this.selectSourcesMap()
+            ]
+        )
+
+        for (const m of methodsSources) {
+            m.source = sourceMap[m.source_id];
+        }
+        return methodsSources;
+    }
+
+    async selectSystemMethodsSources(systemCode) {
+        const [methodsSources, sourceMap] = await Promise.all(
+            [
+                Repository.queryRows(`${SELECT_METHOD_ALL_SOURCES} WHERE i.app_code=$1`, [systemCode]),
                 this.selectSourcesMap()
             ]
         )

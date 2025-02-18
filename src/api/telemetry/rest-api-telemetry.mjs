@@ -28,7 +28,7 @@ export async function registerAPIRequestTelemetry(req, res, next, fn, path, meth
     checkExpire();
     const end = httpRequestDurationMicroseconds.startTimer();
     if (fn) { await fn(req, res, next); } else res.status(501).send("Нет обработчика для запроса")
-    const labels = { path: path, uri: path, status: res.statusCode, code: res.statusCode, method: method };
+    const labels = { path: path, uri: path, status: res.statusCode, code: res.statusCode, method: method.toUpperCase() };
     httpRequestMax.set(labels, requestMax = Math.max(requestMax, end(labels)));
 }
 

@@ -22,7 +22,7 @@ const SYSTEM_REALIZATION_LIST = `with recursive app_catalog as (
     (select api_url.value from t_objectproperties api_url where api_url.object_id=i.object_id and api_url.property='${PROTOCOL_TAG}' limit 1) as ${PROTOCOL_TAG},
     (select alias from rel tc where tc.start_object_id=i.object_id and tc.stereotype='ArchiMate_TechnicalCapability' limit 1) as "capabilityCode"
     from app_catalog cat
-    join t_object app on app.package_id=cat.package_id and object_type='Component' and alias is not null and stereotype is null
+    join t_object app on app.package_id=cat.package_id and alias is not null and stereotype='softwareSystem'
     left join rel container on container.start_object_id=app.object_id and container.object_type='Component' and container.alias is not null and container.stereotype='${applicationCatalog.CONTAINER_STEREOTYPE}'
         left join rel i on i.start_object_id=container.object_id and i.object_type='Interface' and i.alias is not null and i.alias <> ''
     `;

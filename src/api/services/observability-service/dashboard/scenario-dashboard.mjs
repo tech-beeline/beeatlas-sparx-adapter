@@ -61,6 +61,10 @@ export class Interaction {
         this.interfaceUID = messageMethod.api_guid;
         this.title = `${index + 1}. ${formatTitle(message)}`
 
+        if (!messageMethod.name) {
+            console.log(messageMethod);
+        }
+
         const [method, path] = messageMethod.name.split(' ').filter(it => it.length);
 
         this.method = method;
@@ -112,7 +116,7 @@ export class ScenarioDashboard {
 
     processMessages(messages) {
         for (const msg of messages) {
-            if (msg.client_code && msg.server_code) {
+            if (msg.client_code && msg.server_code && (msg.method || msg.name)) {
                 const title = formatTitle(msg);
                 msg.interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction(
                     msg, this.interactions.count++,
@@ -196,7 +200,7 @@ export class ScenarioDashboard {
                         fixedColor: "transparent",
                         mode: "continuous-GrYlRd"
                     },
-                    displayName: `${message.interaction.index + 1} ${message.interaction.title}`,
+                    displayName: `${message.interaction.title}`,
                     "max": 1,
                     "min": 0
                 }

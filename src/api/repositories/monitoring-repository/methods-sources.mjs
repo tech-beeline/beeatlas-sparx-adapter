@@ -1,6 +1,4 @@
-export const SELECT_METHOD_SOURCES = `
--- Получение настроек источников метрик для наблюдаемости методов
-
+export const SELECT_METHOD_ALL_SOURCES = `
 WITH RECURSIVE cte_src AS (
 	SELECT
 		t.object_id as target_id,
@@ -68,10 +66,11 @@ WITH RECURSIVE cte_src AS (
 		r.app_code,
 		coalesce( src.source_id, r.source_id)
 	FROM cte_rls r
-		JOIN t_connector c ON c.start_object_id=r.object_id
+		LEFT JOIN t_connector c ON c.start_object_id=r.object_id
 			AND c.connector_type='Realisation'
-		JOIN t_object ch ON ch.object_id=c.end_object_id
+		LEFT JOIN t_object ch ON ch.object_id=c.end_object_id
 			AND (ch.object_type = 'Interface' OR ch.stereotype='C4_Container')
+			AND ch.status <> 'REMOVED'
 		LEFT JOIN cte_src src ON src.target_id=ch.object_id
 ), cte_api AS (
 	SELECT
@@ -93,10 +92,15 @@ WITH RECURSIVE cte_src AS (
 	FROM cte_rls api
 )
 SELECT DISTINCT
-	i.api_guid, m.ea_guid as operation_guid, i.source_id
+	i.name, i.code, i.api_guid, m.name as method, m.ea_guid as operation_guid, i.source_id,
+	latency.value as latency, rps.value as rps, error_rate.value as error_rate
 FROM cte_api i
 	JOIN t_operation m ON m.object_id=i.object_id
-WHERE i.source_id IS NOT NULL`;
+	LEFT JOIN t_operationtag latency ON latency.elementid=m.operationid AND latency.property='latency'
+	LEFT JOIN t_operationtag rps ON rps.elementid=m.operationid AND rps.property='rps'
+	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=m.operationid AND error_rate.property='error_rate'`;
+
+export const SELECT_METHOD_SOURCES = `${SELECT_METHOD_ALL_SOURCES} WHERE i.source_id IS NOT NULL`
 
 export const SELECT_SOURCES_PROPERIES = `SELECT 
 	gs.name,

@@ -365,7 +365,8 @@ class MonitoringService {
             (acc[v.operation_guid] = sources.getSource(v), acc), {}));
 
         const dashboard = new ScenarioDashboard(scenario, methodsSources);
-
+        const ret = dashboard.getPanels();
+        return ret;
         const panelIdSequence = new Sequence();
 
         const interactions = await this.getInteractions(scenario.callTrace);
@@ -379,8 +380,7 @@ class MonitoringService {
         const sequenceCallTreePanel = callTreePanel(panelIdSequence, scenario.callTrace, Math.max(...interactions.map(it => it.statPanel?.gridPos.y ?? 0)) + 1);
         const maxY = sequenceCallTreePanel.panels[sequenceCallTreePanel.panels.length - 1].gridPos.y + 1
         const interactionDetailsPanels = interactions.reduce((r, v) => [...r, ...createInteractionPanels(panelIdSequence, v, maxY)], [])
-        const ret = dashboard.getPanels();
-        return ret;
+        
         return [
             legendPanel, systemHealthHeaderPanel, apiStateHeaderPanel,
             ...interactionStatPanels,
@@ -430,20 +430,21 @@ class MonitoringService {
     async publishSystemDashboard(cmdb) {
         await this.#prepareGrafanaFolder();
 
-        const system = await componentsService.getSystem(cmdb, { loadMethods: true, loadMethodTags: true });
-        const grafana_sources = await this.getGrafanaSources();
+        const system = await componentsService.getSystem(cmdb);
+        const sources = new SourceFactory();
 
-        system.grafanaSource = grafana_sources[system.code] ?? DEFAULT_OPENSEARCH_API_SOURCE; // [ ] ДОбавить управление источниками графаны
+        //const sourceMap = this.selectSourcesMap();
+        const methodsSources = await monitoringRepository.selectSystemMethodsSources(cmdb);
 
+        const apiMap = {};
+        for (const method of methodsSources) {
+            const api = apiMap[method.api_guid] ?? (apiMap[method.api_guid] = { name: method.name, code: method.code, methods: [] });
+            if (method.source)
+                method.source = sources.getSource(method);
+            api.methods.push(method);
+        }
 
-        /** @type {APIMethod[]} */
-        let methods = (system.containers ?? []).reduce((ret, container) => {
-            return [...ret,
-            ...container.interfaces?.reduce((c, i) => [...c, ...i.methods?.map(m => Object.assign({ container: container.name, interface: i.name }, m))], [])
-            ]
-        }, []);
-
-        const dashboard = SystemDashboard(system);
+        const dashboard = SystemDashboard(system, Object.values(apiMap));
         console.log(dashboard);
 
         return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, dashboard);

@@ -279,11 +279,38 @@ function rpsPanels(seq, m, grafanaSource, y) {
 }
 
 
-export default function SystemDashboard(system) {
+export default function SystemDashboard(system, apiList) {
     const seq = new Sequence();
     const header = TextPanel(seq, `# Дашбор для ${system.name}`, { x: 0, y: 0, w: 25, h: 2 });
     const panels = [];
     let y = 2;
+
+    for (const api of apiList ?? []) {
+        const panelText = TextPanel(seq, `Интефрейс ${api.name}`, { x: 0, y: y, h: 2, w: 25 });
+        //const apiRow = Row(seq, `Интефрейс ${api.name}`, [], { x: 0, y: y, h: 2, w: 25 })
+        y += 2;
+        for (const m of api.methods) {
+            const methodRow = Row(seq, m.method, [], { x: 1, y: y++, h: 1, w: 24 })
+            panels.push(methodRow);
+            if( !m.source){
+                const noSettingPanel = TextPanel(seq, `Отсутствуют настройки мониторинга API`, { x: 0, y: y, h: 2, w: 25 });
+                methodRow.panels.push(noSettingPanel);
+                continue;
+            }
+            const method = {...{},...m, name: m.method};
+            const latencyPanels = LatancyPanels(seq, method, m.source, y)
+            methodRow.panels.push(...latencyPanels);
+            y += 4;
+            const errorRatePanels = ErrorRatePanels(seq, method, m.source, y)
+            methodRow.panels.push(...errorRatePanels);
+            y += 4;
+            const rps_panels = rpsPanels(seq, method, m.source, y)
+            methodRow.panels.push(...rps_panels);
+            
+        }
+        panels.push(panelText);
+    }
+    /*
     for (const container of system.containers) {
         const panelText = TextPanel(seq, `Контейнер ${container.name}`, { x: 0, y: y, h: 2, w: 25 });
         y += 2;
@@ -305,7 +332,7 @@ export default function SystemDashboard(system) {
                 panels.push(methodRow);
             }
         }
-    }
+    }*/
 
     return {
         folderUid: DEFAULT_FOLDER_UID,
