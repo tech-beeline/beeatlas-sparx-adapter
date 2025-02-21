@@ -146,7 +146,7 @@ export class InteractionStat {
             source.errorCountTarget(method, path),
             expr("$A75 * 1", "Latency75"),
             expr("$A95 * 1", "Latency95"),
-            expr("$C/$B * 100", "Error"),
+            expr("$C/($B + ($B==0)) * 100", "Error"),
             expr("$B / (60 * 5)", "TPS"),
             expr(sla.latency * 1000 + '/1000', "LatencyThreshold"),
             expr(sla.errorRate.toString(), "ErrorThreshold"),

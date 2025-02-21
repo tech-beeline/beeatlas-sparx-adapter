@@ -25,11 +25,16 @@ import Sequence from "./monitoring-templates/sequence.mjs";
 import { ScenarioDashboard } from "../../api/services/observability-service/dashboard/scenario-dashboard.mjs";
 import { MonitoringRepository } from "../../api/repositories/index.mjs";
 import { SourceFactory } from "../../api/services/observability-service/dashboard/sources/index.mjs";
+import { GRAFANA_INTERACTION_TEMPLATE_ROW, GRAFANA_MESSAGES_HEADERS_ROW, GRAFANA_MESSAGES_TEMPLATE_ROW } from "../../api/const.mjs";
+import { SecnarioDashboardBuilder } from "../../api/services/observability-service/dashboard/scenario-dashboard-builder.mjs";
 
 const GRAFANA_URL = process.env.GRAFANA_URL ?? "https://inside-dev.beeline.ru"
 const GRAFANA_TOKEN = process.env.GRAFANA_TOKEN;
+const GRAFANA_E2E_TEMPLATE_UID = process.env.GRAFANA_E2E_TEMPLATE_UID;
+
 const FOLDER_API_PATH = "/api/folders"
-const DASHBOARD_API_PATH = "/api/dashboards/db"
+const DASHBOARD_API_PATH = "/api/dashboards/db";
+const GET_DASHBOARD_PATH = "/api/dashboards/uid/";
 
 const GRAFANA_HTTP_OPTIONS = { headers: { 'Authorization': `Bearer ${GRAFANA_TOKEN}` }, rejectUnauthorized: false };
 
@@ -367,26 +372,6 @@ class MonitoringService {
         const dashboard = new ScenarioDashboard(scenario, methodsSources);
         const ret = dashboard.getPanels();
         return ret;
-        const panelIdSequence = new Sequence();
-
-        const interactions = await this.getInteractions(scenario.callTrace);
-
-        const legendPanel = LEGEND_PANEL(panelIdSequence);
-        const systemHealthHeaderPanel = SYSTEMS_HEALTH_HEADER_PANEL(panelIdSequence, process.name);
-        const apiStateHeaderPanel = API_STATE_HEADER_PANEL(panelIdSequence, process.name);
-
-        const interactionStatPanels = interactions.map(it => createInteractionStatPanel(it, panelIdSequence));
-
-        const sequenceCallTreePanel = callTreePanel(panelIdSequence, scenario.callTrace, Math.max(...interactions.map(it => it.statPanel?.gridPos.y ?? 0)) + 1);
-        const maxY = sequenceCallTreePanel.panels[sequenceCallTreePanel.panels.length - 1].gridPos.y + 1
-        const interactionDetailsPanels = interactions.reduce((r, v) => [...r, ...createInteractionPanels(panelIdSequence, v, maxY)], [])
-        
-        return [
-            legendPanel, systemHealthHeaderPanel, apiStateHeaderPanel,
-            ...interactionStatPanels,
-            sequenceCallTreePanel,
-            ...interactionDetailsPanels
-        ];
     }
 
     async #prepareGrafanaFolder() {
@@ -401,6 +386,53 @@ class MonitoringService {
             })
         }
     }
+
+    /**
+     * 
+     * @returns {Promise<{statTemplate,messageHeaderTemplate, messageTemplate, interactionPanelTemplate}>}
+     */
+    async getE2EScenarioTemplate() {
+        const dashboardTemplate = await getJSON(`${GRAFANA_URL}${GET_DASHBOARD_PATH}${GRAFANA_E2E_TEMPLATE_UID}`, GRAFANA_HTTP_OPTIONS);
+
+        /**
+         * @type {Array}
+         */
+        const templatePanels = dashboardTemplate.dashboard.panels;
+        const sourceTemplate = templatePanels.find(p => p.id == 1);
+        const transformationsTemplate = templatePanels.find(p => p.id == 2);
+
+        const statTemplate = { ...{}, ...transformationsTemplate, targets: sourceTemplate.targets, datasource: sourceTemplate.datasource };
+
+        const msgHeaderRowIndex = templatePanels.findIndex(p => p.title == GRAFANA_MESSAGES_HEADERS_ROW);
+        if (msgHeaderRowIndex === -1) {
+            throw Error(`В шаблоне дашборда Е2Е сценария не найден шаблон для шапки сообщений (${GRAFANA_MESSAGES_HEADERS_ROW})`);
+        }
+
+        const msgTemlateRowIndex = templatePanels.findIndex(p => p.title == GRAFANA_MESSAGES_TEMPLATE_ROW);
+
+        if (msgTemlateRowIndex === -1) {
+            throw Error(`В шаблоне дашборда Е2Е сценария не найден шаблон для сообщений (${GRAFANA_MESSAGES_TEMPLATE_ROW})`);
+        }
+
+        const interactionTemlateRowIndex = templatePanels.findIndex(p => p.title == GRAFANA_INTERACTION_TEMPLATE_ROW);
+
+        if (interactionTemlateRowIndex === -1) {
+            throw Error(`В шаблоне дашборда Е2Е сценария не найден шаблон взаимодейства (${GRAFANA_INTERACTION_TEMPLATE_ROW})`);
+        }
+        const messageHeaderTemplate = [...templatePanels[msgHeaderRowIndex].panels, ...templatePanels.slice(msgHeaderRowIndex + 1, msgTemlateRowIndex)]
+        const messageTemplate = [...templatePanels[msgTemlateRowIndex].panels, ...templatePanels.slice(msgTemlateRowIndex + 1, interactionTemlateRowIndex)]
+        const interactionPanelTemplate = [...templatePanels[interactionTemlateRowIndex].panels, ...templatePanels.slice(interactionTemlateRowIndex + 1)]
+        return {
+            statTemplate: statTemplate,
+            messageHeaderTemplate: messageHeaderTemplate,
+            messageTemplate: messageTemplate,
+            interactionPanelTemplate: interactionPanelTemplate
+        }
+    }
+
+
+
+
     /**
      * 
      * @param {string} code 
@@ -411,7 +443,18 @@ class MonitoringService {
         const process = await Repository.first(t_diagram, { ea_guid: code });
         if (!process) throw NotFound(`Процесс с GUID=${code} не найден`);
 
-        let scenarioJSON = await this.getScenarioJSON(code, process)
+        const template = await this.getE2EScenarioTemplate();
+
+        const scenario = await E2EProcessService.getBIScenario(code);
+        const sources = new SourceFactory();
+        const methodsSources = await monitoringRepository.selectMethodsSources().then(rows => rows.reduce((acc, v) =>
+            (acc[v.operation_guid] = sources.getSource(v), acc), {}));
+
+
+        const builder = new SecnarioDashboardBuilder(template);
+        const dashboardPanels = builder.buildScenarioDashboard(scenario, methodsSources);
+
+        //let scenarioJSON = await this.getScenarioJSON(code, process)
 
         let body = {
             folderUid: DEFAULT_FOLDER_UID,
@@ -419,7 +462,7 @@ class MonitoringService {
             dashboard: {
                 uid: code.replaceAll(/\{|\}/g, ''),
                 title: `Дашборд для шага ${process.name}`,
-                panels: scenarioJSON
+                panels: dashboardPanels
             }
         };
 
@@ -427,6 +470,7 @@ class MonitoringService {
 
         return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, body);
     }
+
     async publishSystemDashboard(cmdb) {
         await this.#prepareGrafanaFolder();
 

@@ -292,12 +292,12 @@ export default function SystemDashboard(system, apiList) {
         for (const m of api.methods) {
             const methodRow = Row(seq, m.method, [], { x: 1, y: y++, h: 1, w: 24 })
             panels.push(methodRow);
-            if( !m.source){
+            if (!m.source) {
                 const noSettingPanel = TextPanel(seq, `Отсутствуют настройки мониторинга API`, { x: 0, y: y, h: 2, w: 25 });
                 methodRow.panels.push(noSettingPanel);
                 continue;
             }
-            const method = {...{},...m, name: m.method};
+            const method = { ...{}, ...m, name: m.method };
             const latencyPanels = LatancyPanels(seq, method, m.source, y)
             methodRow.panels.push(...latencyPanels);
             y += 4;
@@ -306,7 +306,6 @@ export default function SystemDashboard(system, apiList) {
             y += 4;
             const rps_panels = rpsPanels(seq, method, m.source, y)
             methodRow.panels.push(...rps_panels);
-            
         }
         panels.push(panelText);
     }
@@ -334,11 +333,13 @@ export default function SystemDashboard(system, apiList) {
         }
     }*/
 
+    const code = system.code.replaceAll(/\.|\,/gi, '_');
+
     return {
         folderUid: DEFAULT_FOLDER_UID,
         overwrite: true,
         dashboard: {
-            uid: `${SYSTEM_UID_PREFIX}${system.code}`,
+            uid: `${SYSTEM_UID_PREFIX}${code}`,
             title: `Дашборд для ${system.name}`,
             panels: [
                 header,
