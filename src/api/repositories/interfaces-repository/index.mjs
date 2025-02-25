@@ -139,49 +139,55 @@ export class InterfacesRepository {
     }
 
     async setContainerInterfaces(containerCode, interfaces = []) {
-        const currentAPIList = await this.selectContainerInterfaces(containerCode);
-        const newAPIs = [], toUpdate = [];
-        for (const it of interfaces) {
-            if (!it.status) it.status = DEFAULT_STATUS;
+        try {
 
-            const currentAPI = currentAPIList.find(i => i.code === it.code);
-            if (!currentAPI) {
-                newAPIs.push(it);
-                continue;
+
+            const currentAPIList = await this.selectContainerInterfaces(containerCode);
+            const newAPIs = [], toUpdate = [];
+            for (const it of interfaces) {
+                if (!it.status) it.status = DEFAULT_STATUS;
+
+                const currentAPI = currentAPIList.find(i => i.code === it.code);
+                if (!currentAPI) {
+                    newAPIs.push(it);
+                    continue;
+                }
+                if (!isAPIEquals(it, currentAPI))
+                    toUpdate.push(it);
             }
-            if (!isAPIEquals(it, currentAPI))
-                toUpdate.push(it);
-        }
 
-        for (const it of currentAPIList) {
-            if (it.status !== REMOVED_STATUS && !interfaces.find(i => i.code === it.code)) {
-                it.status = REMOVED_STATUS;
-                toUpdate.push(it);
+            for (const it of currentAPIList) {
+                if (it.status !== REMOVED_STATUS && !interfaces.find(i => i.code === it.code)) {
+                    it.status = REMOVED_STATUS;
+                    toUpdate.push(it);
+                }
             }
-        }
 
-        console.group("Планируемые изменения")
-        console.info("Добавить интерфейсы: ", newAPIs)
-        console.info("Обновить интерфейсы: ", toUpdate);
-        console.groupEnd();
+            console.group("Планируемые изменения")
+            console.info("Добавить интерфейсы: ", newAPIs)
+            console.info("Обновить интерфейсы: ", toUpdate);
+            console.groupEnd();
 
-        await Promise.all([
-            ...newAPIs.map(it => this.insertInterface(containerCode, it.name, it.code, it.version, it.description, it.status)),
-            ...toUpdate.map(it => this.updateInterface(it.name, it.code, it.version, it.description, it.status))
-        ]);
+            await Promise.all([
+                ...newAPIs.map(it => this.insertInterface(containerCode, it.name, it.code, it.version, it.description, it.status)),
+                ...toUpdate.map(it => this.updateInterface(it.name, it.code, it.version, it.description, it.status))
+            ]);
 
-        for (const it of interfaces) {
-            const methods = it.methods ?? [];
-            await this.setInterfaceMethods( it.code, methods);
-        }
+            for (const it of interfaces) {
+                const methods = it.methods ?? [];
+                await this.setInterfaceMethods(it.code, methods);
+            }
 
-        for (const it of toUpdate) {
-            const currentMethods = await this.selectInterfaceMethods(it.code);
-            if (it.status === REMOVED_STATUS) {
-                console.info(`Помечаем удаленными методы для интерфейса [${it.code} ${it.name}]`);
-                await Promise.all(currentMethods.map(m => this.markMethodRemoved(it.code, m.name)));
-                continue;
-            };
+            for (const it of toUpdate) {
+                const currentMethods = await this.selectInterfaceMethods(it.code);
+                if (it.status === REMOVED_STATUS) {
+                    console.info(`Помечаем удаленными методы для интерфейса [${it.code} ${it.name}]`);
+                    await Promise.all(currentMethods.map(m => this.markMethodRemoved(it.code, m.name)));
+                    continue;
+                };
+            }
+        } catch (error) {
+            console.error( error.message,containerCode, interfaces);
         }
     }
 
