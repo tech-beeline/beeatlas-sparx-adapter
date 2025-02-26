@@ -11,3 +11,4 @@ env:
   FDM_PASSWORD : "vault:eafdmmart/data/dev/fdm#password"
   GRAFANA_URL : "vault:eafdmmart/data/dev/grafana#url"
   GRAFANA_TOKEN : "vault:eafdmmart/data/dev/grafana#token"
+  GRAFANA_E2E_TEMPLATE_UID: "vault:eafdmmart/data/dev/grafana#scenario_template_uid"
