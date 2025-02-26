@@ -168,9 +168,10 @@ export class SystemService {
 
         if (!systemCode) throw BadRequest('Code parameter is not specified');
         if (!system) throw BadRequest('System is not specified');
+
         const containerWithoutCode = system.containers?.find(c => !c.code);
         if (containerWithoutCode) {
-            throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`)
+            throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`);
         }
 
         const containers = system.containers ?? [];
@@ -182,11 +183,11 @@ export class SystemService {
         for( const container of containers ){
             await interfacesRepository.setContainerInterfaces(container.code, container.interfaces)
         }
+
         console.info(`${systemCode} - Обновление информации об интерфейсах завершено`);
 
         return this.getByCode(systemCode, { level: "methods" });
     }
-
 
     async getPurpose(systemCode) {
         const rows = await systemsRepository.selectSystemCapabilities(systemCode);
@@ -209,6 +210,7 @@ export class SystemService {
 
         return capabilityMap["GRP.000"] ?? {};
     }
+
     async getE2EParticipition(systemCode) {
         return (await systemsRepository.selectSystemE2EParticipition(systemCode))
             .map(r => new E2EProcessContext(r));

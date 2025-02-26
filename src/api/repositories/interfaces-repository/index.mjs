@@ -184,7 +184,7 @@ export class InterfacesRepository {
 
             for (const it of toUpdate) {
                 console.info(`${containerCode} - Обновление интерфейса и методов [${it.code}] ${it.name}`);
-                if (isAPIEquals(it, it.currentAPI)) {
+                if (!isAPIEquals(it, it.currentAPI)) {
                     console.info(`${containerCode} - Обновление интерфейса [${it.code}] ${it.name}`);
                     await this.updateInterface(it.name, it.code, it.version, it.description, it.status);
                 }
@@ -223,6 +223,9 @@ export class InterfacesRepository {
                     if (!isMethodEquals(currentMethod, m)) {
                         console.info(`${interfaceCode} - Обновление метода ${m.name}`);
                         await this.updateMethod(interfaceCode, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
+                    }
+                    if (currentMethod.removed_date) {
+                        await Repository.updateOperationTags(currentMethod.operationid, { removedDate: null })
                     }
                     continue;
                 }

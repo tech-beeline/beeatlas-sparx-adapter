@@ -4,6 +4,7 @@ export const SELECT_ALL_METHODS = `SELECT
 	it.name as interface_name,
 	m.name,
 	m.type as "returnType",
+	m.operationid,
 	rps.value as rps,
 	latency.value as latency,
 	error_rate.value as error_rate,

@@ -343,7 +343,7 @@ export class SystemsRepository {
 	}
 
 	async setSystemContainers(systemCode, containers) {
-		console.log(`${systemCode} - Обновление информации о контейнерах системы`)
+		console.log(`${systemCode} - Обновление информации о контейнерах системы`);
 		containers = containers ?? [];
 
 		/** @type {SystemDTOInternal} */
@@ -390,8 +390,6 @@ export class SystemsRepository {
 			newContainers.push(container);
 			console.info(`${systemCode} - добавлен контейнер `, container);
 		}
-
-		//if (containersToUpdate.length) console.log(`${systemCode} - update containers:`, containersToUpdate);
 
 		for (const diff of containersToUpdate) {
 			await this.updateContainer(
