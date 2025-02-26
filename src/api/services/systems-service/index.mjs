@@ -1,6 +1,7 @@
 import monitoringService from "../../../legacy/services/monitoring-service.mjs";
 import { BadRequest, NotFound, NotImplemented } from "../../../utils/errors.mjs";
 import patchArray from "../../../utils/patch-array.mjs";
+import { API_METRIC_TEMPLATE_TAG } from "../../const.mjs";
 import { buildHREF } from "../../controllers/controller-decorator.mjs";
 import SystemApiMonitoring, { ContainerApiMonitoring } from "../../model/observability/system-api-monitoring.mjs";
 
@@ -175,9 +176,13 @@ export class SystemService {
         const containers = system.containers ?? [];
 
         await systemsRepository.setSystemContainers(systemCode, containers);
-        await Promise.all(
-            containers.map(c => interfacesRepository.setContainerInterfaces(c.code, c.interfaces))
-        )
+
+        console.info(`${systemCode} - Обновление информации об интерфейсах`);
+
+        for( const container of containers ){
+            await interfacesRepository.setContainerInterfaces(container.code, container.interfaces)
+        }
+        console.info(`${systemCode} - Обновление информации об интерфейсах завершено`);
 
         return this.getByCode(systemCode, { level: "methods" });
     }
@@ -249,7 +254,8 @@ export class SystemService {
              * @type {SystemApiMonitoring}
              */
             const app = apps[row.app_code] ?? (apps[row.app_code] =
-                { systemCode: row.app_code, source: row.app_source, containers: [] });
+                { systemCode: row.app_code, source: row.app_metric_template, containers: [] });
+
             if (row.container_code) {
                 /**
                  * @type {ContainerApiMonitoring}
@@ -259,7 +265,7 @@ export class SystemService {
                     app.containers.push(container = {
                         code: row.container_code,
                         name: row.container_name,
-                        source: row.container_source,
+                        source: row.container_metric_template,
                         interfaces: []
                     });
                 }
@@ -269,10 +275,14 @@ export class SystemService {
                 }
             }
         }
-        const ret = (apps[systemCode]??{ systemCode: systemCode})
+        const ret = (apps[systemCode] ?? { systemCode: systemCode })
         ret.providedAPIs = providedRows;
 
         return ret;
+    }
+
+    async setAppMonitoringTemplate(systemCode, appMetricTemplate) {
+        return systemsRepository.setSystemTag(systemCode, API_METRIC_TEMPLATE_TAG, appMetricTemplate);
     }
 }
 

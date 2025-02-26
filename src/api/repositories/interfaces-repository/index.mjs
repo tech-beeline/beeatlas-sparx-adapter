@@ -10,6 +10,12 @@ const INTERFACES_FOLDER = 'Interfaces'
 
 const isAPIEquals = (a, b) => a.name === b.name && a.description === b.description && a.version === b.version && a.status === b.status;
 
+const isMethodEquals = (a, b) =>
+    a.name === b.name && (a.description ?? "") === (b.description ?? "")
+    && (a.rps?.toString() ?? "") === (b.rps?.toString() ?? "")
+    && (a.latency?.toString() ?? "") === (b.latency?.toString() ?? "")
+    && (a.error_rate?.toString() ?? "") === (b.error_rate?.toString() ?? "");
+
 export class InterfacesRepository {
     /**
      * 
@@ -122,7 +128,9 @@ export class InterfacesRepository {
     }
 
     async updateMethod(interfaceCode, name, description, returnType, rps, latency, error_rate) {
+        console.info('Обновляем метод', name);
         const updatedMethods = await Repository.queryRows(UPDATE_OPERATION, [interfaceCode, name, description, returnType]);
+        console.info('Обновляем tagged value', { name: name, rps: rps, latency: latency, error_rate: error_rate });
         for (const method of updatedMethods) {
             await Repository.updateOperationTags(method.operationid, { rps: rps, latency: latency, error_rate: error_rate, removedDate: null })
         }
@@ -133,72 +141,94 @@ export class InterfacesRepository {
         for (const op of operations) {
             await Repository.updateOperationTags(op.operationid, { removedDate: new Date() });
         }
-    }
-
-    async setInterfaceMethods(interfaceCode, methods) {
+        console.info(`${interfaceCode}:${name} - помечен удаленным`);
     }
 
     async setContainerInterfaces(containerCode, interfaces = []) {
-        const currentAPIList = await this.selectContainerInterfaces(containerCode);
-        const newAPIs = [], toUpdate = [];
-        for (const it of interfaces) {
-            if (!it.status) it.status = DEFAULT_STATUS;
+        try {
+            console.info(`${containerCode} - Обновление инфтерфейсов контейнера`)
+            const currentAPIList = await this.selectContainerInterfaces(containerCode);
+            const newAPIs = [], toUpdate = [];
+            for (const it of interfaces ?? []) {
+                if (!it.status) it.status = DEFAULT_STATUS;
 
-            const currentAPI = currentAPIList.find(i => i.code === it.code);
-            if (!currentAPI) {
-                newAPIs.push(it);
-                continue;
-            }
-            if (!isAPIEquals(it, currentAPI))
-                toUpdate.push(it);
-        }
-
-        for (const it of currentAPIList) {
-            if (it.status !== REMOVED_STATUS && !interfaces.find(i => i.code === it.code)) {
-                it.status = REMOVED_STATUS;
+                const currentAPI = currentAPIList.find(i => i.code === it.code);
+                if (!currentAPI) {
+                    newAPIs.push(it);
+                    continue;
+                }
+                it.currentAPI = currentAPI;
                 toUpdate.push(it);
             }
-        }
 
-        console.group("Планируемые изменения")
-        console.info("Добавить интерфейсы: ", newAPIs)
-        console.info("Обновить интерфейсы: ", toUpdate);
-        console.groupEnd();
+            for (const it of currentAPIList) {
+                if (it.status !== REMOVED_STATUS && !interfaces.find(i => i.code === it.code)) {
+                    it.currentAPI = { ...it };
+                    it.status = REMOVED_STATUS;
+                    toUpdate.push(it);
+                }
+            }
 
-        await Promise.all([
-            ...newAPIs.map(it => this.insertInterface(containerCode, it.name, it.code, it.version, it.description, it.status)),
-            ...toUpdate.map(it => this.updateInterface(it.name, it.code, it.version, it.description, it.status))
-        ]);
+            console.group("Планируемые изменения")
+            console.info("Добавить интерфейсы: ", newAPIs.map(it => it.code).join(','));
+            console.info("Обновить интерфейсы: ", toUpdate);
+            console.groupEnd();
 
-        for (const it of interfaces) {
-            const methods = it.methods ?? [];
-            await this.setInterfaceMethods( it.code, methods);
-        }
+            for (const it of newAPIs) {
+                console.info(`${containerCode} - Добавление интерфейса [${it.code}] ${it.name}`);
+                await this.insertInterface(containerCode, it.name, it.code, it.version, it.description, it.status);
+                const methods = it.methods ?? [];
+                await this.setInterfaceMethods(it.code, methods);
+                console.info(`${containerCode} - Интерфейс добавлен [${it.code}] ${it.name}`);
+            }
 
-        for (const it of toUpdate) {
-            const currentMethods = await this.selectInterfaceMethods(it.code);
-            if (it.status === REMOVED_STATUS) {
-                console.info(`Помечаем удаленными методы для интерфейса [${it.code} ${it.name}]`);
-                await Promise.all(currentMethods.map(m => this.markMethodRemoved(it.code, m.name)));
-                continue;
-            };
+            for (const it of toUpdate) {
+                console.info(`${containerCode} - Обновление интерфейса и методов [${it.code}] ${it.name}`);
+                if (isAPIEquals(it, it.currentAPI)) {
+                    console.info(`${containerCode} - Обновление интерфейса [${it.code}] ${it.name}`);
+                    await this.updateInterface(it.name, it.code, it.version, it.description, it.status);
+                }
+
+                const methods = it.methods ?? [];
+                await this.setInterfaceMethods(it.code, methods);
+
+                console.info(`${containerCode} - Интерфейс и методы обновлены [${it.code}] ${it.name}, status = ${it.status}`);
+            }
+        } catch (error) {
+            console.error(error.message, containerCode, interfaces);
+            throw error;
         }
     }
 
     async setInterfaceMethods(interfaceCode, methods = []) {
         const currentMethods = await Repository.queryRows(SELECT_INTERFACE_METHODS, [interfaceCode]);
         const methodsToRemove = currentMethods.filter(cm => !cm.removed_date && !methods.find(m => m.name === cm.name));
-        console.info(`Удаление методов`, methodsToRemove);
-        await Promise.all(methodsToRemove.map(m => this.markMethodRemoved(interfaceCode, m.name)));
-        console.log(`Добавление и обновление методов`, methods);
-        for (const m of methods) {
-            const currentMethod = currentMethods.find(cm => cm.name === m.name);
-            if (currentMethod) {
-                await this.updateMethod(interfaceCode, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
-                console.info('Обновляем метод', m);
-                continue;
+
+        if (!methodsToRemove.length && !methods.length) {
+            console.log(`${interfaceCode} - Обновление методов не требуется`);
+            return;
+        }
+
+        if (methodsToRemove.length) {
+            console.info(`Удаление методов`, methodsToRemove);
+            for (const m of methodsToRemove) {
+                await this.markMethodRemoved(interfaceCode, m.name);
             }
-            await this.insertMethod(interfaceCode, m.name, m.description, m.returnType, m.rpos, m.latency, m.error_rate);
+        }
+        if (methods.length) {
+            console.log(`${interfaceCode} - Добавление и обновление методов`, methods);
+            for (const m of methods) {
+                const currentMethod = currentMethods.find(cm => cm.name === m.name);
+                if (currentMethod) {
+                    if (!isMethodEquals(currentMethod, m)) {
+                        console.info(`${interfaceCode} - Обновление метода ${m.name}`);
+                        await this.updateMethod(interfaceCode, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
+                    }
+                    continue;
+                }
+                console.log(`${interfaceCode} - добавление метода ${m.name}`);
+                await this.insertMethod(interfaceCode, m.name, m.description, m.returnType, m.rpos, m.latency, m.error_rate);
+            }
         }
     }
 }

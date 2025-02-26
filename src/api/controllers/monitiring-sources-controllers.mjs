@@ -39,7 +39,10 @@ class GrafanaSourceControllers {
     }
 
     async postObjectSource(request, response) {
-        response.json((await service.setObjectSource(request.body)) ?? {});
+        const body = request.body;
+        if( !body.object_id) throw BadRequest('object_id is not specified');
+
+        response.json((await service.setObjectMetricTemplate(request.body)) ?? {});
     }
 }
 

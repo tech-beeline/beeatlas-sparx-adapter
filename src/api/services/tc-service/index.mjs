@@ -37,7 +37,7 @@ export class TechnicalCapabiliiesService {
      * @returns {Promise<TechnicalCapability>}
      */
     async putTC(targetTC) {
-        const currentTC = await tcDataService.selectTCByCode(targetTC.code);
+        const [currentTC] = await tcDataService.selectTCByCode(targetTC.code);
         if (currentTC) currentTC.system = { code: currentTC.sys_code };
 
         currentTC ? (await updateTC(currentTC, targetTC)) : await createTC(targetTC)

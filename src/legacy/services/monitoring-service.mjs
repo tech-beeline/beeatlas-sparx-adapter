@@ -27,20 +27,11 @@ import { MonitoringRepository } from "../../api/repositories/index.mjs";
 import { SourceFactory } from "../../api/services/observability-service/dashboard/sources/index.mjs";
 import { GRAFANA_INTERACTION_TEMPLATE_ROW, GRAFANA_MESSAGES_HEADERS_ROW, GRAFANA_MESSAGES_TEMPLATE_ROW } from "../../api/const.mjs";
 import { SecnarioDashboardBuilder } from "../../api/services/observability-service/dashboard/scenario-dashboard-builder.mjs";
-
-const GRAFANA_URL = process.env.GRAFANA_URL ?? "https://inside-dev.beeline.ru"
-const GRAFANA_TOKEN = process.env.GRAFANA_TOKEN;
-const GRAFANA_E2E_TEMPLATE_UID = process.env.GRAFANA_E2E_TEMPLATE_UID;
-
-const FOLDER_API_PATH = "/api/folders"
-const DASHBOARD_API_PATH = "/api/dashboards/db";
-const GET_DASHBOARD_PATH = "/api/dashboards/uid/";
-
-const GRAFANA_HTTP_OPTIONS = { headers: { 'Authorization': `Bearer ${GRAFANA_TOKEN}` }, rejectUnauthorized: false };
+import { GrafanaService } from "../../api/resources/index.mjs";
+import { FOLDER_API_PATH, GET_DASHBOARD_BY_UID_PATH, GRAFANA_E2E_TEMPLATE_UID, GRAFANA_HTTP_OPTIONS, GRAFANA_URL } from "../../api/resources/grafana/conts.mjs";
 
 const monitoringRepository = new MonitoringRepository();
-
-const BI_UID_PREFIX = 'archops-bi-'
+const grafanaService = new GrafanaService();
 
 class InvalidMessageMetrics {
     msg;
@@ -392,7 +383,8 @@ class MonitoringService {
      * @returns {Promise<{statTemplate,messageHeaderTemplate, messageTemplate, interactionPanelTemplate}>}
      */
     async getE2EScenarioTemplate() {
-        const dashboardTemplate = await getJSON(`${GRAFANA_URL}${GET_DASHBOARD_PATH}${GRAFANA_E2E_TEMPLATE_UID}`, GRAFANA_HTTP_OPTIONS);
+
+        const dashboardTemplate = await grafanaService.getScenarioTemplate();
 
         /**
          * @type {Array}
@@ -431,7 +423,22 @@ class MonitoringService {
     }
 
 
+    async buildApiMetricTemlate(uid, target) {
+        const dashboard = await grafanaService.getDashboardByUID(uid);
+        const selectedDatasourceName = GrafanaService.getVariableCurrentValue(dashboard.dashboard, 'DATASOURCE');
+        const datasource = await grafanaService.getDatasourceByName(selectedDatasourceName);
 
+        for (const panel of dashboard.dashboard.panels) {
+            panel.datasource.uid = datasource.uid;
+            for (const target of panel.targets) {
+                if (target.datasource.uid === '${DATASOURCE}' || target.datasource.uid === '$DATASOURCE') {
+                    target.datasource.uid = datasource.uid;
+                }
+            }
+        }
+
+        return Object.assign(target, dashboard.dashboard);
+    }
 
     /**
      * 
@@ -447,28 +454,35 @@ class MonitoringService {
 
         const scenario = await E2EProcessService.getBIScenario(code);
         const sources = new SourceFactory();
-        const methodsSources = await monitoringRepository.selectMethodsSources().then(rows => rows.reduce((acc, v) =>
-            (acc[v.operation_guid] = sources.getSource(v), acc), {}));
+        const methodsSourcesRows = await monitoringRepository.selectMethodsSources();
+
+        const apiMetricTemplates = {};
+        const methodSourcesMap = {};
+        for (const m of methodsSourcesRows) {
+            if (!m.api_metric_template)
+                continue;
+
+            const template_uid = GrafanaService.dashboardUIDFromURL(m.api_metric_template);
+            m.apiMetricTemplate = apiMetricTemplates[template_uid] ?? (apiMetricTemplates[template_uid] = {});
+            methodSourcesMap[m.operation_guid] = m;
+        }
+
+        await Promise.all(
+            Object.entries(apiMetricTemplates)
+                .map(([uid, value]) => this.buildApiMetricTemlate(uid, value)
+                ));
 
 
         const builder = new SecnarioDashboardBuilder(template);
-        const dashboardPanels = builder.buildScenarioDashboard(scenario, methodsSources);
-
-        //let scenarioJSON = await this.getScenarioJSON(code, process)
-
-        let body = {
-            folderUid: DEFAULT_FOLDER_UID,
-            overwrite: true,
-            dashboard: {
-                uid: code.replaceAll(/\{|\}/g, ''),
-                title: `Дашборд для шага ${process.name}`,
-                panels: dashboardPanels
-            }
-        };
+        const dashboardPanels = builder.buildScenarioDashboard(scenario, methodSourcesMap);
 
         await this.#prepareGrafanaFolder();
 
-        return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, body);
+        return grafanaService.postDashboard({
+            uid: code.replaceAll(/\{|\}/g, ''),
+            title: `Дашборд для шага ${process.name}`,
+            panels: dashboardPanels
+        });
     }
 
     async publishSystemDashboard(cmdb) {

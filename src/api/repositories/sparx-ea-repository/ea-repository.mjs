@@ -576,7 +576,10 @@ export class SparxRepository {
         for (let name of tags) {
             const ct = current_tags.find(t => t.property === name);
             if (ct) {
-                await this.update(t_objectproperties, { value: obj[name] ?? "" }, { propertyid: ct.propertyid });
+                if (obj[name])
+                    await this.update(t_objectproperties, { value: obj[name] ?? "" }, { propertyid: ct.propertyid });
+                else
+                    await this.delete(t_objectproperties, { propertyid: ct.propertyid });
                 continue;
             }
             if (obj[name]) {

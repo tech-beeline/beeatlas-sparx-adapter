@@ -74,21 +74,9 @@ class MonitiringSourcesServices {
         return this.getSystemSource(systemCode)
     }
 
-    async setObjectSource({ object_id, uid }) {
-        const currentSource = await this.getObjectSource(object_id);
-        if (currentSource?.uid === uid) {
-            return currentSource;
-        }
-
-        if (currentSource) {
-            await mointoringRepository.removeObjectSourceLink(object_id, currentSource.uid);
-        }
-
-        if (uid) {
-            await mointoringRepository.setObjectSourceLink(object_id, uid);
-        }
-
-        return this.getSource(uid);
+    async setObjectMetricTemplate({ object_id, apiMetricTemplate }) {
+        const row = await mointoringRepository.setObjectApiTemplate(object_id, apiMetricTemplate);
+        return { object_id: object_id, apiMetricTemplate: row?.value };
     }
 }
 

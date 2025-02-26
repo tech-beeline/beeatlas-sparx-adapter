@@ -1,5 +1,4 @@
 node_modules
-
 dump
 .vscode/launch.json
 ./data
@@ -15,3 +14,5 @@ dashboard.code-workspace
 show.ps1
 ./c4-language-server.log
 c4-language-server.log
+dump/rich-esia.json
+.gitignore

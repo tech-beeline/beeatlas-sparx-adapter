@@ -15,6 +15,7 @@ const GET_SYSTEM_PURPOSE_SUMMARY = "Получение назначения си
 const GET_SYSTEM_E2E_SUMMARY = "Получение информации о том, в какиих Е2Е процессах участвует система";
 const GET_SYSTEM_ASSESSMENT_SUMMARY = "Актуальная оценка системы";
 const GET_SYSTEM_MONITORING_SUMMARY = "Настройки наблюдаемости системы";
+const POST_SYSTEM_MONITORING_SUMMARY = "Изменение ссылки на шаблон для настройки метрик";
 const POST_SYSTEM_ASSESSMENT_SUMMARY = "Публикация результата оценки системы архитектурной фитнес-функцией";
 
 
@@ -136,6 +137,13 @@ const GET_OPERATION_LEVEL_SCHEMA = SWAGGER.defineEntitySchema("SystemQueryLevel"
     type: "string",
     enum: ["systems", "containers", "interfaces", "methods"]
 })
+
+const POST_SYSTEM_API_MONITORING_SCHEMA_REF = SWAGGER.defineEntitySchema("SystemApiMetricTemplate", {
+    type: "object",
+    properties : {
+        apiMetricTemplate : stringProperty("Ссылка на шаблон получения метрик для приложения")
+    }
+});
 //#endregion
 
 //#region Определение параметров
@@ -178,6 +186,7 @@ SWAGGER
     .defineGet(SYSTEM_ASSESSMENTS_RESOURCE, new GetJSONOperation(GET_SYSTEM_ASSESSMENT_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, systemsControllers.getSystemAssessments))
     .definePost(SYSTEM_ASSESSMENTS_RESOURCE, new JSONOperation(POST_SYSTEM_ASSESSMENT_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, systemsControllers.postSystemAssessment))
     .defineGet(SYSTEM_API_MONITORING_RESOURCE, new GetJSONOperation(GET_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_MONITORING_RESULT_SCHEMA_REF, systemsControllers.getApiMonitoring))
+    .definePost(SYSTEM_API_MONITORING_RESOURCE, new JSONOperation(POST_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], POST_SYSTEM_API_MONITORING_SCHEMA_REF, SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, systemsControllers.postApiMonitoring))
     ;
 //#endregion
 

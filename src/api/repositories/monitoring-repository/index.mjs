@@ -6,6 +6,7 @@ import Repository,
 
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import { SELECT_API_SOURCES, SELECT_METHOD_ALL_SOURCES, SELECT_METHOD_SOURCES, SELECT_PROVIDED_API_SOURCES, SELECT_SOURCES_PROPERIES } from './methods-sources.mjs';
+import { API_METRIC_TEMPLATE_TAG } from '../../const.mjs';
 
 const SELECT_ALL_SOURCES = `SELECT
 src.object_id, src.ea_guid, src.name, t.property, t.value
@@ -180,57 +181,45 @@ export class MonitoringRepository {
     }
 
     async selectApiSources(systemCode) {
-        //return Repository.queryRows(SELECT_API_SOURCES, [systemCode]);
-        const [c4Rows, providedRows, sourceMap] = await Promise.all(
+
+        const [c4Rows, providedRows] = await Promise.all(
             [
                 Repository.queryRows(SELECT_API_SOURCES, [systemCode]),
-                Repository.queryRows(SELECT_PROVIDED_API_SOURCES, [systemCode]),
-                this.selectSourcesMap()
+                Repository.queryRows(SELECT_PROVIDED_API_SOURCES, [systemCode])
             ]
         )
 
-        for (const row of c4Rows) {
-            if (row.app_source_id)
-                row.app_source = sourceMap[row.app_source_id];
-            if (row.container_source_id)
-                row.container_source = sourceMap[row.container_source_id];
-            if (row.api_source_id)
-                row.api_source = sourceMap[row.api_source_id];
-        }
-
-        for (const row of providedRows) {
-            if (row.api_source_id)
-                row.source = sourceMap[row.api_source_id];
-        }
         return { c4Rows: c4Rows, providedRows: providedRows };
     }
 
-
+    /**
+     * 
+     * @returns {Promise<Array<{ api_metric_template}>>}
+     */
     async selectMethodsSources() {
-        const [methodsSources, sourceMap] = await Promise.all(
+        const [methodsSources] = await Promise.all(
             [
                 Repository.queryRows(SELECT_METHOD_SOURCES),
-                this.selectSourcesMap()
+                //this.selectSourcesMap()
             ]
         )
 
-        for (const m of methodsSources) {
-            m.source = sourceMap[m.source_id];
-        }
         return methodsSources;
     }
 
     async selectSystemMethodsSources(systemCode) {
-        const [methodsSources, sourceMap] = await Promise.all(
+        const [methodsSources] = await Promise.all(
             [
                 Repository.queryRows(`${SELECT_METHOD_ALL_SOURCES} WHERE i.app_code=$1`, [systemCode]),
-                this.selectSourcesMap()
+                //this.selectSourcesMap()
             ]
         )
 
-        for (const m of methodsSources) {
-            m.source = sourceMap[m.source_id];
-        }
         return methodsSources;
+    }
+
+    async setObjectApiTemplate(object_id, apiMetricTemplate) {
+        await Repository.updateObjectTags(object_id, { [API_METRIC_TEMPLATE_TAG]: apiMetricTemplate }, [API_METRIC_TEMPLATE_TAG]);
+        return Repository.first(t_objectproperties, { object_id: object_id, property: API_METRIC_TEMPLATE_TAG });
     }
 }

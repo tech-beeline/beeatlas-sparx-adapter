@@ -201,7 +201,7 @@ export class SystemsRepository {
 	 */
 	async selectSystems() {
 		return Repository.queryRows(SELECT_SYSTEMS)
-			.then(rows=>rows.map(r => new SystemDTOInternal(r)));
+			.then(rows => rows.map(r => new SystemDTOInternal(r)));
 	}
 	/**
 	 * 
@@ -342,7 +342,9 @@ export class SystemsRepository {
 		return { name: container.name, description: container.note, container_id: container.object_id, code: container.alias };
 	}
 
-	async setSystemContainers(systemCode, containers = []) {
+	async setSystemContainers(systemCode, containers) {
+		console.log(`${systemCode} - Обновление информации о контейнерах системы`)
+		containers = containers ?? [];
 
 		/** @type {SystemDTOInternal} */
 		const systemDTO = await this.setSystem(systemCode);
@@ -365,31 +367,44 @@ export class SystemsRepository {
 		/** @type {Array<{current, target, needUpdate}>} */
 		const containersToInsert = Object.values(containersDiffMap).filter(c => !c.current);
 		const containersToUpdate = Object.values(containersDiffMap).filter(c => c.needUpdate);
+		if( !containersToInsert.length && !containersToUpdate.length){
+			console.info(`${systemCode} - Обновление контейнеров не требуется`);
+			return;
+		}
 
-		if (containersToInsert.length) console.log('add new containers:', containersToInsert.map(c => c.target));
+		if (containersToInsert.length) console.log(`${systemCode} - add new containers:`, containersToInsert.map(c => c.target));
 
-		const newContainers = await Promise.all(containersToInsert.map(diff => this.#insertContainer(
-			systemDTO.object_id,
-			systemDTO.containerPackageId,
-			diff.target.name,
-			diff.target.code,
-			diff.target.author,
-			diff.target.version,
-			diff.target.description,
-			diff.target.status
-		)));
+		const newContainers = [];
 
-		if (containersToUpdate.length) console.log('update containers:', containersToUpdate);
-
-		await Promise.all(
-			containersToUpdate.map(diff => this.updateContainer(
+		for (const diif of containersToInsert) {
+			const container = await this.#insertContainer(
+				systemDTO.object_id,
+				systemDTO.containerPackageId,
 				diff.target.name,
 				diff.target.code,
 				diff.target.author,
 				diff.target.version,
 				diff.target.description,
-				diff.target.status))
-		);
+				diff.target.status
+			);
+			newContainers.push(container);
+			console.info(`${systemCode} - добавлен контейнер `, container);
+		}
+
+		//if (containersToUpdate.length) console.log(`${systemCode} - update containers:`, containersToUpdate);
+
+		for (const diff of containersToUpdate) {
+			await this.updateContainer(
+				diff.target.name,
+				diff.target.code,
+				diff.target.author,
+				diff.target.version,
+				diff.target.description,
+				diff.target.status);
+
+			console.log(`${systemCode} - Обновлен контейнер, status = [${diff.target.status}]`, diff.target)
+		}
+		console.log(`${systemCode} - Обновление контейнеров завершено`)
 	}
 
 	async updateContainer(name, code, author, version, description, status) {
@@ -402,5 +417,10 @@ export class SystemsRepository {
 		return Repository.update(t_object,
 			{ name: `[REMOVED!]${name}`, status: "REMOVED" },
 			{ alias: code, stereotype: "C4_Container" });
+	}
+
+	async setSystemTag(systemCode, tagName, tagValue) {
+		const system = await this.selectSystemByCode(systemCode);
+		return Repository.updateObjectTags(system.object_id, { [tagName]: tagValue }, [tagName])
 	}
 }

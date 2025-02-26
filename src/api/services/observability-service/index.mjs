@@ -8,4 +8,7 @@ export class ObservabilityService {
 
         NotImplemented();
     }
+    async getDashboards(){
+        
+    }
 }

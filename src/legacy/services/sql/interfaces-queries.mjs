@@ -34,9 +34,9 @@ export const TC_API_QUERY = `with realisation as (
 ), op_tags as (
 	select o.operationid, rps.value as rps, l.value as latency, e.value as error_rate
 	from t_operation o
-		left join t_operationtag rps on rps.elementid=o.operationid and rps.property='TPSThreshold'
-		left join t_operationtag l on l.elementid=o.operationid and l.property='LatencyThreshold'
-		left join t_operationtag e on e.elementid=o.operationid and e.property='ErrorThreshold'
+		left join t_operationtag rps on rps.elementid=o.operationid and rps.property='rps'
+		left join t_operationtag l on l.elementid=o.operationid and l.property='latency'
+		left join t_operationtag e on e.elementid=o.operationid and e.property='error_rate'
 )
 select  op.name, op.ea_guid as operation_guid, api.name as api, api.alias as api_code, api.ea_guid as api_guid
 ,container.name as container, container.alias as container_code, 

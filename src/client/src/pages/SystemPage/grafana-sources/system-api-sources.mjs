@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { SystemSourceDialog } from "./system-grafana-source.mjs";
 import { OpenSearchProperties } from "./opensearch-source.mjs";
 import { PrometheusProperties } from "./prometheus-source.mjs";
+import { SystemMetricTemplateInput } from "./system-metric-template.mjs";
 
 
 const OPENSEARECH_PROPETIES = {
@@ -31,6 +32,8 @@ const SOURCE_TYPES = {
     opensearch: OPENSEARECH_PROPETIES,
     prometheus: PROMETHEUS_PROPETIES
 }
+
+
 
 
 
@@ -60,17 +63,36 @@ const saveLink = async (target, source) => {
 }
 
 
-const saveObjectSource = async (object_id, source) => {
-    const body = JSON.stringify({ object_id: object_id, uid: source.uid ?? null })
-    console.log(object_id, source);
-    const response = await fetch(MONITORING_OBJECT_SOURCE_RESOURCE, {
+
+const saveSystemApiTemplate = async (code, apiMetricTemplate) => {
+    const response = await fetch(systemApiMonitoringPath(code), {
         method: "POST",
-        body: body,
+        body: JSON.stringify({
+            apiMetricTemplate: apiMetricTemplate
+        }),
         headers: {
             "Content-Type": "application/json",
         }
     });
-    await checkResponse(response);
+    if (response.status !== 200) {
+        throw Error(await response.text())
+    }
+}
+
+const saveObjectApiTemplate = async (object_id, apiMetricTemplate) => {
+    const response = await fetch(MONITORING_OBJECT_SOURCE_RESOURCE, {
+        method: "POST",
+        body: JSON.stringify({
+            object_id: object_id,
+            apiMetricTemplate: apiMetricTemplate
+        }),
+        headers: {
+            "Content-Type": "application/json",
+        }
+    });
+    if (response.status !== 200) {
+        throw Error(await response.text())
+    }
 }
 
 const saveSource = async (src) => {
@@ -83,7 +105,7 @@ const saveSource = async (src) => {
             "Content-Type": "application/json",
         }
     });
-    await checkResponse(response)
+    await checkResponse(response);
     return response.json();
 }
 
@@ -179,37 +201,14 @@ function ContainerAccordion({ containerMonitoring }) {
 
 function ProvidedInterfaceRow({ api }) {
 
-    const [monDialogOpen, setMonDialogOpen] = useState(false);
-    const [source, setSource] = useState(api.source);
-
-
-    const handleClick = () => {
-        setMonDialogOpen(true);
-    }
-
-
-
-    const dialog = monDialogOpen ? <MonitoringSettingsDialog
-        open={monDialogOpen}
-        setOpen={setMonDialogOpen}
-        source={source}
-        handleSaveLink={async (t, s) => {
-            console.log(t, s);
-            await saveObjectSource(api.object_id, s);
-            setSource(s.uid ? s : null);
-        }}
-        target={{ type: "api", code: api.object_id, name: api.name }}
-    /> : null;
-
+    const [source, setSource] = useState(api.api_metric_template);
 
     return (
         <TableRow>
             <TableCell>{api.name}</TableCell>
-            <TableCell>{source ?
-                <Button onClick={() => handleClick()}>{source.name}</Button> :
-                <Button onClick={() => handleClick()} >Добавить</Button>}
+            <TableCell><SystemMetricTemplateInput targetName={api.name} source={source}
+                onSave={ (value)=>saveObjectApiTemplate( api.object_id, value) } />
             </TableCell>
-            {dialog}
         </TableRow>
     )
 }
@@ -272,8 +271,6 @@ function SourceProperties({ source, setSource, edit }) {
         return null;
     }
 
-    console.log(source);
-
     const canEdit = (source.uid === NEW_UID) || edit;
 
     return <Box component={Paper} sx={{ margin: 1 }}>
@@ -299,11 +296,6 @@ export function SystemApiMonitoringAccordion({ system }) {
     const [reload, setReload] = useState({ reload: false })
 
     const { loading, data: apiMonitoring, error } = useFetchJSON(systemApiMonitoringPath(system.code), null, [system, reload]);
-    console.log(apiMonitoring);
-
-    function handleViewAppSource() {
-        setMonDialogOpen(true);
-    }
 
     const dialog = monDialogOpen ? <MonitoringSettingsDialog
         open={monDialogOpen}
@@ -329,8 +321,10 @@ export function SystemApiMonitoringAccordion({ system }) {
                     }} /> :
                     error ? "ERROR" :
                         <div>
-                            Настройки метрик для приложения по умолчанию <Link to="" onClick={handleViewAppSource}>
-                                <b>{apiMonitoring?.source ? apiMonitoring.source?.name : "Добавить"}</b></Link>
+                            Настройки метрик API приложения <SystemMetricTemplateInput
+                                targetName={system.name}
+                                source={apiMonitoring.source}
+                                onSave={(value) => saveSystemApiTemplate(system.code, value)} />
                             {apiMonitoring.containers?.length ? (<Accordion>
                                 <AccordionSummary component={Paper} expandIcon={<ExpandMore />}>
                                     <Box fontWeight='fontWeightMedium' display='inline'>Контейнеры</Box>

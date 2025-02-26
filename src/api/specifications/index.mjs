@@ -49,7 +49,7 @@ const API_ROUTES = {
     "system-service": systemsServiceSpec,
     "e2e-service": processServiceSpec,
     "scenarios-service": scenariosServiceSpec,
-    "monitoring": monitoringServiceSpec,
+    "monitoring-service": monitoringServiceSpec,
     "observability-service": observabilityServiceSpec,
     "tech-radar-service": techRadarServiceSpec,
     /*

@@ -4,11 +4,32 @@ import { expr } from "../../../../legacy/services/monitoring-templates/panels/pr
 import Sequence from "../../../../legacy/services/monitoring-templates/sequence.mjs";
 import { NotImplemented } from "../../../../utils/errors.mjs";
 import { GrafanaRow } from "./panels/call-tree-row.mjs";
+import { uriRegex } from "./sources/common.mjs";
 
 const formatTitle = (msg) => `${msg.client_code} - ${msg.server_code}${msg.stereotype ? ` ${msg.stereotype}` : ""}: ${msg.method?.name ?? msg.name}`;
 
 const updateTargetsRef = (panel, id) => {
     panel.targets.forEach(t => t.panelId = id)
+}
+
+
+export function formatQuery(template, uri, method) {
+    const uri_regex = uriRegex(uri);
+
+    let variables = {
+        URI_REQEX: uri_regex, "URI_REQEX:raw": uri_regex,
+        //uri: uri, 
+        URI: uri,
+        //method: method, 
+        METHOD: method,
+        //uri_regex: uri_regex, 
+    };
+
+    let ret = template;
+    for (let v in variables) {
+        ret = ret.replaceAll("${" + v + "}", variables[v]).replaceAll(`$${v}`, variables[v]);
+    }
+    return ret;
 }
 
 class StatPanel {
@@ -62,28 +83,37 @@ export class SecnarioDashboardBuilder {
         const [method, path] = message.method.name.split(' ').filter(it => it.length);
 
         const ret = JSON.parse(this.statTemplateJSON);
-        ret.datasource=message.source.datasource;
 
-        const a75 = ret.targets.find(t => t.refId == 'A75');
-        Object.assign(a75, message.source.percentileTarget(method, path, 75));
-        const a95 = ret.targets.find(t => t.refId == 'A95');
-        Object.assign(a95, message.source.percentileTarget(method, path, 95));
-        const errorCountTarget = ret.targets.find(t => t.refId == 'C');
-        Object.assign(errorCountTarget, message.source.errorCountTarget(method, path))
+        const apiTemplate = message.source.apiMetricTemplate;
+        if (!apiTemplate) throw Error(`api-metric-template not specified for ${message.method.name}`);
+        if (!apiTemplate.panels?.length) throw Error(`No template panel found on ${apiTemplate.title}`);
+        const panelTemplate = apiTemplate.panels[0];
 
-        const totalCountTarget = ret.targets.find(t => t.refId == 'B');
-        Object.assign(totalCountTarget, message.source.totalCountTarget(method, path));
+        ret.datasource = panelTemplate.datasource;
 
-        for( const t of ret.targets.filter( t=>t.expression==='$ERROR_RATE')){
-            t.expression = "0";
+        for (const t of panelTemplate.targets) {
+            const target = ret.targets.find(tt => tt.refId == t.refId);
+            if (target) {
+                Object.assign(target, t);
+                if (t.expr) {
+                    target.expr = formatQuery(t.expr, path, method);
+                }
+                if (t.query) {
+                    target.query = formatQuery(t.query, path, method)
+                }
+            }
         }
 
-        for( const t of ret.targets.filter( t=>t.expression==='$LATENCY')){
-            t.expression = "0";
+        for (const t of ret.targets.filter(t => t.expression === '$ERROR_RATE')) {
+            t.expression = message.method?.error_rate?.toString() ?? "0";
         }
 
-        for( const t of ret.targets.filter( t=>t.expression==='$RPS')){
-            t.expression = "0";
+        for (const t of ret.targets.filter(t => t.expression === '$LATENCY')) {
+            t.expression = message.method?.latency?.toString() ?? "0";
+        }
+
+        for (const t of ret.targets.filter(t => t.expression === '$RPS')) {
+            t.expression = message.method?.rps?.toString() ?? "0";
         }
 
         ret.title = `${order}`;
@@ -206,10 +236,7 @@ export class SecnarioDashboardBuilder {
 
         const interactionDetailsPanels = interactionStatPanels.map(s => this.buildInteractionRow(s));
 
-
         this.layoutPanels(interactionStatPanels, messagesRow, interactionDetailsPanels);
-
-
 
         return [
             legendPanel,

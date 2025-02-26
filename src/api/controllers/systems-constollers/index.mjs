@@ -19,6 +19,20 @@ function checkGetOptions(request) {
         throw BadRequest(`Wrong add-remove parameter value (${request.query["add-removed"]})`);
 }
 
+
+function validatePutSystemBody(system) {
+    const containers = system.containers;
+    if (containers) {
+        if (!Array.isArray(containers)) throw BadRequest(`system.containers is not array`);
+        for (const container of containers) {
+            if (!container.code) throw BadRequest(`conatiner.code not specified\n${JSON.stringify({ ...container, interfaces: undefined })}`);
+            if (container.interfaces) {
+                if (!Array.isArray(container.interfaces)) throw BadRequest(`conatiner.interfaces is not array (container.code="${container.code}")`);
+            }
+        }
+    }
+}
+
 export class SystemsControllers {
     /**
      *
@@ -63,6 +77,7 @@ export class SystemsControllers {
      */
     async putSystem(request, response) {
         const system = request.body;
+        validatePutSystemBody(system);
         const code = request.params.code;
         if (!code) throw BadRequest(`Parameter "code" is not specified`);
 
@@ -110,12 +125,21 @@ export class SystemsControllers {
     }
 
     /**
-* 
-* @param {express.Request} request 
-* @param {express.Response} response 
-*/
+    * 
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
     async getApiMonitoring(request, response) {
         response.json(await SystemServiceInstance.getApiMonitoring(request.params.code));
+    }
+
+    /**
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
+    async postApiMonitoring(request, response) {
+        if (!request.body.apiMetricTemplate && request.body.apiMetricTemplate !== "") throw BadRequest(`apiMetricTemplate not specified`);
+        response.json(await SystemServiceInstance.setAppMonitoringTemplate(request.params.code, request.body.apiMetricTemplate));
     }
 }
 
