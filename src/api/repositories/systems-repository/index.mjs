@@ -376,7 +376,7 @@ export class SystemsRepository {
 
 		const newContainers = [];
 
-		for (const diif of containersToInsert) {
+		for (const diff of containersToInsert) {
 			const container = await this.#insertContainer(
 				systemDTO.object_id,
 				systemDTO.containerPackageId,
