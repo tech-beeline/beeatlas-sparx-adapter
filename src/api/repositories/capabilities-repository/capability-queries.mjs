@@ -140,7 +140,7 @@ SELECT
 	d.* 
 FROM cte_bc b
 	JOIN cte_bc d ON d.package_id=b.package_id
-WHERE b.code=$1`;
+WHERE lower(b.code)=lower($1)`;
 
 export const SELECT_DOMAINS_DIAGRAMS = `WITH RECURSIVE
 ${CTE_DOMAINS}

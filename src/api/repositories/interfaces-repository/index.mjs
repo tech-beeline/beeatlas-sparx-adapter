@@ -1,4 +1,3 @@
-import { NotImplemented } from '../../../utils/errors.mjs';
 import Repository, { t_object, t_operationtag } from '../sparx-ea-repository/index.mjs';
 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';

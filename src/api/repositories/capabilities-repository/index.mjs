@@ -15,11 +15,11 @@ const DEFAULT_ELEMENT_HEIGHT = 100;
 const LEVEL_OFFSET = 50;
 const X__OFFSET = 50;
 
-const SELECT_BY_CODE = `${SELECT_ALL_BC} AND bc.code=$1`;
+const SELECT_BY_CODE = `${SELECT_ALL_BC} AND lower(bc.code)=$1`;
 const SELECT_BY_CODE_LIST = `${SELECT_ALL_BC} AND bc.code=ANY($1)`;
 
 const SEARCH_BY_NAME = `${SELECT_ALL_BC} WHERE name LIKE ANY ($1)`
-const SELECT_CHILDREN_BY_NAME = `${SELECT_ALL_BC} AND bc.parent_code=$1`;
+const SELECT_CHILDREN_BY_NAME = `${SELECT_ALL_BC} AND lower(bc.parent_code)=$1`;
 const throwCapabilityNotFound = (code) => {
 	throw Error(`Capability with code="${code}" not found`);
 };
@@ -43,7 +43,7 @@ export class CapabilitiesRepository {
 	 * @returns {Promise<CapabilitDTO>}
 	 */
 	async selectByCode(code) {
-		const data = await Repository.queryOne(SELECT_BY_CODE, [code]); // [ ] Добавить проверку на уникальность кода ( alias )
+		const data = await Repository.queryOne(SELECT_BY_CODE, [code.toLowerCase()]); // [ ] Добавить проверку на уникальность кода ( alias )
 		return data ? new CapabilityDTOInternal(data) : null;
 	}
 
@@ -51,8 +51,13 @@ export class CapabilitiesRepository {
 		const rows = await Repository.queryRows(SELECT_BY_CODE_LIST, [codes]);
 		return rows.map(r => new CapabilityDTOInternal(r));
 	}
+	/**
+	 * 
+	 * @param {string} code 
+	 * @returns 
+	 */
 	async selectChildren(code) {
-		return Repository.queryRows(SELECT_CHILDREN_BY_NAME, [code]);
+		return Repository.queryRows(SELECT_CHILDREN_BY_NAME, [code.toLowerCase()]);
 	}
 	/**
 	 * 
@@ -120,15 +125,26 @@ export class CapabilitiesRepository {
 		return l - X__OFFSET;
 	}
 
+	/**
+	 * 
+	 * @param {string} parentCode 
+	 * @param {string} code 
+	 * @param {string} name 
+	 * @param {string} description 
+	 * @param {*} author 
+	 * @param {*} status 
+	 * @returns 
+	 */
 	async createCapability(parentCode, code, name, description, author, status) {
 		/** @type {Array<CapabilityDTOInternal>} */
-		const domainRows = await Repository.queryRows(SELECT_BC_DOMAIN, [parentCode]);
+		const domainRows = await Repository.queryRows(SELECT_BC_DOMAIN, [parentCode.toLowerCase()]);
 		if (!domainRows.length) throw Error(`Не удалось получить структуру домена для BC code="${parentCode}"`);
 
 		const domainDiagram = await this.#prepareDomainDiagram(domainRows[0].package_id);
 
 		const diagramTree = {};
 		domainRows.forEach(row => {
+			row.code = row.code.toLowerCase();
 			diagramTree[row.code] = row;
 			const parent = diagramTree[row.parent];
 			if (parent) {
@@ -146,7 +162,7 @@ export class CapabilitiesRepository {
 		const capabilitiesPackage = await Repository.putPackage({ parent_id: domainRows[0].package_id, name: CAPABILITY_PACKAGE_NAME });
 
 		/** @type {t_object} */
-		let capabilityRow = await Repository.first(t_object, { package_id: capabilitiesPackage.package_id, alias: code });
+		let capabilityRow = await Repository.queryOne("SELECT * FROM t_object WHERE pacakge_id=$1 AND lower(alias)=lower($2)", [capabilitiesPackage.package_id, code]);
 		if (capabilityRow
 			&& (
 				capabilityRow.name !== name

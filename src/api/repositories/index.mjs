@@ -1,3 +1,4 @@
+export { SparxRepository } from './sparx-ea-repository/index.mjs'
 export { CapabilitiesRepository } from './capabilities-repository/index.mjs'
 export { GlossariesRepository } from './glossaries-repository/index.mjs'
 export { TechnicalCapabilitiesRepository } from './tc-repository/index.mjs'

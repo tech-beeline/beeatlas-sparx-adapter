@@ -1,7 +1,6 @@
 import { InterfacesRepository, SystemsRepository } from "../../repositories/index.mjs";
 import System, { Container } from "../../model/system.mjs";
 
-
 const interfaceDataService = new InterfacesRepository();
 const systemDataService = new SystemsRepository();
 

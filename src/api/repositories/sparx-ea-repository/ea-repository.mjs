@@ -14,6 +14,7 @@ import {
     t_diagramobjects,
     t_diagramlinks
 } from './ea-model/index.mjs';
+
 import { SELECT_DIAGRAMOBJECTS } from '../tc-repository/tc-parents-queries.mjs';
 import { t_diagramobjects_ex } from './ea-model/t_diagramobjects.mjs';
 import { DELETE_CONNECTOR_BY_ID, DELETE_LINK_BY_CONNECTOR_ID } from './ea-queries/diagram-queries.mjs';
@@ -61,12 +62,9 @@ const CONNECTOR_STEREOTYPE = {
     }
 }
 
-
-
 export class SparxRepository {
     #config;
     constructor() {
-
     }
 
     get config() {

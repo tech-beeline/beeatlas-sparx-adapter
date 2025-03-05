@@ -1,4 +1,4 @@
-import { CTE_REALIZATION } from "./systems-cte.mjs";
+import { CTE_REALIZATION } from "./queries/systems-cte.mjs";
 
 export const SELECT_SYSTEM_CONTAINERS = `WITH ${CTE_REALIZATION}
     SELECT

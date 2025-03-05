@@ -1,6 +1,6 @@
 import { buildHREF } from "../controllers/controller-decorator.mjs";
 import { integerProperty, schemasRef, stringProperty } from "../specifications/helpers.mjs";
-import { E2E_LIST_RESOURCE, E2E_SCENARIO_LIST_RESOURCE, SYSTEM_LIST_RESOURCE } from "../specifications/paths.mjs";
+import { E2E_LIST_RESOURCE, SYSTEM_LIST_RESOURCE } from "../specifications/paths.mjs";
 
 export class APIMethodParameter {
     name;
@@ -311,6 +311,9 @@ export const SYSTEM_PURPOSE_SCHEMA = {
 
 export default class System {
     name;
+    /**
+     * @type {string}
+     */
     code;
     version;
     package;

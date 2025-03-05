@@ -1,5 +1,3 @@
-import { APP_CATALOG_ROOT } from '../../../resources/const.mjs';
-
 export const CTE_SYS_PACKAGE = `cte_sys_package AS (
 	SELECT 
 		p.package_id, p.name, o.alias as code
@@ -12,7 +10,6 @@ export const CTE_SYS_PACKAGE = `cte_sys_package AS (
 	FROM cte_sys_package parent
 		JOIN t_package p ON p.parent_id=parent.package_Id
 		JOIN t_object o ON o.ea_guid=p.ea_guid
-	
 )`;
 
 export const CTE_SYS_CATALOG = `${CTE_SYS_PACKAGE},

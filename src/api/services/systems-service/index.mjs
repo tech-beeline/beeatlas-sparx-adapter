@@ -1,11 +1,11 @@
-import monitoringService from "../../../legacy/services/monitoring-service.mjs";
-import { BadRequest, NotFound, NotImplemented } from "../../../utils/errors.mjs";
+import { BadRequest, NotImplemented } from "../../../utils/errors.mjs";
 import patchArray from "../../../utils/patch-array.mjs";
 import { API_METRIC_TEMPLATE_TAG } from "../../const.mjs";
 import { buildHREF } from "../../controllers/controller-decorator.mjs";
 import SystemApiMonitoring, { ContainerApiMonitoring } from "../../model/observability/system-api-monitoring.mjs";
 
 import System, { Container, E2EProcessContext, SysemAssessmentStatus } from "../../model/system.mjs";
+
 import {
     ArchMetricsRepository,
     InterfacesRepository,
@@ -13,10 +13,12 @@ import {
     PtrArtifactsRepository,
     SystemsRepository
 } from "../../repositories/index.mjs";
+
 import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../../specifications/paths.mjs";
 import interfacesService from "../interfaces-service/index.mjs";
+import { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL } from "./const.mjs";
 import GetAllSystems from "./get-all-systems.mjs";
-import GetSystemByCode, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL } from "./get-system-by-code.mjs";
+import GetSystemByCode from "./get-system-by-code.mjs";
 
 
 const STEREOTYPE_MAP = {

@@ -6,11 +6,6 @@ import {
 } from "../../repositories/index.mjs";
 import { REMOVED_STATUS } from "../../repositories/systems-repository/const.mjs";
 
-export const SYSTEM_LEVEL = "systems";
-export const CONTAINERS_LEVEL = "containers";
-export const INTERFACES_LEVEL = "interfaces";
-export const METHODS_LEVEL = "methods";
-
 const interfaceDataService = new InterfacesRepository();
 const systemDataService = new SystemsRepository();
 
