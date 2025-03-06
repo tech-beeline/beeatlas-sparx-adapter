@@ -17,6 +17,9 @@ import {
 import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../../specifications/paths.mjs";
 import interfacesService from "../interfaces-service/index.mjs";
 import { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL } from "./const.mjs";
+
+export { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL };
+
 import GetAllSystems from "./get-all-systems.mjs";
 import GetSystemByCode from "./get-system-by-code.mjs";
 
@@ -27,6 +30,7 @@ const STEREOTYPE_MAP = {
     Package: "Domain",
     Domain: "Domain"
 }
+
 
 const interfacesRepository = new InterfacesRepository();
 const systemsRepository = new SystemsRepository();
@@ -182,7 +186,7 @@ export class SystemService {
 
         console.info(`${systemCode} - Обновление информации об интерфейсах`);
 
-        for( const container of containers ){
+        for (const container of containers) {
             await interfacesRepository.setContainerInterfaces(container.code, container.interfaces)
         }
 

@@ -87,14 +87,6 @@ cte_bcd AS
 )
 SELECT * FROM cte_bcd`;
 
-export const SELECT_DIAGRAMOBJECTS =
-	`SELECT 
-	dob.*,
-	c.alias as code
-FROM t_diagramobjects dob
-	JOIN t_object c ON c.object_id=dob.object_id
-WHERE dob.diagram_id=$1`;
-
 
 export const DELETE_BC_TC_LINKS =
 	`DELETE FROM t_diagramlinks

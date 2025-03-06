@@ -20,7 +20,7 @@ export class TechnicalCapabilitiesRepository {
 
 	/**
 	 * 
-	 * @returns {Promise<Array<{ sys_code, code, parent_code, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
+	 * @returns {Promise<Array<{ sys_code, code, parent_code:string, name, author, description, status, version, object_id, createddate, modifieddate, goal_from, goal_to}>>}
 	 */
 	async selectTCByCode(tcCode) {
 		return Repository.queryRows(SELECT_TC_BY_CODE, [tcCode]);

@@ -1,13 +1,7 @@
-const SELECT_DIAGRAM_OBJECTS =
-    `SELECT 
-	dob.recttop,
-	dob.rectleft,
-	dob.rectright,
-	dob.rectbottom,
-	dob.sequence,
-	dob.objectstyle,
-	dob.instance_id,
-	c.*
+export const SELECT_DIAGRAMOBJECTS =
+`SELECT 
+	dob.*,
+	c.alias as code
 FROM t_diagramobjects dob
 	JOIN t_object c ON c.object_id=dob.object_id
 WHERE dob.diagram_id=$1`;

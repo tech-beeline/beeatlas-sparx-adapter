@@ -37,6 +37,8 @@ export class APIMethod {
     }
 }
 
+const compareMethods = (a,b)=>a.name.localeCompare(b.name)
+
 export class APIInterface {
     name;
     code;
@@ -75,6 +77,7 @@ export class APIInterface {
     }
     addMethod(method) {
         this.methods.push(new APIMethod(method));
+        this.methods = this.methods.sort(compareMethods);
     }
 }
 export class Container {

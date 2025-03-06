@@ -286,15 +286,17 @@ class E2EProcessService {
 
         const [messages, systems] = await Promise.all([
             Repository.queryRows(
-                `select d.ea_guid as d_uid, d.name as diagram, m.name, m.start_object_id as client_id, m.end_object_id as server_id, m.stereotype, m.ea_guid, m.notes,
-op.value as operation_guid, rps.value as rps, l.value as latency, e.value as error_rate, m.seqno, m.pdata1 = 'Synchronous' as is_sync, m.pdata4 as is_ret, ia.value as ia_path
-from t_diagram d
-join t_connector m on m.diagramid=d.diagram_id
-left join t_connectortag op on op.elementid=m.connector_id and op.property='operation_guid'
-left join t_connectortag rps on rps.elementid=m.connector_id and rps.property='TPSThreshold'
-left join t_connectortag l on l.elementid=m.connector_id and l.property='LatencyThreshold'
-left join t_connectortag e  on e.elementid=m.connector_id and e.property='ErrorThreshold'
-left join t_connectortag ia on ia.elementid=m.connector_id and ia.property='InterfaceAgreement'
+                `SELECT
+	d.ea_guid as d_uid, d.name as diagram, m.name, m.start_object_id as client_id, m.end_object_id as server_id, m.stereotype, m.ea_guid, m.notes,
+	op.value as operation_guid, rps.value as rps, l.value as latency, e.value as error_rate, m.seqno, m.pdata1 = 'Synchronous' as is_sync, m.pdata4 as is_ret
+FROM t_diagram d
+	JOIN t_connector m ON m.diagramid=d.diagram_id
+	JOIN t_diagramobjects so ON so.object_id=m.end_object_id AND so.diagram_id=d.diagram_id
+	JOIN t_diagramobjects co ON co.object_id=m.start_object_id AND co.diagram_id=d.diagram_id
+	left join t_connectortag op on op.elementid=m.connector_id and op.property='operation_guid'
+	left join t_connectortag rps on rps.elementid=m.connector_id and rps.property='TPSThreshold'
+	left join t_connectortag l on l.elementid=m.connector_id and l.property='LatencyThreshold'
+	left join t_connectortag e  on e.elementid=m.connector_id and e.property='ErrorThreshold'
 where d.ea_guid  = ANY($1)`, [diagram_uids]
             ),
             Repository.queryRows(`SELECT d.ea_guid as d_uid,od.object_id, p.object_id as parent_id, coalesce( p.alias, o.alias) as code, coalesce(p.name, o.name) as name, o.object_type
@@ -360,7 +362,6 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
                     content: await IARepository.Instance.byPath(safeDecode(m.ia_path, m))
                 }
             }
-            //m.method = methods[m.operation_guid];
 
             if (m.client && m.server) {
                 m.childDiagram = diagrams.byContainerId[m.server_id];
@@ -373,7 +374,7 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             }
 
             if (!m.server || !m.client) {
-                onError(m, `Сообщение связано с элементом, который отсутствует на диаграмме`)
+                onError(m, `Сообщение связано с элементом, который отсутствует на диаграмме`);
             }
         }
 

@@ -10,6 +10,10 @@ export class TechnicalCapabiliiesService {
         this.getAll = this.getAll.bind(this);
         this.getByCode = this.getByCode.bind(this);
     }
+    /**
+     * 
+     * @returns {Promise<Array<TechnicalCapability>>}
+     */
     async getAll() {
         const tc_rows = await tcDataService.selectTCList();
         const tc_map = {};

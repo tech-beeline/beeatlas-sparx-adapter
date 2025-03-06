@@ -15,13 +15,16 @@ class TechnicalCapability {
     goal_from;
     goal_to;
 
+    /**
+     * @type {Array<{code:string, href:string}>}
+     */
     parents = [];
     children;
     system;
 
     /**
      * 
-     * @param {{code, name, description, author, createdDate, modifiedDate, status, targetSystemCode, parents:[]}} cap 
+     * @param {{code: string, name, description, author, createdDate, modifiedDate, status, targetSystemCode, parents:[]}} cap 
      * @returns 
      */
     constructor(cap) {
@@ -38,6 +41,7 @@ class TechnicalCapability {
     }
     addParent(s) {
         (this.parents = this.parents ?? []).push({ ...s, href: buildHREF(`${CAPABILITY_LIST_RESOURCE}/${encodeURIComponent(s.code)}`) });
+        this.parents = this.parents.sort((a, b) => a.code.localeCompare(b.code));
     }
 }
 

@@ -15,9 +15,8 @@ import {
     t_diagramlinks
 } from './ea-model/index.mjs';
 
-import { SELECT_DIAGRAMOBJECTS } from '../tc-repository/tc-parents-queries.mjs';
 import { t_diagramobjects_ex } from './ea-model/t_diagramobjects.mjs';
-import { DELETE_CONNECTOR_BY_ID, DELETE_LINK_BY_CONNECTOR_ID } from './ea-queries/diagram-queries.mjs';
+import { DELETE_CONNECTOR_BY_ID, DELETE_LINK_BY_CONNECTOR_ID, SELECT_DIAGRAMOBJECTS } from './ea-queries/diagram-queries.mjs';
 import { SELECT_PACKAGE_BY_ALIAS } from './ea-queries/ea-pacakgies-queries.mjs';
 import { OBJECT_STEREOTYPES } from './stereotypes/index.mjs';
 import { REMOVE_CONNECTOR_TXREF_BY_START_END_STEREOTYPE } from './ea-queries/remove-t_xref.mjs';

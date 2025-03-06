@@ -190,6 +190,7 @@ export class InterfacesRepository {
 
                 const methods = it.methods ?? [];
                 await this.setInterfaceMethods(it.code, methods);
+                delete it.currentAPI;
 
                 console.info(`${containerCode} - Интерфейс и методы обновлены [${it.code}] ${it.name}, status = ${it.status}`);
             }

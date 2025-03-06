@@ -1,5 +1,4 @@
-import 
-{
+import {
 	SparxRepository,
 	t_object
 } from '../sparx-ea-repository/index.mjs';
@@ -10,8 +9,10 @@ import { SELECT_SYSTEM_PARTICIPITION, SELECT_SYSTEM_SUBPACKAGES } from './system
 import { SELECT_SYSTEM_CONTAINERS, SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE } from './systems-containers-queries.mjs';
 import { SystemDTO, SystemDTOInternal } from './model.mjs';
 import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
-import { CONTAINERS_SUBPACKAGE_NAME, DEFAULT_STATUS, REMOVED_STATUS, SYSTEM_SUBPACKAGES as SYSTEM_SUBPACKAGES_NAMES } from './const.mjs';
+import { CONTAINER_STEREOTYPE, CONTAINERS_SUBPACKAGE_NAME, DEFAULT_STATUS, INTERFACES_SUBPACKAGE_NAME, REMOVED_STATUS, SYSTEM_SUBPACKAGES as SYSTEM_SUBPACKAGES_NAMES } from './const.mjs';
 import { SELECT_SYSTEMS, SELECT_SYSTEM_BY_CODE } from './queries/index.mjs';
+import { SELECT_SYSTEM_PACKAGES } from './queries/select-systems.mjs';
+
 
 const Repository = new SparxRepository();
 
@@ -43,44 +44,41 @@ export class SystemsRepository {
 		return rows.length ? new SystemDTOInternal(rows[0]) : null;
 	}
 
-	async setSystem(code, name, description, author, version, status) {
-		const systemDTO = await this.selectSystemByCode(code);
-		if (!systemDTO) throw NotFound(`System with code=${code} not found`);
+	async prepareSystemPackages(code) {
+		/** @type {{object_id, name:string, package_id, containers_package_id,interfaces_package_id}} */
+		let systemPackages = await Repository.queryOne(SELECT_SYSTEM_PACKAGES, [code]);
+		if (!systemPackages) throw NotFound(`System with code=[${code}] not found`);
 
-		let techPackageId = systemDTO.package_id;
-
-
-		const subpackages = techPackageId ? (await Repository.queryRows(SELECT_SYSTEM_SUBPACKAGES, [techPackageId, SYSTEM_SUBPACKAGES_NAMES])) : [];
-
-		if (!techPackageId) {
-			console.info('Technical package for system not found');
-			if (!SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue) {
-				throw Error('TechCapabilitiesCatalogue not found');
-			}
-
-			const newPackage = await Repository.createPackage({
+		if (!systemPackages.package_id) {
+			console.info(`create system package (code="${code}", name="${systemPackages.name}"):`);
+			const pkg = await Repository.createPackage({
 				parent_id: SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue.package_id,
-				name: systemDTO.name,
+				name: systemPackages.name,
 				alias: code
 			});
-			console.info(`Technical package for system with code=${code} created`);
-			techPackageId = newPackage.package_id;
+			systemPackages.package_id = pkg.package_id;
 		}
 
-		const packageToCreate = SYSTEM_SUBPACKAGES_NAMES.filter(n => !subpackages.find(r => r.name === n));
-		if (packageToCreate.length) {
-			console.info('start create system subpackages:', packageToCreate);
-			const newPackages = await Promise.all(packageToCreate.map(subpackageName => Repository.createPackage({
-				parent_id: techPackageId,
-				name: subpackageName
-			})));
+		if (!systemPackages.containers_package_id) {
+			console.info(`create containers package (code="${code}", name="${systemPackages.name}"):`);
 
-			subpackages.push(...newPackages.map(p => ({ name: p.name, package_id: p.package_id })));
-			console.info('Packages created');
+			const containerPackage = await Repository.createPackage({
+				parent_id: systemPackages.package_id,
+				name: CONTAINERS_SUBPACKAGE_NAME
+			});
+			systemPackages.containers_package_id = containerPackage.package_id;
 		}
 
-		return new SystemDTOInternal({ ...systemDTO, package_id: techPackageId, subpackages: subpackages, package_id: systemDTO.package_id, object_id: systemDTO.object_id });
+		if (!systemPackages.interfaces_package_id) {
+			console.info(`create interfaces package (code="${code}", name="${systemPackages.name}"):`);
 
+			const interfacesPackage = await Repository.createPackage({
+				parent_id: systemPackages.package_id,
+				name: INTERFACES_SUBPACKAGE_NAME
+			});
+			systemPackages.interfaces_package_id = interfacesPackage.package_id;
+		}
+		return systemPackages;
 	}
 
 	/**
@@ -150,8 +148,7 @@ export class SystemsRepository {
 		console.log(`${systemCode} - Обновление информации о контейнерах системы`);
 		containers = containers ?? [];
 
-		/** @type {SystemDTOInternal} */
-		const systemDTO = await this.setSystem(systemCode);
+		const systemPackages = await this.prepareSystemPackages(systemCode);
 
 		const containersDiffMap = (await this.selectSystemContainers(systemCode)).reduce((cm, c) => ((cm[c.code] = { current: c }), cm), {});
 		for (const tc of containers) {
@@ -182,8 +179,8 @@ export class SystemsRepository {
 
 		for (const diff of containersToInsert) {
 			const container = await this.#insertContainer(
-				systemDTO.object_id,
-				systemDTO.containerPackageId,
+				systemPackages.object_id,
+				systemPackages.containers_package_id,
 				diff.target.name,
 				diff.target.code,
 				diff.target.author,
