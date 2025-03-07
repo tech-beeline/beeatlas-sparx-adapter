@@ -6,3 +6,7 @@ export {
     ProcessScenario,
     ScenarioMessage
 } from "./scenario/index.mjs";
+
+export {
+    Capability
+} from './capability.mjs';

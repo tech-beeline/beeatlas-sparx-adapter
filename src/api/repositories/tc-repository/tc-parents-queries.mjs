@@ -44,7 +44,7 @@ SELECT
 FROM cte_btc`;
 
 export const SELECT_BC_FOR_TC = `${SELECT_PARENT_BC}
-WHERE code=$2
+WHERE LOWER(code)=LOWER($2)
 `
 
 export const SELECT_OR_CREATE_BC_REALIZATION_DIAGRAM =
@@ -93,7 +93,7 @@ export const DELETE_BC_TC_LINKS =
 WHERE connectorid IN (
 	SELECT c.connector_id
 	FROM t_connector c
-		JOIN t_object tc ON tc.alias=$1 AND tc.object_id=c.end_object_id
+		JOIN t_object tc ON LOWER(tc.alias)=LOWER($1) AND tc.object_id=c.end_object_id
 		JOIN t_object bc ON bc.alias = ANY($2) AND bc.object_id=c.start_object_id
 	WHERE c.stereotype='ArchiMate_Aggregation')
 `
@@ -103,7 +103,7 @@ export const DELETE_BC_TC_CONNECTOR =
 WHERE connector_id IN (
 	SELECT c.connector_id
 	FROM t_connector c
-		JOIN t_object tc ON tc.alias=$1 AND tc.object_id=c.end_object_id
+		JOIN t_object tc ON LOWER(tc.alias)=LOWER($1) AND tc.object_id=c.end_object_id
 		JOIN t_object bc ON bc.alias = ANY($2) AND bc.object_id=c.start_object_id
 	WHERE c.stereotype='ArchiMate_Aggregation')
 `;

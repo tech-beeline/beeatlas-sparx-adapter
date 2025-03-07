@@ -211,8 +211,8 @@ export class SparxRepository {
                     throw Error('not implemented')
                 }
                 if (trx.active_a == '1') {
-                    trx.counter_a = String(Number(trx.counter_a) + 1).padStart(trx.counter_a.length, '0');
                     obj.alias = `${trx.prefix_a}${trx.counter_a}`;
+                    trx.counter_a = String(Number(trx.counter_a) + 1).padStart(trx.counter_a.length, '0');
                 }
                 await client.query({
                     text: 'UPDATE t_trxtypes SET notes=$1 where trx_id=$2',

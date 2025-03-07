@@ -120,7 +120,8 @@ WITH RECURSIVE cte_bc_pkg AS (
 )
 SELECT
 DISTINCT
-	bc.code, 
+	bc.code,
+	bc.object_id,
 	bc.name,
 	bc."isDomain",
 	bc.description,
@@ -242,3 +243,49 @@ VALUES(
 	0
 )
 `
+
+export const SELECT_DOMAIN_BY_CODE = `WITH RECURSIVE cte_bc_pkg AS (
+	SELECT 
+		p.package_id, 
+		p.name, 
+		o.alias as code, 
+		NULL::text as parent_code, 
+		o.object_id,
+		o.author,
+		o.status,
+		o.version,
+		o.createddate,
+		o.modifieddate,
+		o.note as description,
+		(SELECT obe.name 
+	 		FROM t_connector co,  t_object obe 
+	 		WHERE co.end_object_id = o.object_id
+	 		AND obe.object_id = co.start_object_id
+	 		AND co.stereotype = 'Responsibility'
+	 		AND obe.stereotype = 'ArchiMate_BusinessActor' limit 1) as owner
+	FROM t_object o
+		JOIN t_package p ON p.ea_guid=o.ea_guid
+	WHERE o.stereotype='BusinessCapabilitiesCatalogue'
+	UNION
+	SELECT 
+		p.package_id, p.name, o.alias, parent.code, o.object_id,
+		o.author,
+		o.status,
+		o.version,
+		o.createddate,
+		o.modifieddate,
+		o.note,
+		coalesce((SELECT obe.name 
+	 		FROM t_connector co,  t_object obe 
+	 		WHERE co.end_object_id = o.object_id
+	 		AND obe.object_id = co.start_object_id
+	 		--AND co.stereotype = 'Responsibility'
+	 		AND obe.stereotype = 'ArchiMate_BusinessActor' limit 1),parent.owner )
+	FROM cte_bc_pkg parent
+		JOIN t_package p ON p.parent_id=parent.package_Id
+		JOIN t_object o ON o.ea_guid=p.ea_guid	
+)
+SELECT
+*
+FROM cte_bc_pkg
+WHERE LOWER(code)=LOWER($1)`;

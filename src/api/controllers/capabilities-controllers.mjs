@@ -1,6 +1,8 @@
 import express from 'express'
-import capabilitiesService from '../services/capabilities-service.mjs';
+import { CapabilityService } from '../services/index.mjs';
 import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
+
+const capabilityService = new CapabilityService();
 
 export class CapabilityControllers {
     /**
@@ -9,7 +11,7 @@ export class CapabilityControllers {
      * @param {express.Response} response 
      */
     async getAll(request, response) {
-        response.json(await capabilitiesService.getAll())
+        response.json(await capabilityService.getAll())
     }
 
     /**
@@ -19,7 +21,7 @@ export class CapabilityControllers {
      */
     async searchByName(request, response) {
         if (!request.query.terms || !request.query.terms.length) throw BadRequest(`Terms is not specified`);
-        response.json(await capabilitiesService.searchByName(request.query.terms));
+        response.json(await capabilityService.searchByName(request.query.terms));
     }
 
     /**
@@ -29,7 +31,7 @@ export class CapabilityControllers {
      */
     async getByCode(request, response) {
         if (!request.params.code) throw BadRequest(`The code is not specified`);
-        const capabilty = await capabilitiesService.getByCode(request.params.code);
+        const capabilty = await capabilityService.getByCode(request.params.code);
         if (!capabilty) throw NotFound(`The capability with the code ${request.params.code} was not found`)
         response.json(capabilty);
     }

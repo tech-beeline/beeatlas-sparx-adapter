@@ -4,6 +4,7 @@ import { ScenariosService } from "./scenarios-service/index.mjs";
 import { SystemService } from "./systems-service/index.mjs"
 import { TechnicalCapabiliiesService } from "./tc-service/index.mjs";
 export { GET_ALL_SYSTEMS_HANDLERS } from "./systems-service/get-all-systems.mjs";
+export { CapabilityService } from './capability-service/index.mjs'
 
 
 const SystemServiceInstance = new SystemService();

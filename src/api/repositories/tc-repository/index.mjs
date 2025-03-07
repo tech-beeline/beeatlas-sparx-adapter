@@ -5,7 +5,7 @@ import Repository, { ARCHIMATE_AGGREGATION, t_diagramobjects, t_object, t_packag
 import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
 import { TC_PACKAGE_NAME, TC_TAGS_NAMES, TECH_CAPABILITY_STEREOTYPE } from './const.mjs';
 import { SELECT_BC_FOR_TC, SELECT_PARENT_BC, prepareBcRealizationDiagram, DELETE_BC_TC_LINKS, DELETE_BC_TC_CONNECTOR } from './tc-parents-queries.mjs';
-import { SELECT_ALL_TEC, SELECT_TC_BY_CODE } from './tc-queries.mjs';
+import { SELECT_ALL_TEC, SELECT_TC_BY_CODE, SELECT_TC_OBJECT_ID } from './tc-queries.mjs';
 
 const capabilityRepository = new CapabilitiesRepository();
 
@@ -27,21 +27,29 @@ export class TechnicalCapabilitiesRepository {
 	}
 
 	/**
+	 * Получить сырой t_object по коду ТС. Предполагается, что такая записьсуществует и уникальна. 
+	 * В противном случае генерируется исключения
+	 * @param {string} code 
+	 * @returns {Promise<t_object>}
+	 */
+	async #selectTCObject(code) {
+		const currentTcList = await Repository.queryRows(SELECT_TC_OBJECT_ID, [code]);
+		if (!currentTcList.length) throw NotFound(`TC with code ${code} not found`);
+		if (currentTcList.length > 1) throw Error(`Слишком много ТС с кодом ${code}`);
+		return currentTcList[0];
+	}
+
+	/**
 	  * 
 	  * @param {{ code, name, description, author, status, version, goal_from, goal_to }} tc
 	  */
 	async updateTC(tc) {
 		const { code, name, description, author, status, version } = tc;
-		/**
-		 * @type { t_object}
-		 */
-		const currentTC = await Repository.first(t_object,
-			{
-				alias: code,
-				stereotype: TECH_CAPABILITY_STEREOTYPE
-			});
 
-		if (!currentTC) throw NotFound(`TC with code ${code} not found`);
+		/**
+		 * @type { t_object[]}
+		 */
+		const currentTC = await this.#selectTCObject(code);
 
 		await Repository.update(t_object, {
 			name: name,
@@ -78,9 +86,7 @@ export class TechnicalCapabilitiesRepository {
 	 */
 	async setParentsBCForTC(tcCode, bcCodes) {
 		/** @type {t_object} */
-		const tc_object = await Repository.first(t_object, { alias: tcCode, stereotype: TECH_CAPABILITY_STEREOTYPE }) // [ ] Можно оптимизировать, если перейти на внутренние идентификаторы sparx
-		if (!tc_object) throw Error(`TC with code ${tcCode} not found`);
-
+		const tc_object = await this.#selectTCObject(tcCode);
 
 		for (const bcCode of bcCodes) {
 			/** @type {t_object} */
@@ -119,6 +125,7 @@ export class TechnicalCapabilitiesRepository {
 			this.removeParentsBCForTC(tcCode, parentsForRemove)
 		])
 	}
+
 	async insertTC(tc) {
 		let sys_package = await Repository.getPackageByAlias(tc.system.code);
 		if (!sys_package) {

@@ -5,8 +5,6 @@ import Capability from "../model/capability-legacy.mjs";
 import { BadRequest, NotImplemented } from "../../utils/errors.mjs";
 import Repository,
 {
-    ARCHIMATE_CAPABILITY,
-    ARCHIMATE_AGGREGATION,
     t_package,
     t_object
 } from "../../api/repositories/sparx-ea-repository/index.mjs";

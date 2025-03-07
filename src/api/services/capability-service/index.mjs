@@ -1,0 +1,70 @@
+import { BadRequest, NotFound, NotImplemented } from "../../../utils/errors.mjs";
+import { CapabilitiesRepository } from "../../repositories/index.mjs";
+import { Capability } from "../../model/index.mjs";
+
+const capabilitiesRepository = new CapabilitiesRepository();
+
+export class CapabilityService {
+    constructor() {
+        this.getAll = this.getAll.bind(this);
+        this.searchByName = this.searchByName.bind(this);
+        this.getByCode = this.getByCode.bind(this);
+    }
+    /**
+     * 
+     * @returns {Promise<Array<Capability>>}
+     */
+    async getAll() {
+        return capabilitiesRepository.selectAll().then(rows => rows.map(r => new Capability(r)));
+    }
+
+    /**
+     * 
+     * @param {string} terms 
+     * @returns 
+     */
+    async searchByName(terms) {
+        const termsArray = terms.split([' ']).filter(t => t.length);
+        if (!termsArray.length) throw BadRequest("Search terms list is empty");
+
+        return capabilitiesRepository.searchByName(termsArray).then(rows => rows.map(r => new Capability(r)));
+    }
+
+    /**
+     * 
+     * @param {string} code 
+     * @returns {Promise<Capability>}
+     */
+    async getByCode(code) {
+        return capabilitiesRepository.selectByCode(code).then(row => row ? new Capability(row) : null);
+    }
+    /**
+     * 
+     * @param {string} code 
+     * @param {Capability} capabilityData 
+     */
+    async putCapability(code, capabilityData) {
+        if (!capabilityData) {
+            throw BadRequest('В теле не передается capability')
+        }
+        if (!capabilityData.parent) {
+            throw BadRequest('Capability parent is not specified');
+        }
+        const parent = await capabilitiesRepository.selectByCode(capabilityData.parent);
+        if (!parent) throw NotFound(`Не найден родительская возможность с кодом=${capabilityData / parent}`);
+
+        capabilityData.code = code;
+
+        const capability = await capabilitiesRepository.upsertCapability(
+            capabilityData.parent,
+            capabilityData.isDomain,
+            capabilityData.code,
+            capabilityData.name,
+            capabilityData.description,
+            capabilityData.author,
+            capabilityData.status);
+
+        await capabilitiesRepository.setCapabilityOwner(capability.code, capabilityData.owner);
+        return this.getByCode(code);
+    }
+}

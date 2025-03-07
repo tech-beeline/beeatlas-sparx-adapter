@@ -1,8 +1,8 @@
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import { ARCHIMATE_AGGREGATION, UML_RESPONSIBILITY } from '../sparx-ea-repository/ea-repository.mjs';
 import Repository, { ARCHIMATE_CAPABILITY, t_object } from '../sparx-ea-repository/index.mjs'
-import { INSERT_DIAGRAM_LINK, INSERT_DIAGRAM_OBJECTS, INSERT_DOMAIN_DIAGRAM, SELECT_ALL_BC, SELECT_BC_DOMAIN, SELECT_DIAGRAM_HIERARCHY, SELECT_DOMAIN_DIAGRAM_BY_CODE, SELECT_DOMAIN_DIAGRAM_BY_PACKAGE_ID } from './capability-queries.mjs';
-import { CapabilitDTO, CapabilityDTOInternal } from './model.mjs';
+import { INSERT_DIAGRAM_LINK, INSERT_DIAGRAM_OBJECTS, INSERT_DOMAIN_DIAGRAM, SELECT_ALL_BC, SELECT_BC_DOMAIN, SELECT_DIAGRAM_HIERARCHY, SELECT_DOMAIN_BY_CODE, SELECT_DOMAIN_DIAGRAM_BY_CODE, SELECT_DOMAIN_DIAGRAM_BY_PACKAGE_ID } from './capability-queries.mjs';
+import { CapabilityDTO, CapabilityDTOInternal } from './model.mjs';
 import { OwnersCatalogue } from './owners-catalogue.mjs';
 export { BC_PACKAGE_QUERY_BY_ID } from './capability-queries.mjs'
 
@@ -15,11 +15,12 @@ const DEFAULT_ELEMENT_HEIGHT = 100;
 const LEVEL_OFFSET = 50;
 const X__OFFSET = 50;
 
-const SELECT_BY_CODE = `${SELECT_ALL_BC} AND lower(bc.code)=$1`;
-const SELECT_BY_CODE_LIST = `${SELECT_ALL_BC} AND bc.code=ANY($1)`;
+const SELECT_BY_CODE = `${SELECT_ALL_BC} AND lower(bc.code)=LOWER($1)`;
+const SELECT_BY_CODE_LIST = `${SELECT_ALL_BC} AND LOWER(bc.code)=ANY($1)`;
 
-const SEARCH_BY_NAME = `${SELECT_ALL_BC} WHERE name LIKE ANY ($1)`
+const SEARCH_BY_NAME = `${SELECT_ALL_BC} AND name LIKE ANY ($1)`
 const SELECT_CHILDREN_BY_NAME = `${SELECT_ALL_BC} AND lower(bc.parent_code)=$1`;
+
 const throwCapabilityNotFound = (code) => {
 	throw Error(`Capability with code="${code}" not found`);
 };
@@ -28,6 +29,9 @@ const throwIsNotDomain = (code) => {
 }
 
 export class CapabilitiesRepository {
+	/**
+	  * @returns {Promise<Array<{code, name, isDomain, description, createdDate, parent,status, author, version,owner}>>}
+	  */
 	async selectAll() {
 		return Repository.queryRows(SELECT_ALL_BC)
 	}
@@ -40,15 +44,20 @@ export class CapabilitiesRepository {
 	/**
 	 * 
 	 * @param {string} code Код возможности
-	 * @returns {Promise<CapabilitDTO>}
+	 * @returns {Promise<CapabilityDTO>}
 	 */
 	async selectByCode(code) {
 		const data = await Repository.queryOne(SELECT_BY_CODE, [code.toLowerCase()]); // [ ] Добавить проверку на уникальность кода ( alias )
 		return data ? new CapabilityDTOInternal(data) : null;
 	}
 
+	/**
+	 * 
+	 * @param {Array<string>} codes 
+	 * @returns 
+	 */
 	async selectCapabilityList(codes) {
-		const rows = await Repository.queryRows(SELECT_BY_CODE_LIST, [codes]);
+		const rows = await Repository.queryRows(SELECT_BY_CODE_LIST, [codes.map(c => c.toLowerCase())]);
 		return rows.map(r => new CapabilityDTOInternal(r));
 	}
 	/**
@@ -70,12 +79,9 @@ export class CapabilitiesRepository {
 	 */
 	async createDomain(parentCode, code, name, description, author, status) {
 		/** @type {CapabilityDTOInternal} */
-		const parentDomain = await this.selectByCode(parentCode);
+		const parentDomain = await Repository.queryOne(SELECT_DOMAIN_BY_CODE, [parentCode]);
 		if (!parentDomain) {
 			throwCapabilityNotFound(parentCode);
-		}
-		if (!parentDomain.isDomain) {
-			throwIsNotDomain(parentCode);
 		}
 
 		const newPackage = await Repository.createPackage({
@@ -221,6 +227,16 @@ export class CapabilitiesRepository {
 
 		await Promise.all(Object.values(diagramTree).map(c => Repository.queryOne(INSERT_DIAGRAM_LINK, [domainDiagram.diagram_id, c.connector_id])));
 		return this.selectByCode(code);
+	}
+
+	async upsertCapability(parentCode, isDomain, code, name, description, author, status) {
+		const currentCapability = await this.selectByCode(code);
+		if (currentCapability) {
+			NotImplemented();
+		}
+		return isDomain ?
+			this.createDomain(parentCode, code, name, description, author, status)
+			: this.createCapability(parentCode, code, name, description, author, status);
 	}
 
 	async setCapabilityOwner(code, owner) {

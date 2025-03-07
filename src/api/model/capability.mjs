@@ -21,13 +21,14 @@ export class Capability {
     description;
     author;
     createdDate;
-    modifiedDate;
+    //modifiedDate;
     status;
     parent;
     owner;
     children;
     ea_guid;
     self;
+    
     constructor(cap) {
         for (const prop in this) {
             this[prop] = cap[prop] ?? undefined;

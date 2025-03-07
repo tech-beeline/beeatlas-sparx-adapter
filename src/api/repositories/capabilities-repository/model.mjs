@@ -1,4 +1,4 @@
-export class CapabilitDTO {
+export class CapabilityDTO {
     /**
      *
      */
@@ -20,7 +20,7 @@ export class CapabilitDTO {
     owner;
 }
 
-export class CapabilityDTOInternal extends CapabilitDTO {
+export class CapabilityDTOInternal extends CapabilityDTO {
     /**
      *
      */

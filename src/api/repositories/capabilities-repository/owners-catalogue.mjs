@@ -24,7 +24,7 @@ FROM cte_owners_catalogue c
 export class OwnersCatalogue {
     #ownerRootPackage;
     async selectByName(name) {
-        return Repository.queryRows(`${SELECT_OWNERS} WHERE o.name=$1`, [name]).then(rows => rows.map(r => new OwnerDTO(r)));
+        return Repository.queryRows(`${SELECT_OWNERS} WHERE LOWER(o.name)=LOWER($1)`, [name]).then(rows => rows.map(r => new OwnerDTO(r)));
     }
     /**
      * 
