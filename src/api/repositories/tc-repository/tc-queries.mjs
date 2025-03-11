@@ -1,6 +1,5 @@
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
-import Repository, { t_object } from '../sparx-ea-repository/index.mjs'
-import { TC_TAGS_NAMES, TECH_CAPABILITY_STEREOTYPE } from './const.mjs';
+import { ARCHIMATE_TECH_CAPABILITY } from '../sparx-ea-repository/stereotypes/index.mjs';
 
 export const SELECT_ALL_TEC = `
 WITH RECURSIVE cte_bc_pkg AS (
@@ -64,7 +63,7 @@ WITH RECURSIVE cte_bc_pkg AS (
 		JOIN t_connector c ON c.stereotype IN ('ArchiMate_Aggregation', 'ArchiMate_Composition')
 			AND c.start_object_id=p.object_id
 		JOIN t_object bc ON bc.object_id=c.end_object_id 
-			AND bc.stereotype IN ('ArchiMate_Capability', '	')
+			AND bc.stereotype IN ('ArchiMate_Capability', 'ArchiMate_TechnicalCapability')
 		JOIN t_diagramobjects co ON co.diagram_id=d.diagram_id AND co.object_id=bc.object_id
 ), cte_sys_package AS (
 	SELECT 
@@ -114,5 +113,5 @@ export const insertTC = async (tc) => {
 export const SELECT_TC_OBJECT_ID = `SELECT
 *
 FROM t_object
-WHERE LOWER(alias)=LOWER($1) AND stereotype='${TECH_CAPABILITY_STEREOTYPE}';
+WHERE LOWER(alias)=LOWER($1) AND stereotype='${ARCHIMATE_TECH_CAPABILITY}';
 `;

@@ -62,6 +62,7 @@ suite("Технические возможности", async () => {
         await SparxRepositoryPackagesOptions.init();
         await tcService.putTC(FDM_TC);
     });
+    
     test("Получение списка ТС", async (t) => {
         const tc_list = await tcService.getAll();
         assert(tc_list.length);

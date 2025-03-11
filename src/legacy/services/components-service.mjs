@@ -90,7 +90,7 @@ class ComponentsService {
 		 * @type {System}
 		 */
 		let system = null;
-		const rows = await Repository.queryRows({ text: SYSTEM_QUERY.SYSTEM_REALIZATION_BY_CODE, values: [code] });
+		const rows = await Repository.query(SYSTEM_QUERY.SYSTEM_REALIZATION_BY_CODE, code);
 		for (const row of rows) {
 			system = system ?? new System({ name: row.system, code: row.cmdb, version: row.sys_version, description: row.sys_description, ...row });
 			/**

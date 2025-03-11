@@ -23,12 +23,13 @@ export class Capability {
     createdDate;
     //modifiedDate;
     status;
+    /** @type {{ code:string}} */
     parent;
     owner;
     children;
     ea_guid;
     self;
-    
+
     constructor(cap) {
         for (const prop in this) {
             this[prop] = cap[prop] ?? undefined;

@@ -1,6 +1,7 @@
 import { BadRequest, NotFound, NotImplemented } from "../../../utils/errors.mjs";
 import { CapabilitiesRepository } from "../../repositories/index.mjs";
 import { Capability } from "../../model/index.mjs";
+import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
 
 const capabilitiesRepository = new CapabilitiesRepository();
 
@@ -50,21 +51,29 @@ export class CapabilityService {
         if (!capabilityData.parent) {
             throw BadRequest('Capability parent is not specified');
         }
-        const parent = await capabilitiesRepository.selectByCode(capabilityData.parent);
-        if (!parent) throw NotFound(`Не найден родительская возможность с кодом=${capabilityData / parent}`);
+        if (!capabilityData.parent) {
+            throw BadRequest('Не задана родительская возможность');
+        }
+        if (!capabilityData.parent.code)
+            throw BadRequest(`У родительской возможности не указан код ${JSON.stringify(capabilityData.parent)}`);
 
-        capabilityData.code = code;
+        return eaRepository.transactionScope(async () => {
+            const parent = await capabilitiesRepository.selectByCode(capabilityData.parent.code);
+            if (!parent) throw NotFound(`Не найден родительская возможность с кодом=${capabilityData.parent.code}`);
 
-        const capability = await capabilitiesRepository.upsertCapability(
-            capabilityData.parent,
-            capabilityData.isDomain,
-            capabilityData.code,
-            capabilityData.name,
-            capabilityData.description,
-            capabilityData.author,
-            capabilityData.status);
+            capabilityData.code = code;
 
-        await capabilitiesRepository.setCapabilityOwner(capability.code, capabilityData.owner);
-        return this.getByCode(code);
+            const capability = await capabilitiesRepository.upsertCapability(
+                capabilityData.parent.code,
+                capabilityData.isDomain,
+                capabilityData.code,
+                capabilityData.name,
+                capabilityData.description,
+                capabilityData.author,
+                capabilityData.status);
+
+            await capabilitiesRepository.setCapabilityOwner(capability.code, capabilityData.owner);
+            return this.getByCode(code);
+        })
     }
 }

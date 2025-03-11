@@ -44,7 +44,9 @@ export class TechnicalCapabiliiesService {
         const [currentTC] = await tcDataService.selectTCByCode(targetTC.code);
         if (currentTC) currentTC.system = { code: currentTC.sys_code };
 
-        currentTC ? (await updateTC(currentTC, targetTC)) : await createTC(targetTC)
+        currentTC ? (await updateTC(currentTC, targetTC)) :
+            await createTC(targetTC);
+
         return this.getByCode(targetTC.code);
     }
 }

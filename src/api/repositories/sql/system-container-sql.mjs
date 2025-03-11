@@ -1,12 +1,12 @@
 const SELECT_CONTAINER_SYS_CTE = `cte_sys AS (
-SELECT package_id , $1 as name FROM t_object WHERE object_type='Component' AND alias=$2 )`;
+SELECT package_id , $1 as name FROM t_object WHERE object_type='Component' AND LOWER(alias)=LOWER($2) )`;
 
 const SELECT_INTERFACE_SYS_CTE = `cte_sys AS (
 SELECT s.package_id , $1 as name 
 FROM t_object o
 	JOIN t_package p ON p.package_id=o.package_id
 	JOIN t_package s ON s.package_id=p.parent_id
-WHERE stereotype='C4_Container' AND alias=$2)`
+WHERE stereotype='C4_Container' AND LOWER(alias)=LOWER($2))`
 
 const PREPARE_EXPR = `cte_new_package AS (
 	INSERT INTO t_package(

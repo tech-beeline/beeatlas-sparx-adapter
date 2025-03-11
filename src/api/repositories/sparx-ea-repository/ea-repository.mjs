@@ -20,6 +20,12 @@ import { DELETE_CONNECTOR_BY_ID, DELETE_LINK_BY_CONNECTOR_ID, SELECT_DIAGRAMOBJE
 import { SELECT_PACKAGE_BY_ALIAS } from './ea-queries/ea-pacakgies-queries.mjs';
 import { OBJECT_STEREOTYPES } from './stereotypes/index.mjs';
 import { REMOVE_CONNECTOR_TXREF_BY_START_END_STEREOTYPE } from './ea-queries/remove-t_xref.mjs';
+import { NotImplemented } from '../../../utils/errors.mjs';
+
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { DELETE_OBJECT } from './ea-queries/delete/index.mjs';
+
+const transactionClient = new AsyncLocalStorage();
 
 const ENVIROMENT_VARIABLE = {
     user: "DB_EA_USER", password: "DB_EA_PASSWORD", host: "DB_EA_URL", database: "DB_EA_DATABASE"
@@ -83,18 +89,46 @@ export class SparxRepository {
         this.#config = config;
         return this.#config
     }
+    /**
+     * 
+     * @param {async ()=>void} fn 
+     */
+    async transactionScope(fn) {
+        if (transactionClient.getStore()) { // if in transaction
+            return fn();
+        }
+
+        const client = new pg.Client(this.config);
+        await client.connect();
+        try {
+            await client.query('BEGIN')
+            const  ret = await transactionClient.run(client, fn);
+            await client.query('COMMIT')
+            return ret;
+        } catch (error) {
+            console.log('ROLLBACK');
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            await client.end();
+        }
+    }
 
     /**
      * 
-     * @param {String|{text : String, values : []}} sql 
-     * @param {Array} values
-     * @returns {Promise<Array>}
+     * @param {*} sql 
+     * @param  {...any} values 
+     * @returns {Promise<[]>}
      */
-    async queryRows(sql, values) {
+    async query(sql, ...values) {
         try {
+            const storedClient = transactionClient.getStore();
+            if (storedClient) {
+                return (await storedClient.query(sql, sql.values ?? values)).rows;
+            }
             let client = new pg.Client(this.config);
             await client.connect();
-            let rows = (await client.query(sql, values)).rows;
+            let rows = (await client.query(sql, sql.values ?? values)).rows;
             await client.end();
             return rows;
         } catch (error) {
@@ -102,23 +136,24 @@ export class SparxRepository {
             throw error;
         }
     }
+
+    /**
+     * 
+     * @param {String|{text : String, values : []}} sql 
+     * @param {Array} values
+     * @returns {Promise<Array>}
+     */
+    async queryRows(sql, values = []) {
+        return this.query(sql, ...values);
+    }
     /**
    * 
    * @param {String|{text : String, values : []}} sql 
    * @param {Array} values 
    * @returns {Promise}
    */
-    async queryOne(sql, values) {
-        try {
-            let client = new pg.Client(this.config);
-            await client.connect();
-            let rows = (await client.query(sql, values)).rows;
-            await client.end();
-            return rows.find(a => a);
-        } catch (error) {
-            console.log(sql?.text ?? sql);
-            throw error;
-        }
+    async queryOne(sql, values = []) {
+        return this.query(sql, ...values).then(r => r.find(a => a));
     }
     /**
      * 
@@ -136,46 +171,30 @@ export class SparxRepository {
     async objectByAlias(alias) {
         return this.getObjectsByAlias(alias).then(rows => rows.find(v => true));
     }
-    async insert(type, value, client) {
+    async insert(type, value) {
         if (!(value instanceof type)) value = new type(value);
         if (value.beforeCreate) value.beforeCreate();
 
         let field_values = Object.entries(value).filter(([k, v]) => v);
         const text = `INSERT INTO ${type.name}(${field_values.map(([k, v]) => `${k}`).join(',')}) VALUES(${field_values.map((v, i) => `$${i + 1}`)}) RETURNING *`;
 
-        if (client) return await client.query({ text: text, values: field_values.map(([_, v]) => v) }).then(
-            v => v.rows.find(a => a));
+        return this.query({ text: text, values: field_values.map(([_, v]) => v) }).then(
+            v => v.find(a => a));
 
-        client = new pg.Client(this.config);
-        await client.connect();
-
-        try {
-            await client.query('BEGIN');
-            let res = await client.query({ text: text, values: field_values.map(([_, v]) => v) });
-            await client.query('COMMIT');
-
-            if (res.rowCount)
-                return new type(res.rows[0]);
-
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            await client.end();
-        }
     }
     async update(type, value, condition) {
         if (!condition) throw Error('update condition is null ');
         let field_values = Object.entries(value);//.filter(([k, v]) => v);
         let condition_list = Object.entries(condition);
-        const text = `UPDATE ${type.name} SET ${field_values.map(([k, v], i) => `${k} = $${i + 1}`).join(', ')} WHERE ${Object.entries(condition).map(([k, v], i) => `${k} = $${i + 1 + field_values.length}`).join(' AND ')}`;
-        return this.queryRows({ text: text, values: [...field_values.map(([k, v]) => v), ...condition_list.map(([k, v]) => v)] });
+        const text = `UPDATE ${type.name} SET ${field_values.map(([k, v], i) => `${k} = $${i + 1}`).join(', ')} 
+        WHERE ${Object.entries(condition).map(([k, v], i) => `${k} = $${i + 1 + field_values.length}`).join(' AND ')} RETURNING *`;
+        return this.query(text, ...field_values.map(([k, v]) => v), ...condition_list.map(([k, v]) => v));
     }
 
     async delete(type, condition) {
         const condition_list = Object.entries(condition);
         const text = `DELETE FROM ${type.name} WHERE ${condition_list.map(([k, v], i) => `${k} = $${i + 1}`).join(' AND ')}`;
-        return this.queryOne(text, condition_list.map(([k, v]) => v))
+        return this.queryOne(text, condition_list.map(([k, v]) => v));
     }
 
     async find(type, condition) {
@@ -194,7 +213,7 @@ export class SparxRepository {
     }
 
 
-    async #prepareObjectAlias(obj, client) {
+    async #prepareObjectAlias(obj) {
         if (!obj.alias) {
             let autocount = obj.stereotype ? await this.queryOne({
                 text: `select * from t_trxtypes where description = 'AutocountEx' and trx = $1`, values: [obj.stereotype]
@@ -214,7 +233,7 @@ export class SparxRepository {
                     obj.alias = `${trx.prefix_a}${trx.counter_a}`;
                     trx.counter_a = String(Number(trx.counter_a) + 1).padStart(trx.counter_a.length, '0');
                 }
-                await client.query({
+                await this.query({
                     text: 'UPDATE t_trxtypes SET notes=$1 where trx_id=$2',
                     values: [Object.entries(trx).map(([k, v]) => `${k}=${v};`).join(''), autocount.trx_id]
                 });
@@ -241,30 +260,17 @@ export class SparxRepository {
      * @returns {Promise<t_object>}
      */
     async createObject(obj) {
-
-        /**
-         * @type {pg.Client}
-         */
-        let client = new pg.Client(this.config);
-        await client.connect();
-        try {
-            await client.query('BEGIN');
+        return this.transactionScope(async () => {
             const xref = this.#processStereotype(obj);
-            await this.#prepareObjectAlias(obj, client);
-            obj = await this.insert(t_object, obj, client);
+            await this.#prepareObjectAlias(obj);
+            obj = await this.insert(t_object, obj);
             if (xref) {
                 for (let name in xref) {
-                    await this.insert(t_xref, Object.assign({ name: name, client: obj.ea_guid }, xref[name]), client);
+                    await this.insert(t_xref, Object.assign({ name: name, client: obj.ea_guid }, xref[name]));
                 }
             }
-            await client.query('COMMIT');
             return obj;
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            await client.end();
-        }
+        })
     }
     /**
      * 
@@ -275,6 +281,7 @@ export class SparxRepository {
         return (await this.first(t_package, { parent_id: pkg.parent_id, name: pkg.name })) ??
             (await this.createPackage({ parent_id: pkg.parent_id, name: pkg.name }));
     }
+
     buildDiagram(d) {
         return Object.assign({
             package_id: 17888,
@@ -667,6 +674,79 @@ export class SparxRepository {
      */
     async getPackageByAlias(alias) {
         return this.queryOne(SELECT_PACKAGE_BY_ALIAS, [alias])
+    }
+
+    /**
+     * 
+     * @param {number} object_id 
+     * @returns {Promise<Array<t_object>>}
+     */
+    async getChildObjects(object_id) {
+        return this.query(`SELECT * FROM t_object WHERE parentid=$1`, object_id);
+    }
+
+    /**
+    * 
+    * @param {number} package_id 
+    * @returns {Promise<Array<t_package>>}
+    */
+    async getChildPackages(package_id) {
+        return this.query(`SELECT * FROM t_package WHERE parent_id=$1`, package_id);
+    }
+
+    /**
+     * 
+     * @param {number} package_id 
+     * @returns {Promise<Array<t_object>>}
+     */
+    async getPackageObjects(package_id) {
+        return this.query(`SELECT * FROM t_object WHERE package_id=$1`, package_id);
+    }
+
+    /**
+     * 
+     * @param {number} package_id 
+     * @returns {Promise<Array<t_diagram>>}
+     */
+    async getPackageDiagrams(package_id) {
+        return this.query(`SELECT * FROM t_diagram WHERE package_id=$1`, package_id);
+    }
+
+    async deleteObject(object_id) {
+        if( !object_id) throw Error('object_id is not specified');
+        return this.transactionScope(async () => {
+
+            const children = await this.getChildObjects(object_id);
+            for (const child of children) {
+                this.deleteObject(child.object_id);
+            }
+            for (const entity in DELETE_OBJECT) {
+                await this.query(DELETE_OBJECT[entity], object_id);
+            }
+        });
+    }
+
+    async deleteDiagram(diagram_id) {
+        NotImplemented();
+    }
+
+    async deletePackage(package_id) {
+        return this.transactionScope(async () => {
+            for (const subpackage of await this.getChildPackages(package_id)) {
+                await this.deletePackage(subpackage.package_id);
+            }
+
+            for (const obj of await this.getPackageObjects(package_id)) {
+                await this.deleteObject(obj.object_id);
+            }
+            for (const diagram of await this.getPackageDiagrams(package_id)) {
+                await this.deleteDiagram(diagram.diagram_id)
+            }
+            for (const obj of await this.query(`SELECT object_id FROM t_object WHERE ea_guid IN (SELECT ea_guid FROM t_package where package_id=$1)`, package_id)) {
+                await this.deleteObject(obj.object_id);
+            }
+            await this.query(`DELETE FROM t_package WHERE package_id=$1`, package_id);
+        });
     }
 }
 

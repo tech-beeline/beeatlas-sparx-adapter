@@ -171,7 +171,6 @@ export class SystemService {
      * @param {System} system 
      */
     async putSystem(systemCode, system) {
-
         if (!systemCode) throw BadRequest('Code parameter is not specified');
         if (!system) throw BadRequest('System is not specified');
 

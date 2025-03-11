@@ -28,7 +28,7 @@ import { SourceFactory } from "../../api/services/observability-service/dashboar
 import { GRAFANA_INTERACTION_TEMPLATE_ROW, GRAFANA_MESSAGES_HEADERS_ROW, GRAFANA_MESSAGES_TEMPLATE_ROW } from "../../api/const.mjs";
 import { SecnarioDashboardBuilder } from "../../api/services/observability-service/dashboard/scenario-dashboard-builder.mjs";
 import { GrafanaService } from "../../api/resources/index.mjs";
-import { FOLDER_API_PATH, GET_DASHBOARD_BY_UID_PATH, GRAFANA_E2E_TEMPLATE_UID, GRAFANA_HTTP_OPTIONS, GRAFANA_URL } from "../../api/resources/grafana/conts.mjs";
+import { DASHBOARD_API_PATH, FOLDER_API_PATH, GET_DASHBOARD_BY_UID_PATH, GRAFANA_E2E_TEMPLATE_UID, GRAFANA_HTTP_OPTIONS, GRAFANA_URL } from "../../api/resources/grafana/conts.mjs";
 
 const monitoringRepository = new MonitoringRepository();
 const grafanaService = new GrafanaService();

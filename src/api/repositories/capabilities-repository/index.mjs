@@ -1,7 +1,20 @@
-import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
-import { ARCHIMATE_AGGREGATION, UML_RESPONSIBILITY } from '../sparx-ea-repository/ea-repository.mjs';
-import Repository, { ARCHIMATE_CAPABILITY, t_object } from '../sparx-ea-repository/index.mjs'
+import {
+	BadRequest,
+	NotFound,
+	NotImplemented
+} from '../../../utils/errors.mjs';
+import {
+	ARCHIMATE_AGGREGATION,
+	UML_RESPONSIBILITY
+} from '../sparx-ea-repository/ea-repository.mjs';
+import Repository, {
+	ARCHIMATE_CAPABILITY,
+	t_object,
+	t_package
+} from '../sparx-ea-repository/index.mjs'
+
 import { INSERT_DIAGRAM_LINK, INSERT_DIAGRAM_OBJECTS, INSERT_DOMAIN_DIAGRAM, SELECT_ALL_BC, SELECT_BC_DOMAIN, SELECT_DIAGRAM_HIERARCHY, SELECT_DOMAIN_BY_CODE, SELECT_DOMAIN_DIAGRAM_BY_CODE, SELECT_DOMAIN_DIAGRAM_BY_PACKAGE_ID } from './capability-queries.mjs';
+import { loadDomainStructure } from './domain-strcuture.mjs';
 import { CapabilityDTO, CapabilityDTOInternal } from './model.mjs';
 import { OwnersCatalogue } from './owners-catalogue.mjs';
 export { BC_PACKAGE_QUERY_BY_ID } from './capability-queries.mjs'
@@ -10,10 +23,6 @@ export { BC_PACKAGE_QUERY_BY_ID } from './capability-queries.mjs'
 const ownersCatalogue = new OwnersCatalogue();
 
 const CAPABILITY_PACKAGE_NAME = "BC";
-const DEFAULT_ELEMENT_WIDTH = 150;
-const DEFAULT_ELEMENT_HEIGHT = 100;
-const LEVEL_OFFSET = 50;
-const X__OFFSET = 50;
 
 const SELECT_BY_CODE = `${SELECT_ALL_BC} AND lower(bc.code)=LOWER($1)`;
 const SELECT_BY_CODE_LIST = `${SELECT_ALL_BC} AND LOWER(bc.code)=ANY($1)`;
@@ -142,57 +151,26 @@ export class CapabilitiesRepository {
 	 * @returns 
 	 */
 	async createCapability(parentCode, code, name, description, author, status) {
-		/** @type {Array<CapabilityDTOInternal>} */
-		const domainRows = await Repository.queryRows(SELECT_BC_DOMAIN, [parentCode.toLowerCase()]);
-		if (!domainRows.length) throw Error(`Не удалось получить структуру домена для BC code="${parentCode}"`);
-
-		const domainDiagram = await this.#prepareDomainDiagram(domainRows[0].package_id);
-
-		const diagramTree = {};
-		domainRows.forEach(row => {
-			row.code = row.code.toLowerCase();
-			diagramTree[row.code] = row;
-			const parent = diagramTree[row.parent];
-			if (parent) {
-				(parent.children = (parent.children ?? {}))[row.code] = row;
-			}
-		});
-
-		const domain = domainRows.find(row => row.isDomain);
+		const domainStructure = await loadDomainStructure(parentCode);
+		const domain = domainStructure.domain;
 
 		/** @type {CapabilityDTOInternal} */
-		const parentRow = diagramTree[parentCode];
-		if (!parentRow) throw Error(`В домене ${domain.code} не найдена возможность с кодом ${parentCode}`);
+		const parentCapability = domainStructure.member(parentCode);
+		if (!parentCapability) throw Error(`В домене ${domain.code} не найдена возможность с кодом ${parentCode}`);
 
+		const domainCapabilitiesPackage = await Repository.putPackage({ parent_id: domain.package_id, name: CAPABILITY_PACKAGE_NAME });
 
-		const capabilitiesPackage = await Repository.putPackage({ parent_id: domainRows[0].package_id, name: CAPABILITY_PACKAGE_NAME });
+		const capabilityRow = await Repository.createObject({
+			package_id: domainCapabilitiesPackage.package_id,
+			name: name,
+			author: author,
+			status: status,
+			note: description,
+			alias: code,
+			object_type: ARCHIMATE_CAPABILITY
+		});
 
-		/** @type {t_object} */
-		let capabilityRow = await Repository.queryOne("SELECT * FROM t_object WHERE pacakge_id=$1 AND lower(alias)=lower($2)", [capabilitiesPackage.package_id, code]);
-		if (capabilityRow
-			&& (
-				capabilityRow.name !== name
-				|| capabilityRow.note !== description
-				|| capabilityRow.author !== author
-				|| capabilityRow.status !== status)) {
-			// Если есть существующая BC в целевой папке и ее надо обновить
-			await Repository.update(t_object, { note: description, name: name, author: author, status: status }, { object_id: capabilityRow.object_id });
-		}
-
-		if (!capabilityRow) {
-			// Создаем если нет в папке BC
-			capabilityRow = await Repository.createObject({
-				package_id: capabilitiesPackage.package_id,
-				name: name,
-				author: author,
-				status: status,
-				note: description,
-				alias: code,
-				object_type: ARCHIMATE_CAPABILITY
-			});
-		}
-
-		const connector = await Repository.putConnector(parentRow.object_id, capabilityRow.object_id, ARCHIMATE_AGGREGATION);
+		const connector = await Repository.putConnector(parentCapability.object_id, capabilityRow.object_id, ARCHIMATE_AGGREGATION);
 
 		const capability = new CapabilityDTOInternal({
 			name: capabilityRow.name,
@@ -209,30 +187,60 @@ export class CapabilitiesRepository {
 			package_id: domain.package_id
 		});
 
-		diagramTree[code] = capability;
-		(diagramTree[parentCode].children = (diagramTree[parentCode].children ?? {}))[code] = capability;
+		domainStructure.addMember(capability);
+		await domainStructure.arrange();
 
-		const r = this.calcPosition(domain);
-
-		await Promise.all([
-			Repository.queryOne('DELETE FROM t_diagramlinks WHERE diagramid=$1', [domainDiagram.diagram_id]),
-			Repository.queryOne('DELETE FROM t_diagramobjects WHERE diagram_id=$1', [domainDiagram.diagram_id])
-		]);
-
-		const diagramObjects = Object.values(diagramTree).map(c => ({ left: c.left, right: c.right, top: -c.top, bottom: -c.bottom, object_id: c.object_id }));
-
-		await Promise.all(
-			diagramObjects.map(r => Repository.queryOne(INSERT_DIAGRAM_OBJECTS, [domainDiagram.diagram_id, r.object_id, r.left, r.right, r.top, r.bottom]))
-		)
-
-		await Promise.all(Object.values(diagramTree).map(c => Repository.queryOne(INSERT_DIAGRAM_LINK, [domainDiagram.diagram_id, c.connector_id])));
 		return this.selectByCode(code);
 	}
 
 	async upsertCapability(parentCode, isDomain, code, name, description, author, status) {
 		const currentCapability = await this.selectByCode(code);
+
 		if (currentCapability) {
-			NotImplemented();
+			if (currentCapability.author === author
+				&& currentCapability.isDomain === isDomain
+				&& currentCapability.parent === parentCode
+				&& currentCapability.name === name
+				&& currentCapability.description === description
+				&& currentCapability.status == status
+				&& currentCapability.parent.toLowerCase() === parentCode.toLowerCase()
+			) {
+				return currentCapability;
+			}
+			if (isDomain !== currentCapability.isDomain) throw BadRequest('Смена типа возможности не предусмотрена');
+			if (isDomain) {
+				const objects = await Repository.update(t_object, {
+					name: name,
+					note: description,
+					author: author,
+					status: status
+				}, { alias: currentCapability.code, object_type: 'Package' });
+
+				if (currentCapability.name !== name
+					|| currentCapability.description !== description
+					|| currentCapability.parent.toLowerCase() !== parentCode.toLowerCase()) {
+
+					const domainData = { name: name, notes: description };
+
+					if (currentCapability.parent.toLowerCase() !== parentCode.toLowerCase()) {
+						throw NotImplemented('Смена родительского домена для домена отключена');
+						const parent = await Repository.getPackageByAlias(parentCode);
+						if (!parent) throw BadRequest('РОдительский домен не найден');
+						domainData.parent_id = parent.package_id;
+					}
+
+					for (const obj of objects) {
+						await Repository.update(t_package, domainData, { ea_guid: obj.ea_guid });
+					}
+				}
+				return this.selectByCode(code);
+			}
+			await Repository.update(t_object, {
+				name: name,
+				note: description,
+				author: author,
+				status: status
+			}, { alias: currentCapability.code, object_type: 'Class', stereotype: ARCHIMATE_CAPABILITY });
 		}
 		return isDomain ?
 			this.createDomain(parentCode, code, name, description, author, status)
@@ -240,12 +248,14 @@ export class CapabilitiesRepository {
 	}
 
 	async setCapabilityOwner(code, owner) {
-		console.info(`Изменение владельца для BC (code="${code}")`);
 
 		const capability = await this.selectByCode(code);
 		if (!capability) throw NotFound(`Capability with code=${code} not found`);
+		if (capability.owner?.toLowerCase() === owner.toLowerCase())
+			return;
 
-		// remove current owners
+		console.info(`Изменение владельца для BC (code="${code}")`);
+
 		if (capability.owner) {
 			const currentOwners = await ownersCatalogue.selectByName(capability.owner);
 			for (const o of currentOwners) {

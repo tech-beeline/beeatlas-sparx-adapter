@@ -1,0 +1,1 @@
+export { DELETE_OBJECT } from './object.mjs'

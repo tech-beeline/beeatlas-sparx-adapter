@@ -3,7 +3,8 @@ import { CapabilitiesRepository, SystemsRepository } from '../index.mjs';
 import Repository, { ARCHIMATE_AGGREGATION, t_diagramobjects, t_object, t_package, t_xref } from '../sparx-ea-repository/index.mjs'
 
 import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
-import { TC_PACKAGE_NAME, TC_TAGS_NAMES, TECH_CAPABILITY_STEREOTYPE } from './const.mjs';
+import { ARCHIMATE_TECH_CAPABILITY } from '../sparx-ea-repository/stereotypes/index.mjs';
+import { TC_PACKAGE_NAME, TC_TAGS_NAMES } from './const.mjs';
 import { SELECT_BC_FOR_TC, SELECT_PARENT_BC, prepareBcRealizationDiagram, DELETE_BC_TC_LINKS, DELETE_BC_TC_CONNECTOR } from './tc-parents-queries.mjs';
 import { SELECT_ALL_TEC, SELECT_TC_BY_CODE, SELECT_TC_OBJECT_ID } from './tc-queries.mjs';
 
@@ -128,9 +129,10 @@ export class TechnicalCapabilitiesRepository {
 
 	async insertTC(tc) {
 		let sys_package = await Repository.getPackageByAlias(tc.system.code);
+
 		if (!sys_package) {
 			const tc_catalogue_package = await Repository.first(t_package, { ea_guid: SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue.ea_guid });
-			const system = new SystemsRepository().selectSystemByCode(tc.system.code);
+			const system = await new SystemsRepository().selectSystemByCode(tc.system.code);
 			const system_name = system?.name ?? tc.system.code;
 			sys_package = await Repository.createPackage({ name: system_name, alias: tc.system.code, parent_id: tc_catalogue_package.package_id });
 		}
@@ -139,16 +141,14 @@ export class TechnicalCapabilitiesRepository {
 
 		const tc_object = await Repository.createObject({
 			alias: tc.code,
-			package_id: tc_package.package_id, name: tc.name, object_type: "Class",
+			package_id: tc_package.package_id,
+			name: tc.name,
+			object_type: ARCHIMATE_TECH_CAPABILITY,
 			author: "FDM API",
 			note: tc.description,
-			scope: 'Public', parentid: '0', classifier: '0', pdata4: '0',
-			stereotype: TECH_CAPABILITY_STEREOTYPE,
-			backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1, status: "Created",
+			status: "Created",
 			version: tc.version
 		});
-
-		await Repository.insert(t_xref, t_xref.ArchimateElementStereotype({ guid: tc_object.ea_guid, stereotype: TECH_CAPABILITY_STEREOTYPE })); // [ ] Надо отрефакторить - скрыть работу со стереотипами
 
 		return Repository.updateObjectTags(tc_object.object_id, tc, TC_TAGS_NAMES);
 	}
