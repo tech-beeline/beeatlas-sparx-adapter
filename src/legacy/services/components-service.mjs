@@ -6,9 +6,10 @@ import Repository, {
 import interfacesService from "./interfaces-service.mjs";
 import applicationCatalog, { API_SPECIFICATION_URL_TAG, PROTOCOL_TAG } from "./sql/application-catalog.mjs";
 import SYSTEM_QUERY from "./sql/systems-queries.mjs";
-import { BadRequest, NotImplemented } from "../../utils/errors.mjs";
+import { BadRequest, NotFound, NotImplemented } from "../../utils/errors.mjs";
 import systemParticipation from "./sql/system-participation.mjs";
 import { ERROR_RATE_THRESHOLD_TAG, LATENCY_THRESHOLD_TAG, RPS_THRESHOLD_TAG } from "./sql/interfaces-queries.mjs";
+import { SystemService } from "../../api/services/index.mjs";
 
 
 const INTERFACE_TAGS = [PROTOCOL_TAG, API_SPECIFICATION_URL_TAG]
@@ -40,6 +41,9 @@ const SLA_TAG_MAP = {
 	[LATENCY_THRESHOLD_TAG]: "latency",
 	[ERROR_RATE_THRESHOLD_TAG]: "error_rate"
 }
+
+const actualService = new SystemService();
+
 class ComponentsService {
 
 	async getComponents() {
@@ -67,60 +71,11 @@ class ComponentsService {
 		});
 	}
 	async getSystemList() {
-		let systems = {}
-		for (const row of await Repository.queryRows(SYSTEM_QUERY.SYSTEM_REALIZATION_LIST)) {
-			/**
-			 * @type {System}
-			 */
-			let system = systems[row.cmdb] = systems[row.cmdb] ?? new System(Object.assign({
-				name: row.system, code: row.cmdb,
-				description: row.sys_description
-			}, row));
-
-			this.#addContainerFromRow(system, row);
-		}
-
-		const arr = Object.values(systems);
-		return Object.values(systems);
+		return actualService.getAll();
 	}
 
 	async getSystem(code, { loadMethods } = {}) {
-		if (!code) throw Object.assign(Error(`system with code ${code} not found`, { status: 404 }));
-		/**
-		 * @type {System}
-		 */
-		let system = null;
-		const rows = await Repository.query(SYSTEM_QUERY.SYSTEM_REALIZATION_BY_CODE, code);
-		for (const row of rows) {
-			system = system ?? new System({ name: row.system, code: row.cmdb, version: row.sys_version, description: row.sys_description, ...row });
-			/**
-			 * @type {Container}
-			 */
-			this.#addContainerFromRow(system, row);
-		}
-
-		if (loadMethods) {
-			const interfaces = {};
-			for (const container of system.containers ?? []) {
-				for (const i of container.interfaces ?? []) {
-					interfaces[i.ea_id()] = i;
-
-				}
-			}
-
-			const methods = await Repository.queryRows(`select * from t_operation where object_id = ANY($1)`, [Object.keys(interfaces)])
-			let method_map = {}
-			for (const m of methods) {
-				interfaces[m.object_id].methods.push(method_map[m.operationid] = new APIMethod({ ...m }))
-			}
-
-			const tags = await Repository.queryRows('select * from t_operationtag where elementid=ANY($1) and property=ANY($2)', [Object.keys(method_map), [ERROR_RATE_THRESHOLD_TAG, LATENCY_THRESHOLD_TAG, RPS_THRESHOLD_TAG]]);
-			for (const t of tags) {
-				method_map[t.elementid][SLA_TAG_MAP[t.property]] = t.value;
-			}
-		}
-
-		return system;
+		return actualService.getByCode(code, { level: loadMethods ? "methods" : "systems" })
 	}
 
 	async getSystemProcesses(cmdb) {

@@ -1,6 +1,6 @@
 import { before, after, suite, test } from 'node:test';
 import assert, { deepEqual, deepStrictEqual, strictEqual } from 'assert';
-import { readEnv } from '../env.mjs';
+import { updateEnv } from '../env.mjs';
 import { TechnicalCapabiliiesService } from '../../src/api/services/index.mjs'
 import { SparxRepositoryPackagesOptions } from '../../src/api/repositories/sparx-ea-repository/options.mjs';
 
@@ -58,11 +58,11 @@ const tcService = new TechnicalCapabiliiesService();
 
 suite("Технические возможности", async () => {
     before(async () => {
-        readEnv();
+        updateEnv();
         await SparxRepositoryPackagesOptions.init();
         await tcService.putTC(FDM_TC);
     });
-    
+
     test("Получение списка ТС", async (t) => {
         const tc_list = await tcService.getAll();
         assert(tc_list.length);

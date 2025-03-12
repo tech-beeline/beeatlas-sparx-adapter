@@ -30,6 +30,7 @@ export const INTERFACE_SCHEMA = {
         version: stringProperty("Версия интерфейса", { example: "1.0.0" }),
         status: stringProperty("Статус интерфейса", { example: "Proposed" }),
         protocol: stringProperty("Протокол", { example: "rest" }),
+        implements : stringProperty("Код технической возможности, которую реализует интерфейс"),
         specification: stringProperty("Ссылка на спецификацию"),
         methods: {
             type: "array",

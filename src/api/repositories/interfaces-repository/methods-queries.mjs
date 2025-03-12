@@ -18,7 +18,7 @@ FROM t_object it
 WHERE it.object_type='Interface'
 `
 
-export const SELECT_INTERFACE_METHODS = `${SELECT_ALL_METHODS} AND it.alias = $1`;
+export const SELECT_INTERFACE_METHODS = `${SELECT_ALL_METHODS} AND LOWER(it.alias) = LOWER($1)`;
 
 export const SELECT_METHOD_BY_NAME_INTERFACE_CODE = `SELECT o.* 
 FROM t_operation o

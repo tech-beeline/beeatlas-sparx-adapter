@@ -158,6 +158,49 @@ export const CMDB_A_CONTAINER_SAMPLE = {
     FQName: "IT-Landscape Catalog/DEV_TEST/Test Application",
     status: "Proposed",
     containers: [
+        {
+            name: "Backend service",
+            code: "BACKEND.CMDB_A",
+            version: "1.0.0",
+            description: "Подробное описание",
+            status: "Proposed",
+        }
+    ],
+    links: {
+        self: "/api/v4/systems/CMDB_A",
+        purpose: "/api/v4/systems/CMDB_A/purpose",
+        e2e: "/api/v4/systems/CMDB_A/e2e",
+        assessments: "/api/v4/systems/CMDB_A/e2e",
+    },
+};
+
+
+export const CMDB_A_INTERFACE_SAMPLE = {
+    name: "System A",
+    code: "CMDB_A",
+    version: "1.0",
+    author: "Igor Voronin",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Test Application",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Backend service",
+            code: "BACKEND.CMDB_A",
+            version: "1.0.0",
+            description: "Подробное описание",
+            status: "Proposed",
+            interfaces: [
+                {
+                    name: "API поиска чего-нибудь",
+                    code: "SEARCH-API.BACKEND.CMDB_A",
+                    version: "1.0.0",
+                    description: "Подробно о",
+                    status: "Proposed",
+                    specification: "/swagger/searcj.json",
+                    methods: []
+                }
+            ]
+        }
     ],
     links: {
         self: "/api/v4/systems/CMDB_A",
@@ -189,6 +232,7 @@ export const CMDB_A_METHODS_SAMPLE = {
                     version: "1.0.0",
                     description: "Подробно о",
                     status: "Proposed",
+                    specification: "/swagger/searcj.json",
                     methods: [
                         {
                             "error_rate": "1",
@@ -214,6 +258,85 @@ export const CMDB_A_METHODS_SAMPLE = {
         self: "/api/v4/systems/CMDB_A",
     },
 };
+
+export const APP_API_TC_INTERFACE = {
+    name: "App_Api_Tc",
+    code: "TEST.APP.API.TC",
+    version: "1.0",
+    author: "Игорь Воронин",
+    FQName: "IT-Landscape Catalog/DEV_TEST/AppInterfaceCapability",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Backend service",
+            code: "BACKEND.TEST.APP.API.TC",
+            version: "1.0.0",
+            description: "Контейнер для тестирования загрузки API с ТС",
+            status: "Proposed",
+            interfaces: [
+                {
+                    name: "API поиска чего-нибудь",
+                    code: "SEARCH-API.BACKEND.TEST.APP.API.TC",
+                    version: "1.0.0",
+                    description: "Подробно о",
+                    status: "Proposed",
+                    implements: "FDMSHOWCASEAPP.001",
+                    methods: [
+                    ]
+                }
+            ]
+        }
+    ],
+    links: {
+        self: "/api/v4/systems/TEST.APP.API.TC",
+        purpose: "/api/v4/systems/TEST.APP.API.TC/purpose",
+        e2e: "/api/v4/systems/TEST.APP.API.TC/e2e",
+        assessments: "/api/v4/systems/TEST.APP.API.TC/e2e"
+    }
+}
+
+export const APP_API_TC = {
+    name: "App_Api_Tc",
+    code: "TEST.APP.API.TC",
+    version: "1.0",
+    author: "Игорь Воронин",
+    FQName: "IT-Landscape Catalog/DEV_TEST/AppInterfaceCapability",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Backend service",
+            code: "BACKEND.TEST.APP.API.TC",
+            version: "1.0.0",
+            description: "Контейнер для тестирования загрузки API с ТС",
+            status: "Proposed",
+            interfaces: [
+                {
+                    name: "API поиска чего-нибудь",
+                    code: "SEARCH-API.BACKEND.TEST.APP.API.TC",
+                    version: "1.0.0",
+                    description: "Подробно о",
+                    status: "Proposed",
+                    implements: "FDMSHOWCASEAPP.001",
+                    methods: [
+                        {
+                            "error_rate": "1",
+                            "latency": "500",
+                            "name": "GET /api/entities",
+                            "parameters": [],
+                            "tags": {}
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    links: {
+        self: "/api/v4/systems/TEST.APP.API.TC",
+        purpose: "/api/v4/systems/TEST.APP.API.TC/purpose",
+        e2e: "/api/v4/systems/TEST.APP.API.TC/e2e",
+        assessments: "/api/v4/systems/TEST.APP.API.TC/e2e"
+    }
+}
 
 export const checkSystemMethods = (s, a = SYSTEM_METHODS_SAMPLE) => {
     if (s.modifiedDate) s.modifiedDate = undefined;

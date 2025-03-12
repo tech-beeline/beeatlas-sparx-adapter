@@ -1,0 +1,1 @@
+export const REALIZATION_CONNECTOR = "Realisation";

@@ -1,5 +1,5 @@
 import { bootstrapAPI } from './api/bootstrap.mjs';
-import app from './load-app.mjs'
+import app from './index.mjs'
 
 process.env.API_PORT = process.env.API_PORT ?? 8080;
 

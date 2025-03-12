@@ -89,6 +89,7 @@ SELECT
 	tc.version,
 	tc."createdDate",
 	tc."modifiedDate",
+	tc.object_id,
 	goal_to.value as goal_to,
 	goal_from.value as goal_from,
 	(SELECT obe.name 

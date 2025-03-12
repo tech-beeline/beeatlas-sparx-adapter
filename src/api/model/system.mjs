@@ -28,16 +28,16 @@ export class APIMethod {
 
     constructor({ name, returnType, description, parameters, notes, ea_guid, operationid, rps, latency, error_rate } = {}) {
         this.name = name;
-        this.returnType = returnType??undefined;
+        this.returnType = returnType ?? undefined;
         this.desciption = description ?? notes;
-        this.rps = rps??undefined;
-        this.latency = latency??undefined;
-        this.error_rate = error_rate??undefined;
+        this.rps = rps ?? undefined;
+        this.latency = latency ?? undefined;
+        this.error_rate = error_rate ?? undefined;
         this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
     }
 }
 
-const compareMethods = (a,b)=>a.name.localeCompare(b.name)
+const compareMethods = (a, b) => a.name.localeCompare(b.name)
 
 export class APIInterface {
     name;
@@ -45,7 +45,7 @@ export class APIInterface {
     version;
     type;
     specification;
-    capabilityCode;
+    implements;
     description;
     status;
     protocol;
@@ -53,16 +53,16 @@ export class APIInterface {
      * @type {APIMethod[]}
      */
     methods = [];
-    constructor({ name, code, version, type, api_url: specification, capabilityCode, methods, description, i_id, protocol, status } = {}) {
+    constructor({ name, code, version, type, specification, tcCode, methods, description, i_id, protocol, status } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
         this.type = type;
-        this.specification = specification;
-        this.capabilityCode = capabilityCode;
-        this.description = description;
+        this.specification = specification ?? undefined;
+        this.implements = tcCode ?? undefined;
+        this.description = description ?? undefined;
         this.methods = methods ?? [];
-        this.protocol = protocol;
+        this.protocol = protocol ?? undefined;
         this.status = status;
 
         this.ea_id = () => i_id;

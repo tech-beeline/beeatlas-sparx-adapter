@@ -16,7 +16,7 @@ FROM t_object o
     JOIN t_package p ON p.ea_guid=o.ea_guid
 WHERE o.stereotype = ANY ($1)`;
 
-class SparxRepositoryPackages {
+export class SparxRepositoryPackages {
     /**
      * @type {{name, ea_guid, stereotype, package_id}}
      */
@@ -38,9 +38,18 @@ class SparxRepositoryPackages {
                 this[row.stereotype] = row;
             }
             console.info(`Read SPARX package config: done`)
+            return this;
         } catch (e) {
             console.error(e);
         }
+    }
+    static #default;
+    static async default() {
+        if (!SparxRepositoryPackages.#default) {
+            SparxRepositoryPackages.#default = new SparxRepositoryPackages();
+            await this.#default.init();
+        }
+        return this.#default;
     }
 }
 

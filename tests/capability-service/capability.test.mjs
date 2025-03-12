@@ -1,6 +1,6 @@
 import { before, after, suite, test } from 'node:test';
 import assert, { deepEqual, deepStrictEqual, strictEqual } from 'assert';
-import { readEnv } from '../env.mjs';
+import { updateEnv } from '../env.mjs';
 import { SparxRepositoryPackagesOptions } from '../../src/api/repositories/sparx-ea-repository/options.mjs';
 import { CapabilityService } from '../../src/api/services/index.mjs';
 import { BC_018364, DMN_153, FOOL_STATE_DOMAIN, GRP_000, TEST_CAPABILITY } from './resources/legacy-data.mjs';
@@ -9,11 +9,30 @@ import eaRepository from '../../src/api/repositories/sparx-ea-repository/ea-repo
 
 suite("Получение возможностей", async () => {
     before(async () => {
-        readEnv();
+        updateEnv();
+    });
+
+    const service = new CapabilityService();
+
+    test("Запрос всех возможностей", async () => {
+        const capabilityList = await service.getAll();
+        assert(capabilityList.length);
+        const grp_000 = capabilityList.find(c => c.code === GRP_000.code);
+        assert(grp_000);
+        grp_000.createdDate = undefined;
+        deepEqual(JSON.parse(JSON.stringify(grp_000)), GRP_000);
+    });
+
+    test("Поиск по имени", async () => {
+        const capabilityList = await service.searchByName(GRP_000.name.substring(0,10));
+        assert(capabilityList.length);
+        const grp_000 = capabilityList.find(c => c.code === GRP_000.code);
+        assert(grp_000);
+        grp_000.createdDate = undefined;
+        deepEqual(JSON.parse(JSON.stringify(grp_000)), GRP_000);
     });
 
     test("Получить GRP.00", async () => {
-        const service = new CapabilityService();
 
         const grp_000 = await service.getByCode('GRP.000');
         assert(grp_000);
@@ -21,8 +40,7 @@ suite("Получение возможностей", async () => {
         deepEqual(JSON.parse(JSON.stringify(grp_000)), GRP_000);
     });
 
-    test("ПОлучить DMN.153", async () => {
-        const service = new CapabilityService();
+    test("Пoлучить DMN.153", async () => {
 
         const dmn_153 = await service.getByCode('DMN.153');
         assert(dmn_153);
@@ -31,7 +49,6 @@ suite("Получение возможностей", async () => {
     });
 
     test("Получить BC-018364", async () => {
-        const service = new CapabilityService();
 
         const bc_018364 = await service.getByCode(BC_018364.code);
         assert(bc_018364);
@@ -42,7 +59,7 @@ suite("Получение возможностей", async () => {
 
 suite("Обновление возможностей", async () => {
     before(async () => {
-        readEnv();
+        updateEnv();
         const p = await eaRepository.getPackageByAlias(FOOL_STATE_DOMAIN.code);
         if (p) await eaRepository.deletePackage(p.package_id);
         const o = await eaRepository.queryOne('SELECT * FROM t_object where LOWER(alias)=LOWER($1)', [TEST_CAPABILITY.code])

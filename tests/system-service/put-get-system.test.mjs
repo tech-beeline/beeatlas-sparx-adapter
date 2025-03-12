@@ -1,16 +1,17 @@
 import { before, suite, test } from 'node:test';
+import assert, { deepEqual, deepStrictEqual } from "node:assert";
 
 
-import { readEnv } from '../env.mjs';
+import { updateEnv } from '../env.mjs';
 
-import { CDMB_A, checkSystem, checkSystemContainers, checkSystemMethods, CMDB_A_CONTAINER_SAMPLE, CMDB_A_METHODS_SAMPLE, CMDB_A_SAMPLE, SYSTEM_CODE, SYSTEM_CONTAINER_SAMPLE, SYSTEM_METHODS_SAMPLE, SYSTEM_SAMPLE } from './const.mjs';
+import { APP_API_TC, CDMB_A, checkSystem, checkSystemContainers, checkSystemMethods, CMDB_A_CONTAINER_SAMPLE, CMDB_A_METHODS_SAMPLE, CMDB_A_SAMPLE, SYSTEM_CODE, SYSTEM_CONTAINER_SAMPLE, SYSTEM_METHODS_SAMPLE, SYSTEM_SAMPLE } from './const.mjs';
 
 import systemsService, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL } from '../../src/api/services/systems-service/index.mjs';
 import { SparxRepositoryPackagesOptions } from '../../src/api/repositories/sparx-ea-repository/options.mjs';
 
 suite("Обновление системы", () => {
     before(() => {
-        readEnv();
+        updateEnv();
         SparxRepositoryPackagesOptions.init();
     });
 
@@ -26,5 +27,13 @@ suite("Обновление системы", () => {
         await systemsService.putSystem(CDMB_A, CMDB_A_METHODS_SAMPLE);
         checkSystemMethods(await systemsService.getByCode(CDMB_A.toLowerCase(), { level: METHODS_LEVEL }), CMDB_A_METHODS_SAMPLE);
         checkSystemMethods(await systemsService.getByCode(CDMB_A, { level: METHODS_LEVEL }), CMDB_A_METHODS_SAMPLE);
+    });
+
+    test("Установка и удаление кода ТС для интерфейса", async (t) => {
+        await systemsService.putSystem(APP_API_TC.code, APP_API_TC);
+        const app_api_tc = await systemsService.getByCode(APP_API_TC.code, { level: "methods" });
+        assert(app_api_tc);
+        app_api_tc.modifiedDate = undefined;
+        deepEqual(JSON.parse(JSON.stringify(app_api_tc)), APP_API_TC);
     });
 });

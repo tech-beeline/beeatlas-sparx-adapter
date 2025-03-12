@@ -8,7 +8,7 @@ import { PREPARE_CONTAINERS_PACKAGE } from '../sql/system-container-sql.mjs';
 import { SELECT_SYSTEM_PARTICIPITION, SELECT_SYSTEM_SUBPACKAGES } from './systems-queries.mjs';
 import { SELECT_SYSTEM_CONTAINERS, SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE } from './systems-containers-queries.mjs';
 import { SystemDTO, SystemDTOInternal } from './model.mjs';
-import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
+import { SparxRepositoryPackages as sparxOptions } from '../sparx-ea-repository/options.mjs';
 import { CONTAINER_STEREOTYPE, CONTAINERS_SUBPACKAGE_NAME, DEFAULT_STATUS, INTERFACES_SUBPACKAGE_NAME, REMOVED_STATUS, SYSTEM_SUBPACKAGES as SYSTEM_SUBPACKAGES_NAMES } from './const.mjs';
 import { SELECT_SYSTEMS, SELECT_SYSTEM_BY_CODE } from './queries/index.mjs';
 import { SELECT_SYSTEM_PACKAGES } from './queries/select-systems.mjs';
@@ -51,8 +51,9 @@ export class SystemsRepository {
 
 		if (!systemPackages.package_id) {
 			console.info(`create system package (code="${code}", name="${systemPackages.name}"):`);
+			const option = await sparxOptions.default();
 			const pkg = await Repository.createPackage({
-				parent_id: SparxRepositoryPackagesOptions.TechCapabilitiesCatalogue.package_id,
+				parent_id: option.TechCapabilitiesCatalogue.package_id,
 				name: systemPackages.name,
 				alias: code
 			});

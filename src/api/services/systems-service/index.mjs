@@ -70,7 +70,7 @@ export class SystemService {
     /**
      * 
      * @param {string} code 
-     * @param {*} options 
+     * @param {{ level:"systems"|"containers"| "interfaces"|"methods"}} options 
      * @returns {Promise<System>}
      */
     async getByCode(code, options = {}) {
@@ -91,6 +91,7 @@ export class SystemService {
                 return GetSystemByCode.withMethods(code, addRemoved);
             }
         }
+        
         NotImplemented();
     }
 

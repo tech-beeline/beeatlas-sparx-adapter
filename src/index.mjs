@@ -31,7 +31,7 @@ const SWAGGER_DEFINITION = SwaggerDefinition.load();
 
 app.use('/js', express.static('./src/view/js'))
 
-app.use('/swagger/api.json', (request, response) => response.json(SWAGGER_DEFINITION))//express.static('./src/swagger/capabilities-api.yaml'))
+app.use('/swagger/api.json', (request, response) => response.json(SWAGGER_DEFINITION));
 
 let routes = routeControllers(SWAGGER_DEFINITION, { ifErrorMarkDepricated: true, logSwaggerDescription: true });
 app.use('/', routes);
@@ -41,10 +41,6 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.use('*', (req, res) =>
     res.sendFile(path.join(__dirname, 'client/build/index.html')));
-
-///app.get('/app*', react);
-
-
 
 app.use((err, req, res, next) => {
     res.status(500).send(err.message);

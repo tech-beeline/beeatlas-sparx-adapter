@@ -1,17 +1,20 @@
-import { suite, test } from 'node:test';
+import { suite, test, before } from 'node:test';
 import assert, { deepEqual, deepStrictEqual, strictEqual } from 'assert';
 
 
-import { readEnv } from '../env.mjs';
-import { checkSystem, checkSystemContainers, checkSystemMethods, SYSTEM_CODE, SYSTEM_INTERFACES_SAMPLE, SYSTEM_METHODS_SAMPLE, SYSTEM_NAME, SYSTEM_SAMPLE } from './const.mjs';
+import { updateEnv } from '../env.mjs';
+import { APP_API_TC, APP_API_TC_INTERFACE, checkSystem, checkSystemContainers, checkSystemMethods, CMDB_A_INTERFACE_SAMPLE, CMDB_A_METHODS_SAMPLE, SYSTEM_CODE, SYSTEM_INTERFACES_SAMPLE, SYSTEM_METHODS_SAMPLE, SYSTEM_NAME, SYSTEM_SAMPLE } from './const.mjs';
 import System from '../../src/api/model/system.mjs';
 
-readEnv();
-
 import systemsService, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL } from '../../src/api/services/systems-service/index.mjs';
+import { NotImplemented } from '../../src/utils/errors.mjs';
 
 
 suite('Получение информаиции о системе (без контейнеров)', () => {
+    before(async () => {
+        updateEnv();
+    })
+
     test("Получение систем без контейнеров", async () => {
         const systems = await systemsService.getAll();
         assert(systems.length)
@@ -41,6 +44,10 @@ suite('Получение информаиции о системе (без ко�
 
 
 suite('Получение информаиции о системах с контейнерами', () => {
+    before(async () => {
+        updateEnv();
+    })
+
     test("ВСе системы с контейнерами", async () => {
         const systems = await systemsService.getAll({ level: CONTAINERS_LEVEL });
         assert(systems.length)
@@ -79,11 +86,20 @@ const checkSystemInterfaces = (s) => {
 }
 
 suite('Получение информаиции о системе с интерфейсами', () => {
+    before(async () => {
+        updateEnv();
+    })
+
     test("ВСе системы с интерфейсами", async () => {
         const systems = await systemsService.getAll({ level: INTERFACES_LEVEL });
         assert(systems.length)
-        const s = systems.find(c => c.code === SYSTEM_CODE);
-        checkSystemInterfaces(s);
+        const s = systems.find(c => c.code === CMDB_A_INTERFACE_SAMPLE.code);
+        s.modifiedDate = undefined;
+        NotImplemented();
+        //deepEqual(JSON.parse(JSON.stringify(s)), CMDB_A_INTERFACE_SAMPLE, 'Система с интерфейсом и спецификацией');
+        //const tc = systems.find(c => c.code === APP_API_TC.code);
+        //tc.modifiedDate = undefined;
+        //deepEqual(JSON.parse(JSON.stringify(tc)), APP_API_TC_INTERFACE, 'Система с интерфейсом (есть реализация ТС)');
     });
 
     test("Система с интерфейсами по коду", async () => {
@@ -107,6 +123,10 @@ suite('Получение информаиции о системе с интер
 });
 
 suite('Получение информаиции о системе с методами', () => {
+    before(async () => {
+        updateEnv();
+    })
+
     test("ВСе системы с методами", async () => {
         const systems = await systemsService.getAll({ level: METHODS_LEVEL });
         assert(systems.length)

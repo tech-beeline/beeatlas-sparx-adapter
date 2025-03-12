@@ -67,15 +67,33 @@ const CONNECTOR_STEREOTYPE = {
     }
 }
 
-export class SparxRepository {
-    #config;
-    constructor() {
+export class SparxRepositoryConfig {
+    user;
+    password;
+    host;
+    database;
+    /**
+     * 
+     * @param {{user:string, password:string, host:string, database:string}} config 
+     */
+    constructor(config) {
+        if (config) {
+            this.user = config.user;
+            this.password = config.password;
+            this.host = config.host;
+            this.database = config.database;
+        }
     }
+    static #default;
+    static get default() {
+        if (this.#default) return this.#default;
+        return this.#default = SparxRepositoryConfig.readEnviroment();
+    }
+    static readEnviroment(config) {
+        if (!config) {
+            config = new SparxRepositoryConfig();
+        }
 
-    get config() {
-        if (this.#config) return this.#config;
-
-        let config = {};
         for (const name in ENVIROMENT_VARIABLE) {
             if (!process.env[ENVIROMENT_VARIABLE[name]]) {
                 throw Error(`Environment variable [${ENVIROMENT_VARIABLE[name]}] not set`);
@@ -86,8 +104,19 @@ export class SparxRepository {
             let url = new URL(config.host.slice(5));
             config.host = url.hostname;
         }
-        this.#config = config;
-        return this.#config
+        return config;
+    }
+}
+
+
+export class SparxRepository {
+    #config;
+    constructor(config) {
+        if (config) this.#config = config;
+    }
+
+    get config() {
+        return this.#config ?? (this.#config = SparxRepositoryConfig.default);
     }
     /**
      * 
@@ -102,7 +131,7 @@ export class SparxRepository {
         await client.connect();
         try {
             await client.query('BEGIN')
-            const  ret = await transactionClient.run(client, fn);
+            const ret = await transactionClient.run(client, fn);
             await client.query('COMMIT')
             return ret;
         } catch (error) {
@@ -263,6 +292,10 @@ export class SparxRepository {
         return this.transactionScope(async () => {
             const xref = this.#processStereotype(obj);
             await this.#prepareObjectAlias(obj);
+            
+            obj.createddate = new Date();
+            obj.modifieddate = new Date();
+
             obj = await this.insert(t_object, obj);
             if (xref) {
                 for (let name in xref) {
@@ -572,6 +605,12 @@ export class SparxRepository {
             return map;
         }, {});
     }
+    /**
+     * 
+     * @param {*} object_id 
+     * @param {*} obj 
+     * @param {string[]} tags 
+     */
     async updateObjectTags(object_id, obj, tags) {
         /**
          * @type {t_objectproperties[]}
@@ -713,7 +752,7 @@ export class SparxRepository {
     }
 
     async deleteObject(object_id) {
-        if( !object_id) throw Error('object_id is not specified');
+        if (!object_id) throw Error('object_id is not specified');
         return this.transactionScope(async () => {
 
             const children = await this.getChildObjects(object_id);

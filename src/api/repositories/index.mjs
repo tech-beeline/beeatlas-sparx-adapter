@@ -1,4 +1,4 @@
-export { SparxRepository } from './sparx-ea-repository/index.mjs'
+export { SparxRepository, REALIZATION_CONNECTOR} from './sparx-ea-repository/index.mjs'
 export { CapabilitiesRepository } from './capabilities-repository/index.mjs'
 export { GlossariesRepository } from './glossaries-repository/index.mjs'
 export { TechnicalCapabilitiesRepository } from './tc-repository/index.mjs'
@@ -10,3 +10,10 @@ export { ScenarioRepository } from './scenarios-repository/index.mjs'
 export { TechRadarRepository } from './tech-radar-repository/index.mjs'
 export { MonitoringRepository } from './monitoring-repository/index.mjs'
 export { PtrArtifactsRepository } from './ptr-artifacts-repository/index.mjs'
+
+
+
+export class BoardRepositories{
+    constructor( config){
+    }
+}

@@ -1,8 +1,7 @@
 import { SparxRepository } from "../../src/api/repositories/index.mjs";
-import { readEnv } from "../env.mjs";
+import { updateEnv } from "../env.mjs";
 
 export async function beforeCreateFoolState(){
-    readEnv();
+    updateEnv();
     const repository = new SparxRepository();
-    
 }

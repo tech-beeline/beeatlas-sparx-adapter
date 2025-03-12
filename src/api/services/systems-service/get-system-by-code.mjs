@@ -10,38 +10,37 @@ const interfaceDataService = new InterfacesRepository();
 const systemDataService = new SystemsRepository();
 
 class GetSystemByCode {
-    async system(code, addRemoved) {
-        const systemRow = await systemDataService.selectSystemByCode(code);
-        if (!systemRow) throw NotFound(`System with code = ${code} was not found`);
+    async system(systemCode, addRemoved) {
+        const systemRow = await systemDataService.selectSystemByCode(systemCode);
+        if (!systemRow) throw NotFound(`System with code = ${systemCode} was not found`);
         return new System(systemRow);
     }
-    async withContainers(code, addRemoved) {
+    async withContainers(systemCode, addRemoved) {
         const [system, containersRows] = await Promise.all([
-            this.system(code, addRemoved),
-            systemDataService.selectSystemContainers(code)
+            this.system(systemCode, addRemoved),
+            systemDataService.selectSystemContainers(systemCode)
         ]);
         const containersMap = {};
 
         (addRemoved ? containersRows : containersRows.filter(c => c.status !== "REMOVED"))
             .forEach(row => {
-                system.addContainer(containersMap[row.code] = new Container(row));
+                system.addContainer(containersMap[row.code.toLowerCase()] = new Container(row));
             });
         return { system: system, containersMap: containersMap };
     }
-    async withInterfaces(code, addRemoved) {
-        const { system, containersMap } = await this.withContainers(code, addRemoved);
+    async withInterfaces(systemCode, addRemoved) {
+        const { system, containersMap } = await this.withContainers(systemCode, addRemoved);
 
         const interfacesMap = {}
 
-        await Promise.all(Object.keys(containersMap)
-            .map(code => interfaceDataService.selectContainerInterfaces(code)
-                .then(rows => {
-                    rows.forEach(row => {
-                        if (row.status !== REMOVED_STATUS || addRemoved) {
-                            interfacesMap[row.code] = containersMap[code].addInterface(row);
-                        }
-                    })
-                })));
+        for (const containerCode of Object.keys(containersMap)) {
+            const apiRows = await interfaceDataService.selectContainerInterfaces(containerCode);
+            for (const row of apiRows) {
+                if (row.status !== REMOVED_STATUS || addRemoved) {
+                    interfacesMap[row.code.toLowerCase()] = containersMap[containerCode].addInterface(row);
+                }
+            }
+        }
 
         return { system: system, containersMap: containersMap, interfacesMap: interfacesMap };
     }
@@ -51,7 +50,8 @@ class GetSystemByCode {
             .map(interfaceCode =>
                 interfaceDataService.selectInterfaceMethods(interfaceCode)
                     .then(methodsRows => {
-                        methodsRows.forEach(methodRow => interfacesMap[interfaceCode].addMethod(methodRow))
+                        methodsRows.forEach(methodRow => 
+                            interfacesMap[interfaceCode].addMethod(methodRow))
                     }));
 
         await Promise.all(selectMethodsPromises);

@@ -21,4 +21,4 @@ export { SparxRepository }
 
 export const SparxRepositoryInstance = new SparxRepository();
 export default SparxRepositoryInstance;
-
+export { REALIZATION_CONNECTOR } from './const.mjs';

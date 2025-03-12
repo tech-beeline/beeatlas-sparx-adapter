@@ -2,13 +2,19 @@ import fs from 'fs'
 
 export function readEnv(envPath = './.env.test') {
     if (fs.existsSync(envPath)) {
-
-        const env = fs.readFileSync(envPath).toString();
-        for (const v of env.split('\n')) {
-            const [key, val] = v.split('=').map(i=>i.trim());
-            process.env[key] = val;
+        const envFile = fs.readFileSync(envPath).toString();
+        const env = {}
+        for (const v of envFile.split('\n')) {
+            const [key, val] = v.split('=').map(i => i.trim());
+            env[key] = val;
         }
-        return;
+        return env;
     }
     throw error(`"${envPath}" not found`);
+}
+
+export function updateEnv(envPath) {
+    for (const [key, val] of Object.entries(readEnv(envPath))) {
+        process.env[key] = val;
+    }
 }

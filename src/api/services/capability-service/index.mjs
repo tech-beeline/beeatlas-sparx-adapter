@@ -3,10 +3,13 @@ import { CapabilitiesRepository } from "../../repositories/index.mjs";
 import { Capability } from "../../model/index.mjs";
 import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
 
-const capabilitiesRepository = new CapabilitiesRepository();
 
 export class CapabilityService {
-    constructor() {
+    capabilitiesRepository
+
+    constructor(config) {
+        this.capabilitiesRepository = new CapabilitiesRepository(config);
+
         this.getAll = this.getAll.bind(this);
         this.searchByName = this.searchByName.bind(this);
         this.getByCode = this.getByCode.bind(this);
@@ -16,7 +19,7 @@ export class CapabilityService {
      * @returns {Promise<Array<Capability>>}
      */
     async getAll() {
-        return capabilitiesRepository.selectAll().then(rows => rows.map(r => new Capability(r)));
+        return this.capabilitiesRepository.selectAll().then(rows => rows.map(r => new Capability(r)));
     }
 
     /**
@@ -28,7 +31,7 @@ export class CapabilityService {
         const termsArray = terms.split([' ']).filter(t => t.length);
         if (!termsArray.length) throw BadRequest("Search terms list is empty");
 
-        return capabilitiesRepository.searchByName(termsArray).then(rows => rows.map(r => new Capability(r)));
+        return this.capabilitiesRepository.searchByName(termsArray).then(rows => rows.map(r => new Capability(r)));
     }
 
     /**
@@ -37,7 +40,7 @@ export class CapabilityService {
      * @returns {Promise<Capability>}
      */
     async getByCode(code) {
-        return capabilitiesRepository.selectByCode(code).then(row => row ? new Capability(row) : null);
+        return this.capabilitiesRepository.selectByCode(code).then(row => row ? new Capability(row) : null);
     }
     /**
      * 
@@ -58,12 +61,12 @@ export class CapabilityService {
             throw BadRequest(`У родительской возможности не указан код ${JSON.stringify(capabilityData.parent)}`);
 
         return eaRepository.transactionScope(async () => {
-            const parent = await capabilitiesRepository.selectByCode(capabilityData.parent.code);
+            const parent = await this.capabilitiesRepository.selectByCode(capabilityData.parent.code);
             if (!parent) throw NotFound(`Не найден родительская возможность с кодом=${capabilityData.parent.code}`);
 
             capabilityData.code = code;
 
-            const capability = await capabilitiesRepository.upsertCapability(
+            const capability = await this.capabilitiesRepository.upsertCapability(
                 capabilityData.parent.code,
                 capabilityData.isDomain,
                 capabilityData.code,
@@ -72,7 +75,7 @@ export class CapabilityService {
                 capabilityData.author,
                 capabilityData.status);
 
-            await capabilitiesRepository.setCapabilityOwner(capability.code, capabilityData.owner);
+            await this.capabilitiesRepository.setCapabilityOwner(capability.code, capabilityData.owner);
             return this.getByCode(code);
         })
     }

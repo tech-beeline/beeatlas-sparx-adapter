@@ -1,19 +1,30 @@
-import Repository, { t_object, t_operationtag } from '../sparx-ea-repository/index.mjs';
+import { NotImplemented } from '../../../utils/errors.mjs';
+import { TechnicalCapabilitiesRepository } from '../index.mjs';
+import Repository, { REALIZATION_CONNECTOR, t_connector, t_object, t_operationtag } from '../sparx-ea-repository/index.mjs';
 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { DEFAULT_STATUS, REMOVED_STATUS } from '../systems-repository/const.mjs';
-import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_CONTAINER_INTERFACES } from './interfaces-queries.mjs';
+import { API_SPECFICATION_TAG } from './const.mjs';
+import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_API_TC, SELECT_CONTAINER_INTERFACES } from './interfaces-queries.mjs';
 import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION } from './methods-queries.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
-const isAPIEquals = (a, b) => a.name === b.name && a.description === b.description && a.version === b.version && a.status === b.status;
+const isAPIEquals = (a, b) => a.name === b.name
+    && a.description === b.description 
+    && a.version === b.version 
+    && a.status === b.status 
+    && a.specification == b.specification
+    && a.implements == b.implements;
 
 const isMethodEquals = (a, b) =>
     a.name === b.name && (a.description ?? "") === (b.description ?? "")
     && (a.rps?.toString() ?? "") === (b.rps?.toString() ?? "")
     && (a.latency?.toString() ?? "") === (b.latency?.toString() ?? "")
     && (a.error_rate?.toString() ?? "") === (b.error_rate?.toString() ?? "");
+
+
+const tcRepository = new TechnicalCapabilitiesRepository();
 
 export class InterfacesRepository {
     /**
@@ -32,6 +43,7 @@ export class InterfacesRepository {
         return Repository.first(t_object, { object_type: 'Interface', alias: interfaceCode })
             .then(it => it ? { name: it.name, code: it.code, description: it.note, version: it.version } : null);
     }
+
     async selectContainerInterfaces(containerCode) {
         return Repository.queryRows(SELECT_CONTAINER_INTERFACES, [containerCode]);
     }
@@ -64,7 +76,7 @@ export class InterfacesRepository {
         return Repository.queryOne(PREPARE_INTERFACES_PACKAGE, [INTERFACES_FOLDER, containerCode]);
     }
 
-    async insertInterface(containerCode, name, code, version, description, status, protocol, specification) {
+    async insertInterface(containerCode, name, code, version, description, status, specification, tcCode, protocol) {
         const [packageInfo, container] = await Promise.all([
             this.prepareInterfacesPackage(containerCode),
             Repository.first(t_object, { stereotype: 'C4_Container', alias: containerCode })]
@@ -84,13 +96,25 @@ export class InterfacesRepository {
             backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
         });
 
-        await Repository.putConnector(container.object_id, it.object_id, 'Realisation');
+        if (specification) {
+            await Repository.updateObjectTags(it.object_id, { [API_SPECFICATION_TAG]: specification }, [API_SPECFICATION_TAG]);
+        }
+        if (tcCode) {
+            const targetTcList = await tcRepository.selectTCByCode(tcCode);
+            if (!targetTcList.length) throw Error(`TC with code=${tcCode} not found`);
+
+            for (const tc of targetTcList) {
+                await Repository.putConnector(it.object_id, tc.object_id, REALIZATION_CONNECTOR);
+            }
+        }
+
+        await Repository.putConnector(container.object_id, it.object_id, REALIZATION_CONNECTOR);
 
         return { name: it.name, code: it.alias, description: it.note };
     }
 
-    async updateInterface(name, code, version, description, status, protocol, specification) {
-        await Repository.update(t_object,
+    async updateInterface(name, code, version, description, status, specification, tcCode, protocol) {
+        const updated = await Repository.update(t_object,
             {
                 name: name,
                 status: status,
@@ -99,6 +123,22 @@ export class InterfacesRepository {
                 status: status
             },
             { alias: code, object_type: 'Interface' });
+        for (const it of updated) {
+            await Repository.updateObjectTags(it.object_id, { [API_SPECFICATION_TAG]: specification }, [API_SPECFICATION_TAG]);
+            /** @type {{ code:string, name:string, object_id }[]} */
+            const currentImplementation = await Repository.query(SELECT_API_TC, it.object_id);
+            for (const tc of currentImplementation.filter(tc => tc.code.toLowerCase() != tcCode?.toLowerCase())) {
+                await Repository.delete(t_connector, { start_object_id: it.object_id, end_object_id: tc.object_id, connector_type: REALIZATION_CONNECTOR });
+            }
+            if (tcCode) {
+                const targetTcList = await tcRepository.selectTCByCode(tcCode);
+                if (!targetTcList.length) throw Error(`TC with code=${tcCode} not found`);
+
+                for (const tc of targetTcList) {
+                    await Repository.putConnector(it.object_id, tc.object_id, REALIZATION_CONNECTOR);
+                }
+            }
+        }
     }
 
     async markInterfaceRemoved(name, code) {
@@ -175,7 +215,7 @@ export class InterfacesRepository {
 
             for (const it of newAPIs) {
                 console.info(`${containerCode} - Добавление интерфейса [${it.code}] ${it.name}`);
-                await this.insertInterface(containerCode, it.name, it.code, it.version, it.description, it.status);
+                await this.insertInterface(containerCode, it.name, it.code, it.version, it.description, it.status, it.specification, it.implements);
                 const methods = it.methods ?? [];
                 await this.setInterfaceMethods(it.code, methods);
                 console.info(`${containerCode} - Интерфейс добавлен [${it.code}] ${it.name}`);
@@ -185,7 +225,7 @@ export class InterfacesRepository {
                 console.info(`${containerCode} - Обновление интерфейса и методов [${it.code}] ${it.name}`);
                 if (!isAPIEquals(it, it.currentAPI)) {
                     console.info(`${containerCode} - Обновление интерфейса [${it.code}] ${it.name}`);
-                    await this.updateInterface(it.name, it.code, it.version, it.description, it.status);
+                    await this.updateInterface(it.name, it.code, it.version, it.description, it.status, it.specification, it.implements);
                 }
 
                 const methods = it.methods ?? [];
