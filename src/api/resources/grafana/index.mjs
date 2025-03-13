@@ -35,7 +35,7 @@ export class GrafanaService {
     static dashboardUIDFromURL(url) {
         if (!url) return null;
         const r = url.match(DASHBOARD_UID_REGEXP);
-        if (r.length > 1) return r[1];
+        if (r && r.length > 1) return r[1];
         return null;
     }
     static getVariableCurrentValue(dashboard, name) {

@@ -1,5 +1,5 @@
-import {  ExpandMore, SettingsApplications, Home, AddCard, Signpost } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary,  Autocomplete, Box, Breadcrumbs, Chip,  List, ListItem, ListItemButton, ListItemIcon, ListItemText,  Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { ExpandMore, SettingsApplications, Home, AddCard, Signpost } from "@mui/icons-material";
+import { Accordion, AccordionDetails, AccordionSummary, Autocomplete, Box, Breadcrumbs, Chip, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom";
 import CreateSystemDashboard from "./system-create-dashboard.mjs";
@@ -94,7 +94,7 @@ export function SystemE2EParticipion({ systemCode }) {
         return process.children.map((r, i) => (
             i ? <TableRow key={i}><TableCell>{r.name}</TableCell><TableCell>{r.interface.name}</TableCell></TableRow> :
                 <TableRow key={i}>
-                    <TableCell rowSpan={process.children.length}>{process.name}</TableCell>
+                    <TableCell rowSpan={process.children.length}><Link to={`/e2e/${encodeURIComponent(process.uid)}`}>{process.name}</Link></TableCell>
                     <TableCell>{r.name}</TableCell>
                     <TableCell>{r.interface.name}</TableCell>
                 </TableRow>
@@ -154,7 +154,8 @@ export default function SystemE2EParticipionPage() {
     }
 
     const handleSelectSystem = (sys) => {
-        navigate(`/systems/${sys.code}/e2e`);
+        console.log(`select ${sys.code}`);
+        navigate(`/systems/${sys.code.toLowerCode()}`);
         setSystemCode(sys.code)
         loadData(sys.code);
     }

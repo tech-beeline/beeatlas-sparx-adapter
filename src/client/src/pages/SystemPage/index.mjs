@@ -29,8 +29,6 @@ export function SystemPage() {
     const [dashboardDialogOpen, setDashboardDialogOpen] = useState(false);
     const navigate = useNavigate();
 
-    console.log(code);
-
     async function loadData(systemCode = code) {
 
         console.log(systemCode);
@@ -51,8 +49,7 @@ export function SystemPage() {
     }
 
     const handleSelectSystem = (sys) => {
-        console.log(sys);
-        navigate(`/systems/${sys.code}`);
+        navigate(`/systems/${sys.code.toLowerCase()}`);
         //loadData(sys.code);
     };
 
@@ -62,7 +59,6 @@ export function SystemPage() {
 
     const contextMenu = (
         <List>
-            <GrafanaSourceMenuItem system={system} />
             <ListItem key="create-dashboard" disablePadding>
                 <ListItemButton
                     onClick={() => {

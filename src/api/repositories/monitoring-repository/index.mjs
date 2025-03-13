@@ -197,14 +197,7 @@ export class MonitoringRepository {
      * @returns {Promise<Array<{ api_metric_template}>>}
      */
     async selectMethodsSources() {
-        const [methodsSources] = await Promise.all(
-            [
-                Repository.queryRows(SELECT_METHOD_SOURCES),
-                //this.selectSourcesMap()
-            ]
-        )
-
-        return methodsSources;
+        return Repository.queryRows(SELECT_METHOD_SOURCES);
     }
 
     async selectSystemMethodsSources(systemCode) {

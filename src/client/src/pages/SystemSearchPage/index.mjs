@@ -40,12 +40,12 @@ export function SystemSearchPage() {
         loadData();
     }, []);
 
-    console.log( filter.length > 0
+    console.log(filter.length > 0
         ? systems.filter(
-              (s) =>
-                  s.code.includes(filter) ||
-                  s.name.includes(filter)
-          )
+            (s) =>
+                s.code.includes(filter) ||
+                s.name.includes(filter)
+        )
         : systems);
 
     return systems ? (
@@ -74,18 +74,18 @@ export function SystemSearchPage() {
                         <TableBody>
                             {(filter.length > 0
                                 ? systems.filter(
-                                      (s) =>
-                                          s.code.includes(filter) ||
-                                          s.name.includes(filter)
-                                  )
+                                    (s) =>
+                                        s.code.toLowerCase().includes(filter.toLowerCase()) ||
+                                        s.name.toLowerCase().includes(filter.toLowerCase())
+                                )
                                 : systems
-                            ).map((s,i) => (
+                            ).map((s, i) => (
                                 <TableRow
                                     className={styles.pointer}
                                     key={i}
                                     hover
                                     onClick={() => {
-                                        navigate(`/systems/${s.code}`);
+                                        navigate(`/systems/${s.code?.toLowerCase()}`);
                                     }}
                                 >
                                     <TableCell>{s.code}</TableCell>

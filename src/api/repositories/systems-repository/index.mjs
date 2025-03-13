@@ -5,7 +5,7 @@ import {
 
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import { PREPARE_CONTAINERS_PACKAGE } from '../sql/system-container-sql.mjs';
-import { SELECT_SYSTEM_PARTICIPITION, SELECT_SYSTEM_SUBPACKAGES } from './systems-queries.mjs';
+import { SELECT_SYSTEM_CAPABILITIES, SELECT_SYSTEM_PARTICIPITION, SELECT_SYSTEM_SUBPACKAGES } from './systems-queries.mjs';
 import { SELECT_SYSTEM_CONTAINERS, SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE } from './systems-containers-queries.mjs';
 import { SystemDTO, SystemDTOInternal } from './model.mjs';
 import { SparxRepositoryPackages as sparxOptions } from '../sparx-ea-repository/options.mjs';
@@ -222,5 +222,13 @@ export class SystemsRepository {
 	async setSystemTag(systemCode, tagName, tagValue) {
 		const system = await this.selectSystemByCode(systemCode);
 		return Repository.updateObjectTags(system.object_id, { [tagName]: tagValue }, [tagName])
+	}
+
+	/**
+	 * 
+	 * @returns {Promise}
+	 */
+	async selectSystemCapabilities(code) {
+		return Repository.queryRows(SELECT_SYSTEM_CAPABILITIES, [code]);
 	}
 }

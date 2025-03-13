@@ -38,7 +38,8 @@ WITH RECURSIVE cte_src AS (
 		api.ea_guid,
 		api.object_id,
 		coalesce(src.api_metric_template,app.api_metric_template) as api_metric_template,
-		app.code as app_code
+		app.code as app_code,
+		app.name as app_name
 	FROM cte_app app
 		JOIN t_object pi ON pi.parentid=app.object_id
 		JOIN t_object api ON api.object_id=pi.classifier
@@ -52,6 +53,7 @@ WITH RECURSIVE cte_src AS (
 		app.name::text as FQName,
 		'NULL'::text as type,
 		app.code as app_code,
+		app.name as app_name,
 		app.api_metric_template
 	FROM cte_app app
 	UNION DISTINCT
@@ -63,6 +65,7 @@ WITH RECURSIVE cte_src AS (
 		r.name || '/' ||  ch.name,
 		c.connector_type,
 		r.app_code,
+		r.app_name,
 		coalesce( src.api_metric_template, r.api_metric_template)
 	FROM cte_rls r
 		LEFT JOIN t_connector c ON c.start_object_id=r.object_id
@@ -78,6 +81,7 @@ WITH RECURSIVE cte_src AS (
 		api.ea_guid as api_guid,
 		api.object_id,
 		api.app_code,
+		api.app_name,
 		api.api_metric_template
 	FROM cte_provided api
 	UNION
@@ -87,11 +91,12 @@ WITH RECURSIVE cte_src AS (
 		api.uid,
 		api.object_id,
 		api.app_code,
+		api.app_name,
 		api.api_metric_template
 	FROM cte_rls api
 )
 SELECT DISTINCT
-	i.name, i.code, i.api_guid, m.name as method, m.ea_guid as operation_guid, i.api_metric_template,
+	i.app_name, i.name, i.code, i.api_guid, m.name as method, m.ea_guid as operation_guid, i.api_metric_template,
 	latency.value as latency, rps.value as rps, error_rate.value as error_rate
 FROM cte_api i
 	JOIN t_operation m ON m.object_id=i.object_id

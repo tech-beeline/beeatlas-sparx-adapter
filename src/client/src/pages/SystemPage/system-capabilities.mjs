@@ -31,7 +31,7 @@ export function SystemCapabilitiesAccordion({ system }) {
             setLoading(true);
             const response = await fetch(`/api/v4/systems/${system.code}/purpose`);
             if (response.status != 200) {
-                throw Error(response.body)
+                throw Error(await response.text())
             }
             setCapabilityTree(await response.json());
         } catch (error) {

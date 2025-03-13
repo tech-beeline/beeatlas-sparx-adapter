@@ -3,7 +3,7 @@ import assert, { deepEqual, deepStrictEqual, strictEqual } from 'assert';
 
 
 import { updateEnv } from '../env.mjs';
-import { APP_API_TC, APP_API_TC_INTERFACE, checkSystem, checkSystemContainers, checkSystemMethods, CMDB_A_INTERFACE_SAMPLE, CMDB_A_METHODS_SAMPLE, SYSTEM_CODE, SYSTEM_INTERFACES_SAMPLE, SYSTEM_METHODS_SAMPLE, SYSTEM_NAME, SYSTEM_SAMPLE } from './const.mjs';
+import { APP_API_TC, APP_API_TC_INTERFACE, APP_API_TC_PURPOSE, APP_API_TC_READ_INTERFACES, CDMB_A, checkSystem, checkSystemContainers, checkSystemMethods, CMDB_A_INTERFACE_SAMPLE, CMDB_A_METHODS_SAMPLE, SYSTEM_CODE, SYSTEM_INTERFACES_SAMPLE, SYSTEM_METHODS_SAMPLE, SYSTEM_NAME, SYSTEM_SAMPLE } from './const.mjs';
 import System from '../../src/api/model/system.mjs';
 
 import systemsService, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL } from '../../src/api/services/systems-service/index.mjs';
@@ -91,15 +91,15 @@ suite('Получение информаиции о системе с интер
     })
 
     test("ВСе системы с интерфейсами", async () => {
+        const SAMPLE = APP_API_TC_READ_INTERFACES;
         const systems = await systemsService.getAll({ level: INTERFACES_LEVEL });
         assert(systems.length)
-        const s = systems.find(c => c.code === CMDB_A_INTERFACE_SAMPLE.code);
+        const s = systems.find(c => c.code === SYSTEM_METHODS_SAMPLE.code);
         s.modifiedDate = undefined;
-        NotImplemented();
-        //deepEqual(JSON.parse(JSON.stringify(s)), CMDB_A_INTERFACE_SAMPLE, 'Система с интерфейсом и спецификацией');
-        //const tc = systems.find(c => c.code === APP_API_TC.code);
-        //tc.modifiedDate = undefined;
-        //deepEqual(JSON.parse(JSON.stringify(tc)), APP_API_TC_INTERFACE, 'Система с интерфейсом (есть реализация ТС)');
+        deepEqual(JSON.parse(JSON.stringify(s)), SYSTEM_INTERFACES_SAMPLE, 'Система с интерфейсом и спецификацией');
+        const tc = systems.find(c => c.code === SAMPLE.code);
+        tc.modifiedDate = undefined;
+        deepEqual(JSON.parse(JSON.stringify(tc)), SAMPLE, 'Система с интерфейсом (есть реализация ТС)');
     });
 
     test("Система с интерфейсами по коду", async () => {
@@ -153,3 +153,19 @@ suite('Получение информаиции о системе с метод
         throw Error('not exception')
     })
 });
+
+
+suite("Позиционирование и участие в E2E", async () => {
+    before(async () => {
+        updateEnv();
+    })
+
+    test("Получение для тестовой системы", async () => {
+        const purpose = await systemsService.getPurpose(APP_API_TC_READ_INTERFACES.code.toLowerCase());
+        deepEqual( purpose, APP_API_TC_PURPOSE);
+    });
+
+    test("Участие в Е2Е", async () => {
+        throw Error('Not implemented');
+    });
+})

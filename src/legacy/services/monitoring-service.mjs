@@ -463,6 +463,10 @@ class MonitoringService {
                 continue;
 
             const template_uid = GrafanaService.dashboardUIDFromURL(m.api_metric_template);
+            if( !template_uid ){
+                const errMessage = `Не корректный адрес для шаблона дашборда приложения (${m.app_name}) url шаблона="${m.api_metric_template}"`;
+                throw Error( errMessage)
+            }
             m.apiMetricTemplate = apiMetricTemplates[template_uid] ?? (apiMetricTemplates[template_uid] = {});
             methodSourcesMap[m.operation_guid] = m;
         }

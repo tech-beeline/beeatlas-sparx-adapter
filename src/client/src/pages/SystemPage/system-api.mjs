@@ -95,7 +95,7 @@ function InterfaceTreeItem({ it }) {
                             <TableCell>{it.code}</TableCell>
                             <TableCell>{it.protocol}</TableCell>
                             <TableCell>{it.version}</TableCell>
-                            <TableCell>{it.api_url ? <a href={it.api_url} target="_blank">{it.api_url}</a> : null}</TableCell>
+                            <TableCell>{it.specification ? <a href={it.specification} target="_blank">{it.specification}</a> : null}</TableCell>
                             <TableCell><CapabilityBox capabilityCode={it.capabilityCode} /></TableCell>
                         </TableRow>
                     </TableBody>
@@ -165,8 +165,8 @@ function ApiAccorion({ api }) {
                                     <TableCell>{api.code}</TableCell>
                                     <TableCell>{api.protocol}</TableCell>
                                     <TableCell>{api.version}</TableCell>
-                                    <TableCell>{api.api_url ? <a href={api.api_url} target="_blank">{api.api_url}</a> : null}</TableCell>
-                                    <TableCell><CapabilityBox capabilityCode={api.capabilityCode} /></TableCell>
+                                    <TableCell>{api.specification ? <a href={api.specification} target="_blank">{api.specification}</a> : null}</TableCell>
+                                    <TableCell><CapabilityBox capabilityCode={api.implements} /></TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>

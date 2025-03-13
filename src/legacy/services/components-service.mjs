@@ -36,12 +36,6 @@ const CONSTANTS = {
 	INTERFACES_FOLDER: "Interfaces"
 }
 
-const SLA_TAG_MAP = {
-	[RPS_THRESHOLD_TAG]: "rps",
-	[LATENCY_THRESHOLD_TAG]: "latency",
-	[ERROR_RATE_THRESHOLD_TAG]: "error_rate"
-}
-
 const actualService = new SystemService();
 
 class ComponentsService {
@@ -49,27 +43,7 @@ class ComponentsService {
 	async getComponents() {
 		return Repository.queryRows(ALL_COMPONENTS_QUERY);
 	}
-	#addContainerFromRow(system, row) {
-		if (!row.container_code)
-			return;
-		const container_code = row.container_code?.split('.').find(v => v);
-		if (!container_code) return;
-		/**
-		 * @type {Container}
-		 */
-		let container = system.containerByCode(container_code) ?? system.addContainer({
-			name: row.container,
-			code: container_code, version: row.container_version
-		});
-		const interface_code = row.interface_code?.split('.').find(v => v);
-		if (!interface_code) return;
-		if (!row.interface_code)
-			return;
-		let api = container.interfaceByCode(interface_code) ?? container.addInterface({
-			name: row.interface,
-			code: interface_code, version: row.interface_version, ...row
-		});
-	}
+
 	async getSystemList() {
 		return actualService.getAll();
 	}

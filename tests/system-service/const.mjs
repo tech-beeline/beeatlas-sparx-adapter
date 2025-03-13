@@ -338,6 +338,81 @@ export const APP_API_TC = {
     }
 }
 
+export const APP_API_TC_READ_INTERFACES = {
+    name: "App_Api_Tc_read",
+    code: "TEST.APP.API.TC.READ",
+    version: "1.0",
+    author: "Игорь Воронин",
+    FQName: "IT-Landscape Catalog/DEV_TEST/AppInterfaceCapability",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Backend service",
+            code: "BACKEND.TEST.APP.API.TC.READ",
+            version: "1.0.0",
+            description: "Контейнер для тестирования загрузки API с ТС",
+            status: "Proposed",
+            interfaces: [
+                {
+                    name: "API поиска чего-нибудь",
+                    code: "SEARCH-API.BACKEND.TEST.APP.API.TC.READ",
+                    version: "1.0.0",
+                    description: "Подробно о",
+                    status: "Proposed",
+                    implements: "FDMSHOWCASEAPP.001",
+                    methods: [
+                    ]
+                }
+            ]
+        }
+    ],
+    links: {
+        self: "/api/v4/systems/TEST.APP.API.TC.READ",
+        purpose: "/api/v4/systems/TEST.APP.API.TC.READ/purpose",
+        e2e: "/api/v4/systems/TEST.APP.API.TC.READ/e2e",
+        assessments: "/api/v4/systems/TEST.APP.API.TC.READ/e2e"
+    }
+}
+
+export const APP_API_TC_PURPOSE = {
+    children: [
+        {
+            children: [
+                {
+                    children: [
+                        {
+                            children: [
+                                {
+                                    name: "Name",
+                                    code: "TEST.APP.API.TC.READ.001",
+                                    type: "TechnicalCapability",
+                                    href: "/api/v4/tc/TEST.APP.API.TC.READ.001",
+                                },
+                            ],
+                            name: "Проектирование технического решения ИТ-продукта",
+                            code: "DMN.153",
+                            type: "Domain",
+                            href: "/api/v4/capabilities/DMN.153",
+                        },
+                    ],
+                    name: "Сервисы производства",
+                    code: "GRP.012",
+                    type: "Domain",
+                    href: "/api/v4/capabilities/GRP.012",
+                },
+            ],
+            name: "Сервисы ИТ-ландшафта ВК",
+            code: "GRP.011",
+            type: "Domain",
+            href: "/api/v4/capabilities/GRP.011",
+        },
+    ],
+    name: "Каталог Возможностей (Capability Catalog)",
+    code: "GRP.000",
+    type: "Domain",
+    href: "/api/v4/capabilities/GRP.000",
+}
+
 export const checkSystemMethods = (s, a = SYSTEM_METHODS_SAMPLE) => {
     if (s.modifiedDate) s.modifiedDate = undefined;
     deepEqual(JSON.parse(JSON.stringify(s)), a);
