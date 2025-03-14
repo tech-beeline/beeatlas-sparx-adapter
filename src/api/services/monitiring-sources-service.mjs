@@ -1,12 +1,13 @@
 import { MonitoringRepository } from "../repositories/index.mjs";
 import GrafanaSource from "../model/GrafanaSource.mjs";
+import { NotImplemented } from "../../utils/errors.mjs";
 
 
 const SKIP_PROPERIES = ["name", "sourceId", "label", "type", "uid"]
 const mointoringRepository = new MonitoringRepository();
 
 
-class MonitiringSourcesServices {
+export class MonitiringSourcesServices {
 
     async getAllSources() {
         const rows = await mointoringRepository.selectSourcesProperties();
@@ -71,12 +72,21 @@ class MonitiringSourcesServices {
         if (source.uid) {
             await mointoringRepository.setSystemSourceLink(systemCode, source.uid);
         };
-        return this.getSystemSource(systemCode)
+        const result = await this.getSystemSource(systemCode)
+        return result;
     }
 
     async setObjectMetricTemplate({ object_id, apiMetricTemplate }) {
         const row = await mointoringRepository.setObjectApiTemplate(object_id, apiMetricTemplate);
         return { object_id: object_id, apiMetricTemplate: row?.value };
+    }
+
+    async setContainerMetricTemplate({ container_code: containerCode, apiMetricTemplate }) {
+        return mointoringRepository.setContainerApiTemplate( containerCode, apiMetricTemplate);
+    }
+
+    async setInterfaceMetricTemplate({ interfaceCode, apiMetricTemplate }) {
+        return mointoringRepository.setInterfaceApiTemplate( interfaceCode, apiMetricTemplate);
     }
 }
 

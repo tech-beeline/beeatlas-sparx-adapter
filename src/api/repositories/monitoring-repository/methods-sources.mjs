@@ -150,7 +150,7 @@ FROM t_object app
 	LEFT JOIN cte_src app_s ON app_s.target_id=app.object_id
 	LEFT JOIN cte_src c_s ON c_s.target_id=c2.object_id
 	LEFT JOIN cte_src i_s ON i_s.target_id=api.object_id
-WHERE app.alias=$1
+WHERE LOWER(app.alias)=LOWER($1)
 	AND app.stereotype='softwareSystem'`;
 
 export const SELECT_PROVIDED_API_SOURCES = `WITH RECURSIVE cte_src AS (
@@ -171,5 +171,6 @@ SELECT
 		JOIN t_object api ON api.object_id=pi.classifier
 		LEFT JOIN cte_src src ON src.target_id=api.object_id
 		LEFT JOIN cte_src app_s ON app_s.target_id=app.object_id
-WHERE app.alias=$1
+WHERE LOWER(app.alias)=LOWER($1)
 	AND app.stereotype='softwareSystem'`;
+

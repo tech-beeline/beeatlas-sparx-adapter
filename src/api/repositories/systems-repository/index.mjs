@@ -1,6 +1,7 @@
 import {
 	SparxRepository,
-	t_object
+	t_object,
+	t_objectproperties
 } from '../sparx-ea-repository/index.mjs';
 
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
@@ -219,6 +220,17 @@ export class SystemsRepository {
 			{ alias: code, stereotype: "C4_Container" });
 	}
 
+	/**
+	 * 
+	 * @param {string} systemCode Код приложения
+	 * @param {string} tagName 
+	 * @returns {Promise<t_objectproperties>}
+	 */
+	async getSystemTag(systemCode, tagName) {
+		const system = await this.selectSystemByCode(systemCode);
+		return Repository.first(t_objectproperties, { object_id: system.object_id, property: tagName });
+	}
+
 	async setSystemTag(systemCode, tagName, tagValue) {
 		const system = await this.selectSystemByCode(systemCode);
 		return Repository.updateObjectTags(system.object_id, { [tagName]: tagValue }, [tagName])
@@ -231,4 +243,5 @@ export class SystemsRepository {
 	async selectSystemCapabilities(code) {
 		return Repository.queryRows(SELECT_SYSTEM_CAPABILITIES, [code]);
 	}
+	
 }

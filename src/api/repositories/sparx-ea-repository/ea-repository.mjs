@@ -612,6 +612,7 @@ export class SparxRepository {
      * @param {string[]} tags 
      */
     async updateObjectTags(object_id, obj, tags) {
+        if( !object_id) throw Error('object_id is not specified');
         /**
          * @type {t_objectproperties[]}
          */

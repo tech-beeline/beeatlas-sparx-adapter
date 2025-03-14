@@ -15,6 +15,7 @@ SELECT
 	it.note as description,
 	it.version,
 	it.status,
+	it.object_id,
 	spec.value as specification,
 	(SELECT	tc.alias
 			FROM t_connector r 
@@ -27,6 +28,7 @@ FROM t_object cn
 WHERE cn.stereotype='${CONTAINER_STEREOTYPE}'`
 
 export const SELECT_CONTAINER_INTERFACES = `${SELECT_ALL_CONTAINERS_INTERFACES} AND LOWER(cn.alias)=LOWER($1)`;
+export const SELECT_INTERFACE_BY_CODE = `${SELECT_ALL_CONTAINERS_INTERFACES} AND LOWER(it.alias)=LOWER($1)`;
 
 export const SELECT_API_TC = `SELECT
 	tc.name,tc.alias as code, tc.object_id

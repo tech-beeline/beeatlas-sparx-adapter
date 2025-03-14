@@ -14,8 +14,6 @@ import IconButton from "@mui/material/IconButton/IconButton.js";
 import {
     KeyboardArrowDown,
     KeyboardArrowUp,
-    Home,
-    Signpost,
     AddCard,
 } from "@mui/icons-material";
 import Collapse from "@mui/material/Collapse/Collapse.js";
@@ -39,9 +37,9 @@ import { InteractionsSection } from "./e2e-interactions-section.mjs";
 import {
     E2ECatalogLink,
     E2EProcessLink,
-    HomeLink,
     MainBar,
 } from "../../components/index.mjs";
+
 import { Progress } from '@beeline/design-system-react';
 
 

@@ -168,4 +168,4 @@ suite("Позиционирование и участие в E2E", async () => {
     test("Участие в Е2Е", async () => {
         throw Error('Not implemented');
     });
-})
+});

@@ -19,7 +19,8 @@ SELECT
 		sys.author,
 		c."FQName",
 		sys.modifiedDate AS "modifiedDate", 
-		sys.version
+		sys.version,
+		sys.object_id
 	FROM cte_sys_catalog c
 		JOIN t_object sys ON sys.package_id=c.package_id 
 		AND sys.alias IS NOT NULL 

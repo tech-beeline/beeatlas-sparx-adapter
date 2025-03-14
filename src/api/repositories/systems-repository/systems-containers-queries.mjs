@@ -8,9 +8,11 @@ export const SELECT_SYSTEM_CONTAINERS = `WITH ${CTE_REALIZATION}
         cn.name,
         cn.note as description,
         cn.version,
-        cn.status
+        cn.status,
+        cn.object_id
     FROM t_object sys
         JOIN cte_realization cn ON cn.start_object_id=sys.object_id AND cn.stereotype='C4_Container'
     WHERE sys.object_type='Component'`;
 
 export const SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE = `${SELECT_SYSTEM_CONTAINERS} AND LOWER(sys.alias)=LOWER($1)`
+export const SELECT_SYSTEM_CONTAINERS_CODE = `${SELECT_SYSTEM_CONTAINERS} AND LOWER(cn.alias)=LOWER($1)`

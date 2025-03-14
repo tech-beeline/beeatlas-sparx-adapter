@@ -44,6 +44,20 @@ class GrafanaSourceControllers {
 
         response.json((await service.setObjectMetricTemplate(request.body)) ?? {});
     }
+
+    async postContainerSource(request, response) {
+        const body = request.body;
+        if( !body.container_code) throw BadRequest('container_code is not specified');
+        
+        response.json((await service.setContainerMetricTemplate(request.body)) ?? {});
+    }
+
+    async postInterfaceSource(request, response) {
+        const body = request.body;
+        if( !body.interfaceCode) throw BadRequest('interface_code is not specified');
+        
+        response.json((await service.setInterfaceMetricTemplate(request.body)) ?? {});
+    }
 }
 
 export default new GrafanaSourceControllers();

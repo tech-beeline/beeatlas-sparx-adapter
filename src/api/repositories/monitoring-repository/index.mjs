@@ -7,6 +7,8 @@ import Repository,
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import { SELECT_API_SOURCES, SELECT_METHOD_ALL_SOURCES, SELECT_METHOD_SOURCES, SELECT_PROVIDED_API_SOURCES, SELECT_SOURCES_PROPERIES } from './methods-sources.mjs';
 import { API_METRIC_TEMPLATE_TAG } from '../../const.mjs';
+import { SELECT_SYSTEM_CONTAINERS_CODE } from '../systems-repository/systems-containers-queries.mjs';
+import { SELECT_INTERFACE_BY_CODE } from '../interfaces-repository/interfaces-queries.mjs';
 
 const SELECT_ALL_SOURCES = `SELECT
 src.object_id, src.ea_guid, src.name, t.property, t.value
@@ -187,7 +189,7 @@ export class MonitoringRepository {
                 Repository.queryRows(SELECT_API_SOURCES, [systemCode]),
                 Repository.queryRows(SELECT_PROVIDED_API_SOURCES, [systemCode])
             ]
-        )
+        );
 
         return { c4Rows: c4Rows, providedRows: providedRows };
     }
@@ -207,12 +209,40 @@ export class MonitoringRepository {
                 //this.selectSourcesMap()
             ]
         )
-
         return methodsSources;
     }
 
     async setObjectApiTemplate(object_id, apiMetricTemplate) {
         await Repository.updateObjectTags(object_id, { [API_METRIC_TEMPLATE_TAG]: apiMetricTemplate }, [API_METRIC_TEMPLATE_TAG]);
         return Repository.first(t_objectproperties, { object_id: object_id, property: API_METRIC_TEMPLATE_TAG });
+    }
+
+    async setContainerApiTemplate(containerCode, apiMetricTemplate) {
+        const containerRows = await Repository.query(SELECT_SYSTEM_CONTAINERS_CODE, containerCode);
+        if (!containerRows.length) throw NotFound(`Container with code=[${containerCode}] not found`);
+
+        for (const row of containerRows) {
+            await Repository.updateObjectTags(row.object_id, { [API_METRIC_TEMPLATE_TAG]: apiMetricTemplate }, [API_METRIC_TEMPLATE_TAG]);
+        }
+
+        return { containerCode: containerCode, apiMetricTemplate: apiMetricTemplate };
+    }
+
+    async setInterfaceApiTemplate(interfaceCode, apiMetricTemplate) {
+        return Repository.transactionScope(async () => {
+            const innerfaceRows = await Repository.query(SELECT_INTERFACE_BY_CODE, interfaceCode);
+            if (!innerfaceRows.length) throw NotFound(`Interface with code=[${interfaceCode}] not found`);
+
+            for (const row of innerfaceRows) {
+                await Repository.updateObjectTags(row.object_id, { [API_METRIC_TEMPLATE_TAG]: apiMetricTemplate }, [API_METRIC_TEMPLATE_TAG]);
+            }
+
+            const result = await Repository.first(t_objectproperties, { object_id: innerfaceRows[0].object_id, property: API_METRIC_TEMPLATE_TAG });
+            if (result?.value != apiMetricTemplate) {
+                throw Error('unknown error')
+            }
+
+            return { interfaceCode: interfaceCode, apiMetricTemplate: result.value };
+        });
     }
 }

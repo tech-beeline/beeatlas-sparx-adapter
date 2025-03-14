@@ -1,12 +1,11 @@
+import { CONTAINER_SOURCE_RESOURCE, INTERFACE_SOURCE_RESOURCE, SYSTEM_OBJECTS_RESOURCE, SYSTEM_SOURCE_RESOURCE } from "../../resources/const.mjs";
 import monitoringSourcesControllers from "../controllers/monitiring-sources-controllers.mjs";
 import { GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, numberProperty, schemasRef, stringProperty } from "./helpers.mjs"
 import { SYSTEM_CODE_PARAMETER } from "./system-service-spec/index.mjs";
 
 export const BC_NAME = "Управление источниками мониторинга"
 export const BC_DESCRIPTION = "Управление техническими возможностями и их реализацией"
-export const SOURCE_LIST_RESOURCE = '/api/v4/monitoring/sources';
-export const SYSTEM_SOURCE_RESOURCE = '/api/v4/monitoring/systems/{code}/source';
-export const SYSTEM_OBJECTS_RESOURCE = '/api/v4/monitoring/objects/source';
+
 
 
 const SWAGGER = new SimpleServiceSpecification(BC_NAME, BC_DESCRIPTION);
@@ -21,10 +20,32 @@ const OBJECT_API_TEMPLATE_SCHEMA = SWAGGER.defineEntitySchema("GrafanaSource", {
         })
     }
 });
+
+const CONTAINER_API_TEMPLATE_SCHEMA = SWAGGER.defineEntitySchema("ContainerApiTmplate", {
+    type: "object",
+    properties: {
+        container_code: stringProperty("Код контейнера", { example : 'dashboard.FDMSHOWCASEAPP'}),
+        apiMetricTemplate: stringProperty("Ссылка на шаблон для получения метрик", {
+            example: "https://inside.beeline.ru/d/hwzG1EcNz/opensearch-template-api-queries?orgId=1"
+        })
+    }
+});
+
+const INTERFACE_API_TEMPLATE_SCHEMA = SWAGGER.defineEntitySchema("InterfaceApiTemplate", {
+    type: "object",
+    properties: {
+        container_code: stringProperty("Код интерфейса", { example : 'business-terms-api.dashboard.FDMSHOWCASEAPP'}),
+        apiMetricTemplate: stringProperty("Ссылка на шаблон для получения метрик", {
+            example: "https://inside.beeline.ru/d/hwzG1EcNz/opensearch-template-api-queries?orgId=1"
+        })
+    }
+});
 //#endregion
 
 SWAGGER.definePost(SYSTEM_SOURCE_RESOURCE, new JSONOperation("Обновление настроек мониторинга", [SYSTEM_CODE_PARAMETER], OBJECT_API_TEMPLATE_SCHEMA, OBJECT_API_TEMPLATE_SCHEMA, monitoringSourcesControllers.postSystemSource))
     .definePost(SYSTEM_OBJECTS_RESOURCE, new JSONOperation("Обновление настроек мониторинга", null, OBJECT_API_TEMPLATE_SCHEMA, OBJECT_API_TEMPLATE_SCHEMA, monitoringSourcesControllers.postObjectSource))
+    .definePost(CONTAINER_SOURCE_RESOURCE, new JSONOperation("Обновление настроек мониторинга для контейнера", null, CONTAINER_API_TEMPLATE_SCHEMA, CONTAINER_API_TEMPLATE_SCHEMA, monitoringSourcesControllers.postContainerSource))
+    .definePost(INTERFACE_SOURCE_RESOURCE, new JSONOperation("Обновление настроек мониторинга для интефрейса", null, INTERFACE_API_TEMPLATE_SCHEMA, INTERFACE_API_TEMPLATE_SCHEMA, monitoringSourcesControllers.postInterfaceSource))
 
 export const GET_SOURCES = {
     tags: [BC_NAME],

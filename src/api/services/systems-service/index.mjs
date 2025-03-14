@@ -91,7 +91,7 @@ export class SystemService {
                 return GetSystemByCode.withMethods(code, addRemoved);
             }
         }
-        
+
         NotImplemented();
     }
 
@@ -261,7 +261,7 @@ export class SystemService {
             /**
              * @type {SystemApiMonitoring}
              */
-            const app = apps[row.app_code] ?? (apps[row.app_code] =
+            const app = apps[row.app_code.toLowerCase()] ?? (apps[row.app_code.toLowerCase()] =
                 { systemCode: row.app_code, source: row.app_metric_template, containers: [] });
 
             if (row.container_code) {
@@ -279,18 +279,26 @@ export class SystemService {
                 }
 
                 if (row.api_code) {
-                    container.interfaces.push({ code: row.api_code, name: row.api_name, source: row.api_source });
+                    container.interfaces.push({ code: row.api_code, name: row.api_name, source: row.api_metric_template });
                 }
             }
         }
-        const ret = (apps[systemCode] ?? { systemCode: systemCode })
+        const ret = (apps[systemCode.toLowerCase()] ?? { systemCode: systemCode })
         ret.providedAPIs = providedRows;
 
         return ret;
     }
 
-    async setAppMonitoringTemplate(systemCode, appMetricTemplate) {
-        return systemsRepository.setSystemTag(systemCode, API_METRIC_TEMPLATE_TAG, appMetricTemplate);
+    /**
+     * 
+     * @param {string} systemCode 
+     * @param {string} apiMetricTemplate 
+     * @returns {Promise<{systemCode,apiMetricTemplate }>}
+     */
+    async setAppMonitoringTemplate(systemCode, apiMetricTemplate) {
+        await systemsRepository.setSystemTag(systemCode, API_METRIC_TEMPLATE_TAG, apiMetricTemplate);
+        const result = await systemsRepository.getSystemTag(systemCode, API_METRIC_TEMPLATE_TAG);
+        return { systemCode: systemCode, apiMetricTemplate: result?.value };
     }
 }
 

@@ -255,6 +255,7 @@ export class InterfacesRepository {
                 await this.markMethodRemoved(interfaceCode, m.name);
             }
         }
+        
         if (methods.length) {
             console.log(`${interfaceCode} - Добавление и обновление методов`, methods);
             for (const m of methods) {

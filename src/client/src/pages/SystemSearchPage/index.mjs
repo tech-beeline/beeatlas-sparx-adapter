@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { MainBar, SearchBox } from "../../components/index.mjs";
 import styles from "./SystemSearchPage.module.css";
 import { SYSTEM_RESOURCE } from "../../resources/services.mjs";
+import { Progress } from "@beeline/design-system-react";
 
 export function SystemSearchPage() {
     const [systems, setSystems] = React.useState(null);
@@ -105,6 +106,10 @@ export function SystemSearchPage() {
             </Box>
         )
     ) : (
-        <Box>Данные загружаются....</Box>
+        <Box> <Progress cycled style={{
+            display: "block",
+            marginLeft: "auto",
+            marginRight: "auto",
+        }} /></Box>
     );
 }

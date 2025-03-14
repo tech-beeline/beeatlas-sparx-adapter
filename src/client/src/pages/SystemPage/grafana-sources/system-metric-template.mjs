@@ -8,7 +8,7 @@ const REGEX_NAME = /https:\/\/inside.beeline.ru\/d\/.*\/([a-zA-Z\-0-9]*)/;
 const REGEX_VALIDATE = /https:\/\/inside.beeline.ru\/d\/.*/;
 
 
-function ChangeApiMetricDialog({ targetName, source = "", setSource, open, setOpen, onSave }) {
+function ChangeApiMetricDialog({ targetName, source = "", open, setOpen, onSave }) {
 
     const [changedSource, setChangedSource] = useState(source);
     const [saving, setSaving] = useState(false);
@@ -23,7 +23,6 @@ function ChangeApiMetricDialog({ targetName, source = "", setSource, open, setOp
 
             await onSave(changedSource);
 
-            setSource?.(changedSource);
             setSaving(false);
             setOpen(false);
         } catch (error) {
@@ -75,13 +74,15 @@ export function SystemMetricTemplateInput({ targetName, source = "", onSave }) {
     const [open, setOpen] = useState(false);
     const [currentSource, setCurrentSource] = useState(source);
 
+    const handleSave = async (value) => {
+        await onSave(value);
+        setCurrentSource(value)
+    }
     const matched = currentSource?.match(REGEX_NAME);
 
     const name = matched?.length > 1 ? matched[1] : currentSource;
-    console.log(name);
 
-    const dialog = open ? <ChangeApiMetricDialog open={open} setOpen={setOpen} source={currentSource} targetName={targetName} onSave={onSave}
-        setSource={setCurrentSource}
+    const dialog = open ? <ChangeApiMetricDialog open={open} setOpen={setOpen} source={currentSource} targetName={targetName} onSave={handleSave}
     /> : null;
 
     return (
