@@ -93,9 +93,9 @@ Cmdb мнемоника берется из контекстной диагра�
             }
         }
 
-        const fdmSystem = await new SystemsRepository().selectSystemByCode();
-        if( !fdmSystem){
-            result.push( errorComment(`Система с cmdb=${cmdb} не найдена на ландшафте компании`));
+        const fdmSystem = await new SystemsRepository().selectSystemByCode(cmdb);
+        if (!fdmSystem) {
+            result.push(errorComment(noSystemComment(cmdb)));
             return result;
         }
 
@@ -139,6 +139,6 @@ export class StructurizrService {
     }
     async getJsonCheckResult(workspaceId) {
         const workspaceJson = await this.repository.getWorkspaceJson(workspaceId);
-        return new WorkspaceValidator(workspaceJson).check();
+        return (new WorkspaceValidator(workspaceJson)).check();
     }
 }
