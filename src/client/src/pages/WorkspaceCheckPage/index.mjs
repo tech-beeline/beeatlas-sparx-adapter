@@ -1,5 +1,5 @@
 import { Button, Header, Progress } from "@beeline/design-system-react";
-import { Accordion, AccordionDetails, AccordionSummary, Box, Paper, TextField, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Paper, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFetchJSON } from "../../utils/index.mjs";
@@ -9,15 +9,48 @@ const COMMENT_REGEX = /^(?<header>.*)\n(?<body>(\n*.*)*)$/m
 
 /**
  * 
- * @param {{errorComment:{ level:"error"|"warning", comment:string}}} param0 
+ * @param {{errorComment:{ level:"error"|"warning", summary:string, details:string}}} param0 
  */
 function CommentCard({ errorComment }) {
-    const matched = errorComment.comment.match(COMMENT_REGEX);
 
     return <Accordion>
-        <AccordionSummary expandIcon={<ExpandMore />}><Typography color={errorComment.level == "error" ? "red" : "blue"}>{matched?.groups.header}</Typography></AccordionSummary>
-        <AccordionDetails><Box component={Paper}><pre>{matched?.groups?.body}</pre></Box></AccordionDetails>
+        <AccordionSummary expandIcon={<ExpandMore />}><Typography color={errorComment.level == "error" ? "red" : "blue"}>{errorComment.summary}</Typography></AccordionSummary>
+        <AccordionDetails><Box component={Paper}><pre dangerouslySetInnerHTML={{ __html: errorComment.details }}></pre></Box></AccordionDetails>
     </Accordion>
+}
+
+function CommentCategories({ comments }) {
+
+    const [toggled, setToggled] = useState(["error", "warning"]);
+
+
+    const handleChangeToggled = (e, newMultiple) => {
+        setToggled(newMultiple);
+    };
+
+    const categories = {};
+    for (const c of comments) {
+        const category = categories[c.category ?? "Другое"] ?? (categories[c.category ?? "Другое"] = []);
+        category.push(c);
+    }
+    return <Box>
+        <ToggleButtonGroup
+            size="small"
+            value={toggled}
+            onChange={handleChangeToggled}
+        >
+            <ToggleButton value="error" size="small"><Typography color="red">Ошибки</Typography></ToggleButton>
+            <ToggleButton value="warning" size="small"><Typography color="blue">Предупреждения</Typography></ToggleButton>
+        </ToggleButtonGroup>
+        {Object.entries(categories).map(([key, val]) => <Accordion key={key}>
+            <AccordionSummary><Typography fontWeight="fontWeightBold" color={val.find(c => c.level == "error") ? "red" : "blue"}>{key}</Typography></AccordionSummary>
+            <AccordionDetails>
+                {val.filter(c => toggled.find(v => v == c.level))
+                    .sort((a, b) => a.level.localeCompare(b.level))
+                    .map((c, i) => <CommentCard key={i} errorComment={c} />)}
+            </AccordionDetails>
+        </Accordion>)}
+    </Box>
 }
 
 export function WorkspaceCheckResultPage() {
@@ -25,21 +58,22 @@ export function WorkspaceCheckResultPage() {
     const { loading, data, error } = useFetchJSON(`/api/v4/structirizr/${workspaceid}/json-check`);
 
     const loadingBox = loading && <Box>
-        <Header><Typography>Идет загрузка</Typography>
-            <Progress cycled={true} />
+        <Header><Typography>Идет загрузка<Progress cycled={true} /></Typography>
+
         </Header>
     </Box>
-    const errorBox = error && <Box><Typography color="red">Ошибка ${error}</Typography></Box>
+    const errorBox = error && <Header><Typography color="red">Ошибка {JSON.stringify(error)}</Typography></Header>
 
     console.log(data);
     const dataBox = data && <Box>
         <Header>[{data.cmdb}] {data.name} </Header>
-        {data.containersComments?.map((c, i) => <CommentCard key={i} errorComment={c} />)}
+        <CommentCategories comments={data.comments} />
     </Box>;
 
     return <Box>
         {loadingBox}
         {dataBox}
+        {errorBox}
     </Box>
 }
 
