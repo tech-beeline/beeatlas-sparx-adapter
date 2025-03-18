@@ -181,7 +181,7 @@ export class ArchMetricsRepository {
     static async insertPluginAction(pluginAction) {
         try {
             const { version, action: action, template_id, user, cmdb, element_uid } = pluginAction;
-            await fdmStorage.query(METRIC_QUERIES.INSERT_ACTION, version, action, template_id, user?.toLowerCase() ?? "unknown", cmdb, element_uid,
+            await fdmStorage.query(METRIC_QUERIES.INSERT_ACTION, version, action, user?.toLowerCase() ?? "unknown", template_id, cmdb, element_uid,
                 JSON.stringify(pluginAction)
             )
         } catch (error) {
