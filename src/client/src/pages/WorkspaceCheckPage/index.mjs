@@ -1,8 +1,24 @@
 import { Button, Header, Progress } from "@beeline/design-system-react";
-import { Box, Paper, TextField, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Paper, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFetchJSON } from "../../utils/index.mjs";
+import { ExpandMore } from "@mui/icons-material";
+
+const COMMENT_REGEX = /^(?<header>.*)\n(?<body>(\n*.*)*)$/m
+
+/**
+ * 
+ * @param {{errorComment:{ level:"error"|"warning", comment:string}}} param0 
+ */
+function CommentCard({ errorComment }) {
+    const matched = errorComment.comment.match(COMMENT_REGEX);
+
+    return <Accordion>
+        <AccordionSummary expandIcon={<ExpandMore />}><Typography color={errorComment.level == "error" ? "red" : "blue"}>{matched?.groups.header}</Typography></AccordionSummary>
+        <AccordionDetails><Box component={Paper}><pre>{matched?.groups?.body}</pre></Box></AccordionDetails>
+    </Accordion>
+}
 
 export function WorkspaceCheckResultPage() {
     const { workspaceid } = useParams();
@@ -15,7 +31,11 @@ export function WorkspaceCheckResultPage() {
     </Box>
     const errorBox = error && <Box><Typography color="red">Ошибка ${error}</Typography></Box>
 
-    const dataBox = data && <Box><Header>[{data.cmdb}] {data.name} </Header></Box>;
+    console.log(data);
+    const dataBox = data && <Box>
+        <Header>[{data.cmdb}] {data.name} </Header>
+        {data.containersComments?.map((c, i) => <CommentCard key={i} errorComment={c} />)}
+    </Box>;
 
     return <Box>
         {loadingBox}

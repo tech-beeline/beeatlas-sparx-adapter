@@ -1,33 +1,36 @@
-import { sys } from "typescript";
-import { NotImplemented } from "../../../utils/errors.mjs";
-import { StructurizrRepository } from "../../repositories/index.mjs";
+import { StructurizrRepository, SystemsRepository } from "../../repositories/index.mjs";
 import { Workspace } from "./model.mjs";
-import { containerWithoutCode } from "./comments.mjs";
-
+import { CMDB_ERROR, cmdbWarning, containerWithoutCode, noSystemComment } from "./comments.mjs";
 
 class CheckResult {
     /** @type {"ok"|"error"|warning} */
-    result;
+    level;
     comment;
     /**
     * 
-    * @param {"ok"|"error"|"warning"} result 
+    * @param {"ok"|"error"|"warning"} level 
     * @param {*} comment 
     */
-    constructor(result, comment) {
+    constructor(level, comment) {
 
-        this.result = result;
+        this.level = level;
         this.comment = comment;
         return this;
     }
 }
 export class WorkspaceCheckResult {
     /** @type {CheckResult} */
-    hasCMDB;
-    /** @type { CheckResult}*/
-    hasSystem;
-    containersResult;
+    cmdbError;
+    containersComments;
 }
+
+function errorComment(comment) {
+    return new CheckResult("error", comment);
+}
+function warningComment(comment) {
+    return new CheckResult("warning", comment);
+}
+
 
 export class WorkspaceValidator {
     /** @type {Workspace} */
@@ -50,17 +53,17 @@ export class WorkspaceValidator {
      * 
      * @returns {CheckResult}
      */
-    hasCMDB() {
+    cmdbError() {
         let cmdb = this.workspace.model.properties?.workspace_cmdb;
         if (cmdb)
-            return new CheckResult("ok", `workspace_cmdb=${cmdb}`);
+            return null;
         for (const cv of this.workspace.views?.systemContextViews) {
             const s = this.workspace.model.softwareSystems.find(s => s.id == cv.softwareSystemId);
             if (s && s.properties?.cmdb)
                 return new CheckResult("warning", `В model.properties отсутствует cmdb мнемоника (workspace_code). 
 Cmdb мнемоника берется из контекстной диаграммы [${cv.title}], cmdb=${s.properties.cmdb}`);
         }
-        return new CheckResult("error", `В model.properties отсутствует cmdb мнемоника (workspace_code)`)
+        return errorComment(CMDB_ERROR);
     }
     /** @returns {CheckResult} */
     hasSoftwareSystem() {
@@ -72,33 +75,59 @@ Cmdb мнемоника берется из контекстной диагра�
             return new CheckResult("ok", `Система: "${systems[0].name}"`);
         }
     }
-    checkContainers() {
-        const cmdb = this.cmdb;
-        if (!cmdb) return undefined;
+    async checkContainers() {
+        let cmdb = this.workspace.model.properties?.workspace_cmdb;
+        const result = [];
+
+        if (!cmdb) {
+            for (const cv of this.workspace.views?.systemContextViews) {
+                const s = this.workspace.model.softwareSystems.find(s => s.id == cv.softwareSystemId);
+                if (s && s.properties?.cmdb) {
+                    result.push(warningComment(cmdbWarning(s, cv)));
+                    cmdb = s.properties.cmdb;
+                }
+            }
+            if (!cmdb) {
+                result.push(errorComment(CMDB_ERROR));
+                return result;
+            }
+        }
+
+        const fdmSystem = await new SystemsRepository().selectSystemByCode();
+        if( !fdmSystem){
+            result.push( errorComment(`Система с cmdb=${cmdb} не найдена на ландшафте компании`));
+            return result;
+        }
 
         const systems = this.workspace.model.softwareSystems?.filter(s => s.properties?.cmdb === cmdb);
-        const result = [];
+        if (!systems.length) {
+            result.push(errorComment(noSystemComment(cmdb)));
+            return result;
+        }
+
         for (const system of systems) {
             for (const container of system.containers) {
                 const containerId = container.properties?.["structurizr.dsl.identifier"];
                 const apiList = container.components?.filter(api => api.properties?.type == "api");
-                if (!apiList?.length) {
+                if (!apiList?.length) { // у контейнера нет API
                     if (!container.properties?.external_name) {
-                        result.push(new CheckResult("warning", containerWithoutCode(container, system)));
+                        result.push(warningComment(containerWithoutCode(container, system)));
                     }
+                    continue;
                 }
-                console.log(apiList);
+                // у контейнера есть API
+                if (!container.properties?.external_name) {
+                    result.push(errorComment());
+                }
             }
         }
         return result;
     }
-    check() {
+    async check() {
         const result = new WorkspaceCheckResult();
-        result.hasCMDB = this.hasCMDB();
         result.cmdb = this.cmdb;
         result.name = this.workspace?.name;
-        result.hasSystem = this.hasSoftwareSystem();
-        result.containersResult = this.checkContainers();
+        result.containersComments = await this.checkContainers();
         return result;
     }
 }
