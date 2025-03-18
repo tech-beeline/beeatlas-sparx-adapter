@@ -60,7 +60,6 @@ class TechnicalCapabilityService {
 			.reduce((acc, v) =>
 				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.parent_code), acc), {})
 
-		//await this.#readTags(tc_map);
 		return tc_map[code];
 	}
 	/**

@@ -7,6 +7,7 @@ import { TechnicalCapabiliiesService } from "./tc-service/index.mjs";
 export { GET_ALL_SYSTEMS_HANDLERS } from "./systems-service/get-all-systems.mjs";
 export { CapabilityService } from './capability-service/index.mjs'
 export { MonitiringSourcesServices } from './monitiring-sources-service.mjs'
+export { StructurizrService } from './structurizr-service/index.mjs'
 
 
 const SystemServiceInstance = new SystemService();

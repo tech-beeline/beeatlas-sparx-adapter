@@ -16,28 +16,32 @@ const COLUMNS_MAP = {
         ts: "context_ts",
         source: "context_source"
     },
-    "CNT.01" : {
+    "CNT.01": {
         link: "container_link",
         ts: "container_ts",
         source: "context_source"
     },
-    "TECH.01" : {
+    "TECH.01": {
         link: "techstack_link",
         ts: "techstack_ts"
     },
-    "DEP.02" : {
+    "DEP.02": {
         link: "deploy_link",
         ts: "deploy_ts",
-        source : "deploy_source"
+        source: "deploy_source"
     },
-    "API.01" : {
+    "API.01": {
         link: "api_link",
         ts: "api_ts"
     },
-    "SQ.01" : {
+    "SQ.01": {
         link: "sequence_link",
         ts: "sequence_ts",
         source: "sequence_source"
+    },
+    "API.02": {
+        link: "nfr_link",
+        ts: "nfr_ts"
     }
 }
 

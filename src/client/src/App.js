@@ -8,12 +8,15 @@ import {
     SystemPage,
     SystemE2EParticipionPage,
     MainPage,
+    WorkspaceCheckPage,
 } from "./pages/index.mjs";
 
 import "./App.css";
 import "./css/e2e-processes.css";
 import "./css/e2e-scenario.css";
 import "./css/table.css";
+import { WorkspaceCheckResultPage } from "./pages/WorkspaceCheckPage/index.mjs";
+import { STRUCTURIZR_CHECK_RESULT } from "./const.mjs";
 
 function App() {
     return (
@@ -32,6 +35,14 @@ function App() {
                 <Route
                     path={`e2e/:process_uid/bi/:uid`}
                     element={<E2EScenarioDashboardPage />}
+                />
+                <Route
+                    path="/structurizr/check"
+                    element={<WorkspaceCheckPage />}
+                />
+                <Route
+                    path={STRUCTURIZR_CHECK_RESULT}
+                    element={<WorkspaceCheckResultPage />}
                 />
             </Routes>
         </Router>

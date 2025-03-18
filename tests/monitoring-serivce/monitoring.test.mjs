@@ -4,6 +4,7 @@ import assert, { deepEqual, deepStrictEqual, strictEqual } from 'assert';
 
 import { updateEnv } from '../env.mjs';
 import { MonitiringSourcesServices, SystemService } from '../../src/api/services/index.mjs';
+import { NotImplemented } from '../../src/utils/errors.mjs';
 
 const PROMETHEUS_TEMPLATE = "https://inside.beeline.ru/d/56_72PcHk/prometheus-template-api-queries?orgId=1";
 const OPENSEARCH_TEMPLATE = "https://inside.beeline.ru/d/hwzG1EcNz/opensearch-template-api-queries?orgId=1";
@@ -24,6 +25,13 @@ suite("Установка шаблонов мониторинга API", async ()
         ret = await systemService.setAppMonitoringTemplate("fdmshowcaseapp", OPENSEARCH_TEMPLATE);
         assert(ret.apiMetricTemplate == OPENSEARCH_TEMPLATE, 'Шаблон opensearch не установился');
     })
+
+    test("check", async ()=>{
+        NotImplemented(`Проверять уникальность, если не уникально -  ругаться
+Если REST, то нормировать
+Если несколько интерфейсов или код интерфейса не той системы, то ругаться
+Сервис проверки DSL (наличие external_name)`)
+    });
 
 
 

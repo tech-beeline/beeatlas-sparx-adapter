@@ -11,3 +11,4 @@ export const TechnicalCapabilitiesControllersInstance = new TechnicalCapabilitie
 export const ProcessScenarioControllersInstance = new ProcessScenarioControllers();
 export const SystemsControllersInstance = new SystemsControllers();
 export const ObservabilityControllersInstance = new ObservabilityControllers();
+export { StructurizrControllers } from "./structurizr-contollers/index.mjs";

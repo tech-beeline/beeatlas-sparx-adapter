@@ -19,7 +19,7 @@ class TechnicalCapability {
 
     /**
      * 
-     * @param {{code, name, description, author, createdDate, modifiedDate, status, targetSystemCode, parents:[]}} cap 
+     * @param {{code, name, description, author, createdDate, modifiedDate, status, targetSystemCode, parents:[], sys_code}} cap 
      * @returns 
      */
     constructor(cap) {
@@ -28,6 +28,7 @@ class TechnicalCapability {
         for (const prop in this) {
             this[prop] = cap[prop] ?? undefined;
         }
+        this.targetSystemCode = cap.sys_code;
 
         // [ ] отрефакторить, что бы не было ссылки на идентификатор элемента в ЕА
         if (cap.object_id) {
@@ -38,6 +39,5 @@ class TechnicalCapability {
         (this.parents = this.parents ?? []).push(s);
     }
 }
-
 
 export default TechnicalCapability;

@@ -16,6 +16,7 @@ import techRadarServiceSpec from './tech-radar-service-spec.mjs'
 import { createControllerDecorator } from '../controllers/controller-decorator.mjs';
 import scenariosServiceSpec from './scenarios-service-spec/index.mjs';
 import observabilityServiceSpec from './observability/index.mjs';
+import { STRUCTURIZR_JSON_CHECK_SPEC } from './structurizr/check-dsl-spec.mjs';
 
 
 const SUMMARY_TITLE = "Полное API управления архитектурными артефактами и представлениями"
@@ -52,6 +53,7 @@ const API_ROUTES = {
     "monitoring-service": monitoringServiceSpec,
     "observability-service": observabilityServiceSpec,
     "tech-radar-service": techRadarServiceSpec,
+    "structurizr-service": STRUCTURIZR_JSON_CHECK_SPEC
     /*
     "monitoring-source-service": monitoringSourceReoutes,
     */
