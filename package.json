@@ -3,8 +3,7 @@
   "version": "1.2.0",
   "description": "Витрина для различных представлений из EA",
   "main": "app.mjs",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "Воронин Игорь",
   "license": "ISC",
   "devDependencies": {
@@ -14,6 +13,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "@beeline/design-tokens": "^1.4.0-beta.5",
     "express": "^4.18.2",
     "node-stream-zip": "^1.15.0",
     "pg": "^8.11.3",

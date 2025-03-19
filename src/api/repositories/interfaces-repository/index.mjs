@@ -11,9 +11,9 @@ import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, 
 const INTERFACES_FOLDER = 'Interfaces'
 
 const isAPIEquals = (a, b) => a.name === b.name
-    && a.description === b.description 
-    && a.version === b.version 
-    && a.status === b.status 
+    && a.description === b.description
+    && a.version === b.version
+    && a.status === b.status
     && a.specification == b.specification
     && a.implements == b.implements;
 
@@ -184,6 +184,7 @@ export class InterfacesRepository {
     }
 
     async setContainerInterfaces(containerCode, interfaces = []) {
+        interfaces = interfaces ?? [];
         try {
             console.info(`${containerCode} - Обновление инфтерфейсов контейнера`)
             const currentAPIList = await this.selectContainerInterfaces(containerCode);
@@ -201,7 +202,7 @@ export class InterfacesRepository {
             }
 
             for (const it of currentAPIList) {
-                if (it.status !== REMOVED_STATUS && !interfaces.find(i => i.code === it.code)) {
+                if (it.status !== REMOVED_STATUS && !interfaces?.find(i => i.code === it.code)) {
                     it.currentAPI = { ...it };
                     it.status = REMOVED_STATUS;
                     toUpdate.push(it);
@@ -255,7 +256,7 @@ export class InterfacesRepository {
                 await this.markMethodRemoved(interfaceCode, m.name);
             }
         }
-        
+
         if (methods.length) {
             console.log(`${interfaceCode} - Добавление и обновление методов`, methods);
             for (const m of methods) {

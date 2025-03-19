@@ -2,7 +2,7 @@
 export class Component {
     id;
     name;
-    /** @type {{"structurizr.dsl.identifier":string, external_name:string, type:string, api_url:string, protocol}} */
+    /** @type {{"structurizr.dsl.identifier":string, external_name:string, type:string, api_url:string, protocol, tc}} */
     properties;
 }
 export class Container {

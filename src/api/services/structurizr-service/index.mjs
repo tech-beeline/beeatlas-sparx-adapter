@@ -1,6 +1,6 @@
 import { StructurizrRepository, SystemsRepository } from "../../repositories/index.mjs";
 import { Workspace } from "./model.mjs";
-import { apiContainerWithoutCode, noCmdbError, cmdbWarning, containerWithoutCode, noSystemComment, WorkspaceCheckResult, systemNotFound, apiCandidateComment, tooManySystems, apiWithoutExternalName } from "./comments.mjs";
+import { apiContainerWithoutCode, noCmdbError, cmdbWarning, containerWithoutCode, noSystemComment, WorkspaceCheckResult, systemNotFound, apiCandidateComment, tooManySystems, apiWithoutExternalName, apiWithoutSpecification } from "./comments.mjs";
 import { NotImplemented } from "../../../utils/errors.mjs";
 
 
@@ -22,6 +22,7 @@ export class WorkspaceValidator {
         }
         return null;
     }
+
 
     async checkContainers() {
         let cmdb = this.workspace.model.properties?.workspace_cmdb;
@@ -55,28 +56,57 @@ export class WorkspaceValidator {
             return result;
         }
 
+        result.preview = { cmdb: cmdb, containers: [] };
+
+
         if (systems.length > 1) {
             result.push(tooManySystems(systems));
         }
 
         for (const system of systems) {
+            result.preview.name = system.name;
+
             for (const container of system.containers ?? []) {
                 const containerId = container.properties?.["structurizr.dsl.identifier"];
+
+                const previewContainer = container.properties?.external_name && {
+                    name: container.name,
+                    code: `${container.properties.external_name}.${result.preview.cmdb}`,
+                    interfaces: []
+                };
+
+                if (previewContainer) result.preview.containers.push(previewContainer);
+
                 const apiList = container.components?.filter(api => api.properties?.type == "api");
                 if (!apiList?.length) { // у контейнера нет API
-                    if (!container.properties?.external_name) {
+                    if (!previewContainer) {
                         result.push(containerWithoutCode(container, system));
                     }
                 }
                 // у контейнера есть API
                 if (apiList?.length) {
-                    if (!container.properties?.external_name) result.push(apiContainerWithoutCode(container, system));
+                    if (!previewContainer) result.push(apiContainerWithoutCode(container, system));
                     for (const api of apiList) {
-                        if (!api.properties.external_name) {
+                        const previewApi = api.properties?.external_name && {
+                            name: api.name,
+                            code: `${api.properties.external_name}.${previewContainer.code}`,
+                            api_url: api.properties.api_url,
+                            identifier: api.properties["structurizr.dsl.identifier"],
+                            tc: api.properties.tc
+                        }
+                        if (previewApi) {
+                            previewContainer.interfaces.push(previewApi);
+                            if (!previewApi.api_url) {
+                                result.push(apiWithoutSpecification(system, container, api));
+                            }
+                        }
+
+                        if (!previewApi) {
                             result.push(apiWithoutExternalName(system, container, api));
                         }
                     }
                 }
+
                 const apiCandidates = container.components?.filter(api => api.properties?.type != "api"
                     && (api.properties?.api_url || api.properties?.external_name));
 
@@ -92,6 +122,9 @@ export class WorkspaceValidator {
         result.cmdb = this.cmdb;
         result.name = this.workspace?.name;
         result.comments = await this.checkContainers();
+        result.preview = result.comments.preview;
+        delete result.comments.preview;
+
         return result;
     }
 }

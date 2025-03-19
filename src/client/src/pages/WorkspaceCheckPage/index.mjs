@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFetchJSON } from "../../utils/index.mjs";
 import { ExpandMore } from "@mui/icons-material";
+import { PreviewAccordion } from "./preview-accordion.mjs";
 
 const COMMENT_REGEX = /^(?<header>.*)\n(?<body>(\n*.*)*)$/m
 
@@ -43,7 +44,7 @@ function CommentCategories({ comments }) {
             <ToggleButton value="warning" size="small"><Typography color="blue">Предупреждения</Typography></ToggleButton>
         </ToggleButtonGroup>
         {Object.entries(categories).map(([key, val]) => <Accordion key={key}>
-            <AccordionSummary><Typography fontWeight="fontWeightBold" color={val.find(c => c.level == "error") ? "red" : "blue"}>{key}</Typography></AccordionSummary>
+            <AccordionSummary expandIcon={<ExpandMore />}><Typography fontWeight="fontWeightBold" color={val.find(c => c.level == "error") ? "red" : "blue"}>{key}</Typography></AccordionSummary>
             <AccordionDetails>
                 {val.filter(c => toggled.find(v => v == c.level))
                     .sort((a, b) => a.level.localeCompare(b.level))
@@ -67,7 +68,14 @@ export function WorkspaceCheckResultPage() {
     console.log(data);
     const dataBox = data && <Box>
         <Header>[{data.cmdb}] {data.name} </Header>
-        <CommentCategories comments={data.comments} />
+
+        <Accordion>
+            <AccordionSummary expandIcon={<ExpandMore />}>Ошибки и предупреждения</AccordionSummary>
+            <AccordionDetails>
+                <CommentCategories comments={data.comments} />
+            </AccordionDetails>
+        </Accordion>
+        <PreviewAccordion preview={data.preview}/>
     </Box>;
 
     return <Box>

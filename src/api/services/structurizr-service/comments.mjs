@@ -190,3 +190,18 @@ export const apiWithoutExternalName = (s, c, api) => errorComment(`У интер
 Свойства интерфейса
 ${properties(api)}
 `, `Проблемы с описанием интерфейсов`)
+
+/**
+ * 
+ * @param {SoftwareSystem} s 
+ * @param {Container} c 
+ * @param {Component} api 
+ * @returns 
+ */
+export const apiWithoutSpecification = (s, c, api) => warningComment(`У интерфейса ${api.name} не указан api_url`,
+    `Контейнер: ${c.name}
+Для этого интерфейса не будут загружены методы из спецификации API
+
+Свойства интерфейса
+${properties(api)}
+`, `Проблемы с описанием интерфейсов`)
