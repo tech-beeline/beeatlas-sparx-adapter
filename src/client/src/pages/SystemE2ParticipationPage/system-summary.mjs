@@ -32,7 +32,7 @@ export function SystemSummary({ system }) {
                             </TableRow>
                             <TableRow>
                                 <TableCell>Дашборд продукта</TableCell>
-                                <TableCell><a href={`https://inside-dev.beeline.ru/d/archops-sys-${system.code}`} target="_blank" rel="noopener">https://inside-dev.beeline.ru/d/archops-sys-{system.code}</a></TableCell>
+                                <TableCell><a href={`https://inside-dev.beeline.ru/d/archops-sys-${system.code}`} target="_blank" rel="noreferrer">https://inside-dev.beeline.ru/d/archops-sys-{system.code}</a></TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>

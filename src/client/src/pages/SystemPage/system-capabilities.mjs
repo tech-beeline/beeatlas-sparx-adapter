@@ -1,8 +1,21 @@
-import { Alarm, CorporateFare, Domain, ExpandMore, KeyboardArrowDown, KeyboardArrowUp, LocalActivity, SettingsApplications, SmartButton } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary, Box, Paper } from "@mui/material";
+import {
+    Alarm,
+    CorporateFare,
+    Domain,
+    ExpandMore,
+    KeyboardArrowDown,
+    KeyboardArrowUp,
+    SmartButton
+} from "@mui/icons-material";
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Box,
+    Paper
+} from "@mui/material";
 import { TreeItem, TreeView } from "@mui/x-tree-view";
 import { useEffect, useState } from "react";
-import { sys } from "typescript";
 
 
 /**
@@ -25,22 +38,6 @@ export function SystemCapabilitiesAccordion({ system }) {
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false);
 
-
-    const loadCapability = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch(`/api/v4/systems/${system.code}/purpose`);
-            if (response.status != 200) {
-                throw Error(await response.text())
-            }
-            setCapabilityTree(await response.json());
-        } catch (error) {
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    }
-
     const loadingDetails = loading ? <AccordionDetails>Loading ...</AccordionDetails> : null;
     const purposeDetails = (
         capabilityTree && !loading ?
@@ -55,7 +52,24 @@ export function SystemCapabilitiesAccordion({ system }) {
                 </AccordionDetails> : null
     )
 
-    useEffect(() => { loadCapability() }, [system])
+    useEffect(() => {
+        const loadCapability = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(`/api/v4/systems/${system.code}/purpose`);
+                if (response.status !== 200) {
+                    throw Error(await response.text())
+                }
+                setCapabilityTree(await response.json());
+            } catch (error) {
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadCapability()
+    }, [system])
 
     return (
         <Accordion>

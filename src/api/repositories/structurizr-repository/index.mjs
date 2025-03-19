@@ -11,7 +11,11 @@ export class StructurizrRepository {
         this.url = url;
     }
     async getWorkspaceJson(workspaceId) {
-        const url = `${this.url}share/${workspaceId}/json`;
         return getJSON(`${this.url}share/${workspaceId}/json`, DEFAULT_OPTIONS);
+    }
+
+    async getWorkspaceDSL(workspaceId) {
+
+        return get(`${this.url}share/${workspaceId}/dsl`, DEFAULT_OPTIONS).then(b=>b.toString());
     }
 }

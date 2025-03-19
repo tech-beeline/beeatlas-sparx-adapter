@@ -19,6 +19,7 @@ export default function SystemAssessmentsAccordion({ system }) {
         {},
         [system]
     );
+
     return (
         <Accordion>
             <AccordionSummary component={Paper} expandIcon={<ExpandMore />}>

@@ -10,7 +10,7 @@ export class Container {
     /** @type {string} */
     name;
     /**
-     * @type { {"structurizr.dsl.identifier":string, external_name:string}}
+     * @type { {"structurizr.dsl.identifier":string, external_name:string, source}}
      */
     properties;
     /** @type {Array<Component>} */

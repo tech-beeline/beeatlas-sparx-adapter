@@ -1,4 +1,3 @@
-export { E2EScenarioPage } from "./E2EScenarioPage/index.mjs";
 export { E2EDashboardMainPage } from "./E2EDashboardMainPage/index.mjs";
 export { E2EProcessPage } from "./E2EProcessPage/index.mjs";
 export { E2EScenarioDashboardPage } from "./E2EScenarioDashboardPage/index.mjs";

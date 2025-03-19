@@ -5,6 +5,7 @@ import {
     AddCard,
     Signpost,
 } from "@mui/icons-material";
+
 import {
     Accordion,
     AccordionDetails,
@@ -104,25 +105,27 @@ export function SystemE2EParticipion({ systemCode }) {
         }
     }
 
-    const loadParticipations = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch(
-                `/api/v4/systems/${encodeURIComponent(systemCode)}/e2e`
-            );
-            if (response.status !== 200) {
-                throw Error(await response.text());
-            }
-            setOperationFilter([]);
-            setParticipationList(await response.json());
-        } catch (error) {
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     useEffect(() => {
+
+        const loadParticipations = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(
+                    `/api/v4/systems/${encodeURIComponent(systemCode)}/e2e`
+                );
+                if (response.status !== 200) {
+                    throw Error(await response.text());
+                }
+                setOperationFilter([]);
+                setParticipationList(await response.json());
+            } catch (error) {
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         loadParticipations();
     }, [systemCode]);
 
@@ -197,25 +200,11 @@ export function SystemE2EParticipionPage() {
     const navigate = useNavigate();
     const [systemCode, setSystemCode] = useState(code);
 
-    async function loadData(systemCode = code) {
-        const response = await fetch(
-            `/api/v1/systems/${systemCode}?loadMethods=1`
-        ); // [ ] Поменять на новую версию API
-        if (response.status !== 200) {
-            setSystem({
-                error: `HTTP STATUS: ${response.status} ( ${response.statusText})`,
-                errorBody: await response.text(),
-            });
-            return;
-        }
-
-        setSystem(await response.json());
-    }
 
     const handleSelectSystem = (sys) => {
         navigate(`/systems/${sys.code}/e2e`);
         setSystemCode(sys.code);
-        loadData(sys.code);
+        //        loadData(sys.code);
     };
 
     const breadcrumbs = (
@@ -247,8 +236,24 @@ export function SystemE2EParticipionPage() {
     );
 
     useEffect(() => {
+
+        async function loadData(systemCode = code) {
+            const response = await fetch(
+                `/api/v1/systems/${systemCode}?loadMethods=1`
+            ); // [ ] Поменять на новую версию API
+            if (response.status !== 200) {
+                setSystem({
+                    error: `HTTP STATUS: ${response.status} ( ${response.statusText})`,
+                    errorBody: await response.text(),
+                });
+                return;
+            }
+
+            setSystem(await response.json());
+        }
+
         loadData(systemCode);
-    }, []);
+    }, [code, systemCode]);
 
     const contextMenu = (
         <List>

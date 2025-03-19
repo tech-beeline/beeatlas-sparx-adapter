@@ -1,7 +1,6 @@
 import { AddCard } from "@mui/icons-material";
 import {
     Box,
-    Breadcrumbs,
     List,
     ListItem,
     ListItemButton,
@@ -13,7 +12,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SystemContainers } from "./system-api.mjs";
 import CreateSystemDashboard from "./system-create-dashboard.mjs";
-import { HomeLink, MainBar, SystemCatalogLink } from "../../components/index.mjs";
+import { MainBar } from "../../components/index.mjs";
 import { SystemCapabilitiesAccordion } from "./system-capabilities.mjs";
 import { SystemSelect } from "./system-select.mjs";
 import { SystemSummary } from "./system-summary.mjs";
@@ -24,36 +23,33 @@ import { SystemApiMonitoringAccordion } from "./grafana-sources/system-api-sourc
 import { Progress } from "@beeline/design-system-react";
 
 export function SystemPage() {
-    const [system, setSystem] = React.useState(null);
-    const [selectedSystem, setSelectedSystem] = React.useState(null);
-
     const { code } = useParams();
+
+    const [system, setSystem] = React.useState(null);
+
     const [dashboardDialogOpen, setDashboardDialogOpen] = useState(false);
     const navigate = useNavigate();
 
-    async function loadData(systemCode = code) {
-        const response = await fetch(apiSystemsPath(code));
-        if (response.status !== 200) {
-            setSystem({
-                error: `HTTP STATUS: ${response.status} ( ${response.statusText})`,
-                errorBody: await response.text(),
-            });
-            return;
-        }
-
-        const s = await response.json();
-        setSelectedSystem(s);
-        setSystem(s);
-    }
-
     const handleSelectSystem = (sys) => {
-        setSelectedSystem(sys);
         setSystem(null);
         navigate(`/systems/${sys.code.toLowerCase()}`);
     };
 
     useEffect(() => {
-        loadData();
+        async function loadData(systemCode) {
+            const response = await fetch(apiSystemsPath(systemCode));
+            if (response.status !== 200) {
+                setSystem({
+                    error: `HTTP STATUS: ${response.status} ( ${response.statusText})`,
+                    errorBody: await response.text(),
+                });
+                return;
+            }
+            const s = await response.json();
+            setSystem(s);
+        }
+        loadData(code);
+
     }, [code]);
 
     const contextMenu = (
@@ -84,7 +80,7 @@ export function SystemPage() {
             <MainBar
                 barContent={
                     <SystemSelect
-                        system={selectedSystem}
+                        system={system}
                         onSelect={handleSelectSystem}
                     />
                 }

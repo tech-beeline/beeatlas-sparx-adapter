@@ -1,12 +1,24 @@
-import { Launch, Settings } from "@mui/icons-material";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField } from "@mui/material";
+import {
+    Launch,
+    Settings
+} from "@mui/icons-material";
+
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Paper,
+    TextField
+} from "@mui/material";
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { systemApiMonitoringPath } from "../../../resources/services.mjs";
 
 const REGEX_NAME = /https:\/\/inside.beeline.ru\/d\/.*\/([a-zA-Z\-0-9]*)/;
-const REGEX_VALIDATE = /https:\/\/inside.beeline.ru\/d\/.*/;
-
 
 function ChangeApiMetricDialog({ targetName, source = "", open, setOpen, onSave }) {
 
@@ -60,7 +72,7 @@ function ChangeApiMetricDialog({ targetName, source = "", open, setOpen, onSave 
         <DialogActions>
             <Button onClick={() => setOpen(false)}>Закрыть</Button>
             <Button autoFocus type="submit"
-                disabled={changedSource == source || saving}
+                disabled={changedSource === source || saving}
                 onClick={handleSave}
             >
                 Сохранить

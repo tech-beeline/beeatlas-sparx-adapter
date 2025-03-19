@@ -70,23 +70,23 @@ export function SystemE2EParticipion({ systemCode }) {
         }
     }
 
-    const loadParticipations = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch(`/api/v4/systems/${encodeURIComponent(systemCode)}/e2e`)
-            if (response.status !== 200) {
-                throw Error(await response.text());
-            }
-            setOperationFilter([])
-            setParticipationList(await response.json());
-        } catch (error) {
-            setError(error.message)
-        } finally {
-            setLoading(false);
-        }
-    }
-
     useEffect(() => {
+        const loadParticipations = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(`/api/v4/systems/${encodeURIComponent(systemCode)}/e2e`)
+                if (response.status !== 200) {
+                    throw Error(await response.text());
+                }
+                setOperationFilter([])
+                setParticipationList(await response.json());
+            } catch (error) {
+                setError(error.message)
+            } finally {
+                setLoading(false);
+            }
+        }
+
         loadParticipations();
     }, [systemCode]);
 
@@ -143,21 +143,13 @@ export default function SystemE2EParticipionPage() {
     const [systemCode, setSystemCode] = useState(code);
 
 
-    async function loadData(systemCode = code) {
-        const response = await fetch(`/api/v1/systems/${systemCode}?loadMethods=1`) // [ ] Поменять на новую версию API
-        if (response.status !== 200) {
-            setSystem({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() })
-            return;
-        }
 
-        setSystem(await response.json());
-    }
 
     const handleSelectSystem = (sys) => {
         console.log(`select ${sys.code}`);
         navigate(`/systems/${sys.code.toLowerCode()}`);
         setSystemCode(sys.code)
-        loadData(sys.code);
+        //loadData(sys.code);
     }
 
 
@@ -180,8 +172,18 @@ export default function SystemE2EParticipionPage() {
 
 
     useEffect(() => {
+        async function loadData(systemCode = code) {
+            const response = await fetch(`/api/v1/systems/${systemCode}?loadMethods=1`) // [ ] Поменять на новую версию API
+            if (response.status !== 200) {
+                setSystem({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() })
+                return;
+            }
+
+            setSystem(await response.json());
+        }
+
         loadData(systemCode);
-    }, [])
+    }, [systemCode, code])
 
     const contextMenu = <List>
         <ListItem key="create-dashboard" disablePadding>

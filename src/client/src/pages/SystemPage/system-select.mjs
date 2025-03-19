@@ -1,5 +1,4 @@
-import { Autocomplete, createFilterOptions, Popper, TextField } from "@mui/material";
-import { styled } from "@mui/system";
+import { Autocomplete, Popper, TextField } from "@mui/material";
 import { useEffect, useState } from "react";
 import { SYSTEM_RESOURCE } from "../../resources/services.mjs";
 
@@ -20,26 +19,29 @@ const CustomPopper = (props) => {
 export function SystemSelect({ onSelect, system }) {
 
     const [app_list, setAppList] = useState(null);
+
     const filterOptions = (options, { inputValue }) => {
-        if( !inputValue || !inputValue.length) return options;
+        if (!inputValue || !inputValue.length) return options;
         const val = inputValue.toLowerCase();
         return options.filter(o => o.label?.toLowerCase().includes(val) || o.code?.toLowerCase().includes(val));
     }
 
-    const loadApplications = async () => {
-        const response = await fetch(SYSTEM_RESOURCE)
-        if (response.status !== 200) {
-            setAppList({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() })
-            return;
-        }
 
-        let apps = (await response.json()).filter(r => r.status !== 'EOL').reduce((acc, v) => (acc[v.code] = v, acc), {})
-        apps = Object.values(apps);
-
-        setAppList(apps)
-    }
 
     useEffect(() => {
+        const loadApplications = async () => {
+            const response = await fetch(SYSTEM_RESOURCE)
+            if (response.status !== 200) {
+                setAppList({ error: `HTTP STATUS: ${response.status} ( ${response.statusText})`, errorBody: await response.text() })
+                return;
+            }
+
+            let apps = (await response.json()).filter(r => r.status !== 'EOL').reduce((acc, v) => (acc[v.code] = v, acc), {})
+            apps = Object.values(apps);
+
+            setAppList(apps)
+        }
+
         loadApplications();
     }, []);
 

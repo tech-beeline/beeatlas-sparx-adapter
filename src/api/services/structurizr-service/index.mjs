@@ -1,22 +1,27 @@
 import { StructurizrRepository, SystemsRepository } from "../../repositories/index.mjs";
 import { Workspace } from "./model.mjs";
-import { apiContainerWithoutCode, noCmdbError, cmdbWarning, containerWithoutCode, noSystemComment, WorkspaceCheckResult, systemNotFound, apiCandidateComment, tooManySystems, apiWithoutExternalName, apiWithoutSpecification } from "./comments.mjs";
+import { apiContainerWithoutCode, noCmdbError, cmdbWarning, containerWithoutCode, noSystemComment, WorkspaceCheckResult, systemNotFound, apiCandidateComment, tooManySystems, apiWithoutExternalName, apiWithoutSpecification, scriptLineComment, scriptNotFoundComment } from "./comments.mjs";
 import { NotImplemented } from "../../../utils/errors.mjs";
 
 
 
 export class WorkspaceValidator {
     /** @type {Workspace} */
-    workspace;
-    constructor(workspace) {
-        this.workspace = workspace;
+    workspaceJson;
+    /** @type {string} */
+
+    workspaceDSL;
+    constructor(workspaceJson, workspaceDSL) {
+        this.workspaceJson = workspaceJson;
+        this.workspaceDSL = workspaceDSL;
     }
+
     get cmdb() {
-        const cmdb = this.workspace.model.properties?.workspace_cmdb;
+        const cmdb = this.workspaceJson.model.properties?.workspace_cmdb;
         if (cmdb)
             return cmdb
-        for (const cv of this.workspace.views?.systemContextViews ?? []) {
-            const s = this.workspace.model.softwareSystems.find(s => s.id == cv.softwareSystemId);
+        for (const cv of this.workspaceJson.views?.systemContextViews ?? []) {
+            const s = this.workspaceJson.model.softwareSystems.find(s => s.id == cv.softwareSystemId);
             if (s && s.properties?.cmdb)
                 return s.properties.cmdb;
         }
@@ -25,12 +30,12 @@ export class WorkspaceValidator {
 
 
     async checkContainers() {
-        let cmdb = this.workspace.model.properties?.workspace_cmdb;
+        let cmdb = this.workspaceJson.model.properties?.workspace_cmdb;
         const result = [];
 
         if (!cmdb) {
-            for (const cv of this.workspace.views?.systemContextViews ?? []) {
-                const s = this.workspace.model.softwareSystems.find(s => s.id == cv.softwareSystemId);
+            for (const cv of this.workspaceJson.views?.systemContextViews ?? []) {
+                const s = this.workspaceJson.model.softwareSystems.find(s => s.id == cv.softwareSystemId);
                 if (s && s.properties?.cmdb) {
                     result.push(cmdbWarning(s, cv));
                     cmdb = s.properties.cmdb;
@@ -50,7 +55,7 @@ export class WorkspaceValidator {
         }
 
 
-        const systems = this.workspace.model.softwareSystems?.filter(s => s.properties?.cmdb === cmdb);
+        const systems = this.workspaceJson.model.softwareSystems?.filter(s => s.properties?.cmdb === cmdb);
         if (!systems.length) {
             result.push(systemNotFound(cmdb));
             return result;
@@ -66,7 +71,9 @@ export class WorkspaceValidator {
         for (const system of systems) {
             result.preview.name = system.name;
 
-            for (const container of system.containers ?? []) {
+            const containers = system.containers?.filter(c => c.properties?.source !== 'landscape') ?? [];
+
+            for (const container of containers) {
                 const containerId = container.properties?.["structurizr.dsl.identifier"];
 
                 const previewContainer = container.properties?.external_name && {
@@ -115,12 +122,40 @@ export class WorkspaceValidator {
                 }
             }
         }
+
+        const dslLines = this.workspaceDSL.split('\n');
+        const modelStartLine = dslLines.findIndex(l => l.match(/\s*model/));
+
+        let brCnt = 0;
+        let modelEndLine;
+        for (modelEndLine = modelStartLine; modelEndLine < dslLines.length; modelEndLine++) {
+            const line = dslLines[modelEndLine];
+            for (const ch of line) {
+                if (ch === '{') {
+                    brCnt++;
+                }
+                if (ch == '}') {
+                    brCnt--;
+                    if (!brCnt) break;
+                }
+            }
+            if (!brCnt) break;
+        }
+
+        const slaScriptLine = dslLines.findIndex(l => l.match(/^\s*!script\s+process-sla.groovy/));
+        if (slaScriptLine < 0) {
+            result.push(scriptNotFoundComment());6
+        }
+        if (slaScriptLine > 0 && slaScriptLine < modelEndLine) {
+            result.push(scriptLineComment());
+        }
+
         return result;
     }
     async check() {
         const result = new WorkspaceCheckResult();
         result.cmdb = this.cmdb;
-        result.name = this.workspace?.name;
+        result.name = this.workspaceJson?.name;
         result.comments = await this.checkContainers();
         result.preview = result.comments.preview;
         delete result.comments.preview;
@@ -135,7 +170,9 @@ export class StructurizrService {
         this.repository = repository;
     }
     async getJsonCheckResult(workspaceId) {
-        const workspaceJson = await this.repository.getWorkspaceJson(workspaceId);
-        return (new WorkspaceValidator(workspaceJson)).check();
+        const [workspaceJson, workspaceDSL] = await Promise.all([
+            this.repository.getWorkspaceJson(workspaceId),
+            this.repository.getWorkspaceDSL(workspaceId)]);
+        return (new WorkspaceValidator(workspaceJson, workspaceDSL)).check();
     }
 }

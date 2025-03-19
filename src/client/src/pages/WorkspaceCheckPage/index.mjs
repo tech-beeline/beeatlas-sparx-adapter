@@ -1,12 +1,23 @@
 import { Button, Header, Progress } from "@beeline/design-system-react";
-import { Accordion, AccordionDetails, AccordionSummary, Box, Paper, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Box,
+    Paper,
+    TextField,
+    ToggleButton,
+    ToggleButtonGroup,
+    Typography
+} from "@mui/material";
+
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFetchJSON } from "../../utils/index.mjs";
 import { ExpandMore } from "@mui/icons-material";
 import { PreviewAccordion } from "./preview-accordion.mjs";
+import { SLATemplateAccordion } from "./sla-accorion.mjs";
 
-const COMMENT_REGEX = /^(?<header>.*)\n(?<body>(\n*.*)*)$/m
 
 /**
  * 
@@ -15,15 +26,13 @@ const COMMENT_REGEX = /^(?<header>.*)\n(?<body>(\n*.*)*)$/m
 function CommentCard({ errorComment }) {
 
     return <Accordion>
-        <AccordionSummary expandIcon={<ExpandMore />}><Typography color={errorComment.level == "error" ? "red" : "blue"}>{errorComment.summary}</Typography></AccordionSummary>
+        <AccordionSummary expandIcon={<ExpandMore />}><Typography color={errorComment.level === "error" ? "red" : "blue"}>{errorComment.summary}</Typography></AccordionSummary>
         <AccordionDetails><Box component={Paper}><pre dangerouslySetInnerHTML={{ __html: errorComment.details }}></pre></Box></AccordionDetails>
     </Accordion>
 }
 
 function CommentCategories({ comments }) {
-
     const [toggled, setToggled] = useState(["error", "warning"]);
-
 
     const handleChangeToggled = (e, newMultiple) => {
         setToggled(newMultiple);
@@ -44,9 +53,9 @@ function CommentCategories({ comments }) {
             <ToggleButton value="warning" size="small"><Typography color="blue">Предупреждения</Typography></ToggleButton>
         </ToggleButtonGroup>
         {Object.entries(categories).map(([key, val]) => <Accordion key={key}>
-            <AccordionSummary expandIcon={<ExpandMore />}><Typography fontWeight="fontWeightBold" color={val.find(c => c.level == "error") ? "red" : "blue"}>{key}</Typography></AccordionSummary>
+            <AccordionSummary expandIcon={<ExpandMore />}><Typography fontWeight="fontWeightBold" color={val.find(c => c.level === "error") ? "red" : "blue"}>{key}</Typography></AccordionSummary>
             <AccordionDetails>
-                {val.filter(c => toggled.find(v => v == c.level))
+                {val.filter(c => toggled.find(v => v === c.level))
                     .sort((a, b) => a.level.localeCompare(b.level))
                     .map((c, i) => <CommentCard key={i} errorComment={c} />)}
             </AccordionDetails>
@@ -56,16 +65,16 @@ function CommentCategories({ comments }) {
 
 export function WorkspaceCheckResultPage() {
     const { workspaceid } = useParams();
-    const { loading, data, error } = useFetchJSON(`/api/v4/structirizr/${workspaceid}/json-check`);
+    const { loading, data, error } = useFetchJSON(`/api/v4/structirizr/${workspaceid}/json-check`,
+        null,
+        [workspaceid]);
 
     const loadingBox = loading && <Box>
         <Header><Typography>Идет загрузка<Progress cycled={true} /></Typography>
-
         </Header>
     </Box>
     const errorBox = error && <Header><Typography color="red">Ошибка {JSON.stringify(error)}</Typography></Header>
 
-    console.log(data);
     const dataBox = data && <Box>
         <Header>[{data.cmdb}] {data.name} </Header>
 
@@ -75,7 +84,8 @@ export function WorkspaceCheckResultPage() {
                 <CommentCategories comments={data.comments} />
             </AccordionDetails>
         </Accordion>
-        <PreviewAccordion preview={data.preview}/>
+        <PreviewAccordion preview={data.preview} />
+        <SLATemplateAccordion preview={data.preview} />
     </Box>;
 
     return <Box>

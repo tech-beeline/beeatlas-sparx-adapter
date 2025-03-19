@@ -19,7 +19,7 @@ export default function CreateSystemDashboard({ system, setOpen }) {
         
         const response = await fetch(`/api/v3/monitoring/system/publish`, options);
         setInProgress(false);
-        if( response.status != 200){
+        if( response.status !== 200){
             setError( await response.text())
             return ;
         }

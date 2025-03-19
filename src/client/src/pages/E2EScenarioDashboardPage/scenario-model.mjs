@@ -180,7 +180,7 @@ export class Scenario {
 
                 const title = `${m.client_code}->${m.server_code}: ${m.name}${m.stereotype ? ` ${m.stereotype}` : ""}`
                 const interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction(Object.assign({ title: title, order: ++this.#interactionCount }, m)))
-                let exisiting = interaction.messages.find(i => i.ea_guid == m.ea_guid);
+                let exisiting = interaction.messages.find(i => i.ea_guid === m.ea_guid);
                 if (!exisiting) {
                     exisiting = Object.assign({ contexts: [] }, m)
                     interaction.messages.push(exisiting);
