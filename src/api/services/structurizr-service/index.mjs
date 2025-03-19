@@ -22,6 +22,7 @@ export class WorkspaceValidator {
         }
         return null;
     }
+
     async checkContainers() {
         let cmdb = this.workspace.model.properties?.workspace_cmdb;
         const result = [];
@@ -46,6 +47,7 @@ export class WorkspaceValidator {
             result.push(noSystemComment(cmdb));
             return result;
         }
+
 
         const systems = this.workspace.model.softwareSystems?.filter(s => s.properties?.cmdb === cmdb);
         if (!systems.length) {
@@ -75,7 +77,9 @@ export class WorkspaceValidator {
                         }
                     }
                 }
-                const apiCandidates = container.components?.filter(api => api.properties?.type != "api" && (api.properties?.api_url || api.properties?.external_name));
+                const apiCandidates = container.components?.filter(api => api.properties?.type != "api"
+                    && (api.properties?.api_url || api.properties?.external_name));
+
                 for (const condidate of apiCandidates ?? []) {
                     result.push(apiCandidateComment(system, container, condidate));
                 }

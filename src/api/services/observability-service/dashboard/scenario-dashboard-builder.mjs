@@ -17,7 +17,7 @@ export function formatQuery(template, uri, method) {
     const uri_regex = uriRegex(uri);
 
     let variables = {
-        URI_REQEX: uri_regex, "URI_REQEX:raw": uri_regex,
+        REGEX_URI: uri_regex, "REGEX_URI:raw": uri_regex,
         //uri: uri, 
         URI: uri,
         //method: method, 
