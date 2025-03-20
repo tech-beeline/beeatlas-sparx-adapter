@@ -4,7 +4,7 @@ import { API_METRIC_TEMPLATE_TAG } from "../../const.mjs";
 import { buildHREF } from "../../controllers/controller-decorator.mjs";
 import SystemApiMonitoring, { ContainerApiMonitoring } from "../../model/observability/system-api-monitoring.mjs";
 
-import System, { Container, E2EProcessContext, SysemAssessmentStatus } from "../../model/system.mjs";
+import System, { APIMethod, Container, E2EProcessContext, SysemAssessmentStatus } from "../../model/system.mjs";
 
 import {
     ArchMetricsRepository,
@@ -166,6 +166,39 @@ export class SystemService {
         }
     }
 
+
+    /**
+     * 
+     * @param {Container[]} containers 
+     */
+    prepareContainersMethods(containers) {
+        for (const container of containers) {
+            container.interfaces = container.interfaces ?? [];
+            for (const api of container.interfaces) {
+                api.methods = api.methods ?? [];
+                if (api.methods.length) {
+                    const methodsMap = {};
+                    for (const m of api.methods) {
+                        const matched = m.name.match(/^(?<method>(get)|(post)|(put)|(delete)|(patch))\s+(?<endpoint>.*)/i)
+                        if (matched) {
+                            m.name = `${matched.groups?.method.toUpperCase()} ${matched.groups?.endpoint.toLowerCase()}`
+                        }
+                        /**@type {APIMethod} */
+                        let method = methodsMap[m.name];
+                        if (method) {
+                            console.warn(`Обнаружен дубль метода ${m.name}`);
+                            Object.assign(method, m);
+                        }
+                        if (!method) {
+                            methodsMap[m.name] = m;
+                        }
+                    }
+                    api.methods = Object.values(methodsMap);
+                }
+            }
+        }
+    }
+
     /**
      * 
      * @param {string} systemCode 
@@ -181,6 +214,8 @@ export class SystemService {
         }
 
         const containers = system.containers ?? [];
+
+        this.prepareContainersMethods(containers);
 
         await systemsRepository.setSystemContainers(systemCode, containers);
 

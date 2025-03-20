@@ -37,4 +37,16 @@ suite("Обновление системы", () => {
         app_api_tc.modifiedDate = undefined;
         deepEqual(JSON.parse(JSON.stringify(app_api_tc)), SAMPLE);
     });
+
+    test("Система с containers==null или undefinded", async (t) => {
+        throw Error('TODO');
+    });
+
+    test("Система с interfaces==null или undefinded", async (t) => {
+        throw Error('TODO');
+    });
+
+    test("Слияние дублей методов", async (t) => {
+        throw Error('TODO');
+    });
 });

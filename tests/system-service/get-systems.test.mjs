@@ -169,3 +169,17 @@ suite("Позиционирование и участие в E2E", async () => {
         throw Error('Not implemented');
     });
 });
+
+suite("Результаты оценки приложения", async () => {
+    before(async () => {
+        updateEnv();
+    })
+
+    test("Получение для тестового приложения", async () => {
+        throw Error('TODO')
+    });
+
+    test("Получение для тестового приложения (код в нижнем регистре)", async () => {
+        throw Error('TODO')
+    });
+});

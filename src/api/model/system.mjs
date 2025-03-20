@@ -14,6 +14,7 @@ export class APIMethodParameter {
 }
 
 export class APIMethod {
+    /** @type {string} */
     name;
     returnType;
     desciption;

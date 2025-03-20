@@ -16,7 +16,7 @@ const METRIC_QUERIES = {
 	assessment_status,
 	result_details 
 FROM arch_metrics.system_assessment_result
-WHERE system_code=$1`,
+WHERE LOWER(system_code)=LOWER($1)`,
     UPSERT_SYSTEM_ASSESSMENT_RESULT: `INSERT INTO arch_metrics.system_assessment_result
     (
         fitness_fn_code,
