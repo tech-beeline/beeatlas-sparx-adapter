@@ -1,6 +1,6 @@
 import { BAD_REQUST_RESPONSE, GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, queryParameter, schemasRef, stringProperty } from "../helpers.mjs"
 import { INTERFACE_SCHEMA, METHOD_SCHEMA } from "../interfaces-service-spec.mjs";
-import { SYSTEM_API_MONITORING_RESOURCE, SYSTEM_ASSESSMENTS_RESOURCE, SYSTEM_E2E_RESOURCE, SYSTEM_LIST_RESOURCE, SYSTEM_PURPOSE_RESOURCE, SYSTEM_RESOURCE, SYSTEM_SEARCH_RESOURCE } from "../paths.mjs";
+import { SYSTEM_API_MONITORING_RESOURCE, SYSTEM_ASSESSMENTS_RESOURCE, SYSTEM_E2E_RESOURCE, SYSTEM_LIST_RESOURCE, SYSTEM_PROVIDED_API_RESOURCE_V4, SYSTEM_PURPOSE_RESOURCE, SYSTEM_RESOURCE, SYSTEM_SEARCH_RESOURCE } from "../paths.mjs";
 import { SYSTEM_ASSESSMENT_RESULT_SCHEMA, SYSTEM_MONITORING_RESULT_SCHEMA, SYSTEM_PURPOSE_SCHEMA } from "../../model/system.mjs";
 import { SystemsControllersInstance as systemsControllers } from "../../controllers/index.mjs";
 
@@ -140,8 +140,18 @@ const GET_OPERATION_LEVEL_SCHEMA = SWAGGER.defineEntitySchema("SystemQueryLevel"
 
 const POST_SYSTEM_API_MONITORING_SCHEMA_REF = SWAGGER.defineEntitySchema("SystemApiMetricTemplate", {
     type: "object",
-    properties : {
-        apiMetricTemplate : stringProperty("Ссылка на шаблон получения метрик для приложения")
+    properties: {
+        apiMetricTemplate: stringProperty("Ссылка на шаблон получения метрик для приложения")
+    }
+});
+
+
+const SYSTEM_PROVIDED_API_REF = SWAGGER.defineEntitySchema("SystemProvidedApi", {
+    type: "object",
+    properties: {
+        uid: stringProperty("UID интерфейса", { example: "{1E23CE52-8EC8-4074-B1E8-3DB5056E779F}" }),
+        name: stringProperty("Название интерфейса", { example: "Поиск сущности" }),
+        apiMetricTemplate : stringProperty("Ссылка на шаблон для настройки метрик", { example: "https://inside.beeline.ru/d/0NbLn3cNk/opensearch-ensemble-logstash-f4ac-waltz?orgId=1" }),
     }
 });
 //#endregion
@@ -187,7 +197,7 @@ SWAGGER
     .definePost(SYSTEM_ASSESSMENTS_RESOURCE, new JSONOperation(POST_SYSTEM_ASSESSMENT_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, systemsControllers.postSystemAssessment))
     .defineGet(SYSTEM_API_MONITORING_RESOURCE, new GetJSONOperation(GET_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_MONITORING_RESULT_SCHEMA_REF, systemsControllers.getApiMonitoring))
     .definePost(SYSTEM_API_MONITORING_RESOURCE, new JSONOperation(POST_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], POST_SYSTEM_API_MONITORING_SCHEMA_REF, SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, systemsControllers.postApiMonitoring))
-    ;
+    .defineGet(SYSTEM_PROVIDED_API_RESOURCE_V4, new GetJSONOperation(POST_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getProvidedApi));
 //#endregion
 
 export default SWAGGER;

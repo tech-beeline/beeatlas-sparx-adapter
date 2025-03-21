@@ -335,6 +335,28 @@ export class SystemService {
         const result = await systemsRepository.getSystemTag(systemCode, API_METRIC_TEMPLATE_TAG);
         return { systemCode: systemCode, apiMetricTemplate: result?.value };
     }
+
+    async getProvidedApi(systemCode) {
+        const [methods, { providedRows }] = await Promise.all([
+            systemsRepository.selectProvidedApi(systemCode),
+            monitoringRepository.selectApiSources(systemCode)
+        ]);
+        const apiMap = providedRows.reduce((map, s) => (map[s.ea_guid] = { ...s, methods: [] }, map), {})
+        for (const m of methods) {
+            const api = apiMap[m.ea_guid];
+            if (!api) throw Error('Hmmmm api not found?');
+            api.code = api.code??undefined;
+            api.api_metric_template = api.api_metric_template??undefined;
+            api.methods.push({
+                name: m.method_name,
+                description: m.method_description?? undefined,
+                rps: m.rps ?? undefined,
+                latency: m.latency ?? undefined,
+                error_rate: m.error_rate ?? undefined
+            });
+        }
+        return Object.values(apiMap);
+    }
 }
 
 export default new SystemService();

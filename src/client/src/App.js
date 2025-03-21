@@ -17,6 +17,7 @@ import "./css/e2e-scenario.css";
 import "./css/table.css";
 import { WorkspaceCheckResultPage } from "./pages/WorkspaceCheckPage/index.mjs";
 import { STRUCTURIZR_CHECK_RESULT } from "./const.mjs";
+import { SequencePage } from "./pages/SequencePage/index.mjs";
 
 function App() {
     return (
@@ -43,6 +44,10 @@ function App() {
                 <Route
                     path={STRUCTURIZR_CHECK_RESULT}
                     element={<WorkspaceCheckResultPage />}
+                />
+                <Route
+                    path="/sequence"
+                    element={<SequencePage />}
                 />
             </Routes>
         </Router>

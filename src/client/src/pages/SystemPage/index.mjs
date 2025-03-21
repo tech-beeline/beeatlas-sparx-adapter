@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { SystemContainers } from "./system-api.mjs";
+import { SystemContainers } from "./system-api/index.mjs";
 import CreateSystemDashboard from "./system-create-dashboard.mjs";
 import { MainBar } from "../../components/index.mjs";
 import { SystemCapabilitiesAccordion } from "./system-capabilities.mjs";

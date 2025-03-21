@@ -141,6 +141,15 @@ export class SystemsControllers {
         if (!request.body.apiMetricTemplate && request.body.apiMetricTemplate !== "") throw BadRequest(`apiMetricTemplate not specified`);
         response.json(await SystemServiceInstance.setAppMonitoringTemplate(request.params.code, request.body.apiMetricTemplate));
     }
+
+        /**
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
+    async getProvidedApi(request, response){
+        if (!request.params.code) throw BadRequest(`code is not specified`);
+        response.json(await SystemServiceInstance.getProvidedApi(request.params.code));
+    }
 }
 
 export default new SystemsControllers();

@@ -6,7 +6,7 @@ import {
 
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import { PREPARE_CONTAINERS_PACKAGE } from '../sql/system-container-sql.mjs';
-import { SELECT_SYSTEM_CAPABILITIES, SELECT_SYSTEM_PARTICIPITION, SELECT_SYSTEM_SUBPACKAGES } from './systems-queries.mjs';
+import { SELECT_PROVIDED_API, SELECT_SYSTEM_CAPABILITIES, SELECT_SYSTEM_PARTICIPITION, SELECT_SYSTEM_SUBPACKAGES } from './systems-queries.mjs';
 import { SELECT_SYSTEM_CONTAINERS, SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE } from './systems-containers-queries.mjs';
 import { SystemDTO, SystemDTOInternal } from './model.mjs';
 import { SparxRepositoryPackages as sparxOptions } from '../sparx-ea-repository/options.mjs';
@@ -243,5 +243,14 @@ export class SystemsRepository {
 	async selectSystemCapabilities(code) {
 		return Repository.queryRows(SELECT_SYSTEM_CAPABILITIES, [code]);
 	}
-	
+
+	/**
+	 * 
+	 * @param {string} systemCode 
+	 * @returns {Promise<Array<{name:string,code:string, ea_guid, object_id,method_name:string, method_uid:string,method_description,rps,latency,error_rate}>>}
+	 */
+	async selectProvidedApi(systemCode) {
+		return Repository.query(SELECT_PROVIDED_API, systemCode);
+	}
+
 }

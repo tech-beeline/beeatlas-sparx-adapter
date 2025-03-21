@@ -32,7 +32,7 @@ export function createControllerDecorator(controller, path, method) {
             await registerAPIRequestTelemetry(request, response, next, controller, path, method);
         } catch (error) {
             console.error(error)
-            return response.status(error.status ?? 500).json({ message: error.message })
+            return response.status(error.status ?? 500).json({ message: error.message, stack: error.stack })
         }
     }
 }

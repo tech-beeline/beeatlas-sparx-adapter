@@ -86,8 +86,6 @@ class E2EProcessService {
 
         }
 
-        //mergeCallInsideApplication( root.messages);
-
         return root.messages;
     }
 

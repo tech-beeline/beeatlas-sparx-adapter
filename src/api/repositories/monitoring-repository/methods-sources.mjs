@@ -160,7 +160,7 @@ export const SELECT_PROVIDED_API_SOURCES = `WITH RECURSIVE cte_src AS (
 	FROM t_object t 
 		JOIN t_objectproperties src ON src.object_id=t.object_id and src.property='api-metric-template'
 )
-SELECT 
+SELECT DISTINCT
 		api.name,
 		api.alias as code,
 		api.ea_guid,

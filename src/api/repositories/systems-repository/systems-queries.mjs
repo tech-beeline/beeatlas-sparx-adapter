@@ -182,3 +182,32 @@ SELECT *
 FROM cte_tree
 WHERE LOWER(sys_code)=LOWER($1)
 `;
+
+
+export const SELECT_PROVIDED_API = `WITH RECURSIVE cte_src AS (
+	SELECT
+		t.object_id as target_id,
+		src.value AS api_metric_template
+	FROM t_object t 
+		JOIN t_objectproperties src ON src.object_id=t.object_id and src.property='api-metric-template'
+)
+SELECT 
+		api.name,
+		api.alias as api_code,
+		api.ea_guid,
+		api.object_id,
+		m.name as method_name,
+		m.ea_guid as method_uid,
+		m.notes as method_description,
+		rps.value as rps,
+		latency.value as latency,
+		error_rate.value as error_rate
+	FROM t_object app
+		JOIN t_object pi ON pi.parentid=app.object_id
+		JOIN t_object api ON api.object_id=pi.classifier
+		JOIN t_operation m ON m.object_id=api.object_id
+		LEFT JOIN t_operationtag rps ON rps.elementid=m.operationid AND rps.property='rps'
+		LEFT JOIN t_operationtag latency ON latency.elementid=m.operationid AND latency.property='latency'
+		LEFT JOIN t_operationtag error_rate ON error_rate.elementid=m.operationid AND error_rate.property='error_rate'
+WHERE LOWER(app.alias)=LOWER($1)
+	AND app.stereotype='softwareSystem'`

@@ -40,9 +40,6 @@ import webeaLogo from "../../res/images/ea-icon.ico";
 
 
 function MessageDetails({ messageDetails }) {
-    const firstMethod = messageDetails.server_methods.find((t) => t);
-    const { message } = messageDetails;
-
     return (
         <Box>
             <Table>
@@ -80,23 +77,24 @@ function MessageDetails({ messageDetails }) {
 
 function ErrorDetails({ call, error, setOpen }) {
     const [messageDetails, setMessageDetails] = useState(null);
-    async function loadMessageDetails() {
-        console.log("!");
-        const response = await fetch(
-            `/api/v3/e2e/messages/${encodeURIComponent(call.ea_guid)}`
-        );
-        if (response.status !== 200) {
-            setMessageDetails({
-                error: `HTTP STATUS: ${response.status} ( ${response.statusText})`,
-                errorBody: await response.text(),
-            });
-            return;
-        }
-        setMessageDetails(await response.json());
-    }
     useEffect(() => {
+        async function loadMessageDetails() {
+            console.log("!");
+            const response = await fetch(
+                `/api/v3/e2e/messages/${encodeURIComponent(call.ea_guid)}`
+            );
+            if (response.status !== 200) {
+                setMessageDetails({
+                    error: `HTTP STATUS: ${response.status} ( ${response.statusText})`,
+                    errorBody: await response.text(),
+                });
+                return;
+            }
+            setMessageDetails(await response.json());
+        }
+
         loadMessageDetails();
-    }, []);
+    }, [call.ea_guid]);
     return (
         <Dialog open={true} onClose={() => setOpen(false)} maxWidth="true">
             <DialogTitle>Детальная информация о проблеме</DialogTitle>
@@ -156,12 +154,6 @@ function Errors({ call }) {
                     horizontal: "right",
                 }}
             >
-                {/*
-        <MenuItem onClick={() => {
-            setOpenDetails(true);
-            setAnchorMenu(null);
-        }}><Handyman />Детальная информация о проблеме</MenuItem>
-        */}
                 {openDetails ? (
                     <ErrorDetails
                         setOpen={setOpenDetails}
@@ -175,7 +167,7 @@ function Errors({ call }) {
                     target="_blank"
                     onClick={() => setAnchorMenu(null)}
                 >
-                    <img src={webeaLogo} width="25" />{" "}
+                    <img src={webeaLogo} width="25" alt="spx" />{" "}
                     <Typography variant="h8">
                         Открыть диаграмму в WebEA
                     </Typography>{" "}
@@ -219,7 +211,7 @@ function CallItem({ call }) {
         });
 
 
-    const callLabel = `${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name} ${call.name}, [protocol:${call.method?.protocol ?? "Не указан"}]`;
+    const callLabel = `${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name} ${call.name}`;
 
     return call.errors ? (
         <CallTreeItem
@@ -254,6 +246,7 @@ function CallItem({ call }) {
 }
 
 export function CallTraceSection({ callTree }) {
+
     return (
         <Accordion component={Paper}>
             <AccordionSummary component={Paper} expandIcon={<ExpandMore />}>
@@ -272,12 +265,11 @@ export function CallTraceSection({ callTree }) {
                         корректное заполнение
                     </Typography>
                     <Box component={Paper}>
-
                         <TreeView
                             defaultCollapseIcon={<KeyboardArrowUp />}
                             defaultExpandIcon={<KeyboardArrowDown />}
                         >
-                            {(callTree[0].children?.length === 0 ? callTree : callTree[0].children).map((it, i) => (
+                            {callTree.map((it, i) => (
                                 <CallItem key={i} call={it} />
                             ))}
                         </TreeView>
