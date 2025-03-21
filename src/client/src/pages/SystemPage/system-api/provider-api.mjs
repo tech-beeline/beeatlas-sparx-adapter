@@ -1,16 +1,85 @@
-import { Box, Collapse, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Alert, Box, Collapse, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useFetchJSON } from "../../../utils/index.mjs";
-import { Progress, TextField } from "@beeline/design-system-react";
+import { Progress, TextField, Tooltip } from "@beeline/design-system-react";
 import { useState } from "react";
 import { SystemMetricTemplateInput } from "../grafana-sources/system-metric-template.mjs";
-import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import { KeyboardArrowDown, KeyboardArrowUp, Save } from "@mui/icons-material";
+
+
+function MethodRow({ method }) {
+    const [rps, setRps] = useState(method.rps)
+    const [latency, setLatency] = useState(method.latency);
+    const [error_rate, setError_rate] = useState(method.error_rate);
+    const rpsError = rps && isNaN(+rps) && "Значение rps должно быть числом"
+    const latencyError = latency && isNaN(+latency) && "Значение latency задается в виде количества миллисекунд";
+    const errorRateError = error_rate && isNaN(+error_rate) && "Значение Error Rate должно быть числом (% ошибочных запросов)"
+
+    const canSave = (!errorRateError && !latencyError && !rpsError) && (rps !== method.rps || latency !== method.latency || error_rate !== method.error_rate);
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState();
+
+    const onSave = async () => {
+        setSaving(true);
+        try {
+            const response = await fetch(`/api/v4/methods-sla`, {
+                method: "POST",
+                body: JSON.stringify({
+                }),
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            });
+            if (response.status !== 200) {
+                throw Error(await response.text())
+            }
+        } catch (e) {
+            setSaveError(e.message);
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    return <TableRow hover>
+        <TableCell>{method.name}</TableCell>
+        <TableCell width={50}>
+            <TextField label="RPS"
+                disabled={saving}
+                defaultValue={method.rps}
+                error={rpsError}
+                helperText={rpsError}
+                onChange={(e) => setRps(e.target.value)} />
+        </TableCell>
+        <TableCell width={50}>
+            <TextField
+                label="Latency"
+                defaultValue={method.latency}
+                disabled={saving}
+                error={latencyError}
+                helperText={latencyError}
+                onChange={(e) => setLatency(e.target.value)} />
+        </TableCell>
+        <TableCell width={50}>
+            <TextField label="ErrorRate"
+                defaultValue={method.error_rate}
+                disabled={saving}
+                error={errorRateError}
+                helperText={errorRateError}
+                onChange={(e) => setError_rate(e.target.value)} />
+        </TableCell>
+        <TableCell width={30}>
+            {saving ? <Progress cycled shape="circle" size="mini" /> : <IconButton disabled={!canSave} onClick={onSave}>
+                <Save />
+            </IconButton>}
+        </TableCell>
+        <TableCell width={30}>
+            {saveError && <Tooltip title={`Ошибка при обновлении SLA: ${saveError}`}><Box> <Alert severity="error"></Alert></Box></Tooltip>}
+        </TableCell>
+    </TableRow>
+}
 
 function ApiRow({ api }) {
     const [open, setOpen] = useState(false);
     const [methodFilter, setMethodFilter] = useState();
-
-    console.log(methodFilter)
-
 
     return (<><TableRow hover>
         <TableCell >
@@ -30,18 +99,12 @@ function ApiRow({ api }) {
                                     console.log(e.target.value);
                                     setMethodFilter(e.target.value)
                                 }}></TextField></TableCell>
-                                <TableCell>Описание</TableCell>
-                                <TableCell>Значение порогов</TableCell>
+                                <TableCell colSpan={3}>Значение порогов</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {api.methods.filter(method => !methodFilter || method.name.toLowerCase().includes(methodFilter.toLowerCase()))
-                                .map((method ,i)=>
-                                    <TableRow key={i} hover>
-                                        <TableCell>{method.name}</TableCell>
-                                        <TableCell>{method.description}</TableCell>
-                                        <TableCell>sla</TableCell>
-                                    </TableRow>)}
+                                .map((method, i) => <MethodRow method={{ ...method, api_uid: api.ea_guid }} key={i} />)}
                         </TableBody>
                     </Table>
                 </Collapse>
