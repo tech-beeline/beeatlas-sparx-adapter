@@ -1,0 +1,1 @@
+export const METHOD_SLA_RESOURCE = "/api/v4/methods-sla"

@@ -3,6 +3,8 @@ import { INTERFACE_SCHEMA, METHOD_SCHEMA } from "../interfaces-service-spec.mjs"
 import { SYSTEM_API_MONITORING_RESOURCE, SYSTEM_ASSESSMENTS_RESOURCE, SYSTEM_E2E_RESOURCE, SYSTEM_LIST_RESOURCE, SYSTEM_PROVIDED_API_RESOURCE_V4, SYSTEM_PURPOSE_RESOURCE, SYSTEM_RESOURCE, SYSTEM_SEARCH_RESOURCE } from "../paths.mjs";
 import { SYSTEM_ASSESSMENT_RESULT_SCHEMA, SYSTEM_MONITORING_RESULT_SCHEMA, SYSTEM_PURPOSE_SCHEMA } from "../../model/system.mjs";
 import { SystemsControllersInstance as systemsControllers } from "../../controllers/index.mjs";
+import { METHOD_SLA_RESOURCE } from "./paths.mjs";
+import { METHOD_SLA_SCHEMA } from "./components/index.mjs";
 
 export const SYSTEM_SERVICE_NAME = "Управление информацией о системах"
 export const SYSTEM_SERVICE_DESCRIPTION = "Поиск, получение и изменение информации о системе"
@@ -17,6 +19,7 @@ const GET_SYSTEM_ASSESSMENT_SUMMARY = "Актуальная оценка сис�
 const GET_SYSTEM_MONITORING_SUMMARY = "Настройки наблюдаемости системы";
 const POST_SYSTEM_MONITORING_SUMMARY = "Изменение ссылки на шаблон для настройки метрик";
 const POST_SYSTEM_ASSESSMENT_SUMMARY = "Публикация результата оценки системы архитектурной фитнес-функцией";
+const POST_METHOD_SLA_SUMMARY = "Установка SLA для метода";
 
 
 
@@ -131,7 +134,7 @@ const SYSTEM_E2E_PARTICIPATION_SCHEMA = SWAGGER.defineEntitySchema("SystemE2EЗa
 const SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF = SWAGGER.defineEntitySchema("SystemAssessmentResult", SYSTEM_ASSESSMENT_RESULT_SCHEMA);
 
 const SYSTEM_MONITORING_RESULT_SCHEMA_REF = SWAGGER.defineEntitySchema("SystemMonitoringResult", SYSTEM_MONITORING_RESULT_SCHEMA)
-
+const METHOD_SLA_SCHEMA_REF = SWAGGER.defineEntitySchema("MethodSLA", METHOD_SLA_SCHEMA);
 
 const GET_OPERATION_LEVEL_SCHEMA = SWAGGER.defineEntitySchema("SystemQueryLevel", {
     type: "string",
@@ -197,7 +200,8 @@ SWAGGER
     .definePost(SYSTEM_ASSESSMENTS_RESOURCE, new JSONOperation(POST_SYSTEM_ASSESSMENT_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, systemsControllers.postSystemAssessment))
     .defineGet(SYSTEM_API_MONITORING_RESOURCE, new GetJSONOperation(GET_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_MONITORING_RESULT_SCHEMA_REF, systemsControllers.getApiMonitoring))
     .definePost(SYSTEM_API_MONITORING_RESOURCE, new JSONOperation(POST_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], POST_SYSTEM_API_MONITORING_SCHEMA_REF, SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, systemsControllers.postApiMonitoring))
-    .defineGet(SYSTEM_PROVIDED_API_RESOURCE_V4, new GetJSONOperation(POST_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getProvidedApi));
+    .defineGet(SYSTEM_PROVIDED_API_RESOURCE_V4, new GetJSONOperation(POST_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getProvidedApi))
+    .definePost(METHOD_SLA_RESOURCE, new JSONOperation(POST_METHOD_SLA_SUMMARY,[], METHOD_SLA_SCHEMA_REF, METHOD_SLA_SCHEMA_REF, systemsControllers.postMethodSLA))
 //#endregion
 
 export default SWAGGER;

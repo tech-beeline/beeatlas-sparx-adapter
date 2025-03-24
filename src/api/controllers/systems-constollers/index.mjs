@@ -6,6 +6,7 @@ import {
 
 import { BadRequest, NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import { logRequestDecorator } from '../log-request-decorator.mjs';
+import interfacesService from '../../services/interfaces-service/index.mjs';
 
 /**
  * 
@@ -142,13 +143,27 @@ export class SystemsControllers {
         response.json(await SystemServiceInstance.setAppMonitoringTemplate(request.params.code, request.body.apiMetricTemplate));
     }
 
-        /**
+    /**
     * @param {express.Request} request 
     * @param {express.Response} response 
     */
-    async getProvidedApi(request, response){
+    async getProvidedApi(request, response) {
         if (!request.params.code) throw BadRequest(`code is not specified`);
         response.json(await SystemServiceInstance.getProvidedApi(request.params.code));
+    }
+
+    /**
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
+    async postMethodSLA(request, response) {
+        const sla = request.body;
+        if( !sla.interface_code && !sla.interface_uid)
+            throw BadRequest("Должен быть задан код интерфейса (interface_code) или uid (interface_uid)");
+        if( !sla.method_name)
+            throw BadRequest("Должно быть задано имя метода (method_name)");
+        
+        response.json(await interfacesService.updateMethodSLA(sla));
     }
 }
 

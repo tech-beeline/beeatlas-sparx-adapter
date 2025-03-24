@@ -67,3 +67,20 @@ WHERE t_operation.object_id=cte_interface.object_id
 	AND t_operation.name=$2
 RETURNING t_operation.operationid`;
 
+export const SELECT_INTERFACE_METHOD = `SELECT
+	*
+FROM t_operation 
+WHERE object_id=$1
+	AND LOWER(name)=LOWER($2)
+`
+
+export const SELECT_METHOD_SLA = `SELECT
+	rps.value AS rps,
+	latency.value AS latency,
+	error_rate.value AS error_rate
+FROM t_operation o
+	LEFT JOIN t_operationtag rps ON rps.elementid=o.operationid AND rps.property='rps'
+	LEFT JOIN t_operationtag latency ON latency.elementid=o.operationid AND latency.property='latency'
+	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=o.operationid AND error_rate.property='error_rate'
+WHERE operationid=$1`;
+

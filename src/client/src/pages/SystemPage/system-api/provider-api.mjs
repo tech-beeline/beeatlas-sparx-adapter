@@ -7,6 +7,10 @@ import { KeyboardArrowDown, KeyboardArrowUp, Save } from "@mui/icons-material";
 
 
 function MethodRow({ method }) {
+    method.rps = method.rps ?? "";
+    method.latency = method.latency ?? "";
+    method.error_rate = method.error_rate ?? "";
+
     const [rps, setRps] = useState(method.rps)
     const [latency, setLatency] = useState(method.latency);
     const [error_rate, setError_rate] = useState(method.error_rate);
@@ -24,6 +28,11 @@ function MethodRow({ method }) {
             const response = await fetch(`/api/v4/methods-sla`, {
                 method: "POST",
                 body: JSON.stringify({
+                    interface_uid: method.api_uid,
+                    method_name: method.name,
+                    rps: rps,
+                    latency: latency,
+                    error_rate: error_rate
                 }),
                 headers: {
                     "Content-Type": "application/json",
@@ -32,6 +41,10 @@ function MethodRow({ method }) {
             if (response.status !== 200) {
                 throw Error(await response.text())
             }
+            const sla = await response.json();
+            method.rps = sla.rps ?? "";
+            method.latency = sla.latency ?? "";
+            method.error_rate = sla.error_rate ?? "";
         } catch (e) {
             setSaveError(e.message);
         } finally {
@@ -78,6 +91,8 @@ function MethodRow({ method }) {
 }
 
 function ApiRow({ api }) {
+    api.methods?.forEach((m, i) => m.key = i);
+
     const [open, setOpen] = useState(false);
     const [methodFilter, setMethodFilter] = useState();
 
@@ -96,7 +111,6 @@ function ApiRow({ api }) {
                         <TableHead>
                             <TableRow>
                                 <TableCell><TextField label="Метод" onChange={(e) => {
-                                    console.log(e.target.value);
                                     setMethodFilter(e.target.value)
                                 }}></TextField></TableCell>
                                 <TableCell colSpan={3}>Значение порогов</TableCell>
@@ -104,7 +118,7 @@ function ApiRow({ api }) {
                         </TableHead>
                         <TableBody>
                             {api.methods.filter(method => !methodFilter || method.name.toLowerCase().includes(methodFilter.toLowerCase()))
-                                .map((method, i) => <MethodRow method={{ ...method, api_uid: api.ea_guid }} key={i} />)}
+                                .map((method, i) => <MethodRow method={{ ...method, api_uid: api.ea_guid }} key={method.key} />)}
                         </TableBody>
                     </Table>
                 </Collapse>

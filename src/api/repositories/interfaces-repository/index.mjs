@@ -1,12 +1,13 @@
+import { getImpliedNodeFormatForFile } from 'typescript';
 import { NotImplemented } from '../../../utils/errors.mjs';
 import { TechnicalCapabilitiesRepository } from '../index.mjs';
-import Repository, { REALIZATION_CONNECTOR, t_connector, t_object, t_operationtag } from '../sparx-ea-repository/index.mjs';
+import Repository, { REALIZATION_CONNECTOR, t_connector, t_object, t_operation, t_operationtag } from '../sparx-ea-repository/index.mjs';
 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { DEFAULT_STATUS, REMOVED_STATUS } from '../systems-repository/const.mjs';
 import { API_SPECFICATION_TAG } from './const.mjs';
 import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_API_TC, SELECT_CONTAINER_INTERFACES } from './interfaces-queries.mjs';
-import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION } from './methods-queries.mjs';
+import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_INTERFACE_METHOD, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION, SELECT_METHOD_SLA } from './methods-queries.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
@@ -41,7 +42,12 @@ export class InterfacesRepository {
      */
     async selectInterfaceByCode(interfaceCode) {
         return Repository.first(t_object, { object_type: 'Interface', alias: interfaceCode })
-            .then(it => it ? { name: it.name, code: it.code, description: it.note, version: it.version } : null);
+            .then(it => it ? { name: it.name, code: it.code, description: it.note, version: it.version, object_id: it.object_id} : null);
+    }
+
+    async selectInterfaceByUID(interfaceUID) {
+        return Repository.first(t_object, { object_type: 'Interface', ea_guid: interfaceUID })
+            .then(it => it ? { name: it.name, code: it.code, description: it.note, version: it.version, object_id: it.object_id } : null);
     }
 
     async selectContainerInterfaces(containerCode) {
@@ -275,5 +281,27 @@ export class InterfacesRepository {
                 await this.insertMethod(interfaceCode, m.name, m.description, m.returnType, m.rpos, m.latency, m.error_rate);
             }
         }
+    }
+    /**
+     * 
+     * @param {{ interfaceCode, interfaceUID, methodName, rps, latency, error_rate }} sla
+     * @returns {Promise<{ interfaceCode, interfaceUID, methodName, rps, latency, error_rate }>}}
+     */
+    async updateMethodSLA({ interfaceCode, interfaceUID, methodName, rps, latency, error_rate } = {}) {
+        if (!interfaceCode && !interfaceUID)
+            throw Error("interface code and interface uid not specified");
+        console.warn( error_rate);
+
+        const api = interfaceUID ? (await this.selectInterfaceByUID(interfaceUID)) :
+            (await this.selectInterfaceByCode(getImpliedNodeFormatForFile));
+        if (!api)
+            throw Error("Interface not found");
+        const method = await Repository.queryOne(SELECT_INTERFACE_METHOD, [api.object_id, methodName]);
+        if (!method)
+            throw Error(`Method ${methodName} not found`);
+        await Repository.updateOperationTags(method.operationid, { rps: rps, latency: latency, error_rate: error_rate });
+        const sla = await Repository.queryOne(SELECT_METHOD_SLA, [method.operationid]);
+        console.warn( sla.error_rate)
+        return { ...sla, methodName: methodName, interfaceCode: interfaceCode, interfaceUID: interfaceUID };
     }
 }
