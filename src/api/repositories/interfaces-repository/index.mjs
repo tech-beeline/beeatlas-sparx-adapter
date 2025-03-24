@@ -290,7 +290,6 @@ export class InterfacesRepository {
     async updateMethodSLA({ interfaceCode, interfaceUID, methodName, rps, latency, error_rate } = {}) {
         if (!interfaceCode && !interfaceUID)
             throw Error("interface code and interface uid not specified");
-        console.warn( error_rate);
 
         const api = interfaceUID ? (await this.selectInterfaceByUID(interfaceUID)) :
             (await this.selectInterfaceByCode(getImpliedNodeFormatForFile));
@@ -301,7 +300,6 @@ export class InterfacesRepository {
             throw Error(`Method ${methodName} not found`);
         await Repository.updateOperationTags(method.operationid, { rps: rps, latency: latency, error_rate: error_rate });
         const sla = await Repository.queryOne(SELECT_METHOD_SLA, [method.operationid]);
-        console.warn( sla.error_rate)
         return { ...sla, methodName: methodName, interfaceCode: interfaceCode, interfaceUID: interfaceUID };
     }
 }
