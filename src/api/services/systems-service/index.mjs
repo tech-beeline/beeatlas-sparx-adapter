@@ -15,7 +15,6 @@ import {
 } from "../../repositories/index.mjs";
 
 import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../../specifications/paths.mjs";
-import interfacesService from "../interfaces-service/index.mjs";
 import { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL } from "./const.mjs";
 
 export { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL };
@@ -100,85 +99,24 @@ export class SystemService {
             .then(rows => rows.map(row => new Container(row)));
     }
 
-    /**
-     * 
-     * @param {string} systemCode 
-     * @param {Container} container
-     */
-    async addContainer(systemCode, container) {
-
-        const currentContainer = await systemsRepository.selectContainerByCode(container.code);
-        if (currentContainer) throw Error(`Container with code=${container.code} already exists`)
-
-        await systemsRepository.setContainer(
-            systemCode,
-            container.name,
-            container.code,
-            container.author,
-            container.version,
-            container.description);
-
-        for (const interfaceData of container.interfaces ?? []) {
-            await interfacesService.addInterface(interfaceData, container.code);
-        }
-    }
-    /**
-     * 
-     * @param {string} systemCode 
-     * @param {Array<{current:Container,target: Container}>} containers 
-     */
-    async updateContainer(systemCode, current, target) {
-        const isContainersEqual = (a, b) => a.name === b.name && a.version === b.version && a.description === b.description;
-
-        if (!isContainersEqual(current, target)) {
-            await systemsRepository.updateContainer(
-                target.name,
-                target.code,
-                target.author,
-                target.version,
-                target.description);
-        }
-
-        await patchArray(
-            target.interfaces ?? [],
-            await interfacesRepository.selectContainerInterfaces(target.code),
-            it => it.code,
-            (it) => interfacesService.addInterface(it, target.code),
-            (currentInterface, targetInterface) => interfacesService.updateInterface(currentInterface, targetInterface),
-            (it) => interfacesService.markInterfaceRemoved(it)
-        )
-    }
-    /**
-     * 
-     * @param {string} systemCode 
-     * @param {Container} container
-     */
-    async markContainerRemoved(systemCode, container) {
-        if (container.status === 'REMOVED') {
-            console.info(`Pass remove for removed container ${container.code}`);
-            return;
-        }
-
-        await systemsRepository.markContainerRemoved(container.name, container.code);
-        // [ ] -проработать вопрос пакетной маркировки интерфейсов как удаленными
-        for (const it of container.interfaces ?? []) {
-            await interfacesService.markInterfaceRemoved(it);
-        }
-    }
-
 
     /**
      * 
      * @param {Container[]} containers 
      */
     prepareContainersMethods(containers) {
-        for (const container of containers) {
-            container.interfaces = container.interfaces ?? [];
-            for (const api of container.interfaces) {
-                api.methods = api.methods ?? [];
-                if (api.methods.length) {
+        const preparedContainers = [];
+        for (const c of containers) {
+            const container = { ...c }
+            container.interfaces = [];
+            preparedContainers.push(container);
+            for (const it of c.interfaces ?? []) {
+                const api = { ...it };
+                container.interfaces.push(api);
+                api.methods = [];
+                if ((it.methods ?? []).length) {
                     const methodsMap = {};
-                    for (const m of api.methods) {
+                    for (const m of it.methods) {
                         const matched = m.name.match(/^(?<method>(get)|(post)|(put)|(delete)|(patch))\s+(?<endpoint>.*)/i)
                         if (matched) {
                             m.name = `${matched.groups?.method.toUpperCase()} ${matched.groups?.endpoint.toLowerCase()}`
@@ -190,13 +128,14 @@ export class SystemService {
                             Object.assign(method, m);
                         }
                         if (!method) {
-                            methodsMap[m.name] = m;
+                            methodsMap[m.name] = {...m};
                         }
                     }
                     api.methods = Object.values(methodsMap);
                 }
             }
         }
+        return preparedContainers;
     }
 
     /**
@@ -213,16 +152,14 @@ export class SystemService {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`);
         }
 
-        const containers = system.containers ?? [];
-
-        this.prepareContainersMethods(containers);
+        const containers = this.prepareContainersMethods(system.containers ?? []);
 
         await systemsRepository.setSystemContainers(systemCode, containers);
 
         console.info(`${systemCode} - Обновление информации об интерфейсах`);
 
         for (const container of containers) {
-            await interfacesRepository.setContainerInterfaces(container.code, container.interfaces)
+            await interfacesRepository.setContainerInterfaces(container, container.interfaces)
         }
 
         console.info(`${systemCode} - Обновление информации об интерфейсах завершено`);
@@ -345,11 +282,11 @@ export class SystemService {
         for (const m of methods) {
             const api = apiMap[m.ea_guid];
             if (!api) throw Error('Hmmmm api not found?');
-            api.code = api.code??undefined;
-            api.api_metric_template = api.api_metric_template??undefined;
+            api.code = api.code ?? undefined;
+            api.api_metric_template = api.api_metric_template ?? undefined;
             api.methods.push({
                 name: m.method_name,
-                description: m.method_description?? undefined,
+                description: m.method_description ?? undefined,
                 rps: m.rps ?? undefined,
                 latency: m.latency ?? undefined,
                 error_rate: m.error_rate ?? undefined

@@ -86,8 +86,8 @@ export class Container {
     code;
     version;
     tags;
-    description;
     status;
+    description;
     /**
      * @type {APIInterface[]}
      */

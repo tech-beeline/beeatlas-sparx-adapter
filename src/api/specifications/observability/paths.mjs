@@ -1,0 +1,1 @@
+export const PUBLISH_APPLICATION_RESOURCE = "/api/v4/observability/app/publish"

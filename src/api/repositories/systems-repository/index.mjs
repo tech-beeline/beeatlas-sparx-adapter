@@ -157,6 +157,8 @@ export class SystemsRepository {
 			if (!tc.status) tc.status = DEFAULT_STATUS;
 			const containerDiff = containersDiffMap[tc.code] ?? (containersDiffMap[tc.code] = {});
 			containerDiff.target = tc;
+			if( containerDiff.current) containerDiff.target.object_id = containerDiff.current.object_id;
+
 			containerDiff.needUpdate = containerDiff.current && !isContainersEqual(containerDiff.current, tc);
 		}
 
@@ -190,12 +192,14 @@ export class SystemsRepository {
 				diff.target.description,
 				diff.target.status
 			);
+			diff.target.object_id = container.object_id
 			newContainers.push(container);
 			console.info(`${systemCode} - добавлен контейнер `, container);
 		}
 
 		for (const diff of containersToUpdate) {
 			await this.updateContainer(
+				diff.current.object_id,
 				diff.target.name,
 				diff.target.code,
 				diff.target.author,
@@ -208,16 +212,12 @@ export class SystemsRepository {
 		console.log(`${systemCode} - Обновление контейнеров завершено`)
 	}
 
-	async updateContainer(name, code, author, version, description, status) {
+	async updateContainer(container_id, name, code, author, version, description, status) {
+		if( !container_id) throw Error('Contianer object_id is not specified');
+
 		return Repository.update(t_object,
 			{ name: name, author: author, version: version, note: description, status: status },
-			{ alias: code, stereotype: "C4_Container" });
-	}
-
-	async markContainerRemoved(name, code) {
-		return Repository.update(t_object,
-			{ name: `[REMOVED!]${name}`, status: "REMOVED" },
-			{ alias: code, stereotype: "C4_Container" });
+			{ object_id : container_id });
 	}
 
 	/**

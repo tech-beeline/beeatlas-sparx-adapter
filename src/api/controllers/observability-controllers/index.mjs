@@ -15,6 +15,17 @@ export class ObservabilityControllers {
         const result = await ObservabilityServiceInstance.publishScenarioDashboard(body.uid);
         response.json({ message: "Витрина сценария создана" });
     }
+
+    /**
+    * 
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
+    async publishApplicationDashboard(request, response) {
+        const options = request.body;
+        if (!options.systemCode) throw BadRequest(`systemCode is not specified`);
+        response.json(await ObservabilityServiceInstance.publishApplicationDashboard(options.systemCode));
+    }
 }
 
 export default new ObservabilityControllers();

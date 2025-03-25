@@ -1,7 +1,9 @@
 
 export const SELECT_ALL_METHODS = `SELECT 
 	it.alias as interface_code,
+	it.object_id as interface_id,
 	it.name as interface_name,
+	m.ea_guid as operation_guid,
 	m.name,
 	m.type as "returnType",
 	m.operationid,
@@ -19,11 +21,17 @@ WHERE it.object_type='Interface'
 `
 
 export const SELECT_INTERFACE_METHODS = `${SELECT_ALL_METHODS} AND LOWER(it.alias) = LOWER($1)`;
+export const SELECT_INTERFACE_METHODS_BY_ID = `${SELECT_ALL_METHODS} AND it.object_id = $1`;
 
 export const SELECT_METHOD_BY_NAME_INTERFACE_CODE = `SELECT o.* 
 FROM t_operation o
 	JOIN t_object api ON api.object_id=o.object_id
-WHERE api.alias=$1 AND o.name=$2`
+WHERE LOWER(api.alias)=LOWER($1) AND o.name=$2`
+
+
+export const SELECT_METHOD_BY_NAME_INTERFACE_ID = `SELECT o.* 
+FROM t_operation o
+WHERE o.object_id=$1 AND LOWER(o.name)=LOWER($2)`
 
 export const INSERT_INTERFACE_METHOD = `WITH cte_interface AS
 (
@@ -39,7 +47,8 @@ INSERT INTO t_operation(
 	isroot,
 	isleaf,
 	isquery,
-	pure
+	pure,
+	ea_guid
 )
 SELECT
 	object_id,
@@ -49,7 +58,8 @@ SELECT
 	0,
 	0,
 	0,
-	0
+	0,
+	UPPER('{' || gen_random_uuid() || '}')
 FROM cte_interface
 RETURNING operationid
 `;

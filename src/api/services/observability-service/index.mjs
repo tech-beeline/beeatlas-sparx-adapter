@@ -11,4 +11,8 @@ export class ObservabilityService {
     async getDashboards(){
         
     }
+
+    async publishApplicationDashboard(code) {
+        NotImplemented();
+    }
 }
