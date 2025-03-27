@@ -26,8 +26,6 @@ export function SystemSelect({ onSelect, system }) {
         return options.filter(o => o.label?.toLowerCase().includes(val) || o.code?.toLowerCase().includes(val));
     }
 
-
-
     useEffect(() => {
         const loadApplications = async () => {
             const response = await fetch(SYSTEM_RESOURCE)

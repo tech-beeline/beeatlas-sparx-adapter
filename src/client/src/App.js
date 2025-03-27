@@ -18,6 +18,7 @@ import "./css/table.css";
 import { WorkspaceCheckResultPage } from "./pages/WorkspaceCheckPage/index.mjs";
 import { STRUCTURIZR_CHECK_RESULT } from "./const.mjs";
 import { SequencePage } from "./pages/SequencePage/index.mjs";
+import { MethodDoublesPage } from "./pages/MethodDoublesPage/index.mjs";
 
 function App() {
     return (
@@ -48,6 +49,10 @@ function App() {
                 <Route
                     path="/sequence"
                     element={<SequencePage />}
+                />
+                <Route
+                    path="/maintenance/dbl"
+                    element={<MethodDoublesPage />}
                 />
             </Routes>
         </Router>

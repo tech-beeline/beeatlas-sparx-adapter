@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { TextField } from "@mui/material";
 import { Search as SearchIcon } from "@mui/icons-material";
 
@@ -51,7 +51,7 @@ import styles from "./Search.module.css";
 //     marginLeft: theme.spacing(1),
 // }));
 
-export function SearchBox({ setSearchText }) {
+export function SearchBox({ setSearchText, label }) {
     const inputRef = useRef("");
 
     const handleKeyDown = (e) => {
@@ -63,6 +63,7 @@ export function SearchBox({ setSearchText }) {
     return (
         <TextField
             placeholder="Search..."
+            label={label}
             className={styles.input}
             inputRef={inputRef}
             onKeyDown={handleKeyDown}
