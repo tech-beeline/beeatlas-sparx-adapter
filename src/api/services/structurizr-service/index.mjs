@@ -92,26 +92,28 @@ export class WorkspaceValidator {
                 }
                 // у контейнера есть API
                 if (apiList?.length) {
-                    if (!previewContainer) result.push(apiContainerWithoutCode(container, system));
-                    for (const api of apiList) {
-                        const previewApi = api.properties?.external_name && {
-                            name: api.name,
-                            code: `${api.properties.external_name}.${previewContainer.code}`,
-                            api_url: api.properties.api_url,
-                            identifier: api.properties["structurizr.dsl.identifier"],
-                            tc: api.properties.tc
-                        }
-                        if (previewApi) {
-                            previewContainer.interfaces.push(previewApi);
-                            if (!previewApi.api_url) {
-                                result.push(apiWithoutSpecification(system, container, api));
+                    if (!previewContainer)
+                        result.push(apiContainerWithoutCode(container, system));
+                    else
+                        for (const api of apiList) {
+                            const previewApi = api.properties?.external_name && {
+                                name: api.name,
+                                code: `${api.properties.external_name}.${previewContainer.code}`,
+                                api_url: api.properties.api_url,
+                                identifier: api.properties["structurizr.dsl.identifier"],
+                                tc: api.properties.tc
+                            }
+                            if (previewContainer && previewApi) {
+                                previewContainer.interfaces.push(previewApi);
+                                if (!previewApi.api_url) {
+                                    result.push(apiWithoutSpecification(system, container, api));
+                                }
+                            }
+
+                            if (!previewApi) {
+                                result.push(apiWithoutExternalName(system, container, api));
                             }
                         }
-
-                        if (!previewApi) {
-                            result.push(apiWithoutExternalName(system, container, api));
-                        }
-                    }
                 }
 
                 const apiCandidates = container.components?.filter(api => api.properties?.type != "api"
@@ -144,7 +146,7 @@ export class WorkspaceValidator {
 
         const slaScriptLine = dslLines.findIndex(l => l.match(/^\s*!script\s+process-sla.groovy/));
         if (slaScriptLine < 0) {
-            result.push(scriptNotFoundComment());6
+            result.push(scriptNotFoundComment()); 6
         }
         if (slaScriptLine > 0 && slaScriptLine < modelEndLine) {
             result.push(scriptLineComment());

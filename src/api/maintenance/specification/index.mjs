@@ -48,7 +48,6 @@ const METHOD_DOUBLES_REF = SWAGGER.defineEntitySchema("MethodDouble", {
     }
 })
 
-
 SWAGGER.defineGet("/api/v4/maintenance/methods-doubles", new GetJSONOperation("Получение дублей методов", [],
     METHOD_DOUBLES_REF, controller.getMethodsDoubles
 )).defineDelete("/api/v4/maintenance/methods-doubles/{uid}",
