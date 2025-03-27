@@ -28,8 +28,8 @@ WHERE LOWER(system_code)=LOWER($1)`,
     )
     VALUES
     (
-        $1,
-        $2,
+        UPPER($1),
+        LOWER($2),
         $3,
         $4,
         $5,
