@@ -1,4 +1,3 @@
-import { getImpliedNodeFormatForFile } from 'typescript';
 import { v4 as uuid } from 'uuid'
 import { NotImplemented } from '../../../utils/errors.mjs';
 import { TechnicalCapabilitiesRepository } from '../index.mjs';
@@ -6,7 +5,7 @@ import Repository, { REALIZATION_CONNECTOR, t_connector, t_object, t_operation, 
 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { DEFAULT_STATUS, REMOVED_STATUS } from '../systems-repository/const.mjs';
-import { API_SPECFICATION_TAG } from './const.mjs';
+import { API_LOAD_DATE_TAG, API_SPECFICATION_TAG } from './const.mjs';
 import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_API_TC, SELECT_CONTAINER_INTERFACES, SELECT_CONTAINER_INTERFACES_BY_ID } from './interfaces-queries.mjs';
 import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_INTERFACE_METHOD, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION, SELECT_METHOD_SLA, SELECT_INTERFACE_METHODS_BY_ID, SELECT_METHOD_BY_NAME_INTERFACE_ID } from './methods-queries.mjs';
 
@@ -107,9 +106,8 @@ export class InterfacesRepository {
             backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
         });
 
-        if (specification) {
-            await Repository.updateObjectTags(it.object_id, { [API_SPECFICATION_TAG]: specification }, [API_SPECFICATION_TAG]);
-        }
+        await Repository.updateObjectTags(it.object_id, { [API_SPECFICATION_TAG]: specification, [API_LOAD_DATE_TAG]: Date() }, [API_SPECFICATION_TAG, API_LOAD_DATE_TAG]);
+
         if (tcCode) {
             const targetTcList = await tcRepository.selectTCByCode(tcCode);
             if (!targetTcList.length) throw Error(`TC with code=${tcCode} not found`);
@@ -134,13 +132,16 @@ export class InterfacesRepository {
                 status: status
             },
             { alias: code, object_type: 'Interface' });
+
         for (const it of updated) {
-            await Repository.updateObjectTags(it.object_id, { [API_SPECFICATION_TAG]: specification }, [API_SPECFICATION_TAG]);
+            await Repository.updateObjectTags(it.object_id, { [API_SPECFICATION_TAG]: specification, [API_LOAD_DATE_TAG]: Date() }, [API_SPECFICATION_TAG, API_LOAD_DATE_TAG]);
+            
             /** @type {{ code:string, name:string, object_id }[]} */
             const currentImplementation = await Repository.query(SELECT_API_TC, it.object_id);
             for (const tc of currentImplementation.filter(tc => tc.code.toLowerCase() != tcCode?.toLowerCase())) {
                 await Repository.delete(t_connector, { start_object_id: it.object_id, end_object_id: tc.object_id, connector_type: REALIZATION_CONNECTOR });
             }
+
             if (tcCode) {
                 const targetTcList = await tcRepository.selectTCByCode(tcCode);
                 if (!targetTcList.length) throw Error(`TC with code=${tcCode} not found`);

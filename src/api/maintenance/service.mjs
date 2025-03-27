@@ -1,5 +1,6 @@
-import { NotImplemented } from "../../utils/errors.mjs";
+import { NotFound, NotImplemented } from "../../utils/errors.mjs";
 import eaRepository from "../repositories/sparx-ea-repository/ea-repository.mjs";
+import { t_operation } from "../repositories/sparx-ea-repository/index.mjs";
 import { DoublesInterface } from "./model.mjs";
 import { SELECT_METHOD_DOUBLES } from "./query.mjs";
 
@@ -14,5 +15,11 @@ export class MaintenanceService {
             api.addMethodDouble(row.operation_guid, row.method, row.rps, row.latency, row.error_rate, row.diagram, row.diagram_uid, row.removed_date, row.parameters);
         }
         return Object.values(doubles);
+    }
+    
+    async deleteMethodDialogByUID(methodUID){
+        const method = await eaRepository.first( t_operation, { ea_guid: methodUID});
+        if( !method) throw NotFound(`Метод с uid="${methodUID}" не найден`);
+        NotImplemented();
     }
 }

@@ -13,6 +13,7 @@ import {
     PtrArtifactsRepository,
     SystemsRepository
 } from "../../repositories/index.mjs";
+import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
 
 import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../../specifications/paths.mjs";
 import { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL } from "./const.mjs";
@@ -128,7 +129,7 @@ export class SystemService {
                             Object.assign(method, m);
                         }
                         if (!method) {
-                            methodsMap[m.name] = {...m};
+                            methodsMap[m.name] = { ...m };
                         }
                     }
                     api.methods = Object.values(methodsMap);
@@ -152,19 +153,21 @@ export class SystemService {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`);
         }
 
-        const containers = this.prepareContainersMethods(system.containers ?? []);
+        return eaRepository.transactionScope(async () => {
+            const containers = this.prepareContainersMethods(system.containers ?? []);
 
-        await systemsRepository.setSystemContainers(systemCode, containers);
+            await systemsRepository.setSystemContainers(systemCode, containers);
 
-        console.info(`${systemCode} - Обновление информации об интерфейсах`);
+            console.info(`${systemCode} - Обновление информации об интерфейсах`);
 
-        for (const container of containers) {
-            await interfacesRepository.setContainerInterfaces(container, container.interfaces)
-        }
+            for (const container of containers) {
+                await interfacesRepository.setContainerInterfaces(container, container.interfaces)
+            }
 
-        console.info(`${systemCode} - Обновление информации об интерфейсах завершено`);
+            console.info(`${systemCode} - Обновление информации об интерфейсах завершено`);
 
-        return this.getByCode(systemCode, { level: "methods" });
+            return this.getByCode(systemCode, { level: "methods" });
+        })
     }
 
     async getPurpose(systemCode) {

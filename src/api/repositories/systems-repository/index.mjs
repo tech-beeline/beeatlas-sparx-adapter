@@ -192,7 +192,7 @@ export class SystemsRepository {
 				diff.target.description,
 				diff.target.status
 			);
-			diff.target.object_id = container.object_id
+			diff.target.object_id = container.container_id;
 			newContainers.push(container);
 			console.info(`${systemCode} - добавлен контейнер `, container);
 		}

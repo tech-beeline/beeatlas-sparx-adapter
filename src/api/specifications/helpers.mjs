@@ -140,13 +140,13 @@ export class GetJSONOperation extends JSONOperation {
     }
 }
 
-export function pathParameter(name, description, examaple) {
+export function pathParameter(name, description, example) {
     return {
         name: name,
         in: "path",
         description: description,
         required: true,
-        example: examaple
+        example: example
     }
 }
 

@@ -17,7 +17,7 @@ import { createControllerDecorator } from '../controllers/controller-decorator.m
 import scenariosServiceSpec from './scenarios-service-spec/index.mjs';
 import observabilityServiceSpec from './observability/index.mjs';
 import { STRUCTURIZR_JSON_CHECK_SPEC } from './structurizr/check-dsl-spec.mjs';
-import maintenanceSpec from '../maintenance/specification.mjs'
+import maintenanceSpec from '../maintenance/specification/index.mjs'
 
 
 const SUMMARY_TITLE = "Полное API управления архитектурными артефактами и представлениями"
