@@ -157,6 +157,7 @@ export class InterfacesRepository {
         return Repository.update(t_object, { name: name, status: 'REMOVED' }, { alias: code, object_type: 'Interface' });
     }
 
+
     async insertMethod({ object_id }, name, description, returnType, rps, latency, error_rate) {
         const existingMethod = await Repository.queryOne(SELECT_METHOD_BY_NAME_INTERFACE_ID, [object_id, name]);
         if (existingMethod) {
@@ -320,5 +321,9 @@ export class InterfacesRepository {
         await Repository.updateOperationTags(method.operationid, { rps: rps, latency: latency, error_rate: error_rate });
         const sla = await Repository.queryOne(SELECT_METHOD_SLA, [method.operationid]);
         return { ...sla, methodName: methodName, interfaceCode: interfaceCode, interfaceUID: interfaceUID };
+    }
+
+    async deleteContainerInterfaces(container_id ){
+        NotImplemented();
     }
 }

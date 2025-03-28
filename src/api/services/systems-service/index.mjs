@@ -1,10 +1,17 @@
-import { BadRequest, NotImplemented } from "../../../utils/errors.mjs";
-import patchArray from "../../../utils/patch-array.mjs";
+import {
+    BadRequest,
+    NotImplemented
+} from "../../../utils/errors.mjs";
 import { API_METRIC_TEMPLATE_TAG } from "../../const.mjs";
 import { buildHREF } from "../../controllers/controller-decorator.mjs";
 import SystemApiMonitoring, { ContainerApiMonitoring } from "../../model/observability/system-api-monitoring.mjs";
 
-import System, { APIMethod, Container, E2EProcessContext, SysemAssessmentStatus } from "../../model/system.mjs";
+import System, {
+    APIMethod,
+    Container,
+    E2EProcessContext,
+    SysemAssessmentStatus
+} from "../../model/system.mjs";
 
 import {
     ArchMetricsRepository,
@@ -14,9 +21,16 @@ import {
     SystemsRepository
 } from "../../repositories/index.mjs";
 import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
-
-import { CAPABILITY_LIST_RESOURCE, TC_LIST_RESOURCE } from "../../specifications/paths.mjs";
-import { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL } from "./const.mjs";
+import {
+    CAPABILITY_LIST_RESOURCE,
+    TC_LIST_RESOURCE
+} from "../../specifications/paths.mjs";
+import {
+    CONTAINERS_LEVEL,
+    INTERFACES_LEVEL,
+    METHODS_LEVEL,
+    SYSTEM_LEVEL
+} from "./const.mjs";
 
 export { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL };
 
@@ -30,7 +44,6 @@ const STEREOTYPE_MAP = {
     Package: "Domain",
     Domain: "Domain"
 }
-
 
 const interfacesRepository = new InterfacesRepository();
 const systemsRepository = new SystemsRepository();

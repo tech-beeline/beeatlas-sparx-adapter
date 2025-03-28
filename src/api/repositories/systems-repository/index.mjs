@@ -13,6 +13,7 @@ import { SparxRepositoryPackages as sparxOptions } from '../sparx-ea-repository/
 import { CONTAINER_STEREOTYPE, CONTAINERS_SUBPACKAGE_NAME, DEFAULT_STATUS, INTERFACES_SUBPACKAGE_NAME, REMOVED_STATUS, SYSTEM_SUBPACKAGES as SYSTEM_SUBPACKAGES_NAMES } from './const.mjs';
 import { SELECT_SYSTEMS, SELECT_SYSTEM_BY_CODE } from './queries/index.mjs';
 import { SELECT_SYSTEM_PACKAGES } from './queries/select-systems.mjs';
+import { SELECT_SYSTEM_CONTAINER_BY_CODE } from './queries/select-containers.mjs';
 
 
 const Repository = new SparxRepository();
@@ -93,10 +94,22 @@ export class SystemsRepository {
 	/**
 	 * 
 	 * @param {string} systemCode 
-	 * @returns {Promise<Array<{sys_code, sys_name, code, name, description,version, status}>>}
+	 * @returns {Promise<Array<{sys_code, sys_name, code:string, name, description,version, status}>>}
 	 */
 	async selectSystemContainers(systemCode) {
 		return Repository.queryRows(SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE, [systemCode])
+	}
+
+	/**
+	 * 
+	 * @param {string} systemCode 
+	 * @param {string} containerCode 
+	 * @returns {Promise<{ container_id, code:string}>}>}
+	 */
+	async selectSystemContainerByCode(systemCode, containerCode) {
+		const rows = await Repository.query(SELECT_SYSTEM_CONTAINER_BY_CODE, systemCode, containerCode);
+		if (rows.length > 1) throw Error(`Найдено несколько контейнеров с кодом ${containerCode} для системы ${systemCode}`);
+		return rows.length && rows[0];
 	}
 
 	async selectContainerByCode(containerCode) {
@@ -157,7 +170,7 @@ export class SystemsRepository {
 			if (!tc.status) tc.status = DEFAULT_STATUS;
 			const containerDiff = containersDiffMap[tc.code] ?? (containersDiffMap[tc.code] = {});
 			containerDiff.target = tc;
-			if( containerDiff.current) containerDiff.target.object_id = containerDiff.current.object_id;
+			if (containerDiff.current) containerDiff.target.object_id = containerDiff.current.object_id;
 
 			containerDiff.needUpdate = containerDiff.current && !isContainersEqual(containerDiff.current, tc);
 		}
@@ -213,11 +226,11 @@ export class SystemsRepository {
 	}
 
 	async updateContainer(container_id, name, code, author, version, description, status) {
-		if( !container_id) throw Error('Contianer object_id is not specified');
+		if (!container_id) throw Error('Contianer object_id is not specified');
 
 		return Repository.update(t_object,
 			{ name: name, author: author, version: version, note: description, status: status },
-			{ object_id : container_id });
+			{ object_id: container_id });
 	}
 
 	/**

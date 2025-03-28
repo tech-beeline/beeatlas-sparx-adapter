@@ -83,6 +83,7 @@ export class APIInterface {
 }
 export class Container {
     name;
+    /** @type {string} */
     code;
     version;
     tags;

@@ -23,7 +23,7 @@ import { REMOVE_CONNECTOR_TXREF_BY_START_END_STEREOTYPE } from './ea-queries/rem
 import { NotImplemented } from '../../../utils/errors.mjs';
 
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { DELETE_OBJECT } from './ea-queries/delete/index.mjs';
+import { DELETE_OBJECT, SELECT_OBJECT_RELATIONS } from './ea-queries/delete/index.mjs';
 
 const transactionClient = new AsyncLocalStorage();
 
@@ -292,7 +292,7 @@ export class SparxRepository {
         return this.transactionScope(async () => {
             const xref = this.#processStereotype(obj);
             await this.#prepareObjectAlias(obj);
-            
+
             obj.createddate = new Date();
             obj.modifieddate = new Date();
 
@@ -612,7 +612,7 @@ export class SparxRepository {
      * @param {string[]} tags 
      */
     async updateObjectTags(object_id, obj, tags) {
-        if( !object_id) throw Error('object_id is not specified');
+        if (!object_id) throw Error('object_id is not specified');
         /**
          * @type {t_objectproperties[]}
          */
@@ -787,6 +787,15 @@ export class SparxRepository {
             }
             await this.query(`DELETE FROM t_package WHERE package_id=$1`, package_id);
         });
+    }
+    async canDeleteObject(object_id) {
+        const relations = await this.queryOne(SELECT_OBJECT_RELATIONS, [object_id]);
+        if (!relations) throw Error(`Не найден элемент с object_id=${object_id}`);
+        for (const f in relations) {
+            if( f!=='object_id' && relations[f]!=0)
+                return false;
+        }
+        return true;
     }
 }
 
