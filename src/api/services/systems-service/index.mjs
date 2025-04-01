@@ -31,12 +31,14 @@ import {
     METHODS_LEVEL,
     SYSTEM_LEVEL
 } from "./const.mjs";
+import { diffContainers } from "./containers/diff.mjs";
 
 export { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL };
 
 import GetAllSystems from "./get-all-systems.mjs";
 import GetSystemByCode from "./get-system-by-code.mjs";
-
+import { SystemContainerService } from './containers/index.mjs'
+import { runSystemContext } from "../../repositories/systems-repository/system-package.mjs";
 
 const STEREOTYPE_MAP = {
     ArchiMate_TechnicalCapability: "TechnicalCapability",
@@ -49,6 +51,13 @@ const interfacesRepository = new InterfacesRepository();
 const systemsRepository = new SystemsRepository();
 const ptrArtifactsRepositoryInstance = new PtrArtifactsRepository();
 const monitoringRepository = new MonitoringRepository();
+
+/**
+ * 
+ * @param {Container} a 
+ * @param {Container} b 
+ */
+const isContainersEquals = (a, b) => a.name === b.name && a.status === b.status && a.version === b.version
 
 export class SystemService {
     constructor() {
@@ -104,8 +113,6 @@ export class SystemService {
                 return GetSystemByCode.withMethods(code, addRemoved);
             }
         }
-
-        NotImplemented();
     }
 
     async getSystemContainers(systemCode) {
@@ -166,21 +173,31 @@ export class SystemService {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`);
         }
 
-        return eaRepository.transactionScope(async () => {
-            const containers = this.prepareContainersMethods(system.containers ?? []);
+        const containers = this.prepareContainersMethods(system.containers ?? []);
 
-            await systemsRepository.setSystemContainers(systemCode, containers);
+        await runSystemContext(systemCode, async () =>
+            eaRepository.transactionScope(async () => {
+                const [newContainers, outdateContainers, existingContainers] = diffContainers(await systemsRepository.selectSystemContainers(systemCode), containers);
 
-            console.info(`${systemCode} - Обновление информации об интерфейсах`);
+                const containerService = new SystemContainerService();
 
-            for (const container of containers) {
-                await interfacesRepository.setContainerInterfaces(container, container.interfaces)
-            }
+                for (const c of newContainers) {
+                    await systemsRepository.addSystemContainer(systemCode, c);
+                }
 
-            console.info(`${systemCode} - Обновление информации об интерфейсах завершено`);
+                for (const c of outdateContainers) {
+                    await systemsRepository.deleteSystemContainer(systemCode, c);
+                }
 
-            return this.getByCode(systemCode, { level: "methods" });
-        })
+                for (const diff of existingContainers) {
+                    if (!isContainersEquals(diff.exists, diff.target)) {
+                        await systemsRepository.updateContainer(diff.exists.container_id, diff.target.name, diff.target.code,
+                            "FDM API", diff.target.version, diff.target.description, diff.target.status);
+                    }
+                    await interfacesRepository.updateContainerInterfaces(systemCode, diff.exists.container_id, diff.target.interfaces);
+                }
+            }));
+        return this.getByCode(systemCode, { level: "methods" });
     }
 
     async getPurpose(systemCode) {

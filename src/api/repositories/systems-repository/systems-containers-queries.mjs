@@ -9,7 +9,8 @@ export const SELECT_SYSTEM_CONTAINERS = `WITH ${CTE_REALIZATION}
         cn.note as description,
         cn.version,
         cn.status,
-        cn.object_id
+        cn.object_id,
+        cn.object_id as container_id
     FROM t_object sys
         JOIN cte_realization cn ON cn.start_object_id=sys.object_id AND cn.stereotype='C4_Container'
     WHERE sys.object_type='Component'`;

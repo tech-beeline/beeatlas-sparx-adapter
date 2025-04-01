@@ -16,6 +16,7 @@ SELECT
 	it.version,
 	it.status,
 	it.object_id,
+	it.object_id as interface_id,
 	spec.value as specification,
 	(SELECT	tc.alias
 			FROM t_connector r 

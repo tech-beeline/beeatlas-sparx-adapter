@@ -4,6 +4,7 @@ export const SELECT_ALL_METHODS = `SELECT
 	it.object_id as interface_id,
 	it.name as interface_name,
 	m.ea_guid as operation_guid,
+	m.notes as description,
 	m.name,
 	m.type as "returnType",
 	m.operationid,
@@ -94,3 +95,11 @@ FROM t_operation o
 	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=o.operationid AND error_rate.property='error_rate'
 WHERE operationid=$1`;
 
+export const CHECK_METHOD_USAGE = `SELECT
+ 1
+FROM t_operation m
+	JOIN t_connectortag og ON og.value=m.ea_guid AND og.property='operation_guid'
+	JOIN t_connector c ON c.connector_id=og.elementid
+	JOIN t_diagram d ON d.diagram_id=c.diagramid
+WHERE m.operationid=$1
+LIMIT 1`;

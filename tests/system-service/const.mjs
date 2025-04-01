@@ -235,11 +235,12 @@ export const CMDB_A_METHODS_SAMPLE = {
                     specification: "/swagger/searcj.json",
                     methods: [
                         {
-                            "error_rate": "1",
-                            "latency": "500",
-                            "name": "GET /api/entities",
-                            "parameters": [],
-                            "tags": {},
+                            error_rate: "1",
+                            latency: "500",
+                            rps: "10",
+                            name: "GET /api/entities",
+                            parameters: [],
+                            tags: {},
                         },
                         {
                             "name": "POST /api/entities",

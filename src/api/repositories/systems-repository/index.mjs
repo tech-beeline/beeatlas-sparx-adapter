@@ -1,4 +1,5 @@
 import {
+	REALIZATION_CONNECTOR,
 	SparxRepository,
 	t_object,
 	t_objectproperties
@@ -14,16 +15,30 @@ import { CONTAINER_STEREOTYPE, CONTAINERS_SUBPACKAGE_NAME, DEFAULT_STATUS, INTER
 import { SELECT_SYSTEMS, SELECT_SYSTEM_BY_CODE } from './queries/index.mjs';
 import { SELECT_SYSTEM_PACKAGES } from './queries/select-systems.mjs';
 import { SELECT_SYSTEM_CONTAINER_BY_CODE } from './queries/select-containers.mjs';
+import { systemContext, SystemPackage } from './system-package.mjs';
+import { Container } from '../../model/system.mjs';
+import { InterfacesRepository } from '../index.mjs';
+import { API_LOAD_DATE_TAG } from '../interfaces-repository/const.mjs';
 
 
 const Repository = new SparxRepository();
 
 const isContainersEqual = (a, b) => a.name === b.name && a.description === b.description && a.status === b.status && a.version === b.version;
 
+
 /**
  * Учет систем
  */
 export class SystemsRepository {
+	/** @type {SystemPackage} */
+	packagesOptions;
+	/** @type {InterfacesRepository} */
+	interfaceRepository;
+
+	constructor(packagesOptions, interfaceRepository) {
+		this.packagesOptions = packagesOptions ?? (new SystemPackage());
+		this.interfaceRepository = interfaceRepository ?? (new InterfacesRepository());
+	}
 	/**
 	 * Получение информации о системам
 	 * @returns {Promise<Array<SystemDTO>>}
@@ -94,9 +109,11 @@ export class SystemsRepository {
 	/**
 	 * 
 	 * @param {string} systemCode 
-	 * @returns {Promise<Array<{sys_code, sys_name, code:string, name, description,version, status}>>}
+	 * @returns {Promise<Array<{container_id, sys_code, sys_name, code:string, name, description,version, status}>>}
 	 */
 	async selectSystemContainers(systemCode) {
+		if (!systemCode) throw "systemCode==null";
+
 		return Repository.queryRows(SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE, [systemCode])
 	}
 
@@ -140,9 +157,12 @@ export class SystemsRepository {
 		return Repository.queryOne(PREPARE_CONTAINERS_PACKAGE, [CONTAINERS_SUBPACKAGE_NAME, systemCode]);
 	}
 
-	async #insertContainer(system_id, containerPackageId, name, code, author, version, description, status) {
+	async #insertContainer(system_id, container_package_id, name, code, author, version, description, status) {
+		if (!system_id) throw Error("system_id==null");
+		if (!container_package_id) throw Error("container_package_id==null");
+
 		const container = await Repository.createObject({
-			package_id: containerPackageId,
+			package_id: container_package_id,
 			name: name,
 			object_type: "Component",
 			author: author,
@@ -228,6 +248,8 @@ export class SystemsRepository {
 	async updateContainer(container_id, name, code, author, version, description, status) {
 		if (!container_id) throw Error('Contianer object_id is not specified');
 
+		await Repository.updateObjectTags( container_id, { API_LOAD_DATE_TAG: new Date()});
+
 		return Repository.update(t_object,
 			{ name: name, author: author, version: version, note: description, status: status },
 			{ object_id: container_id });
@@ -266,4 +288,49 @@ export class SystemsRepository {
 		return Repository.query(SELECT_PROVIDED_API, systemCode);
 	}
 
+	async deleteSystemContainer(systemCode, { code: containerCode, container_id }) {
+		return Repository.transactionScope(async () => {
+			if (!systemCode) throw Error("systemCode==null");
+			if (!containerCode) throw Error("containerCode==null");
+
+			if (!container_id) {
+				const container = await this.selectSystemContainerByCode(systemCode, containerCode);
+				if (!container) throw Error(`Контейнер не найден (systemCode=${systemCode}, containerCode=${containerCode})`);
+				container_id = container.container_id;
+			}
+			await this.interfaceRepository.deleteContainerInterfaces(container_id);
+			/** @type {{system_id, package_id, containers_package_id, interfaces_package_id, root_id}} */
+			const context = systemContext.getStore()??(await (new SystemPackage()).prepareSystemPackage());
+
+			await Repository.removeConnectors( context.system_id, container_id, REALIZATION_CONNECTOR);
+
+			const canDelete = await Repository.canDeleteObject(container_id);
+			if (canDelete) {
+				return Repository.deleteObject(container_id);
+			}
+			await Repository.update(t_object, { status: REMOVED_STATUS }, { object_id: container_id });
+			return Repository.updateObjectTags(container_id, { [API_LOAD_DATE_TAG]: new Date() });
+		});
+	}
+
+	/**
+	 * 
+	 * @param {*} systemCode 
+	 * @param {Container} container 
+	 */
+	async addSystemContainer(systemCode, container) {
+		const systemOption = await this.packagesOptions.prepareSystemPackage(systemCode);
+
+		return Repository.transactionScope(async () => {
+			const c = await this.#insertContainer(systemOption.system_id,
+				systemOption.containers_package_id,
+				container.name, container.code, "FDM API", container.version, container.description, container.status ?? "Proposed"
+			)
+			container.container_id = c.container_id;
+			const apiList = container.interfaces ?? [];
+			for (const it of apiList) {
+				await this.interfaceRepository.addContainerInterface(systemCode, container, it);
+			}
+		});
+	}
 }
