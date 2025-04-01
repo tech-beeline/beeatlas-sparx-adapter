@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid'
 export class t_operation {
     operationid;
     object_id;
+    /** @type {string} */
     name;
     scope;
     type;

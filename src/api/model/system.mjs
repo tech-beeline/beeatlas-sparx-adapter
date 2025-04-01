@@ -17,24 +17,20 @@ export class APIMethod {
     /** @type {string} */
     name;
     returnType;
-    desciption;
+    /** @type {string} */
+    description;
     rps;
     latency;
     error_rate;
-    /**
-     * @type {Array<APIMethodParameter>}
-     */
-    parameters = [];
-    tags = {}
 
     constructor({ name, returnType, description, parameters, notes, ea_guid, operationid, rps, latency, error_rate } = {}) {
         this.name = name;
         this.returnType = returnType ?? undefined;
-        this.desciption = description ?? notes;
+        this.description = description ?? notes;
         this.rps = rps ?? undefined;
         this.latency = latency ?? undefined;
         this.error_rate = error_rate ?? undefined;
-        this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
+        //this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
     }
 }
 

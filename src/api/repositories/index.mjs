@@ -12,9 +12,3 @@ export { MonitoringRepository } from './monitoring-repository/index.mjs'
 export { PtrArtifactsRepository } from './ptr-artifacts-repository/index.mjs'
 export { StructurizrRepository } from './structurizr-repository/index.mjs'
 
-
-
-export class BoardRepositories {
-    constructor(config) {
-    }
-}

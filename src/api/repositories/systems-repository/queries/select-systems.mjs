@@ -36,11 +36,15 @@ export const SELECT_SYSTEM_PACKAGES = `WITH RECURSIVE cte_tc_cat AS (
 		JOIN t_package p ON p.ea_guid=o.ea_guid
 	WHERE o.stereotype='TechCapabilitiesCatalogue'
 	UNION
-	SELECT c.package_id, c.package_id, c.ea_guid
+	SELECT c.package_id, p.parent_id, c.ea_guid
 		FROM cte_tc_cat p
 		JOIN t_package c ON c.parent_id=p.package_id
 )
-SELECT s.object_id, s.name, c.package_id, cp.package_id as containers_package_id, it.package_id as interfaces_package_id
+SELECT s.object_id as system_id, 
+	s.name, c.package_id, 
+	cp.package_id as containers_package_id,
+	it.package_id as interfaces_package_id,
+	coalesce(c.parent_id, (SELECT package_id FROM cte_tc_cat WHERE parent_id=package_id)) as root_id
 FROM  t_object s 
 	LEFT JOIN t_object o ON LOWER(o.alias)=LOWER($1) AND o.object_type='Package'
 	LEFT JOIN cte_tc_cat c ON o.ea_guid=c.ea_guid 

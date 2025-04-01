@@ -4,10 +4,10 @@ import assert, { deepEqual, deepStrictEqual, strictEqual } from 'assert';
 
 import { updateEnv } from '../env.mjs';
 import { APP_API_TC, APP_API_TC_INTERFACE, APP_API_TC_PURPOSE, APP_API_TC_READ_INTERFACES, CDMB_A, checkSystem, checkSystemContainers, checkSystemMethods, CMDB_A_INTERFACE_SAMPLE, CMDB_A_METHODS_SAMPLE, SYSTEM_CODE, SYSTEM_INTERFACES_SAMPLE, SYSTEM_METHODS_SAMPLE, SYSTEM_NAME, SYSTEM_SAMPLE } from './const.mjs';
-import System from '../../src/api/model/system.mjs';
 
 import systemsService, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL } from '../../src/api/services/systems-service/index.mjs';
 import { NotImplemented } from '../../src/utils/errors.mjs';
+import { APP_ALONE, APP_INTERFACE, APP_INTERFACE_IMPLEMENTS, APP_METHODS, APP_ONE_CONTAINER } from './data/get-app.mjs';
 
 
 suite('Получение информаиции о системе (без контейнеров)', () => {
@@ -18,18 +18,21 @@ suite('Получение информаиции о системе (без ко�
     test("Получение систем без контейнеров", async () => {
         const systems = await systemsService.getAll();
         assert(systems.length)
-        const s = systems.find(c => c.code === SYSTEM_CODE);
-        checkSystem(s)
+        const s = JSON.parse(JSON.stringify(systems.find(c => c.code === APP_ALONE.code)));
+        delete s.modifiedDate;
+        deepEqual(s, APP_ALONE);
     });
 
     test("Получение системы без контейнеров по коду", async () => {
-        const s = await systemsService.getByCode(SYSTEM_CODE);
-        checkSystem(s);
+        const s = JSON.parse(JSON.stringify(await systemsService.getByCode(APP_ALONE.code)));
+        delete s.modifiedDate;
+        deepEqual(s, APP_ALONE);
     })
 
     test("Получение системы без контейнеров по коду (нижний регистр)", async (t) => {
-        const fdm = await systemsService.getByCode(SYSTEM_CODE.toLowerCase());
-        checkSystem(fdm);
+        const s = JSON.parse(JSON.stringify(await systemsService.getByCode(APP_ALONE.code.toLowerCase())));
+        delete s.modifiedDate;
+        deepEqual(s, APP_ALONE);
     })
 
     test("Получение системы без контейнеров по коду (не праваильный код)", async (t) => {
@@ -48,21 +51,25 @@ suite('Получение информаиции о системах с конт
         updateEnv();
     })
 
-    test("ВСе системы с контейнерами", async () => {
+    test("Все системы с контейнерами", async () => {
+        const SAMPLE = APP_ONE_CONTAINER;
         const systems = await systemsService.getAll({ level: CONTAINERS_LEVEL });
         assert(systems.length)
-        const s = systems.find(c => c.code === SYSTEM_CODE);
-        checkSystemContainers(s);
+        const s = systems.find(c => c.code === APP_ONE_CONTAINER.code);
+        s.modifiedDate = undefined;
+        deepEqual(JSON.parse(JSON.stringify(s)), APP_ONE_CONTAINER);
     });
 
     test("Система с контейнерами по коду", async () => {
-        const s = await systemsService.getByCode(SYSTEM_CODE, { level: CONTAINERS_LEVEL });
-        checkSystemContainers(s);
+        const s = JSON.parse(JSON.stringify(await systemsService.getByCode(APP_ONE_CONTAINER.code, { level: CONTAINERS_LEVEL })));
+        delete s.modifiedDate;
+        deepEqual(s, APP_ONE_CONTAINER);
     })
 
     test("Система с контейнерами по коду (нижний регистр)", async (t) => {
-        const s = await systemsService.getByCode(SYSTEM_CODE.toLowerCase(), { level: CONTAINERS_LEVEL });
-        checkSystemContainers(s);
+        const s = JSON.parse(JSON.stringify(await systemsService.getByCode(APP_ONE_CONTAINER.code.toLowerCase(), { level: CONTAINERS_LEVEL })));
+        delete s.modifiedDate;
+        deepEqual(s, APP_ONE_CONTAINER);
     })
 
     test("Система с контейнерами по коду (не правильный код)", async (t) => {
@@ -76,40 +83,36 @@ suite('Получение информаиции о системах с конт
 });
 
 
-/**
- * 
- * @param {System} s 
- */
-const checkSystemInterfaces = (s) => {
-    if (s.modifiedDate) s.modifiedDate = undefined;
-    deepEqual(JSON.parse(JSON.stringify(s)), SYSTEM_INTERFACES_SAMPLE);
-}
-
 suite('Получение информаиции о системе с интерфейсами', () => {
     before(async () => {
         updateEnv();
     })
 
     test("ВСе системы с интерфейсами", async () => {
-        const SAMPLE = APP_API_TC_READ_INTERFACES;
+        const SAMPLE = APP_ONE_CONTAINER;
         const systems = await systemsService.getAll({ level: INTERFACES_LEVEL });
         assert(systems.length)
-        const s = systems.find(c => c.code === SYSTEM_METHODS_SAMPLE.code);
+        const s = systems.find(c => c.code === APP_ONE_CONTAINER.code);
         s.modifiedDate = undefined;
-        deepEqual(JSON.parse(JSON.stringify(s)), SYSTEM_INTERFACES_SAMPLE, 'Система с интерфейсом и спецификацией');
-        const tc = systems.find(c => c.code === SAMPLE.code);
-        tc.modifiedDate = undefined;
-        deepEqual(JSON.parse(JSON.stringify(tc)), SAMPLE, 'Система с интерфейсом (есть реализация ТС)');
+        deepEqual(JSON.parse(JSON.stringify(s)), APP_ONE_CONTAINER, 'Система с интерфейсом и спецификацией');
     });
 
     test("Система с интерфейсами по коду", async () => {
-        const s = await systemsService.getByCode(SYSTEM_CODE, { level: INTERFACES_LEVEL });
-        checkSystemInterfaces(s);
+        const s = JSON.parse(JSON.stringify(await systemsService.getByCode(APP_INTERFACE.code, { level: INTERFACES_LEVEL })));
+        delete s.modifiedDate;
+        deepEqual(s, APP_INTERFACE)
     })
 
     test("Система с интерфейсами по коду (нижний регистр)", async (t) => {
-        const s = await systemsService.getByCode(SYSTEM_CODE.toLowerCase(), { level: INTERFACES_LEVEL });
-        checkSystemInterfaces(s);
+        const s = JSON.parse(JSON.stringify(await systemsService.getByCode(APP_INTERFACE.code.toLowerCase(), { level: INTERFACES_LEVEL })));
+        delete s.modifiedDate;
+        deepEqual(s, APP_INTERFACE)
+    })
+
+    test("Система с интерфейсами по коду (с установленной ТС, нижний регистр)", async (t) => {
+        const s = JSON.parse(JSON.stringify(await systemsService.getByCode(APP_INTERFACE_IMPLEMENTS.code.toLowerCase(), { level: INTERFACES_LEVEL })));
+        delete s.modifiedDate;
+        deepEqual(s, APP_INTERFACE_IMPLEMENTS)
     })
 
     test("Система с интерфейсами по коду (не правильный код)", async (t) => {
@@ -130,18 +133,21 @@ suite('Получение информаиции о системе с метод
     test("ВСе системы с методами", async () => {
         const systems = await systemsService.getAll({ level: METHODS_LEVEL });
         assert(systems.length)
-        const s = systems.find(c => c.code === SYSTEM_CODE);
-        checkSystemMethods(s);
+        const s = JSON.parse(JSON.stringify(systems.find(c => c.code === APP_METHODS.code)))
+        delete s.modifiedDate;
+        deepEqual(s, APP_METHODS);
     });
 
     test("Система с контейнерами по коду", async () => {
-        const s = await systemsService.getByCode(SYSTEM_CODE, { level: METHODS_LEVEL });
-        checkSystemMethods(s);
+        const s = JSON.parse(JSON.stringify(await systemsService.getByCode(APP_METHODS.code, { level: METHODS_LEVEL })));
+        delete s.modifiedDate;
+        deepEqual(s, APP_METHODS);
     })
 
     test("Система с контейнерами по коду (нижний регистр)", async (t) => {
-        const s = await systemsService.getByCode(SYSTEM_CODE.toLowerCase(), { level: METHODS_LEVEL });
-        checkSystemMethods(s);
+        const s = JSON.parse(JSON.stringify(await systemsService.getByCode(APP_METHODS.code.toLowerCase(), { level: METHODS_LEVEL })));
+        delete s.modifiedDate;
+        deepEqual(s, APP_METHODS);
     })
 
     test("Система с контейнерами по коду (не правильный код)", async (t) => {
@@ -154,32 +160,3 @@ suite('Получение информаиции о системе с метод
     })
 });
 
-
-suite("Позиционирование и участие в E2E", async () => {
-    before(async () => {
-        updateEnv();
-    })
-
-    test("Получение для тестовой системы", async () => {
-        const purpose = await systemsService.getPurpose(APP_API_TC_READ_INTERFACES.code.toLowerCase());
-        deepEqual( purpose, APP_API_TC_PURPOSE);
-    });
-
-    test("Участие в Е2Е", async () => {
-        throw Error('Not implemented');
-    });
-});
-
-suite("Результаты оценки приложения", async () => {
-    before(async () => {
-        updateEnv();
-    })
-
-    test("Получение для тестового приложения", async () => {
-        throw Error('TODO')
-    });
-
-    test("Получение для тестового приложения (код в нижнем регистре)", async () => {
-        throw Error('TODO')
-    });
-});

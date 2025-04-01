@@ -10,17 +10,17 @@ import { Container } from "../../../model/system.mjs";
 export function diffContainers(existing, target) {
     const result = {}
     for (const c of existing) {
-        result[c.code.toLowerCase()] = { exist: c };
+        result[c.code.toLowerCase()] = { exists: c };
     }
     for (const c of target) {
         const diff = result[c.code.toLowerCase()] ?? (result[c.code.toLowerCase()] = {});
         diff.target = c;
     }
-    /** @type {{exist, target}[]} */
+    /** @type {{exists, target}[]} */
     const diffList = Object.values(result)
     return [
-        diffList.filter(d => !d.exist).map(d => d.target),
-        diffList.filter(d => !d.target).map(d => d.exist),
-        diffList.filter(d => d.target && d.exist)
+        diffList.filter(d => !d.exists).map(d => d.target),
+        diffList.filter(d => !d.target).map(d => d.exists),
+        diffList.filter(d => d.target && d.exists)
     ]
 }

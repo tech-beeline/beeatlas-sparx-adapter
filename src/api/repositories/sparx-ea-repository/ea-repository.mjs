@@ -1,6 +1,5 @@
 import pg from 'pg'
 import { v4 as uuid } from 'uuid'
-
 import {
     t_object,
     t_objectproperties,
@@ -12,14 +11,15 @@ import {
     t_operationtag,
     t_xref,
     t_diagramobjects,
-    t_diagramlinks
+    t_diagramlinks,
+    t_operationparams
 } from './ea-model/index.mjs';
 
 import { t_diagramobjects_ex } from './ea-model/t_diagramobjects.mjs';
 import { DELETE_CONNECTOR_BY_ID, DELETE_LINK_BY_CONNECTOR_ID, SELECT_DIAGRAMOBJECTS } from './ea-queries/diagram-queries.mjs';
 import { SELECT_PACKAGE_BY_ALIAS } from './ea-queries/ea-pacakgies-queries.mjs';
 import { OBJECT_STEREOTYPES } from './stereotypes/index.mjs';
-import { REMOVE_CONNECTOR_TXREF_BY_START_END_STEREOTYPE } from './ea-queries/remove-t_xref.mjs';
+import { REMOVE_CONNECTOR_TXREF_BY_START_END_STEREOTYPE, REMOVE_CONNECTORS_TAGS } from './ea-queries/remove-t_xref.mjs';
 import { NotImplemented } from '../../../utils/errors.mjs';
 
 import { AsyncLocalStorage } from 'node:async_hooks';
@@ -222,6 +222,8 @@ export class SparxRepository {
 
     async delete(type, condition) {
         const condition_list = Object.entries(condition);
+        if (!condition_list.length) throw Error("Пустой список условий");
+
         const text = `DELETE FROM ${type.name} WHERE ${condition_list.map(([k, v], i) => `${k} = $${i + 1}`).join(' AND ')}`;
         return this.queryOne(text, condition_list.map(([k, v]) => v));
     }
@@ -335,6 +337,7 @@ export class SparxRepository {
             Object.assign(condition, stereotype_template.properties);
             await this.queryOne(REMOVE_CONNECTOR_TXREF_BY_START_END_STEREOTYPE, [start_object_id, end_object_id, stereotype_template.properties.stereotype]);
         }
+        await this.query(REMOVE_CONNECTORS_TAGS, start_object_id, end_object_id, connector_type);
         return this.delete(t_connector, condition)
     }
 
@@ -609,13 +612,14 @@ export class SparxRepository {
      * 
      * @param {*} object_id 
      * @param {*} obj 
-     * @param {string[]} tags 
+     * @param {string[] | null} tags 
      */
     async updateObjectTags(object_id, obj, tags) {
         if (!object_id) throw Error('object_id is not specified');
         /**
          * @type {t_objectproperties[]}
          */
+        tags = tags ?? Object.keys(obj);
         let current_tags = await this.queryRows("select * from t_objectproperties where object_id=$1 and property=ANY($2)", [object_id, tags]);
         for (let name of tags) {
             const ct = current_tags.find(t => t.property === name);
@@ -672,7 +676,6 @@ export class SparxRepository {
             await this.update(t_operationtag, { value: targetValue }, { elementid: operation_id, property: tag });
         }
     }
-
 
     /**
      * 
@@ -789,13 +792,20 @@ export class SparxRepository {
         });
     }
     async canDeleteObject(object_id) {
+        if (!object_id) throw Error("object_id==null");
+
         const relations = await this.queryOne(SELECT_OBJECT_RELATIONS, [object_id]);
         if (!relations) throw Error(`Не найден элемент с object_id=${object_id}`);
         for (const f in relations) {
-            if( f!=='object_id' && relations[f]!=0)
+            if (f !== 'object_id' && relations[f] != 0)
                 return false;
         }
         return true;
+    }
+    async deleteOperation(operation_id) {
+        await this.delete(t_operationparams, { operationid: operation_id });
+        await this.delete(t_operationtag, { elementid: operation_id });
+        await this.delete(t_operation, { operationid: operation_id });
     }
 }
 
