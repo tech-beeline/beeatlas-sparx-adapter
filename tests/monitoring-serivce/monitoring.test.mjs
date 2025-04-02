@@ -26,18 +26,9 @@ suite("Установка шаблонов мониторинга API", async ()
         assert(ret.apiMetricTemplate == OPENSEARCH_TEMPLATE, 'Шаблон opensearch не установился');
     })
 
-    test("check", async ()=>{
-        NotImplemented(`Проверять уникальность, если не уникально -  ругаться
-Если REST, то нормировать
-Если несколько интерфейсов или код интерфейса не той системы, то ругаться
-Сервис проверки DSL (наличие external_name)`)
-    });
-
-
-
     test("Установка шаблона для контетйнера", async () => {
         const ret = await service.setContainerMetricTemplate({
-            containerCode: "dashboard.fdmshowcaseapp",
+            container_code: "dashboard.fdmshowcaseapp",
             apiMetricTemplate: "https://inside.beeline.ru/d/56_72PcHk/prometheus-template-api-queries?orgId=1"
         });
     })

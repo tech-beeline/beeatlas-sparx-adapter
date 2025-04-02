@@ -7,3 +7,4 @@ export const SYSTEM_SUBPACKAGES = [TC_SUBPACKAGE_NAME, CONTAINERS_SUBPACKAGE_NAM
 export const REMOVED_STATUS = 'REMOVED';
 export const DEFAULT_STATUS = 'Proposed';
 export const CONTAINER_STEREOTYPE = 'C4_Container';
+export const METHOD_REMOVED_TAG = 'removedDate';

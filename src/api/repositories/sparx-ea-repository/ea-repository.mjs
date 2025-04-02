@@ -229,6 +229,7 @@ export class SparxRepository {
     }
 
     async find(type, condition) {
+        if( !type.name) throw Error('type is invalid');
         const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r)));
     }
