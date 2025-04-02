@@ -1,4 +1,5 @@
 import fs from 'fs'
+import fdmStorage from '../src/api/repositories/fdm-storage.mjs';
 
 export function readEnv(envPath = './.env.test') {
     if (fs.existsSync(envPath)) {
@@ -17,4 +18,5 @@ export function updateEnv(envPath) {
     for (const [key, val] of Object.entries(readEnv(envPath))) {
         process.env[key] = val;
     }
+    fdmStorage.config();
 }

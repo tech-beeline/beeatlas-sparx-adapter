@@ -1,5 +1,6 @@
 import fdmStorage from '../fdm-storage.mjs';
 import { PluginAction } from './model.mjs';
+import { INSERT_PUT_SYSTEM_LOG } from './queries.mjs';
 
 const METRIC_QUERIES = {
     SELECT_PLUGIN_METRICS: "SELECT * FROM arch_metrics.plugin_actions",
@@ -219,5 +220,14 @@ export class ArchMetricsRepository {
     }
     static async selectSystemAssessments(systemCode) {
         return fdmStorage.query(METRIC_QUERIES.SELECT_SYSTEM_ASSESSMENTS, systemCode)
+    }
+
+    static async insertPutSystemLog(systemCode, fromState, targetState, resultState, error) {
+        return fdmStorage.query(INSERT_PUT_SYSTEM_LOG, systemCode,
+            error && JSON.stringify(error),
+            JSON.stringify(fromState),
+            JSON.stringify(targetState),
+            resultState && JSON.stringify(resultState)
+        );
     }
 }

@@ -39,6 +39,7 @@ import GetAllSystems from "./get-all-systems.mjs";
 import GetSystemByCode from "./get-system-by-code.mjs";
 import { SystemContainerService } from './containers/index.mjs'
 import { runSystemContext } from "../../repositories/systems-repository/system-package.mjs";
+import { logErrorPutSystem, logSuccessPutSystem } from "./log/index.mjs";
 
 const STEREOTYPE_MAP = {
     ArchiMate_TechnicalCapability: "TechnicalCapability",
@@ -174,30 +175,38 @@ export class SystemService {
         }
 
         const containers = this.prepareContainersMethods(system.containers ?? []);
+        const currentState = await this.getByCode(systemCode, { level: "methods" });
 
-        await runSystemContext(systemCode, async () =>
-            eaRepository.transactionScope(async () => {
-                const [newContainers, outdateContainers, existingContainers] = diffContainers(await systemsRepository.selectSystemContainers(systemCode), containers);
+        try {
+            await runSystemContext(systemCode, async () =>
+                eaRepository.transactionScope(async () => {
+                    const [newContainers, outdateContainers, existingContainers] = diffContainers(await systemsRepository.selectSystemContainers(systemCode), containers);
 
-                const containerService = new SystemContainerService();
+                    const containerService = new SystemContainerService();
 
-                for (const c of newContainers) {
-                    await systemsRepository.addSystemContainer(systemCode, c);
-                }
-
-                for (const c of outdateContainers) {
-                    await systemsRepository.deleteSystemContainer(systemCode, c);
-                }
-
-                for (const diff of existingContainers) {
-                    if (!isContainersEquals(diff.exists, diff.target)) {
-                        await systemsRepository.updateContainer(diff.exists.container_id, diff.target.name, diff.target.code,
-                            "FDM API", diff.target.version, diff.target.description, diff.target.status);
+                    for (const c of newContainers) {
+                        await systemsRepository.addSystemContainer(systemCode, c);
                     }
-                    await interfacesRepository.updateContainerInterfaces(systemCode, diff.exists.container_id, diff.target.interfaces);
-                }
-            }));
-        return this.getByCode(systemCode, { level: "methods" });
+
+                    for (const c of outdateContainers) {
+                        await systemsRepository.deleteSystemContainer(systemCode, c);
+                    }
+
+                    for (const diff of existingContainers) {
+                        if (!isContainersEquals(diff.exists, diff.target)) {
+                            await systemsRepository.updateContainer(diff.exists.container_id, diff.target.name, diff.target.code,
+                                "FDM API", diff.target.version, diff.target.description, diff.target.status);
+                        }
+                        await interfacesRepository.updateContainerInterfaces(systemCode, diff.exists.container_id, diff.target.interfaces);
+                    }
+                }));
+            const result = await this.getByCode(systemCode, { level: "methods" });
+            await logSuccessPutSystem( systemCode, currentState, system, result);
+            return result;
+        } catch (err) {
+            await logErrorPutSystem(systemCode, currentState, system, err);
+            throw err;
+        }
     }
 
     async getPurpose(systemCode) {

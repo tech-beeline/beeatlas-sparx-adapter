@@ -10,6 +10,7 @@ import systemsService, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, Syst
 import { SparxRepositoryPackagesOptions } from '../../src/api/repositories/sparx-ea-repository/options.mjs';
 import { CHANGE_CONTAINER_CODE, CREATE_CONTAINER_INTERFACE, CREATE_ONE_CONTAINER, CREATE_SLA, CREATE_TWO_CONTAINERS, NEW_CONTAINER, REMOVE_DOUBLES } from './data/put-app.mjs';
 import { insertMethods } from './data/prepare-doubles.mjs';
+import fdmStorage from '../../src/api/repositories/fdm-storage.mjs';
 
 suite("Публикация для пустой системы", async () => {
     before(async () => {
@@ -18,6 +19,7 @@ suite("Публикация для пустой системы", async () => {
     });
 
     test('Публикация первого контейнера для системы', async () => {
+
         const service = new SystemService();
 
         const app = await service.getByCode(CREATE_ONE_CONTAINER.code, { level: CONTAINERS_LEVEL });
