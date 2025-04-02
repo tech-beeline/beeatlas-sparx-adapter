@@ -3,7 +3,7 @@ export const APP_ALONE = {
     code: "TEST.ALONE",
     version: "1.0",
     author: "Игорь Воронин",
-    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/ReadOnly",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/get-system",
     status: "Proposed",
     containers: [],
     links: {
@@ -19,7 +19,7 @@ export const APP_ONE_CONTAINER = {
     code: "TEST.ONE.Container",
     version: "1.0",
     author: "Игорь Воронин",
-    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/ReadOnly",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/get-system",
     status: "Proposed",
     containers: [
         {
@@ -43,7 +43,7 @@ export const APP_INTERFACE = {
     "code": "TEST.INTERFACE",
     "version": "1.0",
     "author": "Игорь Воронин",
-    "FQName": "IT-Landscape Catalog/DEV_TEST/Tests/ReadOnly",
+    "FQName": "IT-Landscape Catalog/DEV_TEST/Tests/get-system",
     "status": "Proposed",
     "containers": [
         {
@@ -77,7 +77,7 @@ export const APP_INTERFACE_IMPLEMENTS = {
     "code": "TEST.INTERFACE.TC",
     "version": "1.0",
     "author": "Игорь Воронин",
-    "FQName": "IT-Landscape Catalog/DEV_TEST/Tests/ReadOnly",
+    "FQName": "IT-Landscape Catalog/DEV_TEST/Tests/get-system",
     "status": "Proposed",
     "containers": [
         {
@@ -112,7 +112,7 @@ export const APP_METHODS = {
     "code": "TEST.METHODS",
     "version": "1.0",
     "author": "Игорь Воронин",
-    "FQName": "IT-Landscape Catalog/DEV_TEST/Tests/ReadOnly",
+    "FQName": "IT-Landscape Catalog/DEV_TEST/Tests/get-system",
     "status": "Proposed",
     "containers": [
         {
@@ -131,16 +131,13 @@ export const APP_METHODS = {
                     "implements": "FDMSHOWCASEAPP.001",
                     "methods": [
                         {
-                            "name": "GET /orcs",
-                            "description": "Получить информацию обо всех орках"
+                            "name": "GET /orcs"
                         },
                         {
-                            "name": "GET /orcs/{nick}",
-                            "description": "Получить информации об орке по его прозвищу"
+                            "name": "GET /orcs/{nick}"
                         },
                         {
-                            "name": "PUT /orcs/{nick}",
-                            "description": "Обновить информацию об орке"
+                            "name": "PUT /orcs/{nick}"
                         }
                     ]
                 }

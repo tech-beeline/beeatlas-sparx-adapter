@@ -11,7 +11,12 @@ export const SELECT_ALL_METHODS = `SELECT
 	rps.value as rps,
 	latency.value as latency,
 	error_rate.value as error_rate,
-	removed_date.value as removed_date
+	removed_date.value as removed_date,
+	(SELECT 1 
+		FROM t_connectortag t
+		JOIN t_connector c ON c.connector_id=t.elementid
+	WHERE t.value=m.ea_guid AND t.property='operation_guid'
+	LIMIT 1) AS used
 FROM t_object it
 	JOIN t_operation m ON m.object_id=it.object_id
 	LEFT JOIN t_operationtag rps ON rps.elementid=m.operationid AND rps.property='rps'
@@ -27,10 +32,10 @@ export const SELECT_INTERFACE_METHODS_BY_ID = `${SELECT_ALL_METHODS} AND it.obje
 export const SELECT_METHOD_BY_NAME_INTERFACE_CODE = `SELECT o.* 
 FROM t_operation o
 	JOIN t_object api ON api.object_id=o.object_id
-WHERE LOWER(api.alias)=LOWER($1) AND o.name=$2`
+WHERE LOWER(api.alias)=LOWER($1) AND LOWER(o.name)=LOWER($2)`
 
 
-export const SELECT_METHOD_BY_NAME_INTERFACE_ID = `SELECT o.* 
+export const SELECT_METHOD_BY_NAME_INTERFACE_ID = `SELECT o.*
 FROM t_operation o
 WHERE o.object_id=$1 AND LOWER(o.name)=LOWER($2)`
 
@@ -77,13 +82,6 @@ FROM cte_interface
 WHERE t_operation.object_id=cte_interface.object_id
 	AND t_operation.name=$2
 RETURNING t_operation.operationid`;
-
-export const SELECT_INTERFACE_METHOD = `SELECT
-	*
-FROM t_operation 
-WHERE object_id=$1
-	AND LOWER(name)=LOWER($2)
-`
 
 export const SELECT_METHOD_SLA = `SELECT
 	rps.value AS rps,
