@@ -13,7 +13,7 @@ const updateTargetsRef = (panel, id) => {
 }
 
 
-export function formatQuery(template, uri, method) {
+export function formatQuery(template, uri, method, client_code) {
     const uri_regex = uriRegex(uri);
 
     let variables = {
@@ -22,6 +22,7 @@ export function formatQuery(template, uri, method) {
         URI: uri,
         //method: method, 
         METHOD: method,
+        CLIENT_CMDB : client_code
         //uri_regex: uri_regex, 
     };
 
@@ -96,29 +97,27 @@ export class SecnarioDashboardBuilder {
             if (target) {
                 Object.assign(target, t);
                 if (t.expr) {
-                    target.expr = formatQuery(t.expr, path, method);
+                    target.expr = formatQuery(t.expr, path, method, client_code);
                 }
                 if (t.query) {
-                    target.query = formatQuery(t.query, path, method)
+                    target.query = formatQuery(t.query, path, method, client_code)
                 }
             }
         }
 
         for (const t of ret.targets.filter(t => t.expression === '$ERROR_RATE')) {
-            t.expression = message.method?.error_rate?.toString() ?? "0";
+            t.expression = message.method?.error_rate?.toString() ?? "-1";
         }
 
         for (const t of ret.targets.filter(t => t.expression === '$LATENCY')) {
-            t.expression = message.method?.latency?.toString() ?? "0";
+            t.expression = message.method?.latency?.toString() ?? "-1";
         }
 
         for (const t of ret.targets.filter(t => t.expression === '$RPS')) {
-            t.expression = message.method?.rps?.toString() ?? "0";
+            t.expression = message.method?.rps?.toString() ?? "-1";
         }
-
         ret.title = `${order}`;
-        console.log()
-        //console.log(message.source);
+
         return ret;
     }
 
