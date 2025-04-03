@@ -37,6 +37,7 @@ import { formatWebEALink } from "../../utils/index.mjs";
 import { Link } from "react-router-dom";
 import { ERROR_INFO } from "./message-validate-errors.mjs";
 import webeaLogo from "../../res/images/ea-icon.ico";
+import { CallMessage } from "../../model/call-message.mjs";
 
 
 function MessageDetails({ messageDetails }) {
@@ -190,6 +191,11 @@ function Errors({ call }) {
     ) : null;
 }
 
+/**
+ * 
+ * @param { {call : CallMessage}} props
+ * @returns 
+ */
 function CallItem({ call }) {
     const LabelIcon = call.errors ? (
         <Warning />
@@ -211,7 +217,7 @@ function CallItem({ call }) {
         });
 
 
-    const callLabel = `${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name} ${call.name}`;
+    const callLabel = `${call.client_code ?? call.client_name}->${call.server_code ?? call.server_name} ${call.stereotype?call.stereotype:''} ${call.name}`;
 
     return call.errors ? (
         <CallTreeItem
@@ -246,7 +252,6 @@ function CallItem({ call }) {
 }
 
 export function CallTraceSection({ callTree }) {
-
     return (
         <Accordion component={Paper}>
             <AccordionSummary component={Paper} expandIcon={<ExpandMore />}>

@@ -41,16 +41,16 @@ ${applicationCatalog.APPLICATION_CATALOG_CTE}, msg as ( select distinct connecto
 )
 select 
 	coalesce( m.name, msg.message ) as message, msg.message_uid,  msg.seqno,msg.client_id, msg.server_id, msg.child_diagram_uid, 
-	msg.server_type, msg.server as server_name, msg.server_uid, msg.styleex,
+	msg.server_type, msg.server as server_name, msg.server_uid,
 	d.name as diagram, d_tree.*,
-	m.ea_guid as operation_guid, ia.value as ia_path, m.name as method, msg.stereotype,
+	m.ea_guid as operation_guid, 
+	m.name as method, msg.stereotype,
 	rps.value as rps, latency.value as latency, er.value as error_rate
 from d_tree
 	join msg on msg.diagram_id=d_tree.diagram_id
 	join t_diagram d on d.diagram_id=msg.diagram_id
 	left join t_connectortag op on op.property='operation_guid' and elementid=msg.connector_id
 	left join t_operation m on m.ea_guid=op.value
-	left join t_connectortag ia on ia.property='InterfaceAgreement' and ia.elementid=msg.connector_id
 	left join t_connectortag rps on rps.property='TPSThreshold' and rps.elementid=msg.connector_id
 	left join t_connectortag latency on latency.property='LatencyThreshold' and latency.elementid=msg.connector_id
 	left join t_connectortag er on er.property='ErrorThreshold' and er.elementid=msg.connector_id

@@ -16,9 +16,9 @@ const PROTOCOL_COLOR_MAP = {
 function InterfaceTreeItem({ nodeId, api }) {
     const apiColor = PROTOCOL_COLOR_MAP[api.protocol] ?? "red";
     return (
-        <TreeItem label={<div style={{ color: apiColor }}><ApiOutlined /> {api.name} [protocol:{api.protocol ?? "Не указан"}]</div>} key={nodeId} nodeId={nodeId}>
+        <TreeItem  label={<div style={{ color: apiColor }}><ApiOutlined /> {api.name} [protocol:{api.protocol ?? "Не указан"}]</div>} nodeId={nodeId}>
             {Object.values(api.methods ?? []).map((m, j) =>
-                <TreeItem label={<div><Code />{m.name}</div>} nodeId={`${nodeId}-${m.name} `} key={`${nodeId}-${m.name} `} />)}
+                <TreeItem label={<div><Code />{m.name}</div>} nodeId={`${nodeId}-${m.name} `} key={`${j}`} />)}
         </TreeItem>
     )
 }
@@ -33,7 +33,7 @@ export function ApplicationSection({ applications }) {
             <TreeView component={Paper} defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
                 <TreeItem label="Приложения" nodeId='products'>
                     {products.map(app => <TreeItem sx={{ fontWeight: "bolder" }} label={<div><SettingsApplicationsOutlined />{`[${app.code}] ${app.name} `}</div>} nodeId={app.code ?? "NULL"} key={app.code}>
-                        {Object.values(app.interfaces).map((it, i) => <InterfaceTreeItem nodeId={`${app.code} -${i} `} api={it} />)}
+                        {Object.values(app.interfaces).map((it, i) => <InterfaceTreeItem  nodeId={`${app.code} -${i} `} api={it} />)}
                     </TreeItem>)}
                 </TreeItem>
                 <TreeItem label="Другие участники" nodeId='objects'>

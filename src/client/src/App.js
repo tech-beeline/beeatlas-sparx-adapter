@@ -6,7 +6,6 @@ import {
     SystemProcessesPage,
     SystemSearchPage,
     SystemPage,
-    SystemE2EParticipionPage,
     MainPage,
     WorkspaceCheckPage,
 } from "./pages/index.mjs";
@@ -28,28 +27,12 @@ function App() {
                 <Route path="/e2e/systems" element={<SystemProcessesPage />} />
                 <Route path="/systems" element={<SystemSearchPage />} />
                 <Route path="/systems/:code" element={<SystemPage />} />
-                <Route
-                    path="/systems/:code/e2e"
-                    element={<SystemE2EParticipionPage />}
-                />
                 <Route path="/e2e" element={<E2EProcessesListPage />} />
                 <Route path={`e2e/:uid`} element={<E2EProcessPage />} />
-                <Route
-                    path={`e2e/:process_uid/bi/:uid`}
-                    element={<E2EScenarioDashboardPage />}
-                />
-                <Route
-                    path="/structurizr/check"
-                    element={<WorkspaceCheckPage />}
-                />
-                <Route
-                    path={STRUCTURIZR_CHECK_RESULT}
-                    element={<WorkspaceCheckResultPage />}
-                />
-                <Route
-                    path="/sequence"
-                    element={<SequencePage />}
-                />
+                <Route path={`e2e/:process_uid/bi/:uid`} element={<E2EScenarioDashboardPage />} />
+                <Route path="/structurizr/check" element={<WorkspaceCheckPage />} />
+                <Route path={STRUCTURIZR_CHECK_RESULT} element={<WorkspaceCheckResultPage />} />
+                <Route path="/sequence" element={<SequencePage />} />
                 <Route
                     path="/maintenance/dbl"
                     element={<MethodDoublesPage />}

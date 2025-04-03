@@ -182,8 +182,7 @@ export class Scenario {
                 const interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction(Object.assign({ title: title, order: ++this.#interactionCount }, m)))
                 let exisiting = interaction.messages.find(i => i.ea_guid === m.ea_guid);
                 if (!exisiting) {
-                    exisiting = Object.assign({ contexts: [] }, m)
-                    interaction.messages.push(exisiting);
+                    interaction.messages.push(exisiting = Object.assign({ contexts: [] }, m));
                 }
                 exisiting.contexts.push(m.stackTrace);
             }
@@ -193,42 +192,5 @@ export class Scenario {
                 this.#buildInteractions(m.children, m);
             }
         }
-    }
-
-    #buildInteractions2(messages, context) {
-
-        let depend_on = {};
-        for (let m of messages) {
-            let message_depend_on = {};
-            m.server = this.applicationByRef(m.server?.$ref);
-            m.client = this.applicationByRef(m.client?.$ref);
-            m.getParent = () => context;
-            m.stackTrace = m.type !== 'internalCall' && context ? [...context.stackTrace, `* ${m.seqno} [${m.server?.cmdb ?? ""}]${m.server?.name ?? m.server_name} [${m.message}]`] : context?.stackTrace ?? [];
-
-            m.rps = tryParseFloat(m.rps);
-            m.latency = tryParseFloat(m.latency);
-            if (m.latency && !isNaN(m.latency)) m.latency *= 1000;
-            m.errorRate = tryParseFloat(m.error_rate)
-
-            parseIA(m);
-
-            if (m.client && m.server && m.method) {
-                const title = `${m.client.cmdb} - ${m.server.cmdb}: ${m.method} ${m.stereotype ? ` ${m.stereotype}` : ""}`;
-                /** @type {Interaction2} */
-                m.interaction = this.interactions[title] ?? (this.interactions[title] = new Interaction2(m.server, m.client, m.method, this.#interactionCount++, m.stereotype, message_depend_on));
-                if (!depend_on[title]) depend_on[title] = m.interaction;
-                m.interaction.addMessage(m);
-            }
-
-
-            if (m.messages) {
-                message_depend_on = this.#buildInteractions2(m.messages, m);
-                if (m.interaction) m.interaction.dependOn = message_depend_on;
-                for (let title in message_depend_on) {
-                    if (!depend_on[title]) depend_on[title] = message_depend_on[title];
-                }
-            }
-        }
-        return depend_on;
     }
 }

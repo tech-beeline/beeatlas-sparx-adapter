@@ -147,33 +147,6 @@ class E2EProcessService {
                 row.validationError.push(`Сообщение не связано с методом интерфейса (operation_guid = null)`)
             }
 
-            if (server && row.ia_path) {
-                const ia = await IARepository.Instance.byPath(decodeURIComponent(row.ia_path))
-                row.interfaceAgreement = ia ? {
-                    path: row.ia_path,
-                    parseError: ia.parseError ?? undefined,
-                    raw: ia.yaml ? undefined : ia.raw,
-                    yaml: ia.yaml ?? undefined,
-                    validationError: this.#formatValidationError(row, ia, client, server)
-                } : {
-                    path: row.ia_path,
-                    validationError: [`Не удалось найти интерфейсное соглашение по пути ${row.ia_path}`]
-                }
-            }
-
-            row.ia_path = undefined;
-
-            if (row.styleex) {
-                const styleex_map = row.styleex?.split(';').filter(v => v.length).reduce((acc, v) => {
-                    const kv = v.split('=');
-                    return kv.length > 0 ? Object.assign(acc, { [kv[0]]: kv.slice(1).join('') }) : acc;
-                }, {})
-                if (styleex_map.DCBM) {
-                    row.duration = styleex_map.DCBM;
-                }
-            }
-            row.styleex = undefined;
-
             (diagram_map[row.diagram_uid] = diagram_map[row.diagram_uid] ?? { name: row.diagram, messages: [] }).messages.push(row);
         }
 

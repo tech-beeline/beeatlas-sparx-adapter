@@ -104,7 +104,7 @@ export function E2EScenarioDashboardPage() {
     const { process_uid, uid } = useParams();
     const [e2eScenario, setE2EScenario] = useState(null);
 
-   
+
     useEffect(() => {
         const loadScenario = async () => {
             const response = await fetch(
