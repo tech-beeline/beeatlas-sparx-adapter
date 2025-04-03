@@ -210,7 +210,7 @@ export const CHANGE_CONTAINER_CODE = {
     version: "1.0",
     author: "Игорь Воронин",
     description: "Изменение кода (удаление старого контейнера и добавление нового с новым кодом)",
-    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/update-existins-api",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/update-existing-container",
     status: "Proposed",
     containers: [
         OLD_CONTAINER

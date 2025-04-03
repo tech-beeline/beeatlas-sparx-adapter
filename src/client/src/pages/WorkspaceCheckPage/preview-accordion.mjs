@@ -7,7 +7,7 @@ import { TreeItem, TreeView } from "@mui/x-tree-view";
 export function PreviewAccordion({ preview }) {
     return preview && <Accordion>
         <AccordionSummary expandIcon={<ExpandMore />}>Предварительный просмотр информации, которая должна загрузиться в Витрину ФДМ</AccordionSummary>
-        <AccordionDetails>{preview.containers?.length ?
+        <AccordionDetails>{!preview.fail && preview.containers?.length ?
             <Box>
                 <Typography>Система:</Typography>
                 Название : {preview.name}, CMDB : {preview.cmdb}
@@ -26,7 +26,7 @@ export function PreviewAccordion({ preview }) {
                         }
                     </TreeItem>)}
                 </TreeView>
-            </Box> : <Box>Ничего не выгрузится</Box>}
+            </Box> : <Box>Ничего не выгрузится {preview.fail&&preview.fail}</Box>}
         </AccordionDetails>
     </Accordion>
 }

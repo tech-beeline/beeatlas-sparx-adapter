@@ -1,9 +1,10 @@
-import { StructurizrRepository, SystemsRepository } from "../../repositories/index.mjs";
+import { StructurizrRepository, SystemsRepository, TechnicalCapabilitiesRepository } from "../../repositories/index.mjs";
 import { Workspace } from "./model.mjs";
-import { apiContainerWithoutCode, noCmdbError, cmdbWarning, containerWithoutCode, noSystemComment, WorkspaceCheckResult, systemNotFound, apiCandidateComment, tooManySystems, apiWithoutExternalName, apiWithoutSpecification, scriptLineComment, scriptNotFoundComment } from "./comments.mjs";
+import { apiContainerWithoutCode, noCmdbError, cmdbWarning, containerWithoutCode, noSystemComment, WorkspaceCheckResult, systemNotFound, apiCandidateComment, tooManySystems, apiWithoutExternalName, apiWithoutSpecification, scriptLineComment, scriptNotFoundComment, apiWithWrongTC } from "./comments.mjs";
 import { NotImplemented } from "../../../utils/errors.mjs";
 
 
+const tcRepositoiry = new TechnicalCapabilitiesRepository();
 
 export class WorkspaceValidator {
     /** @type {Workspace} */
@@ -108,6 +109,13 @@ export class WorkspaceValidator {
                                 if (!previewApi.api_url) {
                                     result.push(apiWithoutSpecification(system, container, api));
                                 }
+                                if( previewApi.tc){
+                                    const tcRows = await tcRepositoiry.selectTCByCode( previewApi.tc);
+                                    if( !tcRows.length) {
+                                        result.push( apiWithWrongTC(system, container, api) );
+                                        result.preview.fail = `Ничего не будет загруждено, так как есть API с не правильным ТС`
+                                    }
+                                }
                             }
 
                             if (!previewApi) {
@@ -148,7 +156,7 @@ export class WorkspaceValidator {
         if (slaScriptLine < 0) {
             result.push(scriptNotFoundComment()); 6
         }
-        if (slaScriptLine > 0 && slaScriptLine < modelEndLine) {
+        if (slaScriptLine > 0 && slaScriptLine < (modelEndLine - 5)) {
             result.push(scriptLineComment());
         }
 
