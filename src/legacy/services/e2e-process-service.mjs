@@ -83,7 +83,6 @@ class E2EProcessService {
                 continue;
             }
             throw Error('not implemented');
-
         }
 
         return root.messages;
@@ -185,7 +184,7 @@ class E2EProcessService {
                         parent_message.messages = [...income_operations[0].messages, ...parent_message.messages];
                         continue;
                     }
-                    throw Error(`Нельзя связать ${JSON.stringify(parent_message.message)}() operation_guid=${operation_guid} с диаграммой ${diagram_map[uid].name}:
+                    throw Error(`Нельзя связать ${JSON.stringify(parent_message.message)}( operation_guid=${operation_guid}) с диаграммой ${diagram_map[uid].name}:
                      ${diagram_map[uid].messages.map(m => `[${m.operation_guid}]${m.message}`).join('\r')}`);
                 } catch (error) {
                     parent_message.validationError = parent_message.validationError ?? [];
@@ -326,13 +325,6 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             }
 
             m.client = useSystem(m.client_id);
-            if (m.ia_path) {
-                if (m.ia_path.endsWith('?ref_type=heads')) m.ia_path = m.ia_path.slice(0, -15)
-                m.ia = {
-                    path: m.ia_path,
-                    content: await IARepository.Instance.byPath(safeDecode(m.ia_path, m))
-                }
-            }
 
             if (m.client && m.server) {
                 m.childDiagram = diagrams.byContainerId[m.server_id];

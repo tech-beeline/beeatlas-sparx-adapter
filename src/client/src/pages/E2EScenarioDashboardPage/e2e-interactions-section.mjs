@@ -75,7 +75,7 @@ function MessagesInstances({ messages }) {
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '5%' }} />
-                <col style={{ width: '40%' }} />
+                <col style={{ width: '30%' }} />
             </colgroup>
             <TableHead>
                 <TableRow key={-1} sx={{ width: 10 }}>
@@ -97,7 +97,6 @@ function MessagesInstances({ messages }) {
 
 
 function InteractionCard({ interaction }) {
-    const [showDetails, setShowDetails] = useState(false);
     const [open, setOpen] = React.useState(false);
 
     return (<React.Fragment>
@@ -115,9 +114,6 @@ function InteractionCard({ interaction }) {
                 {interaction.title}
             </TableCell>
             <TableCell scope="row">
-                {interaction.protocol ? alertText(interaction.protocol, "green") : alertText('---')}
-            </TableCell>
-            <TableCell scope="row">
                 {interaction.notDefinedRPSCount ? alertText('---') : alertText(interaction.totalRPS, 'green')}
             </TableCell>
             <TableCell scope="row">
@@ -127,20 +123,11 @@ function InteractionCard({ interaction }) {
                 {interaction.notDefinedErrorCount ? alertText('---') : alertText(interaction.minErrorRate, 'green')}
             </TableCell>
             <TableCell scope="row">
-                ---
-            </TableCell>
-            <TableCell scope="row">
-                ---
-            </TableCell>
-            <TableCell scope="row">
                 {`${interaction.messages.length}[${interaction.messages.reduce((ret, v) => ret + v.contexts.length, 0)}]`}
-            </TableCell>
-
-            <TableCell align="left" scope="row">
             </TableCell>
         </TableRow>
         <TableRow>
-            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={10}>
+            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                 <Collapse in={open} timeout="auto" unmountOnExit>
                     <Box sx={{ margin: 1, width: "100%" }}>
                         <Typography variant="h8" gutterBottom component={Paper}>
@@ -153,7 +140,6 @@ function InteractionCard({ interaction }) {
         </TableRow>
     </React.Fragment>)
 }
-
 
 export function InteractionsSection({ scenario }) {
     return <Accordion>
@@ -169,22 +155,15 @@ export function InteractionsSection({ scenario }) {
                         <col style={{ width: '5%' }} />
                         <col style={{ width: '5%' }} />
                         <col style={{ width: '5%' }} />
-                        <col style={{ width: '5%' }} />
-                        <col style={{ width: '5%' }} />
-                        <col style={{ width: '5%' }} />
                     </colgroup>
                     <TableHead>
                         <TableRow key={0}>
                             <TableCell size="small">No</TableCell>
                             <TableCell>Название</TableCell>
-                            <TableCell>Протокол</TableCell>
                             <TableCell>RPS</TableCell>
                             <TableCell>Latency</TableCell>
                             <TableCell>Error Rate</TableCell>
-                            <TableCell>Протокол</TableCell>
-                            <TableCell>Источник метрик</TableCell>
                             <TableCell>Уникальных сообщений [всего используется]</TableCell>
-                            <TableCell>От чего зависит</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>

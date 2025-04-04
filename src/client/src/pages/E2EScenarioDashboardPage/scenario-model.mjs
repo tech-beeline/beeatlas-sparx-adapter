@@ -174,8 +174,8 @@ export class Scenario {
             if (m.client_code && m.server_code && m.name) {
                 m.rps = tryParseFloat(m.rps);
                 m.latency = tryParseFloat(m.latency);
-                if (m.latency && !isNaN(m.latency)) m.latency *= 1000;
                 m.errorRate = tryParseFloat(m.error_rate)
+
                 m.stackTrace = context ? [...context.stackTrace ?? [], `${m.seqno} [${m.server_code ?? ""}]${m.server_name} [${m.name}]`] : context?.stackTrace ?? [];
 
                 const title = `${m.client_code}->${m.server_code}: ${m.name}${m.stereotype ? ` ${m.stereotype}` : ""}`
