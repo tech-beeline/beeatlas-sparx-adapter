@@ -8,7 +8,7 @@ import { APP_API_TC, APP_API_TC_READ_INTERFACES, CDMB_A, checkSystem, checkSyste
 
 import systemsService, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SystemService } from '../../src/api/services/systems-service/index.mjs';
 import { SparxRepositoryPackagesOptions } from '../../src/api/repositories/sparx-ea-repository/options.mjs';
-import { CHANGE_CONTAINER_CODE, CREATE_CONTAINER_INTERFACE, CREATE_ONE_CONTAINER, CREATE_SLA, CREATE_TWO_CONTAINERS, NEW_CONTAINER, REMOVE_DOUBLES } from './data/put-app.mjs';
+import { CHANGE_CONTAINER_CODE, CONTAINER_EMPTY_CODE, CONTAINER_NULL_CODE, CONTAINER_WITHOUT_CODE, CREATE_CONTAINER_INTERFACE, CREATE_ONE_CONTAINER, CREATE_SLA, CREATE_TWO_CONTAINERS, INTERFACE_EMPTY_CODE, INTERFACE_NULL_CODE, INTERFACE_WITHOUT_CODE, NEW_CONTAINER, REMOVE_DOUBLES } from './data/put-app.mjs';
 import { insertMethods } from './data/prepare-doubles.mjs';
 import fdmStorage from '../../src/api/repositories/fdm-storage.mjs';
 
@@ -132,5 +132,71 @@ suite("Обновление данных для системы", async () => {
         const newVersion = JSON.parse(JSON.stringify(await service.getByCode(REMOVE_DOUBLES.code, { level: METHODS_LEVEL })));
         delete newVersion.modifiedDate;
         deepEqual(newVersion, REMOVE_DOUBLES);
+    });
+});
+
+suite( "Валидация", async ()=>{
+    before(async () => {
+        updateEnv();
+        SparxRepositoryPackagesOptions.init();
+    });
+    test("У контейнера нет кода", async()=>{
+        try{
+            const service = new SystemService();
+            await service.putSystem( CONTAINER_WITHOUT_CODE.code, CONTAINER_WITHOUT_CODE);
+        }catch( e ){
+            return;
+        }
+        assert(false);
+    })
+
+    test("У контейнера code=null", async()=>{
+        try{
+            const service = new SystemService();
+            await service.putSystem( CONTAINER_NULL_CODE.code, CONTAINER_NULL_CODE);
+        }catch( e ){
+            return;
+        }
+        assert(false);
+    });
+
+    test("У контейнера пустой код", async()=>{
+        try{
+            const service = new SystemService();
+            await service.putSystem( CONTAINER_EMPTY_CODE.code, CONTAINER_EMPTY_CODE);
+        }catch( e ){
+            return;
+        }
+        assert(false);
+    });
+
+    test("У интерфейса отсутствует код", async()=>{
+        try{
+            const service = new SystemService();
+            await service.putSystem( INTERFACE_WITHOUT_CODE.code, INTERFACE_WITHOUT_CODE);
+        }catch( e ){
+            return;
+        }
+        assert(false);
+    });
+
+    test("У интерфейса code=null", async()=>{
+        try{
+            const service = new SystemService();
+            await service.putSystem( INTERFACE_NULL_CODE.code, INTERFACE_NULL_CODE);
+        }catch( e ){
+            return;
+        }
+        assert(false);
+    });
+
+    test("У интерфейса пустой код", async()=>{
+        try{
+            const service = new SystemService();
+            await service.putSystem( INTERFACE_EMPTY_CODE.code, INTERFACE_EMPTY_CODE);
+        }catch( e ){
+            return;
+        }
+        assert(false);
     });
 })

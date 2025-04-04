@@ -129,10 +129,17 @@ export class SystemService {
     prepareContainersMethods(containers) {
         const preparedContainers = [];
         for (const c of containers) {
+            if (!c.code) {
+                throw BadRequest(`Не задан код контейнера "${c.name}"`)
+            }
             const container = { ...c }
             container.interfaces = [];
             preparedContainers.push(container);
             for (const it of c.interfaces ?? []) {
+                if( !it.code){
+                    throw BadRequest(`Не указан код интерфейса "${it.name} (контейнер "${c.name}", code=[${c.code}])"`);
+                }
+                
                 const api = { ...it };
                 container.interfaces.push(api);
                 api.methods = [];
@@ -201,7 +208,7 @@ export class SystemService {
                     }
                 }));
             const result = await this.getByCode(systemCode, { level: "methods" });
-            await logSuccessPutSystem( systemCode, currentState, system, result);
+            await logSuccessPutSystem(systemCode, currentState, system, result);
             return result;
         } catch (err) {
             await logErrorPutSystem(systemCode, currentState, system, err);
