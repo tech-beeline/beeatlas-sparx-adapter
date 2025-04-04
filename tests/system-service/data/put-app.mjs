@@ -276,7 +276,7 @@ export const REMOVE_DOUBLES = {
 }
 
 
-export const CONTAINER_WITHOUT_CODE ={
+export const CONTAINER_WITHOUT_CODE = {
     name: "remove-doubles",
     code: "remove-doubles",
     version: "1.0",
@@ -293,7 +293,7 @@ export const CONTAINER_WITHOUT_CODE ={
     ]
 }
 
-export const CONTAINER_NULL_CODE ={
+export const CONTAINER_NULL_CODE = {
     name: "remove-doubles",
     code: "remove-doubles",
     version: "1.0",
@@ -303,7 +303,7 @@ export const CONTAINER_NULL_CODE ={
     containers: [
         {
             name: "Mordor container",
-            code : null,
+            code: null,
             description: "Орда. Родная, злобная, твоя",
             version: "1.0",
             status: "Proposed"
@@ -311,7 +311,7 @@ export const CONTAINER_NULL_CODE ={
     ]
 }
 
-export const CONTAINER_EMPTY_CODE ={
+export const CONTAINER_EMPTY_CODE = {
     name: "remove-doubles",
     code: "remove-doubles",
     version: "1.0",
@@ -321,7 +321,7 @@ export const CONTAINER_EMPTY_CODE ={
     containers: [
         {
             name: "Mordor container",
-            code : "",
+            code: "",
             description: "Орда. Родная, злобная, твоя",
             version: "1.0",
             status: "Proposed"
@@ -329,7 +329,7 @@ export const CONTAINER_EMPTY_CODE ={
     ]
 }
 
-export const INTERFACE_WITHOUT_CODE ={
+export const INTERFACE_WITHOUT_CODE = {
     name: "remove-doubles",
     code: "remove-doubles",
     version: "1.0",
@@ -339,7 +339,7 @@ export const INTERFACE_WITHOUT_CODE ={
     containers: [
         {
             name: "Mordor container",
-            code : "test.remove-doubles",
+            code: "test.remove-doubles",
             description: "Орда. Родная, злобная, твоя",
             version: "1.0",
             status: "Proposed",
@@ -355,7 +355,7 @@ export const INTERFACE_WITHOUT_CODE ={
     ]
 }
 
-export const INTERFACE_NULL_CODE ={
+export const INTERFACE_NULL_CODE = {
     name: "remove-doubles",
     code: "remove-doubles",
     version: "1.0",
@@ -365,7 +365,7 @@ export const INTERFACE_NULL_CODE ={
     containers: [
         {
             name: "Mordor container",
-            code : "test.remove-doubles",
+            code: "test.remove-doubles",
             description: "Орда. Родная, злобная, твоя",
             version: "1.0",
             status: "Proposed",
@@ -382,7 +382,7 @@ export const INTERFACE_NULL_CODE ={
     ]
 }
 
-export const INTERFACE_EMPTY_CODE ={
+export const INTERFACE_EMPTY_CODE = {
     name: "remove-doubles",
     code: "remove-doubles",
     version: "1.0",
@@ -392,7 +392,7 @@ export const INTERFACE_EMPTY_CODE ={
     containers: [
         {
             name: "Mordor container",
-            code : "test.remove-doubles",
+            code: "test.remove-doubles",
             description: "Орда. Родная, злобная, твоя",
             version: "1.0",
             status: "Proposed",
@@ -407,4 +407,40 @@ export const INTERFACE_EMPTY_CODE ={
             ]
         }
     ]
+};
+
+export const ADD_INTERFACE_METHOD = {
+    "name": "add-method",
+    "code": "add-method",
+    "version": "1.0",
+    "author": "Игорь Воронин",
+    "FQName": "IT-Landscape Catalog/DEV_TEST/Tests/update-existins-api",
+    "status": "Proposed",
+    "containers": [
+        {
+            name: "Mordor",
+            code: "mordor.add-method",
+            version : "1.0",
+            status: "Proposed",
+            interfaces: [
+                {
+                    name : "orcs api",
+                    code : "orcs.mordor.add-method",
+                    version: "1.0",
+                    status: "Proposed",
+                    methods: [
+                        {
+                            name : "GET /orcs"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "links": {
+        "self": "/api/v4/systems/add-method",
+        "purpose": "/api/v4/systems/add-method/purpose",
+        "e2e": "/api/v4/systems/add-method/e2e",
+        "assessments": "/api/v4/systems/add-method/e2e"
+    }
 }

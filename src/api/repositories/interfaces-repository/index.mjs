@@ -13,11 +13,11 @@ import { randomUUID } from 'node:crypto';
 const INTERFACES_FOLDER = 'Interfaces'
 
 const isAPIEquals = (a, b) => a.name === b.name
-    && a.description === b.description
-    && a.version === b.version
-    && a.status === b.status
-    && a.specification === b.specification
-    && a.implements == b.implements;
+    && (a.description??"") === (b.description??"")
+    && (a.version??"") === (b.version??"")
+    && (a.status??"") === (b.status??"")
+    && (a.specification??"") === (b.specification??"")
+    && (a.implements??"") === (b.implements??"");
 
 const isMethodEquals = (a, b) =>
     a.name === b.name && (a.description ?? "") === (b.description ?? "")
@@ -510,16 +510,18 @@ export class InterfacesRepository {
         const existingMethods = await Repository.query(SELECT_INTERFACE_METHODS_BY_ID, interface_id);
 
         return Repository.transactionScope(async () => {
+            /*
             for (const e of existingMethods) {
                 if (!methods.find(m => m.name.toLowerCase() === e.name.toLowerCase())) {
                     await this.deleteMethod(e);
                 }
             }
+            */
 
             for (const m of methods) {
                 const existing = existingMethods.filter(e => e.name.toLowerCase() === m.name.toLowerCase() && !e.removed_date);
                 if (!existing.length) {
-                    await this.insertMethod(interface_id, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
+                    await this.insertMethod({ object_id: interface_id }, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
                     continue;
                 }
 

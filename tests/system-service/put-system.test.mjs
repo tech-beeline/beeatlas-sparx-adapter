@@ -8,7 +8,7 @@ import { APP_API_TC, APP_API_TC_READ_INTERFACES, CDMB_A, checkSystem, checkSyste
 
 import systemsService, { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SystemService } from '../../src/api/services/systems-service/index.mjs';
 import { SparxRepositoryPackagesOptions } from '../../src/api/repositories/sparx-ea-repository/options.mjs';
-import { CHANGE_CONTAINER_CODE, CONTAINER_EMPTY_CODE, CONTAINER_NULL_CODE, CONTAINER_WITHOUT_CODE, CREATE_CONTAINER_INTERFACE, CREATE_ONE_CONTAINER, CREATE_SLA, CREATE_TWO_CONTAINERS, INTERFACE_EMPTY_CODE, INTERFACE_NULL_CODE, INTERFACE_WITHOUT_CODE, NEW_CONTAINER, REMOVE_DOUBLES } from './data/put-app.mjs';
+import { ADD_INTERFACE_METHOD, CHANGE_CONTAINER_CODE, CONTAINER_EMPTY_CODE, CONTAINER_NULL_CODE, CONTAINER_WITHOUT_CODE, CREATE_CONTAINER_INTERFACE, CREATE_ONE_CONTAINER, CREATE_SLA, CREATE_TWO_CONTAINERS, INTERFACE_EMPTY_CODE, INTERFACE_NULL_CODE, INTERFACE_WITHOUT_CODE, NEW_CONTAINER, REMOVE_DOUBLES } from './data/put-app.mjs';
 import { insertMethods } from './data/prepare-doubles.mjs';
 import fdmStorage from '../../src/api/repositories/fdm-storage.mjs';
 
@@ -133,6 +133,13 @@ suite("Обновление данных для системы", async () => {
         delete newVersion.modifiedDate;
         deepEqual(newVersion, REMOVE_DOUBLES);
     });
+
+    test("Добавление метода", async ()=>{
+        const service = new SystemService();
+        const newVersion = JSON.parse(JSON.stringify(await service.putSystem(ADD_INTERFACE_METHOD.code, ADD_INTERFACE_METHOD)));
+        delete newVersion.modifiedDate;
+        deepEqual(newVersion, ADD_INTERFACE_METHOD);
+    })
 });
 
 suite( "Валидация", async ()=>{
