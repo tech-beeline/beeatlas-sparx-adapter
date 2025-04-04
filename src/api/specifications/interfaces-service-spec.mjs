@@ -15,7 +15,8 @@ export const METHOD_SCHEMA = {
         description: stringProperty("Описание метода"),
         rps: numberProperty("Максимальная нагрузка (запросов в секунду)"),
         latency: numberProperty("Максимальное время отклика (ms)"),
-        error_rate: numberProperty("Максимльное количество отказов (%)")
+        error_rate: numberProperty("Максимльное количество отказов (%)"),
+        implements: numberProperty("Код возможности, которую реализует метод"),
     }
 }
 
