@@ -13,18 +13,18 @@ import { randomUUID } from 'node:crypto';
 const INTERFACES_FOLDER = 'Interfaces'
 
 const isAPIEquals = (a, b) => a.name === b.name
-    && (a.description??"") === (b.description??"")
-    && (a.version??"") === (b.version??"")
-    && (a.status??"") === (b.status??"")
-    && (a.specification??"") === (b.specification??"")
-    && (a.implements??"") === (b.implements??"");
+    && (a.description ?? "") === (b.description ?? "")
+    && (a.version ?? "") === (b.version ?? "")
+    && (a.status ?? "") === (b.status ?? "")
+    && (a.specification ?? "") === (b.specification ?? "")
+    && (a.implements ?? "") === (b.implements ?? "");
 
 const isMethodEquals = (a, b) =>
     a.name === b.name && (a.description ?? "") === (b.description ?? "")
     && (a.rps?.toString() ?? "") === (b.rps?.toString() ?? "")
     && (a.latency?.toString() ?? "") === (b.latency?.toString() ?? "")
-    && (a.error_rate?.toString() ?? "") === (b.error_rate?.toString() ?? "");
-
+    && (a.error_rate?.toString() ?? "") === (b.error_rate?.toString() ?? "")
+    && (a.implements?.toString() ?? "") === (b.implements?.toString() ?? "");
 
 const tcRepository = new TechnicalCapabilitiesRepository();
 
@@ -201,14 +201,9 @@ export class InterfacesRepository {
     /**
      * 
      * @param {{object_id}} api 
-     * @param {string} name 
-     * @param {string} description 
-     * @param {*} returnType 
-     * @param {*} rps 
-     * @param {*} latency 
-     * @param {*} error_rate 
+     * @param { { name, description, returnType, rps, latency, error_rate, implements }} method 
      */
-    async insertMethod({ object_id }, name, description, returnType, rps, latency, error_rate) {
+    async insertMethod({ object_id }, { name, description, returnType, rps, latency, error_rate, implements: tcCode }) {
         if (!object_id) throw Error('object_id==null');
 
         const existingMethod = await Repository.queryOne(SELECT_METHOD_BY_NAME_INTERFACE_ID, [object_id, name]);
@@ -221,14 +216,20 @@ export class InterfacesRepository {
             ea_guid: randomUUID().toUpperCase()
         }) //Repository.queryOne(INSERT_INTERFACE_METHOD, [code, name, description, returnType]);
 
+        if (tcCode) {
+            const tc = await tcRepository.selectTCByCode(tcCode);
+            if (!tc.length) throw Error(`TC с кодом =[${tcCode}] для метода ${name} не найден`);
+        }
+
         const tags = {
             rps: rps,
             latency: latency,
-            error_rate: error_rate
+            error_rate: error_rate,
+            implements: tcCode
         }
         for (const tag in tags) {
             if (!tags[tag]) continue;
-            Repository.insert(t_operationtag,
+            await Repository.insert(t_operationtag,
                 {
                     elementid: method.operationid,
                     property: tag,
@@ -237,15 +238,25 @@ export class InterfacesRepository {
         }
     }
 
-    async updateMethod(operationid, name, description, returnType, rps, latency, error_rate) {
+    async updateMethod(operationid, { name, description, returnType, rps, latency, error_rate, implements: tcCode }) {
         if (!operationid) throw Error('operationid is not specified');
 
+        if (tcCode) {
+            const tc = await tcRepository.selectTCByCode(tcCode);
+            if (!tc.length) throw Error(`TC с кодом =[${tcCode}] для метода ${name} не найден`);
+        }
         console.info('Обновляем метод', name);
         //const updatedMethods = await Repository.queryRows(UPDATE_OPERATION, [interfaceCode, name, description, returnType]);
         const method = await Repository.update(t_operation, { name: name, notes: description, type: returnType }, { operationid: operationid })
         if (!method.length) throw Error(`Метод с operationid=${operationid} не найден`)
         console.info('Обновляем tagged value', { name: name, rps: rps, latency: latency, error_rate: error_rate });
-        await Repository.updateOperationTags(method[0].operationid, { rps: rps, latency: latency, error_rate: error_rate, removedDate: null });
+        await Repository.updateOperationTags(method[0].operationid, {
+            rps: rps,
+            latency: latency,
+            error_rate: error_rate,
+            removedDate: null,
+            implements: tcCode
+        });
     }
 
     async markMethodRemoved(interfaceCode, name) {
@@ -349,7 +360,7 @@ export class InterfacesRepository {
                 if (currentMethod) {
                     if (!isMethodEquals(currentMethod, m)) {
                         console.info(`${code} - Обновление метода ${m.name}`);
-                        await this.updateMethod(currentMethod.operationid, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
+                        await this.updateMethod(currentMethod.operationid, m);
                     }
                     if (currentMethod.removed_date) {
                         await Repository.updateOperationTags(currentMethod.operationid, { removedDate: null })
@@ -357,7 +368,7 @@ export class InterfacesRepository {
                     continue;
                 }
                 console.log(`${code} - добавление метода ${m.name}`);
-                await this.insertMethod({ object_id: object_id }, m.name, m.description, m.returnType, m.rpos, m.latency, m.error_rate);
+                await this.insertMethod({ object_id: object_id }, m);
             }
         }
     }
@@ -490,11 +501,7 @@ export class InterfacesRepository {
         if (!api.interface_id) throw Error("api.interface_id==null");
         const methods = api.methods ?? [];
         for (const method of methods) {
-            await this.insertMethod({ object_id: new_api.interface_id },
-                method.name,
-                method.description,
-                method.returnType,
-                method.rps, method.latency, method.error_rate);
+            await this.insertMethod({ object_id: new_api.interface_id }, method);
         }
     }
     /**
@@ -521,14 +528,14 @@ export class InterfacesRepository {
             for (const m of methods) {
                 const existing = existingMethods.filter(e => e.name.toLowerCase() === m.name.toLowerCase() && !e.removed_date);
                 if (!existing.length) {
-                    await this.insertMethod({ object_id: interface_id }, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
+                    await this.insertMethod({ object_id: interface_id }, m);
                     continue;
                 }
 
                 if (existing.length === 1) {
                     const em = existing[0];
                     if (!isMethodEquals(m, em)) {
-                        await this.updateMethod(em.operationid, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
+                        await this.updateMethod(em.operationid, m);
                     }
                     continue;
                 }
@@ -537,7 +544,7 @@ export class InterfacesRepository {
                 for (const em of existing) {
                     if (em.operationid === targetMethod.operationid) {
                         if (!isMethodEquals(m, em)) {
-                            await this.updateMethod(em.operationid, m.name, m.description, m.returnType, m.rps, m.latency, m.error_rate);
+                            await this.updateMethod(em.operationid, m);
                         }
                         continue;
                     }

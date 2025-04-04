@@ -430,7 +430,9 @@ export const ADD_INTERFACE_METHOD = {
                     status: "Proposed",
                     methods: [
                         {
-                            name : "GET /orcs"
+                            name : "GET /orcs",
+                            implements : "FDMSHOWCASEAPP.001",
+                            rps: "10"
                         }
                     ]
                 }

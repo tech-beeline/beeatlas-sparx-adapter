@@ -12,6 +12,7 @@ export const SELECT_ALL_METHODS = `SELECT
 	latency.value as latency,
 	error_rate.value as error_rate,
 	removed_date.value as removed_date,
+	implements.value as implements,
 	(SELECT 1 
 		FROM t_connectortag t
 		JOIN t_connector c ON c.connector_id=t.elementid
@@ -23,6 +24,7 @@ FROM t_object it
 	LEFT JOIN t_operationtag latency ON latency.elementid=m.operationid AND latency.property='latency'
 	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=m.operationid AND error_rate.property='error_rate'
 	LEFT JOIN t_operationtag removed_date ON removed_date.elementid=m.operationid AND removed_date.property='removedDate'
+	LEFT JOIN t_operationtag implements ON implements.elementid=m.operationid AND implements.property='implements'
 WHERE it.object_type='Interface'
 `
 

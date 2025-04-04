@@ -126,7 +126,7 @@ export class SystemService {
      * 
      * @param {Container[]} containers 
      */
-    prepareContainersMethods(containers) {
+    async prepareContainersMethods(containers) {
         const preparedContainers = [];
         for (const c of containers) {
             if (!c.code) {
@@ -136,10 +136,10 @@ export class SystemService {
             container.interfaces = [];
             preparedContainers.push(container);
             for (const it of c.interfaces ?? []) {
-                if( !it.code){
+                if (!it.code) {
                     throw BadRequest(`Не указан код интерфейса "${it.name} (контейнер "${c.name}", code=[${c.code}])"`);
                 }
-                
+
                 const api = { ...it };
                 container.interfaces.push(api);
                 api.methods = [];
@@ -181,15 +181,13 @@ export class SystemService {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`);
         }
 
-        const containers = this.prepareContainersMethods(system.containers ?? []);
+        const containers = await this.prepareContainersMethods(system.containers ?? []);
         const currentState = await this.getByCode(systemCode, { level: "methods" });
 
         try {
             await runSystemContext(systemCode, async () =>
                 eaRepository.transactionScope(async () => {
                     const [newContainers, outdateContainers, existingContainers] = diffContainers(await systemsRepository.selectSystemContainers(systemCode), containers);
-
-                    const containerService = new SystemContainerService();
 
                     for (const c of newContainers) {
                         await systemsRepository.addSystemContainer(systemCode, c);
