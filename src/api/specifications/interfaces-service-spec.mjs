@@ -16,7 +16,7 @@ export const METHOD_SCHEMA = {
         rps: numberProperty("Максимальная нагрузка (запросов в секунду)"),
         latency: numberProperty("Максимальное время отклика (ms)"),
         error_rate: numberProperty("Максимльное количество отказов (%)"),
-        implements: numberProperty("Код возможности, которую реализует метод"),
+        implements: stringProperty("Код возможности, которую реализует метод", { example: 'FDMSHOWCASEAPP.001' }),
     }
 }
 
@@ -31,7 +31,7 @@ export const INTERFACE_SCHEMA = {
         version: stringProperty("Версия интерфейса", { example: "1.0.0" }),
         status: stringProperty("Статус интерфейса", { example: "Proposed" }),
         protocol: stringProperty("Протокол", { example: "rest" }),
-        implements : stringProperty("Код технической возможности, которую реализует интерфейс"),
+        implements: stringProperty("Код технической возможности, которую реализует интерфейс"),
         specification: stringProperty("Ссылка на спецификацию"),
         methods: {
             type: "array",
