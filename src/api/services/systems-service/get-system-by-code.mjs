@@ -36,6 +36,9 @@ class GetSystemByCode {
         for (const containerCode of Object.keys(containersMap)) {
             const apiRows = await interfaceDataService.selectContainerInterfaces(containerCode);
             for (const row of apiRows) {
+                if( !row.code) {
+                    console.error(`Обнаружен интерфейс с пустым кодом, ${JSON.stringify(row)}`);
+                }
                 if (row.status !== REMOVED_STATUS || addRemoved) {
                     interfacesMap[row.code.toLowerCase()] = containersMap[containerCode].addInterface(row);
                 }

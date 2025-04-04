@@ -26,7 +26,7 @@ SELECT
 FROM t_object cn
 	JOIN cte_realization it ON it.start_object_id=cn.object_id AND it.object_type='Interface'
 	LEFT JOIN t_objectproperties spec ON spec.object_id=it.object_id AND spec.property='${API_SPECFICATION_TAG}'
-WHERE cn.stereotype='${CONTAINER_STEREOTYPE}'`
+WHERE cn.stereotype='${CONTAINER_STEREOTYPE}' AND it.alias IS NOT NULL`;
 
 export const SELECT_CONTAINER_INTERFACES = `${SELECT_ALL_CONTAINERS_INTERFACES} AND LOWER(cn.alias)=LOWER($1)`;
 export const SELECT_CONTAINER_INTERFACES_BY_ID = `${SELECT_ALL_CONTAINERS_INTERFACES} AND cn.object_id=$1`;
