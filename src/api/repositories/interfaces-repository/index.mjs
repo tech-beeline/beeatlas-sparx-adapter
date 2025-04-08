@@ -385,7 +385,7 @@ export class InterfacesRepository {
             (await this.selectInterfaceByCode(getImpliedNodeFormatForFile));
         if (!api)
             throw Error("Interface not found");
-        const method = await Repository.queryOne(SELECT_INTERFACE_METHODS_BY_ID, [api.object_id, methodName]);
+        const method = await Repository.queryOne(SELECT_METHOD_BY_NAME_INTERFACE_ID, [api.object_id, methodName]);
         if (!method)
             throw Error(`Method ${methodName} not found`);
         await Repository.updateOperationTags(method.operationid, { rps: rps, latency: latency, error_rate: error_rate });

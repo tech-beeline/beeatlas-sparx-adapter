@@ -97,10 +97,10 @@ export class SecnarioDashboardBuilder {
             if (target) {
                 Object.assign(target, t);
                 if (t.expr) {
-                    target.expr = formatQuery(t.expr, path, method, client_code);
+                    target.expr = formatQuery(t.expr, path, method, message.client_code);
                 }
                 if (t.query) {
-                    target.query = formatQuery(t.query, path, method, client_code)
+                    target.query = formatQuery(t.query, path, method, message.client_code)
                 }
             }
         }
