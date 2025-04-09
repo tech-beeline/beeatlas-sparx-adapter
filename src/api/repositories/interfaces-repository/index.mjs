@@ -158,7 +158,7 @@ export class InterfacesRepository {
 
             /** @type {{ code:string, name:string, object_id }[]} */
             const currentImplementation = await Repository.query(SELECT_API_TC, interface_id);
-            for (const tc of currentImplementation.filter(tc => tc.code.toLowerCase() != tcCode?.toLowerCase())) {
+            for (const tc of currentImplementation.filter(tc => tc.code.toLowerCase() != api.implements?.toLowerCase())) {
                 await Repository.delete(t_connector, { start_object_id: interface_id, end_object_id: tc.object_id, connector_type: REALIZATION_CONNECTOR });
             }
 
