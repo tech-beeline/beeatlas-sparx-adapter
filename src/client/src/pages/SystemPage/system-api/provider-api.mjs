@@ -25,6 +25,7 @@ function MethodRow({ method }) {
     const onSave = async () => {
         setSaving(true);
         try {
+            setSaveError(null);
             const response = await fetch(`/api/v4/methods-sla`, {
                 method: "POST",
                 body: JSON.stringify({

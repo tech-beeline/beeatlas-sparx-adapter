@@ -358,7 +358,9 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             root_messages.push(...CallTreeBuilder.build(m));
         }
 
-        //messages.forEach(m => m.childDiagram = undefined);
+        for (const m of root_messages) {
+            CallTreeBuilder.deduplicateChild(m);
+        }
 
         let applications = {}
         for (const o of Object.values(usedSystems)) {

@@ -77,6 +77,16 @@ export default class CallTreeBuilder {
         return messages;
     }
 
+    static deduplicateChild(msg) {
+        const child = [];
+        for (const m of msg.children ?? []) {
+            if( m.operation_guid && child.find( c=>c.operation_guid===m.operation_guid))
+                continue;
+            child.push(m);
+            this.deduplicateChild(m);
+        }
+        msg.children = child;
+    }
 
     /**
      * 
@@ -103,7 +113,6 @@ export default class CallTreeBuilder {
             }
 
             if (method.server != server) {
-                //onError(message, 'На родительской диаграмме объект не явля')
                 console.warn('method.server != server')
                 // Вызов при котором на дочерней диаграмме первый вызов того же обьекта, что и последний на родительской
             }
@@ -116,12 +125,7 @@ export default class CallTreeBuilder {
             if (!operation_guid) {
                 onError(message, OPERATION_GUID_NOT_FOUND);
             }
-            /*
-            if (!method?.protocol) {
-                onError(message, PROTOCOL_NOT_SPECIFIED);
-            }
-                */
-            
+
             return [new CallMessage(Object.assign({}, message, { children: tmp }))]
         }
         if (client?.code == server?.code) {

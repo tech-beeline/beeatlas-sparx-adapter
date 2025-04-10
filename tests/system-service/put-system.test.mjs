@@ -128,6 +128,21 @@ suite("Обновление данных для системы", async () => {
         }
     });
 
+    test("Изменение описания интерфейса", async () => {
+        const service = new SystemService();
+        throw Error('not implemented');
+    });
+
+    test("Изменение tc code api", async () => {
+        const service = new SystemService();
+        throw Error('not implemented');
+    });
+
+    test("Изменение tc code api tcCode=null", async () => {
+        const service = new SystemService();
+        throw Error('not implemented');
+    });
+
     test("Убрать дубли методов при публикации", async () => {
         const service = new SystemService();
 

@@ -495,7 +495,6 @@ class MonitoringService {
         const system = await componentsService.getSystem(cmdb);
         const sources = new SourceFactory();
 
-        //const sourceMap = this.selectSourcesMap();
         const methodsSources = await monitoringRepository.selectSystemMethodsSources(cmdb);
 
         const apiMap = {};
