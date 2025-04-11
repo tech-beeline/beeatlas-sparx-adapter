@@ -22,7 +22,7 @@ export function formatQuery(template, uri, method, client_code) {
         URI: uri,
         //method: method, 
         METHOD: method,
-        CLIENT_CMDB : client_code
+        CLIENT_CODE: client_code
         //uri_regex: uri_regex, 
     };
 
@@ -86,7 +86,8 @@ export class SecnarioDashboardBuilder {
         const ret = JSON.parse(this.statTemplateJSON);
 
         const apiTemplate = message.source.apiMetricTemplate;
-        if (!apiTemplate) throw Error(`api-metric-template not specified for ${message.method.name}`);
+        if (!apiTemplate)
+            throw Error(`api-metric-template not specified for ${message.method.name}`);
         if (!apiTemplate.panels?.length) throw Error(`No template panel found on ${apiTemplate.title}`);
         const panelTemplate = apiTemplate.panels[0];
 
@@ -126,6 +127,10 @@ export class SecnarioDashboardBuilder {
         message.method = message.method ?? { name: message.name, operation_guid: message.operation_guid }
 
         message.source = methodSources[message.method.operation_guid]
+        if (message.stereotype === "via MAPIC") {
+            message.source = methodSources.MAPIC;
+            console.log('MAPIC');
+        }
         /**
          * @type {StatPanel}
          */

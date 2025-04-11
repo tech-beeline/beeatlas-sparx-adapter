@@ -5,7 +5,7 @@ import Repository,
 } from '../sparx-ea-repository/index.mjs';
 
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
-import { SELECT_API_SOURCES, SELECT_METHOD_ALL_SOURCES, SELECT_METHOD_SOURCES, SELECT_PROVIDED_API_SOURCES, SELECT_SOURCES_PROPERIES } from './methods-sources.mjs';
+import { SELECT_API_SOURCES, SELECT_MAPIC_METRIC_TEMPLATE, SELECT_METHOD_ALL_SOURCES, SELECT_METHOD_SOURCES, SELECT_PROVIDED_API_SOURCES, SELECT_SOURCES_PROPERIES } from './methods-sources.mjs';
 import { API_METRIC_TEMPLATE_TAG } from '../../const.mjs';
 import { SELECT_SYSTEM_CONTAINERS_CODE } from '../systems-repository/systems-containers-queries.mjs';
 import { SELECT_INTERFACE_BY_CODE } from '../interfaces-repository/interfaces-queries.mjs';
@@ -200,6 +200,12 @@ export class MonitoringRepository {
      */
     async selectMethodsSources() {
         return Repository.queryRows(SELECT_METHOD_SOURCES);
+    }
+
+    async selectMapicMetricTempalte() {
+        const metric =  await Repository.queryOne(SELECT_MAPIC_METRIC_TEMPLATE);
+        if( metric ) return metric.api_metric_template;
+        return null;
     }
 
     async selectSystemMethodsSources(systemCode) {

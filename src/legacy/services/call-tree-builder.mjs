@@ -106,7 +106,6 @@ export default class CallTreeBuilder {
                 return [new CallMessage(message)]
             }
 
-
             if (method.server?.code == client.code) {
                 // Внутренний вызов системы с переносом на другую диаграмму (на поддиаграмме первый вызов той же системы)
                 return method.child.reduce((ret, v) => [...ret, ...this.build(v, op_guid)], []);
