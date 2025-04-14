@@ -413,3 +413,58 @@ export const SYSTEM_MONITORING_RESULT_SCHEMA = {
     }
 }
 
+export const isContainersEqual = (a, b) =>
+    a.name === b.name
+    && (a.description ?? "") === (b.description ?? "")
+    && (a.status ?? "") === (b.status ?? "")
+    && (a.version ?? "") === (b.version ?? "");
+
+export const isAPIEquals = (a, b) => a.name === b.name
+    && (a.description ?? "") === (b.description ?? "")
+    && (a.version ?? "") === (b.version ?? "")
+    && (a.status ?? "") === (b.status ?? "")
+    && (a.specification ?? "") === (b.specification ?? "")
+    && (a.implements ?? "") === (b.implements ?? "");
+
+const codeCompare = (a, b) => a.code.toLowerCase().localeCompare(b.code.toLowerCase());
+const nameCompare = (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+
+export const isMethodEquals = (a, b) =>
+    a.name === b.name && (a.description ?? "") === (b.description ?? "")
+    && (a.rps?.toString() ?? "") === (b.rps?.toString() ?? "")
+    && (a.latency?.toString() ?? "") === (b.latency?.toString() ?? "")
+    && (a.error_rate?.toString() ?? "") === (b.error_rate?.toString() ?? "")
+    && (a.implements?.toString() ?? "") === (b.implements?.toString() ?? "");
+/**
+ * 
+ * @param {System} aSystem 
+ * @param {System} bSystem 
+ */
+export const isSystemEquals = (aSystem, bSystem) => {
+    const aContainers = [...aSystem.containers ?? []].sort(codeCompare);
+    const bContainers = [...bSystem.containers ?? []].sort(codeCompare);
+    if (aContainers.length !== bContainers.length) return false;
+    for (let i = 0; i < aContainers.length; i++) {
+        if (aContainers[i].code.toLowerCase() !== bContainers[i].code.toLowerCase() || !isContainersEqual(aContainers[i], bContainers[i]))
+            return false;
+        const aInterfaces = [...aContainers[i].interfaces ?? []].sort(codeCompare);
+        const bInterfaces = [...bContainers[i].interfaces ?? []].sort(codeCompare);
+        if (aInterfaces.length !== bInterfaces.length)
+            return false;
+        for (let j = 0; j < aInterfaces.length; j++) {
+            const aApi = aInterfaces[j];
+            const bApi = bInterfaces[j];
+            if (aApi.code?.toLowerCase() !== bApi.code?.toLowerCase() || !isAPIEquals(aApi, bApi))
+                return false;
+            const aMethods = [...aApi.methods ?? []].sort(nameCompare);
+            const bMethods = [...bApi.methods ?? []].sort(nameCompare);
+            if (aMethods.length !== bMethods.length)
+                return false;
+            for (let k = 0; k < aMethods.length; k++) {
+                if (!isMethodEquals(aMethods[k], bMethods[k]))
+                    return false;
+            }
+        }
+    }
+    return true;
+}

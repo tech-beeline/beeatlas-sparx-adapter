@@ -10,6 +10,7 @@ import System, {
     APIMethod,
     Container,
     E2EProcessContext,
+    isSystemEquals,
     SysemAssessmentStatus
 } from "../../model/system.mjs";
 
@@ -18,7 +19,8 @@ import {
     InterfacesRepository,
     MonitoringRepository,
     PtrArtifactsRepository,
-    SystemsRepository
+    SystemsRepository,
+    TechnicalCapabilitiesRepository
 } from "../../repositories/index.mjs";
 import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
 import {
@@ -41,6 +43,7 @@ import { SystemContainerService } from './containers/index.mjs'
 import { runSystemContext } from "../../repositories/systems-repository/system-package.mjs";
 import { logErrorPutSystem, logSuccessPutSystem } from "./log/index.mjs";
 
+
 const STEREOTYPE_MAP = {
     ArchiMate_TechnicalCapability: "TechnicalCapability",
     ArchiMate_Capability: "Capability",
@@ -52,6 +55,7 @@ const interfacesRepository = new InterfacesRepository();
 const systemsRepository = new SystemsRepository();
 const ptrArtifactsRepositoryInstance = new PtrArtifactsRepository();
 const monitoringRepository = new MonitoringRepository();
+const tcRepository = new TechnicalCapabilitiesRepository();
 
 /**
  * 
@@ -59,7 +63,10 @@ const monitoringRepository = new MonitoringRepository();
  * @param {Container} b 
  */
 const isContainersEquals = (a, b) => a.name === b.name && a.status === b.status && a.version === b.version
-
+const checkTC = async (code, context) => {
+    const tc = await tcRepository.selectTCByCode(code);
+    if (!tc.length) throw Error(`TC с кодом [${code}] не найден. ${context ?? ""} `);
+}
 export class SystemService {
     constructor() {
         this.getByCode = this.getByCode.bind(this);
@@ -124,16 +131,19 @@ export class SystemService {
 
     /**
      * 
-     * @param {Container[]} containers 
+     * @param {Container[]} targetContainers 
+     * @param {Container[]} currentContainers 
      */
-    async prepareContainersMethods(containers) {
+    async prepareContainersMethods(targetContainers, currentContainers) {
         const preparedContainers = [];
-        for (const c of containers) {
+        for (const c of targetContainers) {
             if (!c.code) {
                 throw BadRequest(`Не задан код контейнера "${c.name}"`)
             }
             const container = { ...c }
+            const currentContainer = currentContainers.find(cc => cc.code?.toLowerCase() === container.code.toLowerCase());
             container.interfaces = [];
+            const currentInterfaces = currentContainer?.interfaces ?? [];
             preparedContainers.push(container);
             for (const it of c.interfaces ?? []) {
                 if (!it.code) {
@@ -141,8 +151,15 @@ export class SystemService {
                 }
 
                 const api = { ...it };
+                const currentAPI = currentInterfaces.find(cit => cit.code?.toLowerCase() === api.code.toLowerCase());
+                if (api.implements && api.implements !== currentAPI.implements) {
+                    await checkTC(api.implements, `Интерфейс [${api.code}] "${api.name}"`);;
+                }
+
                 container.interfaces.push(api);
                 api.methods = [];
+                const currentMethods = currentAPI?.methods ?? [];
+
                 if ((it.methods ?? []).length) {
                     const methodsMap = {};
                     for (const m of it.methods) {
@@ -157,7 +174,11 @@ export class SystemService {
                             Object.assign(method, m);
                         }
                         if (!method) {
-                            methodsMap[m.name] = { ...m };
+                            method = methodsMap[m.name] = { ...m };
+                        }
+                        const currentMethod = currentMethods.find(cm => cm.name.toLowerCase() == m.name.toLowerCase());
+                        if (method.implements && currentMethod?.implements !== method.implements) {
+                            await checkTC(method.implements, `Метод "${method.name}", интефрейс [${api.code}] "${api.name}"`);
                         }
                     }
                     api.methods = Object.values(methodsMap);
@@ -180,9 +201,13 @@ export class SystemService {
         if (containerWithoutCode) {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`);
         }
-
-        const containers = await this.prepareContainersMethods(system.containers ?? []);
         const currentState = await this.getByCode(systemCode, { level: "methods" });
+        if( isSystemEquals( currentState, system)){
+            console.info( `Система [${systemCode}] "${system.name}" не требует обновления`);
+            return currentState;
+        }
+
+        const containers = await this.prepareContainersMethods(system.containers ?? [], currentState.containers ?? []);
 
         try {
             await runSystemContext(systemCode, async () =>

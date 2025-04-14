@@ -16,14 +16,13 @@ import { SELECT_SYSTEMS, SELECT_SYSTEM_BY_CODE } from './queries/index.mjs';
 import { SELECT_SYSTEM_PACKAGES } from './queries/select-systems.mjs';
 import { SELECT_SYSTEM_CONTAINER_BY_CODE } from './queries/select-containers.mjs';
 import { systemContext, SystemPackage } from './system-package.mjs';
-import { Container } from '../../model/system.mjs';
+import { Container, isContainersEqual } from '../../model/system.mjs';
 import { InterfacesRepository } from '../index.mjs';
 import { API_LOAD_DATE_TAG } from '../interfaces-repository/const.mjs';
 
 
 const Repository = new SparxRepository();
 
-const isContainersEqual = (a, b) => a.name === b.name && a.description === b.description && a.status === b.status && a.version === b.version;
 
 
 /**
