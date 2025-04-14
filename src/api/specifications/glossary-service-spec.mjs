@@ -1,6 +1,6 @@
 import { GlossaryControllersInstance } from "../controllers/index.mjs";
 import { GetJSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, schemasRef, stringProperty } from "./helpers.mjs"
-import { GLOSSARY_LIST_RESOURCE, GLOSSARY_RESOURCE, GLOSSARY_TERM_LIST_RESOURCE, TERM_RESOURCE } from "./paths.mjs";
+import { DATABASE_SERVICE_LIST_RESOURCE, GLOSSARY_LIST_RESOURCE, GLOSSARY_RESOURCE, GLOSSARY_TERM_LIST_RESOURCE, TERM_RESOURCE } from "./paths.mjs";
 
 export const BUSINESS_TERMS_SERVICE_NAME = "Управление информацией о бизнес-терминах"
 export const BUSINESS_TERMS_SERVICE_DESCRIPTION = `Управление информацией бизнес-терминах`
@@ -40,6 +40,17 @@ const GLOSSARY_SCHEMA = SWAGGER.defineEntitySchema("Glossary", {
     }
 });
 
+
+const DATABASE_SERVICE = SWAGGER.defineEntitySchema("DatabaseService", {
+    type: "object",
+    properties: {
+        id: stringProperty("Идентификатор сервиса баз данных", { example: "782754ba-b90a-4cef-a240-6721dd09f067" }),
+        name: stringProperty("Название"),
+        serviceType: stringProperty("Тип", { example: "Mssql" }),
+        description: stringProperty("Описание")
+    }
+});
+
 //#endregion
 
 //#region Определение операций
@@ -64,6 +75,10 @@ SWAGGER.defineGet(GLOSSARY_TERM_LIST_RESOURCE,
 SWAGGER.defineGet(TERM_RESOURCE,
     new GetJSONOperation("Получение описания термина", [TERM_ID_PARAMETER], arraySchema(TERM_SCHEMA))
 );
+
+SWAGGER.defineGet(DATABASE_SERVICE_LIST_RESOURCE, new GetJSONOperation(
+    "Получение списка сервисов баз данных", null, arraySchema(DATABASE_SERVICE), GlossaryControllersInstance.getDatabaseServices
+));
 
 //#endregion
 

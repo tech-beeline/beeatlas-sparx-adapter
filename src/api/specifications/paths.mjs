@@ -22,6 +22,11 @@ export const TERM_LIST_RESOURCE_V4 = '/api/v4/glossary-terms';
 export const TERM_LIST_RESOURCE = TERM_LIST_RESOURCE_V4;
 export const TERM_RESOURCE_V4 = '/api/v4/glossary-terms/{id}';
 export const TERM_RESOURCE = TERM_RESOURCE_V4;
+
+export const DATABASE_SERVICES_RESOURCE_V4 = '/api/v4/database-services';
+export const DATABASE_SERVICE_LIST_RESOURCE = DATABASE_SERVICES_RESOURCE_V4;
+export const DATABASE_SERVICE_RESOURCE = `${DATABASE_SERVICE_LIST_RESOURCE}/{id}`;
+
 //#endregion
 
 //#region technical capability paths

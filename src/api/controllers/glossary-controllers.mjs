@@ -1,5 +1,5 @@
 import express from 'express'
-import { BadRequest, NotFound } from '../../utils/errors.mjs'
+import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs'
 import glossaryService from '../services/glossary-service.mjs';
 
 export class GlossaryControllers {
@@ -39,6 +39,10 @@ export class GlossaryControllers {
             throw BadRequest(`Parameter id is not specified`);
         }
         response.json(await glossaryService.getGlossaryTerms(request.params.id));
+    }
+    
+    async getDatabaseServices(request, response){
+        response.json( await glossaryService.getDatabaseServices());
     }
 }
 

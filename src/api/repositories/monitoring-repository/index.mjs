@@ -212,7 +212,6 @@ export class MonitoringRepository {
         const [methodsSources] = await Promise.all(
             [
                 Repository.queryRows(`${SELECT_METHOD_ALL_SOURCES} WHERE i.app_code=$1`, [systemCode]),
-                //this.selectSourcesMap()
             ]
         )
         return methodsSources;

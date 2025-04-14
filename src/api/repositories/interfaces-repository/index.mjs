@@ -567,7 +567,7 @@ export class InterfacesRepository {
         return Repository.transactionScope(async () => {
             const outdateInterfaces = existingApiList.filter(e => !interfaces.find(c => c.code === e.code));
             for (const outdateApi of outdateInterfaces) {
-                this.deleteContainerInterface(container_id, outdateApi.interface_id);
+                await this.deleteContainerInterface(container_id, outdateApi.interface_id);
             }
 
             const newApiList = interfaces.filter(n => !existingApiList.find(e => e.code === n.code));
