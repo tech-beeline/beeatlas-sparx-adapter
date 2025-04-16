@@ -133,7 +133,7 @@ export const SELECT_API_SOURCES = `WITH RECURSIVE cte_src AS (
 	 	c.start_object_id,
 		 o.*
 	FROM t_connector c
-		JOIN t_object o ON o.object_id=c.end_object_id AND o.status<>'REMOVED' 
+		JOIN t_object o ON o.object_id=c.end_object_id AND COALESCE(o.status,'')<>'REMOVED' 
 	WHERE c.connector_type='Realisation'
 )
 SELECT

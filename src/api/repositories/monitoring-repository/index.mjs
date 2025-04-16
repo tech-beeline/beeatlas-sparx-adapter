@@ -211,7 +211,7 @@ export class MonitoringRepository {
     async selectSystemMethodsSources(systemCode) {
         const [methodsSources] = await Promise.all(
             [
-                Repository.queryRows(`${SELECT_METHOD_ALL_SOURCES} WHERE i.app_code=$1`, [systemCode]),
+                Repository.queryRows(`${SELECT_METHOD_ALL_SOURCES} WHERE LOWER(i.app_code)=LOWER($1)`, [systemCode]),
             ]
         )
         return methodsSources;
