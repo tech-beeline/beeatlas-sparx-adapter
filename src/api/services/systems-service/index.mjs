@@ -152,7 +152,7 @@ export class SystemService {
 
                 const api = { ...it };
                 const currentAPI = currentInterfaces.find(cit => cit.code?.toLowerCase() === api.code.toLowerCase());
-                if (api.implements && api.implements !== currentAPI.implements) {
+                if (api.implements && api.implements !== currentAPI?.implements) {
                     await checkTC(api.implements, `Интерфейс [${api.code}] "${api.name}"`);;
                 }
 
@@ -170,7 +170,7 @@ export class SystemService {
                         /**@type {APIMethod} */
                         let method = methodsMap[m.name];
                         if (method) {
-                            console.warn(`Обнаружен дубль метода ${m.name}`);
+                            console.warn(`Обнаружен дубль метода ${m.name} интерфейс [${it.code}] ${it.name}`);
                             Object.assign(method, m);
                         }
                         if (!method) {
