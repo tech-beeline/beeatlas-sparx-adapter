@@ -81,8 +81,8 @@ export const ScenarioLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${enc
 export const SCENARIO_MESSAGES_RESOURCE = `${SCENARIO_RESOURCE}/messages`;
 export const ScenarioMessagesLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/messages`);
 
-export const SCENARIO_CALL_TREE_RESOURCE = `${SCENARIO_RESOURCE}/call-tree`;
-export const ScenarioCallTreeLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/call-tree`);
+export const SCENARIO_SEQUENCE_RESOURCE = `${SCENARIO_RESOURCE}/sequence`;
+export const ScenarioCallTreeLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/sequences`);
 
 //#endregion
 

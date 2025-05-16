@@ -17,13 +17,8 @@ export class ScenariosService {
         return messagesRows.map(row => new ScenarioMessage(row));
     }
 
-    async getScnearioSystems() {
-        NotImplemented();
+    async getScenarioSequence(scenarioUID) {
+       NotImplemented();
     }
-    async getScnearioInterfaces() {
-        NotImplemented();
-    }
-    async getScnearioTC() {
-        NotImplemented();
-    }
+
 }

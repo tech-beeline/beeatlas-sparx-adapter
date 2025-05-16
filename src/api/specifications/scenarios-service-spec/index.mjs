@@ -1,6 +1,6 @@
 import { ProcessScenarioControllersInstance as controllers } from "../../controllers/index.mjs";
 import { arraySchema, GetJSONOperation, pathParameter, SimpleServiceSpecification } from "../helpers.mjs";
-import { SCENARIO_MESSAGES_RESOURCE, SCENARIO_RESOURCE } from "../paths.mjs";
+import { SCENARIO_MESSAGES_RESOURCE, SCENARIO_RESOURCE, SCENARIO_SEQUENCE_RESOURCE } from "../paths.mjs";
 import { SCENARIO_SCHEMA } from "./scnearios-service-chemas.mjs";
 
 const SCENARIOS_SERVICE_NAME = "Сервис управление информацией о сценариях процессов";
@@ -8,6 +8,9 @@ const SCENARIOS_SERVICE_DESCRIPTION = "Управление информацие
 
 const GET_SCENARIO_SUMMARY = "Получение информации о сценарии";
 const GET_SCENARIO_MESSAGE_SUMMARY = "Получение информации вызовах и сообщениях между участниками в сценарии";
+
+
+const GET_SCENARIO_SEQUENCE_SUMMARY = "Получение информации последовательности вызовов";
 
 const SCENARIOS_SERVICE_SWAGGER = new SimpleServiceSpecification(SCENARIOS_SERVICE_NAME, SCENARIOS_SERVICE_DESCRIPTION);
 const PROCESS_SCNARIO_SCHEMA_REF = SCENARIOS_SERVICE_SWAGGER.defineEntitySchema("ProcessScenario", SCENARIO_SCHEMA)
@@ -30,6 +33,14 @@ SCENARIOS_SERVICE_SWAGGER
             [SCENARIO_UID_PARAMETER],
             arraySchema({ type: "object" }),
             controllers.getScenarioMessages
+        ))
+    .defineGet(
+        SCENARIO_SEQUENCE_RESOURCE,
+        new GetJSONOperation(
+            GET_SCENARIO_SEQUENCE_SUMMARY,
+            [SCENARIO_UID_PARAMETER],
+            arraySchema({ type: "object" }),
+            controllers.getSequenceCalls
         ));
 
 export default SCENARIOS_SERVICE_SWAGGER;

@@ -424,20 +424,25 @@ class MonitoringService {
 
 
     async buildApiMetricTemlate(uid, target) {
-        const dashboard = await grafanaService.getDashboardByUID(uid);
-        const selectedDatasourceName = GrafanaService.getVariableCurrentValue(dashboard.dashboard, 'DATASOURCE');
-        const datasource = await grafanaService.getDatasourceByName(selectedDatasourceName);
+        try {
+            const dashboard = await grafanaService.getDashboardByUID(uid);
+            const selectedDatasourceName = GrafanaService.getVariableCurrentValue(dashboard.dashboard, 'DATASOURCE');
+            const datasource = await grafanaService.getDatasourceByName(selectedDatasourceName);
 
-        for (const panel of dashboard.dashboard.panels) {
-            panel.datasource.uid = datasource.uid;
-            for (const target of panel.targets) {
-                if (target.datasource.uid === '${DATASOURCE}' || target.datasource.uid === '$DATASOURCE') {
-                    target.datasource.uid = datasource.uid;
+            for (const panel of dashboard.dashboard.panels) {
+                panel.datasource.uid = datasource.uid;
+                for (const target of panel.targets) {
+                    if (target.datasource.uid === '${DATASOURCE}' || target.datasource.uid === '$DATASOURCE') {
+                        target.datasource.uid = datasource.uid;
+                    }
                 }
             }
-        }
 
-        return Object.assign(target, dashboard.dashboard);
+            return Object.assign(target, dashboard.dashboard);
+
+        } catch (error) {
+            console.error(`Ошибка при создании шаблона получения метрик uid="${uid}", target=${JSON.stringify(target)}`, error)
+        }
     }
 
     /**

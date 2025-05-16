@@ -71,7 +71,7 @@ export class SystemsRepository {
 			const pkg = await Repository.createPackage({
 				parent_id: option.TechCapabilitiesCatalogue.package_id,
 				name: systemPackages.name,
-				alias: code
+				alias: code.toUpperCase()
 			});
 			systemPackages.package_id = pkg.package_id;
 		}

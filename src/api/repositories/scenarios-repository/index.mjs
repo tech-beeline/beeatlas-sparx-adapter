@@ -27,9 +27,6 @@ export class ScenarioRepository {
      * @returns {Promise<Array<>>}
      */
     async selectScenarioMessages(scenarioUID) {
-        const scenarioDiagrams = await this.selectRelatedDiagrams(scenarioUID);
-        const messagesRows = await Repository.queryRows(SELECT_MESSAGES_BY_DIAGRAM_ID_LIST, [scenarioDiagrams.map(d => d.diagram_id)])
-        console.log(messagesRows);
-        NotImplemented();
+        const messagesRows = await Repository.query(SELECT_SCENARIO_SEQUENCE_MESSAGES, scenarioUID);
     }
 }
