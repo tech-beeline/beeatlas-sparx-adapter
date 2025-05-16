@@ -137,7 +137,8 @@ export class InterfacesRepository {
                     status: api.status,
                     version: api.version,
                     note: api.description,
-                    status: api.status
+                    status: api.status,
+                    alias : api.code.toLowerCase()
                 },
                 { object_id: interface_id });
 
@@ -553,17 +554,17 @@ export class InterfacesRepository {
         const existingApiList = await this.selectContainerInterfacesById(container_id);
 
         return Repository.transactionScope(async () => {
-            const outdateInterfaces = existingApiList.filter(e => !interfaces.find(c => c.code === e.code));
+            const outdateInterfaces = existingApiList.filter(e => !interfaces.find(c => c.code.toLowerCase() === e.code.toLowerCase()));
             for (const outdateApi of outdateInterfaces) {
                 await this.deleteContainerInterface(container_id, outdateApi.interface_id);
             }
 
-            const newApiList = interfaces.filter(n => !existingApiList.find(e => e.code === n.code));
+            const newApiList = interfaces.filter(n => !existingApiList.find(e => e.code.toLowerCase() === n.code.toLowerCase()));
             for (const newApi of newApiList) {
                 await this.addContainerInterface(systemCode, { container_id: container_id }, newApi);
             }
             for (const api of interfaces) {
-                const existingApi = existingApiList.find(e => e.code === api.code);
+                const existingApi = existingApiList.find(e => e.code.toLowerCase() === api.code.toLowerCase());
                 if (!existingApi) continue;
 
                 if (!isAPIEquals(api, existingApi)) {

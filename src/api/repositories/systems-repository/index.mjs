@@ -16,7 +16,7 @@ import { SELECT_SYSTEMS, SELECT_SYSTEM_BY_CODE } from './queries/index.mjs';
 import { SELECT_SYSTEM_PACKAGES } from './queries/select-systems.mjs';
 import { SELECT_SYSTEM_CONTAINER_BY_CODE } from './queries/select-containers.mjs';
 import { systemContext, SystemPackage } from './system-package.mjs';
-import { Container, isContainersEqual } from '../../model/system.mjs';
+import { Container, isContainersEquals } from '../../model/system.mjs';
 import { InterfacesRepository } from '../index.mjs';
 import { API_LOAD_DATE_TAG } from '../interfaces-repository/const.mjs';
 
@@ -191,7 +191,7 @@ export class SystemsRepository {
 			containerDiff.target = tc;
 			if (containerDiff.current) containerDiff.target.object_id = containerDiff.current.object_id;
 
-			containerDiff.needUpdate = containerDiff.current && !isContainersEqual(containerDiff.current, tc);
+			containerDiff.needUpdate = containerDiff.current && !isContainersEquals(containerDiff.current, tc);
 		}
 
 		// Не удаляем, а устанавливаем статус в удаленный
@@ -247,10 +247,17 @@ export class SystemsRepository {
 	async updateContainer(container_id, name, code, author, version, description, status) {
 		if (!container_id) throw Error('Contianer object_id is not specified');
 
-		await Repository.updateObjectTags( container_id, { API_LOAD_DATE_TAG: new Date()});
+		await Repository.updateObjectTags(container_id, { API_LOAD_DATE_TAG: new Date() });
 
 		return Repository.update(t_object,
-			{ name: name, author: author, version: version, note: description, status: status },
+			{
+				name: name,
+				author: author,
+				version: version,
+				note: description,
+				status: status,
+				alias: code
+			},
 			{ object_id: container_id });
 	}
 
@@ -299,9 +306,9 @@ export class SystemsRepository {
 			}
 			await this.interfaceRepository.deleteContainerInterfaces(container_id);
 			/** @type {{system_id, package_id, containers_package_id, interfaces_package_id, root_id}} */
-			const context = systemContext.getStore()??(await (new SystemPackage()).prepareSystemPackage());
+			const context = systemContext.getStore() ?? (await (new SystemPackage()).prepareSystemPackage());
 
-			await Repository.removeConnectors( context.system_id, container_id, REALIZATION_CONNECTOR);
+			await Repository.removeConnectors(context.system_id, container_id, REALIZATION_CONNECTOR);
 
 			const canDelete = await Repository.canDeleteObject(container_id);
 			if (canDelete) {

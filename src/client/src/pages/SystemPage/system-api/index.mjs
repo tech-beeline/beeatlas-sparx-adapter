@@ -50,8 +50,6 @@ function CapabilityBox({ capabilityCode }) {
         loadCapability();
     }, [capabilityCode]);
 
-    console.log( capability?.name)
-
     return (
         <Link href={`https://beeatlas.vimpelcom.ru/models/search?request=${encodeURIComponent(capabilityCode)}`} target="_blank">{capability ? capability.name : capabilityCode}
         </Link>)

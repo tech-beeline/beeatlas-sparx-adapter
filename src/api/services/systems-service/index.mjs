@@ -11,6 +11,7 @@ import System, {
     Container,
     E2EProcessContext,
     isSystemEquals,
+    isContainersEquals,
     SysemAssessmentStatus
 } from "../../model/system.mjs";
 
@@ -57,12 +58,6 @@ const ptrArtifactsRepositoryInstance = new PtrArtifactsRepository();
 const monitoringRepository = new MonitoringRepository();
 const tcRepository = new TechnicalCapabilitiesRepository();
 
-/**
- * 
- * @param {Container} a 
- * @param {Container} b 
- */
-const isContainersEquals = (a, b) => a.name === b.name && a.status === b.status && a.version === b.version
 const checkTC = async (code, context) => {
     const tc = await tcRepository.selectTCByCode(code);
     if (!tc.length) throw Error(`TC с кодом [${code}] не найден. ${context ?? ""} `);
@@ -134,12 +129,17 @@ export class SystemService {
      * @param {Container[]} targetContainers 
      * @param {Container[]} currentContainers 
      */
-    async prepareContainersMethods(targetContainers, currentContainers) {
+    async prepareContainersMethods(systemCode, targetContainers, currentContainers) {
         const preparedContainers = [];
         for (const c of targetContainers) {
             if (!c.code) {
                 throw BadRequest(`Не задан код контейнера "${c.name}"`)
             }
+            c.code = c.code.toLowerCase();
+            if (!c.code.endsWith(systemCode.toLowerCase())) {
+                throw BadRequest(`Полный код контейнера должен иметь вид <код контейнера внутри системы>.<код системы>. Код контейнера="${c.code}", код системы="${systemCode}"`);
+            }
+
             const container = { ...c }
             const currentContainer = currentContainers.find(cc => cc.code?.toLowerCase() === container.code.toLowerCase());
             container.interfaces = [];
@@ -148,6 +148,11 @@ export class SystemService {
             for (const it of c.interfaces ?? []) {
                 if (!it.code) {
                     throw BadRequest(`Не указан код интерфейса "${it.name} (контейнер "${c.name}", code=[${c.code}])"`);
+                }
+                it.code = it.code.toLowerCase();
+
+                if (!it.code.endsWith(c.code)) {
+                    throw BadRequest(`Полный код интерфейса должен иметь вид <код интерфейса внутри контейнера>.<код контейнера>. Код интерфейса="${it.code}", код системы="${c.code}"`);
                 }
 
                 const api = { ...it };
@@ -202,12 +207,13 @@ export class SystemService {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`);
         }
         const currentState = await this.getByCode(systemCode, { level: "methods" });
-        if( isSystemEquals( currentState, system)){
-            console.info( `Система [${systemCode}] "${system.name}" не требует обновления`);
+
+        const containers = await this.prepareContainersMethods(system.code, system.containers ?? [], currentState.containers ?? []);
+
+        if (isSystemEquals(currentState, system)) {
+            console.info(`Система [${systemCode}] "${system.name}" не требует обновления`);
             return currentState;
         }
-
-        const containers = await this.prepareContainersMethods(system.containers ?? [], currentState.containers ?? []);
 
         try {
             await runSystemContext(systemCode, async () =>

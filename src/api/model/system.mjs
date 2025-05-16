@@ -413,18 +413,20 @@ export const SYSTEM_MONITORING_RESULT_SCHEMA = {
     }
 }
 
-export const isContainersEqual = (a, b) =>
+export const isContainersEquals = (a, b) =>
     a.name === b.name
     && (a.description ?? "") === (b.description ?? "")
     && (a.status ?? "") === (b.status ?? "")
-    && (a.version ?? "") === (b.version ?? "");
-
+    && (a.version ?? "") === (b.version ?? "")
+    && a.code === b.code;
+    
 export const isAPIEquals = (a, b) => a.name === b.name
     && (a.description ?? "") === (b.description ?? "")
     && (a.version ?? "") === (b.version ?? "")
     && (a.status ?? "") === (b.status ?? "")
     && (a.specification ?? "") === (b.specification ?? "")
-    && (a.implements ?? "") === (b.implements ?? "");
+    && (a.implements ?? "") === (b.implements ?? "")
+    && a.code === b.code;
 
 const codeCompare = (a, b) => a.code.toLowerCase().localeCompare(b.code.toLowerCase());
 const nameCompare = (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase());
@@ -445,7 +447,7 @@ export const isSystemEquals = (aSystem, bSystem) => {
     const bContainers = [...bSystem.containers ?? []].sort(codeCompare);
     if (aContainers.length !== bContainers.length) return false;
     for (let i = 0; i < aContainers.length; i++) {
-        if (aContainers[i].code.toLowerCase() !== bContainers[i].code.toLowerCase() || !isContainersEqual(aContainers[i], bContainers[i]))
+        if (aContainers[i].code.toLowerCase() !== bContainers[i].code.toLowerCase() || !isContainersEquals(aContainers[i], bContainers[i]))
             return false;
         const aInterfaces = [...aContainers[i].interfaces ?? []].sort(codeCompare);
         const bInterfaces = [...bContainers[i].interfaces ?? []].sort(codeCompare);
