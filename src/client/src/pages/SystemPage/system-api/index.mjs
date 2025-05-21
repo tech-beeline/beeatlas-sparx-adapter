@@ -1,6 +1,7 @@
 import {
     AccountTree,
-    ExpandMore
+    ExpandMore,
+    Launch
 } from "@mui/icons-material";
 import {
     Accordion,
@@ -63,7 +64,7 @@ function MethodsTable({ methods }) {
         <Table size="small" padding="none">
             <colgroup>
                 <col width="20%" />
-                <col width="20%"/>
+                <col width="20%" />
             </colgroup>
             <TableHead>
                 <TableRow key="head">
@@ -139,7 +140,7 @@ export function SystemContainers({ system }) {
     return (
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}><AccountTree />
-                <Box fontWeight='fontWeightMedium' display='inline'>Контейнеры, интерфейсы и SLA</Box>
+                <Box fontWeight='fontWeightMedium' display='inline'>Контейнеры, интерфейсы и SLA</Box> <Box>&nbsp;<Link href={`${system.code.toLowerCase()}/api`} target="_blank" ><Launch />API</Link></Box>
             </AccordionSummary>
             <AccordionDetails>
                 <Tabs bodyClassName="classForAllTabs">
