@@ -12,3 +12,7 @@ env:
   GRAFANA_URL : "vault:eafdmmart/data/dev/grafana#url"
   GRAFANA_TOKEN : "vault:eafdmmart/data/dev/grafana#token"
   GRAFANA_E2E_TEMPLATE_UID: "vault:eafdmmart/data/dev/grafana#scenario_template_uid"
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
