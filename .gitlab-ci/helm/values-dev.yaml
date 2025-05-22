@@ -16,3 +16,6 @@ env:
 ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 50m
+podAnnotations:
+  vault.security.banzaicloud.io/vault-addr: "https://vault-test.vimpelcom.ru/"
+
