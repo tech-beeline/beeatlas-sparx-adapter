@@ -49,7 +49,7 @@ class GetSystemByCode {
     }
     async withMethods(code, addRemoved) {
         const { system, interfacesMap } = await this.withInterfaces(code, addRemoved);
-        const selectMethodsPromises = Object.keys(interfacesMap)
+        const selectMethodsPromises = Object.keys(interfacesMap) // TODO Пекределать на пакетный вызов
             .map(interfaceCode =>
                 interfaceDataService.selectInterfaceMethods(interfaceCode)
                     .then(methodsRows => {

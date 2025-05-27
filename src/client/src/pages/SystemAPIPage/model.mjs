@@ -1,4 +1,4 @@
-export class ApiMethod{
+export class ApiMethod {
     name;
     rps;
     latency;
@@ -8,13 +8,13 @@ export class ApiMethod{
     implementsTC;
     apiImplementsTC;
     constructor(method) {
-        Object.assign( this, method);
+        Object.assign(this, method);
     }
-    get sla(){
+    get sla() {
         const sla = []
-        if( this.rps) sla.push(`rps=${this.rps}`);
-        if( this.latency) sla.push(`latency=${this.rps}`);
-        if( this.error_rate) sla.push(`error_rate=${this.rps}`);
+        if (this.rps) sla.push(`rps=${this.rps}`);
+        if (this.latency) sla.push(`latency=${this.latency}`);
+        if (this.error_rate) sla.push(`error_rate=${this.error_rate}`);
         return sla.join(';')
     }
 }

@@ -237,6 +237,7 @@ export class SystemService {
                     }
                 }));
             const result = await this.getByCode(systemCode, { level: "methods" });
+            console.log(`Обновление системы с кодом = ${systemCode} завершено`);
             await logSuccessPutSystem(systemCode, currentState, system, result);
             return result;
         } catch (err) {

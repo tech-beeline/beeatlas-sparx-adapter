@@ -7,7 +7,6 @@ import { ApiMethod } from "./model.mjs";
 import { Progress } from "@beeline/design-system-react";
 
 
-
 function SystemInfo({ code }) {
     return <>{code}</>
 }
@@ -16,6 +15,9 @@ function SystemApiMethods({ code }) {
 
     const [error, setError] = useState();
     const [apiLoading, setApiLoading] = useState();
+    /**
+     * @type {[ApiMethod[]]}
+     */
     const [systemMethods, setSystemMethods] = useState();
 
 

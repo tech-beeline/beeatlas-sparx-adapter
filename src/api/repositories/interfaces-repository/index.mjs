@@ -138,7 +138,7 @@ export class InterfacesRepository {
                     version: api.version,
                     note: api.description,
                     status: api.status,
-                    alias : api.code.toLowerCase()
+                    alias: api.code.toLowerCase()
                 },
                 { object_id: interface_id });
 
@@ -506,13 +506,12 @@ export class InterfacesRepository {
         const existingMethods = await Repository.query(SELECT_INTERFACE_METHODS_BY_ID, interface_id);
 
         return Repository.transactionScope(async () => {
-            /*
+            
             for (const e of existingMethods) {
                 if (!methods.find(m => m.name.toLowerCase() === e.name.toLowerCase())) {
                     await this.deleteMethod(e);
                 }
             }
-            */
 
             for (const m of methods) {
                 const existing = existingMethods.filter(e => e.name.toLowerCase() === m.name.toLowerCase() && !e.removed_date);
@@ -564,8 +563,11 @@ export class InterfacesRepository {
                 await this.addContainerInterface(systemCode, { container_id: container_id }, newApi);
             }
             for (const api of interfaces) {
+                console.log(api.name);
                 const existingApi = existingApiList.find(e => e.code.toLowerCase() === api.code.toLowerCase());
-                if (!existingApi) continue;
+                if (!existingApi) { 
+                    console.log( `Не найден существующий интерфес для code=${api.code}`);
+                    continue; }
 
                 if (!isAPIEquals(api, existingApi)) {
                     await this.#updateInterface(existingApi.interface_id, api);
