@@ -501,11 +501,20 @@ class MonitoringService {
         const dashboardPanels = builder.buildScenarioDashboard(scenario, methodSourcesMap);
 
         await this.#prepareGrafanaFolder();
+        const dashboardUID = code.replaceAll(/\{|\}/g, '');
+
+        let tags = []
+        try {
+            const currentDashboard = await grafanaService.getDashboardByUID(dashboardUID);
+            tags.push(...currentDashboard.dashboard.tags);
+        } catch (error) {
+        }
 
         return grafanaService.postDashboard({
-            uid: code.replaceAll(/\{|\}/g, ''),
+            uid: dashboardUID,
             title: `Дашборд для шага ${process.name}`,
-            panels: dashboardPanels
+            panels: dashboardPanels,
+            tags: tags
         });
     }
 
