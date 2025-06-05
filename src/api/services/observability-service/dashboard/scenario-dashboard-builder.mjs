@@ -103,6 +103,8 @@ export class SecnarioDashboardBuilder {
                 if (t.query) {
                     target.query = formatQuery(t.query, path, method, message.client_code)
                 }
+                if( t.rawSql )
+                    target.rawSql = formatQuery(t.rawSql, path, method, message.client_code);
             }
         }
 

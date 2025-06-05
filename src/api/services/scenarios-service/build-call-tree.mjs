@@ -40,8 +40,8 @@ function addMessage(context, msg) {
  * @returns 
  */
 export function buildCallTree(scenario) {
-    console.log( `Строим дерево для каждой диграммы`)
-    for (const d of scenario.diagrams) {
+    console.log(`Строим дерево для каждой диграммы`)
+    for (const d of scenario.diagrams.toArray()) {
         d.messages.sort((a, b) => a.seqno - b.seqno);
 
         console.log(`Обработка диаграммы [${d.uid}] "${d.name}"`);
@@ -53,23 +53,23 @@ export function buildCallTree(scenario) {
         }
     }
     console.log(`Подключем в контексты дочерние диаграммы`);
-    for( const msg of scenario.messages){
-        if( msg.linked_diagram_uid ){
-            if( msg.linked_diagram_uid == msg.diagram_uid ){
+    for (const msg of scenario.messages) {
+        if (msg.linked_diagram_uid) {
+            if (msg.linked_diagram_uid == msg.diagram_uid) {
                 console.log(`На диаграмме c UID=${msg.diagram_uid} есть объект ${msg.server_name}, который ссылается на ту же диаграмму`);
                 continue;
             }
-            const diagram = scenario.diagrams.find( d=>d.uid==msg.linked_diagram_uid);
-            if( !diagram)
-                throw Error(`Не надена диаграмма с UID=${msg.linked_diagram_uid} (объект ${msg.server_name})`);
-            
-            if( !msg.operation_guid){
+            const diagram = scenario.diagrams.get(msg.linked_diagram_uid);
+            if (!diagram)
+                throw Error(`Не найдена диаграмма с UID=${msg.linked_diagram_uid} (объект ${msg.server_name}, диаграмма ${msg.diagram?.name} uid=${msg.diagram_uid}  )`);
+
+            if (!msg.operation_guid) {
                 msg.addInfoMessage(`Сообщение не связано с методом operation_guid`);
                 let ctx = msg.context;
-                while( ctx && !ctx.operation_guid) {
+                while (ctx && !ctx.operation_guid) {
                     ctx = ctx.context;
                 }
-                if( !ctx ) {
+                if (!ctx) {
                     msg.addValidationError(`Не найден operation_guid по всей цевочке вызовов`);
                     continue;
                 }

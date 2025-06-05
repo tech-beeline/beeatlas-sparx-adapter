@@ -23,6 +23,9 @@ export class ScenarioIntrerface {
     get app() {
         return this.#app;
     }
+    toJSON(){
+        return { id:this.id, name:this.name, app_code: this.app_code, methods: this.methods.length?this.methods:undefined}
+    }
 }
 
 export class ScenarioMethod {
@@ -60,6 +63,9 @@ export class ScenarioDiagram {
     /** @type {ScenarioMessage[]} */
     get messages() {
         return this.#messages;
+    }
+    toJSON(){
+        return { name: this.name, uid: this.uid};
     }
 }
 
@@ -225,18 +231,18 @@ export class Scenario {
     uid;
     /** @type {ScenarioMessage[]} */
     messages;
-    /** @type {ScenarioDiagram[]} */
+    /** @type {ScenarioDictionary} */
     diagrams;
-    /** @type {ScenarioIntrerface[]} */
+    /** @type {ScenarioDictionary} */
     interfaces;
-    /** @type {ScenarioApplication[]} */
+    /** @type {ScenarioDictionary} */
     applications;
     /**
      * 
      * @param {ScenarioMessage[]} messages 
-     * @param {ScenarioDiagram[]} diagrams 
-     * @param {ScenarioIntrerface[]} interfaces 
-     * @param {ScenarioApplication[]} applications 
+     * @param {ScenarioDictionary} diagrams 
+     * @param {ScenarioDictionary} interfaces 
+     * @param {ScenarioDictionary} applications 
      */
     constructor(uid, messages, diagrams, interfaces, applications) {
         this.uid = uid;
@@ -244,5 +250,13 @@ export class Scenario {
         this.applications = applications;
         this.interfaces = interfaces;
         this.diagrams = diagrams;
+    }
+    toJSON(){
+        return {
+            diagrams: this.diagrams.toArray(),
+            applications : this.applications.toArray(),
+            interfaces: this.interfaces.toArray(),
+            sequence: this.diagrams[this.uid]?.sequence
+        }
     }
 }

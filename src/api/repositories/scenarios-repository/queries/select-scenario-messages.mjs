@@ -35,7 +35,7 @@ cte_diagrams AS
 		JOIN cte_diagrams d on d.diagram_id=r.diagram_id 
 )
 SELECT 
-	x.supplier as linked_diagram_uid,
+	ld.ea_guid as linked_diagram_uid,
 	ms.name as method,
 	rps.value as rps,
 	latency.value as latency,
@@ -70,4 +70,5 @@ FROM cte_diagrams d
 	LEFT JOIN t_operationtag latency ON latency.elementid=ms.operationid AND latency.property='latency'
 	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=ms.operationid AND error_rate.property='error_rate'
 	LEFT JOIN t_xref x ON x.client=srv.ea_guid AND x.name='DefaultDiagram'
+	LEFT JOIN t_diagram ld ON ld.ea_guid=x.supplier AND ld.diagram_type='Sequence'
 WHERE d.e2e_uid=$1`
