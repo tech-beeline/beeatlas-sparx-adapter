@@ -329,8 +329,8 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             if (m.client && m.server) {
                 m.childDiagram = diagrams.byContainerId[m.server_id];
                 m.childDiagram?.parents.push(m);
-
             }
+            
             if (m.server?.object_type === 'MessageEndpoint') {
                 const error_message = `Сообщение связано с Message Endpoint ${m.server.name}`
                 onError(m, error_message)
@@ -358,7 +358,9 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             root_messages.push(...CallTreeBuilder.build(m));
         }
 
-        //messages.forEach(m => m.childDiagram = undefined);
+        for (const m of root_messages) {
+            CallTreeBuilder.deduplicateChild(m);
+        }
 
         let applications = {}
         for (const o of Object.values(usedSystems)) {

@@ -106,6 +106,12 @@ FROM cte_api i
 
 export const SELECT_METHOD_SOURCES = `${SELECT_METHOD_ALL_SOURCES} WHERE i.api_metric_template IS NOT NULL`
 
+export const SELECT_MAPIC_METRIC_TEMPLATE = `SELECT
+	t.value as api_metric_template
+FROM t_object m
+	JOIN t_objectproperties t ON t.object_id=m.object_id AND t.property='api-metric-template'
+WHERE LOWER(m.alias)='mapic'`;
+
 export const SELECT_SOURCES_PROPERIES = `SELECT 
 	gs.name,
 	gs.ea_guid AS uid,
@@ -127,7 +133,7 @@ export const SELECT_API_SOURCES = `WITH RECURSIVE cte_src AS (
 	 	c.start_object_id,
 		 o.*
 	FROM t_connector c
-		JOIN t_object o ON o.object_id=c.end_object_id AND o.status<>'REMOVED' 
+		JOIN t_object o ON o.object_id=c.end_object_id AND COALESCE(o.status,'')<>'REMOVED' 
 	WHERE c.connector_type='Realisation'
 )
 SELECT

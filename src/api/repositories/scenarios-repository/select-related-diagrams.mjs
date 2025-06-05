@@ -61,4 +61,3 @@ SELECT
 FROM cte_diagram_tree t
 	JOIN t_diagram d ON d.diagram_id=t.diagram_id
 WHERE parent_uid=$1`
-

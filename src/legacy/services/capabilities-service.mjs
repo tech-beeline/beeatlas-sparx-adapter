@@ -90,8 +90,11 @@ class CapabiliiesService {
     async #updateBC(capability_asis, capability, parent) {
         if (capability_asis.isDomain !== capability.isDomain) throw BadRequest('Нельзя менять тип возможности (Домен на BC и BC на Домен');
 
-        await Repository.update(t_object, { name: capability.name, note: capability.description, status: capability.status, author: capability.author }, { ea_guid: capability_asis.ea_guid });
-        if (capability.isDomain) await Repository.update(t_package, { name: capability.name, notes: capability.description }, { ea_guid: capability.ea_guid });
+        const updated = await Repository.update(t_object, { name: capability.name, note: capability.description, status: capability.status, author: capability.author }, { object_id: capability_asis.object_id });
+        if (updated.length) {
+            if (capability.isDomain) await Repository.update(t_package, { name: capability.name, notes: capability.description }, { ea_guid: updated[0].ea_guid });
+        }
+
         if (capability.owner !== capability_asis.owner) {
             await capabilitiesRepository.setCapabilityOwner(capability.code, capability.owner);
         }
@@ -115,10 +118,10 @@ class CapabiliiesService {
         }
 
         capabilityData.code = code;
-        const parent = await this.getCapabilityByCode(capabilityData.parent);
+        const parent = await capabilitiesRepository.selectByCode(capabilityData.parent);
 
         if (!parent) throw BadRequest(`Не найден родительская возможность/домен с кодом ${capabilityData.parent}`);
-        const capability_asis = await this.getCapabilityByCode(code);
+        const capability_asis = await capabilitiesRepository.selectByCode(code);
 
         if (!capability_asis) {
             if (capabilityData.isDomain) {
@@ -136,7 +139,7 @@ class CapabiliiesService {
                 await capabilitiesRepository.setCapabilityOwner(code, capabilityData.owner);
                 capabilityDTO.owner = capabilityData.owner;
             }
-            return new Capability( capabilityDTO);
+            return new Capability(capabilityDTO);
         }
         return this.#updateBC(capability_asis, capabilityData, parent);
     }

@@ -30,7 +30,7 @@ export class ProcessScenarioControllers {
      */
     async getScenario(request, response, next) {
         if (!request.params.uid) throw BadRequest('Scenario uid is not specified');
-        response.json(addScenarioLinks(await ScenariosServiceInstance.getgetScenarioMessagesByUID(request.params.uid)));
+        response.json(addScenarioLinks(await ScenariosServiceInstance.getByUID(request.params.uid)));
     }
     /**
      * 
@@ -49,5 +49,17 @@ export class ProcessScenarioControllers {
      */
     async getScenarioCallTree(request, response, next) {
         NotImplemented();
+    }
+
+    /**
+     * 
+     * @param {express.Request} request 
+     * @param {express.Response} response 
+     */
+    async getSequenceCalls(request, response, next) {
+
+        if( !request.params.uid) throw BadRequest('uid parameter is not specified');
+        
+        response.json( await ScenariosServiceInstance.getScenarioSequence(request.params.uid))
     }
 }

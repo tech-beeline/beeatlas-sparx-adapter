@@ -7,7 +7,6 @@ export const INTERFACES_SERVICE_DESCRIPTION = "Управление информ
 export const INTERFACE_LIST_RESOURCE_V4 = '/api/v4/interfaces';
 export const INTERFACE_RESOURCE_V4 = '/api/v4/interfaces/{code}';
 
-
 export const METHOD_SCHEMA = {
     type: "object",
     properties: {
@@ -15,9 +14,10 @@ export const METHOD_SCHEMA = {
         description: stringProperty("Описание метода"),
         rps: numberProperty("Максимальная нагрузка (запросов в секунду)"),
         latency: numberProperty("Максимальное время отклика (ms)"),
-        error_rate: numberProperty("Максимльное количество отказов (%)")
+        error_rate: numberProperty("Максимльное количество отказов (%)"),
+        implements: stringProperty("Код возможности, которую реализует метод", { example: 'FDMSHOWCASEAPP.001' }),
     }
-}
+};
 
 export const METHOD_SCHEMA_REF = schemasRef("Method");
 
@@ -30,13 +30,13 @@ export const INTERFACE_SCHEMA = {
         version: stringProperty("Версия интерфейса", { example: "1.0.0" }),
         status: stringProperty("Статус интерфейса", { example: "Proposed" }),
         protocol: stringProperty("Протокол", { example: "rest" }),
-        implements : stringProperty("Код технической возможности, которую реализует интерфейс"),
+        implements: stringProperty("Код технической возможности, которую реализует интерфейс"),
         specification: stringProperty("Ссылка на спецификацию"),
         methods: {
             type: "array",
             items: METHOD_SCHEMA_REF,
             example: [
-                { name: "GET /api/entities", rps: 10, latency: 500, error_rate: 1 },
+                { name: "GET /api/entities", rps: 10, latency: 500, error_rate: 1 , implements: "FDMSHOWCASEAPP.001"},
                 { name: "POST /api/entities" }
             ]
         },

@@ -424,20 +424,25 @@ class MonitoringService {
 
 
     async buildApiMetricTemlate(uid, target) {
-        const dashboard = await grafanaService.getDashboardByUID(uid);
-        const selectedDatasourceName = GrafanaService.getVariableCurrentValue(dashboard.dashboard, 'DATASOURCE');
-        const datasource = await grafanaService.getDatasourceByName(selectedDatasourceName);
+        try {
+            const dashboard = await grafanaService.getDashboardByUID(uid);
+            const selectedDatasourceName = GrafanaService.getVariableCurrentValue(dashboard.dashboard, 'DATASOURCE');
+            const datasource = await grafanaService.getDatasourceByName(selectedDatasourceName);
 
-        for (const panel of dashboard.dashboard.panels) {
-            panel.datasource.uid = datasource.uid;
-            for (const target of panel.targets) {
-                if (target.datasource.uid === '${DATASOURCE}' || target.datasource.uid === '$DATASOURCE') {
-                    target.datasource.uid = datasource.uid;
+            for (const panel of dashboard.dashboard.panels) {
+                panel.datasource.uid = datasource.uid;
+                for (const target of panel.targets) {
+                    if (target.datasource.uid === '${DATASOURCE}' || target.datasource.uid === '$DATASOURCE') {
+                        target.datasource.uid = datasource.uid;
+                    }
                 }
             }
-        }
 
-        return Object.assign(target, dashboard.dashboard);
+            return Object.assign(target, dashboard.dashboard);
+
+        } catch (error) {
+            console.error(`Ошибка при создании шаблона получения метрик uid="${uid}", target=${JSON.stringify(target)}`, error)
+        }
     }
 
     /**
@@ -455,37 +460,61 @@ class MonitoringService {
         const scenario = await E2EProcessService.getBIScenario(code);
         const sources = new SourceFactory();
         const methodsSourcesRows = await monitoringRepository.selectMethodsSources();
+        const mapicMetricSource = await monitoringRepository.selectMapicMetricTempalte();
+        if (!mapicMetricSource) throw Error('Не найдена ссылка на настройку для метрик MAPIC');
 
         const apiMetricTemplates = {};
         const methodSourcesMap = {};
+
+
+        const mapicTempalteUID = GrafanaService.dashboardUIDFromURL(mapicMetricSource);
+        if (!mapicTempalteUID) throw Error(`Не корректный адрес для шаблона дашборда MAPIC`);
+        const mapicTemplate = apiMetricTemplates[mapicTempalteUID] = {};
+
+
         for (const m of methodsSourcesRows) {
+            if (m.stereotype == 'via MAPIC') {
+                m.apiMetricTemplate = mapicTemplate;
+                continue;
+            }
             if (!m.api_metric_template)
                 continue;
 
             const template_uid = GrafanaService.dashboardUIDFromURL(m.api_metric_template);
-            if( !template_uid ){
+            if (!template_uid) {
                 const errMessage = `Не корректный адрес для шаблона дашборда приложения (${m.app_name}) url шаблона="${m.api_metric_template}"`;
-                throw Error( errMessage)
+                throw Error(errMessage)
             }
             m.apiMetricTemplate = apiMetricTemplates[template_uid] ?? (apiMetricTemplates[template_uid] = {});
             methodSourcesMap[m.operation_guid] = m;
         }
+
 
         await Promise.all(
             Object.entries(apiMetricTemplates)
                 .map(([uid, value]) => this.buildApiMetricTemlate(uid, value)
                 ));
 
+        methodSourcesMap.MAPIC = { apiMetricTemplate: mapicTemplate };
 
         const builder = new SecnarioDashboardBuilder(template);
         const dashboardPanels = builder.buildScenarioDashboard(scenario, methodSourcesMap);
 
         await this.#prepareGrafanaFolder();
+        const dashboardUID = code.replaceAll(/\{|\}/g, '');
+
+        let tags = []
+        try {
+            const currentDashboard = await grafanaService.getDashboardByUID(dashboardUID);
+            tags.push(...currentDashboard.dashboard.tags);
+        } catch (error) {
+        }
 
         return grafanaService.postDashboard({
-            uid: code.replaceAll(/\{|\}/g, ''),
+            uid: dashboardUID,
             title: `Дашборд для шага ${process.name}`,
-            panels: dashboardPanels
+            panels: dashboardPanels,
+            tags: tags
         });
     }
 
@@ -495,7 +524,6 @@ class MonitoringService {
         const system = await componentsService.getSystem(cmdb);
         const sources = new SourceFactory();
 
-        //const sourceMap = this.selectSourcesMap();
         const methodsSources = await monitoringRepository.selectSystemMethodsSources(cmdb);
 
         const apiMap = {};

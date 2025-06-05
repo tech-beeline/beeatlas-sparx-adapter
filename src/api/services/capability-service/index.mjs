@@ -51,9 +51,7 @@ export class CapabilityService {
         if (!capabilityData) {
             throw BadRequest('В теле не передается capability')
         }
-        if (!capabilityData.parent) {
-            throw BadRequest('Capability parent is not specified');
-        }
+
         if (!capabilityData.parent) {
             throw BadRequest('Не задана родительская возможность');
         }

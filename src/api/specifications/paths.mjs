@@ -22,6 +22,11 @@ export const TERM_LIST_RESOURCE_V4 = '/api/v4/glossary-terms';
 export const TERM_LIST_RESOURCE = TERM_LIST_RESOURCE_V4;
 export const TERM_RESOURCE_V4 = '/api/v4/glossary-terms/{id}';
 export const TERM_RESOURCE = TERM_RESOURCE_V4;
+
+export const DATABASE_SERVICES_RESOURCE_V4 = '/api/v4/database-services';
+export const DATABASE_SERVICE_LIST_RESOURCE = DATABASE_SERVICES_RESOURCE_V4;
+export const DATABASE_SERVICE_RESOURCE = `${DATABASE_SERVICE_LIST_RESOURCE}/{id}`;
+
 //#endregion
 
 //#region technical capability paths
@@ -76,8 +81,8 @@ export const ScenarioLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${enc
 export const SCENARIO_MESSAGES_RESOURCE = `${SCENARIO_RESOURCE}/messages`;
 export const ScenarioMessagesLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/messages`);
 
-export const SCENARIO_CALL_TREE_RESOURCE = `${SCENARIO_RESOURCE}/call-tree`;
-export const ScenarioCallTreeLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/call-tree`);
+export const SCENARIO_SEQUENCE_RESOURCE = `${SCENARIO_RESOURCE}/sequence`;
+export const ScenarioCallTreeLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/sequences`);
 
 //#endregion
 

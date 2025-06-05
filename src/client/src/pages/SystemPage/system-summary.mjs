@@ -30,10 +30,6 @@ export function SystemSummary({ system }) {
                                 <TableCell>Дата изменения</TableCell>
                                 <TableCell>{system.modifiedDate}</TableCell>
                             </TableRow>
-                            <TableRow>
-                                <TableCell>Дашборд продукта</TableCell>
-                                <TableCell><a href={`https://inside-dev.beeline.ru/d/archops-sys-${system.code}`} target="_blank" rel="noreferrer">https://inside-dev.beeline.ru/d/archops-sys-{system.code}</a></TableCell>
-                            </TableRow>
                         </TableBody>
                     </Table>
                 </TableContainer>

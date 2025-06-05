@@ -60,7 +60,7 @@ export class PtrArtifactsRepository {
                 ]);
             if (!updateResult) {
                 await eaRepository.queryOne(
-                    `INSERT INTO fdm_ptr_artifacts(cmdb_mnem, dt_update, ${columnsMap.link}, ${columnsMap.ts} ${columnsMap.source ? `, ${columnsMap.source}` : ""}) VALUES($1,NOW(), $2, $3${columnsMap.source ? ', FDM API' : ""})`,
+                    `INSERT INTO fdm_ptr_artifacts(cmdb_mnem, dt_update, ${columnsMap.link}, ${columnsMap.ts} ${columnsMap.source ? `, ${columnsMap.source}` : ""}) VALUES($1,NOW(), $2, $3${columnsMap.source ? ", 'FDM API'" : ""})`,
                     [
                         systemCode, result, time
                     ])

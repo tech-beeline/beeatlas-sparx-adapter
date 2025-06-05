@@ -18,6 +18,8 @@ import { WorkspaceCheckResultPage } from "./pages/WorkspaceCheckPage/index.mjs";
 import { STRUCTURIZR_CHECK_RESULT } from "./const.mjs";
 import { SequencePage } from "./pages/SequencePage/index.mjs";
 import { MethodDoublesPage } from "./pages/MethodDoublesPage/index.mjs";
+import { DigitalArchitectActionsPage } from "./pages/DigitalArchitectActionsPage/index.mjs";
+import { SystemAPIPage } from "./pages/SystemAPIPage/index.mjs";
 
 function App() {
     return (
@@ -36,6 +38,18 @@ function App() {
                 <Route
                     path="/maintenance/dbl"
                     element={<MethodDoublesPage />}
+                />
+                <Route
+                    path="/digital-architect"
+                    element={<DigitalArchitectActionsPage />}
+                />
+                <Route
+                    path="/digital-architect/:login/actions"
+                    element={<DigitalArchitectActionsPage />}
+                />
+                <Route
+                    path="/systems/:code/api"
+                    element={<SystemAPIPage/>}
                 />
             </Routes>
         </Router>
