@@ -23,8 +23,8 @@ export class ScenarioIntrerface {
     get app() {
         return this.#app;
     }
-    toJSON(){
-        return { id:this.id, name:this.name, app_code: this.app_code, methods: this.methods.length?this.methods:undefined}
+    toJSON() {
+        return { id: this.id, name: this.name, app_code: this.app_code, methods: this.methods.length ? this.methods : undefined }
     }
 }
 
@@ -64,8 +64,8 @@ export class ScenarioDiagram {
     get messages() {
         return this.#messages;
     }
-    toJSON(){
-        return { name: this.name, uid: this.uid};
+    toJSON() {
+        return { name: this.name, uid: this.uid };
     }
 }
 
@@ -99,6 +99,8 @@ export class ScenarioMessage {
     #contex;
     #server;
     #client;
+    /** @type {ScenarioMessage[]} */
+    subdiagramsEntries = [];
 
     constructor(obj) {
         for (const key in this) {
@@ -125,25 +127,25 @@ export class ScenarioMessage {
         return this.#server_id;
     }
     /** @type {ScenarioIntrerface} */
-    get server(){
+    get server() {
         return this.#server;
     }
-    
-    set server(srv){
-        this.#server= srv;
+
+    set server(srv) {
+        this.#server = srv;
     }
     /** @type {ScenarioIntrerface} */
-    get client(){
+    get client() {
         return this.#client;
     }
-    set client(client){
-        this.#client=client;
+    set client(client) {
+        this.#client = client;
     }
     get client_id() {
         return this.#client_id;
     }
     /** @type {ScenarioMessage} */
-    get context(){
+    get context() {
         return this.#contex;
     }
 
@@ -163,11 +165,19 @@ export class ScenarioMessage {
      * 
      * @param {ScenarioMessage} msg 
      */
-    addScenarioMessage(msg){
-        (this.sequence || (this.sequence=[])).push(msg);
+    addScenarioMessage(msg) {
+        (this.sequence || (this.sequence = [])).push(msg);
         msg.#contex = this;
     }
-
+    display(add_diagram) {
+        return add_diagram ? `${this.uid} ${this.client_name}->${this.server_name || ""}:"${this.name || ""}" Диаграмма ${this.diagram?.name} uid=${this.diagram_uid}` : `${this.uid} ${this.client_name}->${this.server_name || ""}:"${this.name || ""}"`
+    }
+    toJSON() {
+        const ret = { ...this };
+        if (ret.subdiagramsEntries.length === 0)
+            ret.subdiagramsEntries = undefined;
+        return ret;
+    }
 }
 
 export class ProcessScenario {
@@ -251,12 +261,12 @@ export class Scenario {
         this.interfaces = interfaces;
         this.diagrams = diagrams;
     }
-    toJSON(){
+    toJSON() {
         return {
             diagrams: this.diagrams.toArray(),
-            applications : this.applications.toArray(),
+            applications: this.applications.toArray(),
             interfaces: this.interfaces.toArray(),
-            sequence: this.diagrams[this.uid]?.sequence
+            sequence: this.diagrams.get(this.uid)?.sequence
         }
     }
 }

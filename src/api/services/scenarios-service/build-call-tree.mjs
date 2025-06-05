@@ -1,5 +1,5 @@
 import { NotImplemented } from "../../../utils/errors.mjs";
-import { Scenario, ScenarioMessage } from "../../model/scenario/index.mjs";
+import { Scenario, ScenarioDiagram, ScenarioMessage } from "../../model/scenario/index.mjs";
 
 const EXCLUDE_NAMES = {
     use: true,
@@ -11,8 +11,7 @@ const EXCLUDE_NAMES = {
  * @param {ScenarioMessage} msg 
  */
 function addMessage(context, msg) {
-    const message_display = (message = msg) => `${message.uid} ${message.client_name}->${message.server_name || ""}:"${message.name || ""}"`;
-    const message_skip = (text) => `Пропускаем сообщение ${message_display()} : ${text || ""}`
+    const message_skip = (text) => `Пропускаем сообщение ${msg.display()} : ${text || ""}`
     if (msg.is_ret == '1')
         return context.addInfoMessage(message_skip("возрат"));
     if (EXCLUDE_NAMES[msg.name])
@@ -21,7 +20,7 @@ function addMessage(context, msg) {
         return context.addInfoMessage(message_skip(`внутренниый вызов самого себя`));
     if (context.server_id == 0 || msg.client_id == context.server_id) {
         context.addScenarioMessage(msg);
-        console.log(`Добавлено сообщение ${message_display()}`);
+        console.log(`Добавлено сообщение ${msg.display()}`);
         return msg;
     }
     context.addInfoMessage(`Предполагается, что этот вызов листовой`);
@@ -29,10 +28,45 @@ function addMessage(context, msg) {
     while (context.context && context.server_id != msg.client_id)
         context = context.context;
 
-    msg.addInfoMessage(`Ближайший подхлодящий контекст: ${message_display(context)}`);
+    msg.addInfoMessage(`Ближайший подхлодящий контекст: ${context.display()}`);
     context.addScenarioMessage(msg);
-    console.log(`Добавлено сообщение ${message_display()}`);
+    console.log(`Добавлено сообщение ${msg.display()}`);
     return msg;
+}
+
+/**
+ * 
+ * @param {ScenarioMessage} msg 
+ * @param {ScenarioDiagram} diagram 
+ * @returns 
+ */
+function tryAddSubDiagrmamEntry(msg, diagram) {
+    /** @type {ScenarioMessage} */
+    const diagram_entry = diagram.sequence.find(m => m.operation_guid === msg.operation_guid);
+    if (!diagram_entry) {
+        msg.addValidationError(`Не удалось найти метод ${msg.method?.name || msg.name} с operation_guid=${msg.operation_guid} на диаграмме ${diagram.name}, uid=${diagram.uid}`);
+        return;
+    }
+    msg.subdiagramsEntries.push(diagram_entry);
+    msg.addInfoMessage(`Добавлены вызовы из сообщения ${diagram_entry.display(true)}`);
+}
+
+/**
+ * 
+ * @param {ScenarioMessage} msg 
+ */
+function removeInternalMessages(msg) {
+    if (!msg.sequence)
+        return;
+    const sequence = []
+    for (const ch of msg.sequence) {
+        removeInternalMessages(ch);
+        if (ch.server?.app_code === msg.server?.app_code || ch.operation_guid === msg.operation_guid)
+            ch.sequence && sequence.push(...ch.sequence);
+        else
+            sequence.push(ch);
+    }
+    msg.sequence = sequence.length ? sequence : undefined;
 }
 /**
  * 
@@ -46,35 +80,63 @@ export function buildCallTree(scenario) {
 
         console.log(`Обработка диаграммы [${d.uid}] "${d.name}"`);
 
-
         let context = new ScenarioMessage({ server_id: 0, sequence: d.sequence });
         for (const msg of d.messages) {
             context = addMessage(context, msg);
         }
     }
     console.log(`Подключем в контексты дочерние диаграммы`);
+
     for (const msg of scenario.messages) {
         if (msg.linked_diagram_uid) {
             if (msg.linked_diagram_uid == msg.diagram_uid) {
                 console.log(`На диаграмме c UID=${msg.diagram_uid} есть объект ${msg.server_name}, который ссылается на ту же диаграмму`);
                 continue;
             }
+            /** @type {ScenarioDiagram} */
             const diagram = scenario.diagrams.get(msg.linked_diagram_uid);
             if (!diagram)
                 throw Error(`Не найдена диаграмма с UID=${msg.linked_diagram_uid} (объект ${msg.server_name}, диаграмма ${msg.diagram?.name} uid=${msg.diagram_uid}  )`);
 
             if (!msg.operation_guid) {
-                msg.addInfoMessage(`Сообщение не связано с методом operation_guid`);
+                msg.addInfoMessage(`Сообщение не связано с методом operation_guid, при этом есть связь с дочерней диагаммой ${diagram.name}.\nИщем сообщшение с operation_guid выше по цепочке вызовов`);
                 let ctx = msg.context;
                 while (ctx && !ctx.operation_guid) {
                     ctx = ctx.context;
                 }
                 if (!ctx) {
-                    msg.addValidationError(`Не найден operation_guid по всей цевочке вызовов`);
+                    msg.addValidationError(`Не найден operation_guid по всей цевочке вызовов, нельзя подключиться к диаграмме ${diagram.name} uid=${diagram.uid}`);
                     continue;
                 }
+                msg.addInfoMessage(`Найдено сообщение ${ctx.display()}, пытаемся к нему подключить дочернюю диаграмму`);
+                tryAddSubDiagrmamEntry(ctx, diagram);
+                continue;
             }
+            tryAddSubDiagrmamEntry(msg, diagram);
         }
+    }
+
+    console.log(`Подключаем сообщения из дочерних диаграмм`);
+
+    for (const msg of scenario.messages) {
+        const subentries = msg.subdiagramsEntries;
+        if (!subentries.length)
+            continue;
+        if (subentries.length > 1) {
+            msg.addValidationError(`У данного сообщения по цепочке вызовов найдено несколько возможных дочерних`);
+        }
+        if (!msg.sequence)
+            msg.sequence = [];
+        else
+            msg.sequence.length = 0;
+        for (const s of subentries) {
+            msg.sequence.push(...s.sequence);
+        }
+    }
+
+    console.log(`Схлопываем сообщения внутри одного приложения`);
+    for (const msg of scenario.diagrams.get(scenario.uid)?.sequence || []) {
+        removeInternalMessages(msg);
     }
     return scenario;
 }

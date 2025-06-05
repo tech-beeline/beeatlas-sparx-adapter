@@ -40,7 +40,7 @@ SELECT
 	rps.value as rps,
 	latency.value as latency,
 	error_rate.value as error_rate,
-	api.name as api_name,
+	COALESCE( api.name, srv.name) AS api_name,
 	show_e2e.value as show_in_e2e,
 	api.object_id as api_id,
 	d.ea_guid as diagram_uid, 

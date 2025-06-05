@@ -48,12 +48,12 @@ export class ScenariosService {
             /** @type {ScenarioDiagram} */
             (m.diagram = diagrams.update(msg)).addMessage(m);
             if (m.method = methods.update(msg)) {
-                if (m.method.api = interfaces.update({ api_id: msg.api_id, name: msg.server_name })) {
+                if (m.method.api = interfaces.update(msg)) {
                     m.method.api.methods.push(m.method);
                 }
             }
-            m.client = interfaces.update({ api_id: m.client_id, name: msg.client_name });
-            m.server = interfaces.update({ api_id: m.server_id, name: msg.server_name });
+            m.server = interfaces.update({ api_id: m.server_id, api_name: msg.server_name });
+            m.client = interfaces.update({ api_id: m.client_id, api_name: msg.client_name });
         }
 
         const api_id_list = interfaces.toArray().map(i => i.id);
