@@ -1,7 +1,7 @@
 import { API_VERSION, CONTACT } from "../../../resources/const.mjs"
 import { GetJSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, schemasRef, stringProperty } from "../helpers.mjs"
 import e2eControllers from '../../controllers/e2e-processes-controllers/index.mjs'
-import { E2E_LIST_RESOURCE, E2E_RESOURCE, E2E_SCENARIO_LIST_RESOURCE } from "../paths.mjs"
+import { E2E_LIST_RESOURCE, E2E_RESOURCE, E2E_SCENARIO_LIST_RESOURCE, SCENARIO_MESSAGES_RESOURCE } from "../paths.mjs"
 import { E2E_PROCESS_SCHEMA } from "./e2e-schema.mjs"
 import { SCENARIO_SCHEMA } from "../scenarios-service-spec/scnearios-service-chemas.mjs"
 
@@ -10,6 +10,7 @@ export const PROCESS_SERVICE_DESCRIPTION = "Управление информа�
 
 const GET_E2E_SUMMARY = 'Получение списка Е2Е процессов';
 const GET_E2E_SCNARIOS_SUMMARY = 'Получение описания сценариев, участвующих в процессе';
+const GET_E2E_SCNARIOS_MESSAGES = 'Получение сиска вызовов для сценария';
 
 export const E2E_MESSAGES_RESOURCE = "/api/v4/e2e/{uid}/messages"
 export const E2E_BI_RESOURCE = "/api/v4/e2e/{uid}/bi"
@@ -28,6 +29,7 @@ const E2E_SWAGGER = new SimpleServiceSpecification(
 
 //#region Определение параметров
 const PROCESS_UID_PARAMETER = pathParameter("uid", "Идентификатор Е2Е процесса", "{5DE220EF-4CC4-4adb-AB5B-C49223DB7ED4}");
+const SCENARIO_UID_PARAMETER = pathParameter("uid", "Идентификатор сценария", "{74276CF2-9C3D-419e-A8F8-EB39A7A68FC0}");
 //#endregion
 
 const E2E_PROCESS_SCHEMA_REF = E2E_SWAGGER.defineEntitySchema("E2EProcess", E2E_PROCESS_SCHEMA)

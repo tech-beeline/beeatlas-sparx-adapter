@@ -60,7 +60,10 @@ export class E2EProcessControllers {
      * @param {express.Response} response 
      */
     async getBIMessages(request, response) {
-        NotImplemented()
+        if( !request.params.uid)
+            throw BadRequest(`Не задан UID для сценария`);
+        console.log(`Получение сообщения для сценария uid=${request.params.uid}`);
+        response.json(await e2eService.getBIMessages(request.params.uid));
     }
 }
 

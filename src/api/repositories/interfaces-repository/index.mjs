@@ -4,7 +4,7 @@ import Repository, { REALIZATION_CONNECTOR, t_connector, t_object, t_operation, 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { DEFAULT_STATUS, METHOD_REMOVED_TAG, REMOVED_STATUS } from '../systems-repository/const.mjs';
 import { API_LOAD_DATE_TAG, API_SPECFICATION_TAG } from './const.mjs';
-import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_API_TC, SELECT_CONTAINER_INTERFACES, SELECT_CONTAINER_INTERFACES_BY_ID } from './interfaces-queries.mjs';
+import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_API_TC, SELECT_CONTAINER_INTERFACES, SELECT_CONTAINER_INTERFACES_BY_ID, SELECT_INTERFACES_BY_CONTAINER_LIST } from './interfaces-queries.mjs';
 import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION, SELECT_METHOD_SLA, SELECT_INTERFACE_METHODS_BY_ID, SELECT_METHOD_BY_NAME_INTERFACE_ID, CHECK_METHOD_USAGE } from './methods-queries.mjs';
 import { APIInterface, APIMethod, isAPIEquals, isMethodEquals } from '../../model/system.mjs';
 import { SystemPackage } from '../systems-repository/system-package.mjs';
@@ -46,6 +46,11 @@ export class InterfacesRepository {
     async selectContainerInterfaces(containerCode) {
         return Repository.queryRows(SELECT_CONTAINER_INTERFACES, [containerCode]);
     }
+
+    async selectInterfacesBySystemCode(systemCode) {
+        return Repository.queryRows(SELECT_INTERFACES_BY_CONTAINER_LIST, [systemCode]);
+    }
+
 
     /**
      * 
@@ -506,7 +511,7 @@ export class InterfacesRepository {
         const existingMethods = await Repository.query(SELECT_INTERFACE_METHODS_BY_ID, interface_id);
 
         return Repository.transactionScope(async () => {
-            
+
             for (const e of existingMethods) {
                 if (!methods.find(m => m.name.toLowerCase() === e.name.toLowerCase())) {
                     await this.deleteMethod(e);
@@ -565,9 +570,10 @@ export class InterfacesRepository {
             for (const api of interfaces) {
                 console.log(api.name);
                 const existingApi = existingApiList.find(e => e.code.toLowerCase() === api.code.toLowerCase());
-                if (!existingApi) { 
-                    console.log( `Не найден существующий интерфес для code=${api.code}`);
-                    continue; }
+                if (!existingApi) {
+                    console.log(`Не найден существующий интерфес для code=${api.code}`);
+                    continue;
+                }
 
                 if (!isAPIEquals(api, existingApi)) {
                     await this.#updateInterface(existingApi.interface_id, api);
@@ -575,5 +581,8 @@ export class InterfacesRepository {
                 await this.updateInterfaceMethods(existingApi.interface_id, api.methods);
             }
         })
+    }
+    async selectSystemProvidedAPI(appCode) {
+
     }
 };

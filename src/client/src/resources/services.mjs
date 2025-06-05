@@ -1,4 +1,5 @@
 export const apiSystemsPath = (code) => `/api/v4/systems/${encodeURIComponent(code)}?level=methods`;
+export const apiSystemProvidedPath = (code) => `/api/v4/systems/${encodeURIComponent(code)}/p-api`;
 
 export const SYSTEM_RESOURCE = '/api/v4/systems';
 export const MON_SOURCES_URL = '/api/v4/monitoring/sources';

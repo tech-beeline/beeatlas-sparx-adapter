@@ -2,7 +2,8 @@ import { SELECT_RELATED_DIAGRAM } from "./select-related-diagrams.mjs";
 import Repository from '../sparx-ea-repository/index.mjs';
 import { SELECT_SCENARIO_BY_UID } from "./select-scenario.mjs";
 import { NotImplemented } from "../../../utils/errors.mjs";
-import { SELECT_MESSAGES_BY_DIAGRAM_ID_LIST } from "./diagram-messages-queries.mjs";
+import { SELECT_SCENARIO_INTERFACES, SELECT_SCENARIO_MESSAGES } from "./queries/index.mjs";
+import { MethodDTO } from "./message-dto.mjs";
 
 export class ScenarioRepository {
     /**
@@ -24,9 +25,18 @@ export class ScenarioRepository {
     /**
      * 
      * @param {string} scenarioUID 
-     * @returns {Promise<Array<>>}
+     * @returns {Promise<Array<{name, ea_guid}>>}
      */
     async selectScenarioMessages(scenarioUID) {
-        const messagesRows = await Repository.query(SELECT_SCENARIO_SEQUENCE_MESSAGES, scenarioUID);
+        return Repository.query(SELECT_SCENARIO_MESSAGES, scenarioUID);
+    }
+
+     /**
+     * 
+     * @param {Array} api_id_list 
+     * @returns {Promise<Array<MethodDTO>>}
+     */
+     async selectScenarioInterfaces(api_id_list) {
+        return Repository.query(SELECT_SCENARIO_INTERFACES, api_id_list);
     }
 }
