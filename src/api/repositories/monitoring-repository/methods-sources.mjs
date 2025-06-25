@@ -72,7 +72,7 @@ WITH RECURSIVE cte_src AS (
 			AND c.connector_type='Realisation'
 		LEFT JOIN t_object ch ON ch.object_id=c.end_object_id
 			AND (ch.object_type = 'Interface' OR ch.stereotype='C4_Container')
-			AND ch.status <> 'REMOVED'
+			AND COALESCE(ch.status,'') <> 'REMOVED'
 		LEFT JOIN cte_src src ON src.target_id=ch.object_id
 ), cte_api AS (
 	SELECT
@@ -179,4 +179,3 @@ SELECT DISTINCT
 		LEFT JOIN cte_src app_s ON app_s.target_id=app.object_id
 WHERE LOWER(app.alias)=LOWER($1)
 	AND app.stereotype='softwareSystem'`;
-

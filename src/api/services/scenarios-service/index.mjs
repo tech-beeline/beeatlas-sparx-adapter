@@ -1,11 +1,21 @@
 import { NotImplemented } from "../../../utils/errors.mjs";
 import { ProcessScenario, ScenarioMessage } from "../../model/index.mjs";
-import { Scenario, ScenarioApplication, ScenarioApplicationDictionary, ScenarioDiagram, ScenarioDiagramDictionary, ScenarioDictionary, ScenarioIntrerface, ScenarioMethod } from "../../model/scenario/index.mjs";
-import { ScenarioRepository } from "../../repositories/index.mjs";
+import {
+    Scenario,
+    ScenarioApplication,
+    ScenarioApplicationDictionary,
+    ScenarioDiagram,
+    ScenarioDiagramDictionary,
+    ScenarioDictionary,
+    ScenarioInterface,
+    ScenarioMethod
+} from "../../model/scenario/index.mjs";
+import { InterfacesRepository, ScenarioRepository } from "../../repositories/index.mjs";
 import { buildCallTree } from "./build-call-tree.mjs";
 import { onMessageDouble } from "./vlidate.mjs";
 
 const scenariosRepository = new ScenarioRepository();
+const interfaceRepository = new InterfacesRepository();
 
 export class ScenariosService {
     async getAll() {
@@ -31,11 +41,11 @@ export class ScenariosService {
         return Object.values(messages);
     }
 
-    async getScenarioSequence(scenarioUID) {
+    async getScenarioSequence(scenarioUID, removeInfo = true, removeError = true) {
         const messagesRows = await scenariosRepository.selectScenarioMessages(scenarioUID);
         const messages = {};
         const diagrams = new ScenarioDiagramDictionary();
-        const interfaces = new ScenarioDictionary("api_id", ScenarioIntrerface);
+        const interfaces = new ScenarioDictionary("api_id", ScenarioInterface);
         const methods = new ScenarioDictionary("operation_guid", ScenarioMethod);
 
         for (const msg of messagesRows) {
@@ -48,7 +58,7 @@ export class ScenariosService {
             /** @type {ScenarioDiagram} */
             (m.diagram = diagrams.update(msg)).addMessage(m);
             if (m.method = methods.update(msg)) {
-                if (m.method.api = interfaces.update(msg)) {
+                if ((!m.method.api) && (m.method.api = interfaces.update(msg))) {
                     m.method.api.methods.push(m.method);
                 }
             }
@@ -61,16 +71,29 @@ export class ScenariosService {
         const applications = new ScenarioApplicationDictionary();
 
         for (const row of interfaces_rows) {
-            /**@type {ScenarioApplication}  */
-            const app = applications.update(row);
-            /** @type {ScenarioIntrerface} */
+            /** @type {ScenarioInterface} */
             [row.api_id, row.container_id, row.app_id].forEach(id => {
-                interfaces.get(id)?.update(row, app)
+                /**@type {ScenarioInterface} */
+                const it = interfaces.get(id);
+                if (it) {
+                    it.update(row, applications.update(row));
+                };
             });
         }
 
+        const methods_mapping = await interfaceRepository.selectMethodMappingByUID(methods.toArray().map(m => m.uid));
+        for (const row of methods_mapping) {
+            /**@type {ScenarioMethod} */
+            const m = methods.get(row.method_uid);
+            if (!m) {
+                console.warn(`Не найден метод ${row.method_name} uid=${row.method_uid} при постройке дерева вызовов для сценария uid=${scenarioUID}`);
+                continue;
+            }
+            m.addStructurizrMap(row);
+        }
+
         const sc = new Scenario(scenarioUID, Object.values(messages), diagrams, interfaces, applications);
-        buildCallTree(sc);
+        buildCallTree(sc, removeInfo, removeError);
         return sc;
     }
 }

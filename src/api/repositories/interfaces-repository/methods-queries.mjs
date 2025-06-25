@@ -103,3 +103,69 @@ FROM t_operation m
 	JOIN t_diagram d ON d.diagram_id=c.diagramid
 WHERE m.operationid=$1
 LIMIT 1`;
+
+export const SELECT_PAPI_MAPPING = `WiTH cte_realization AS ( select 
+    DISTINCT r.start_object_id, c.*
+    FROM t_connector r 
+        JOIN t_object c ON  c.object_id=r.end_object_id
+    WHERE r.connector_type='Realisation'
+), cte_papi AS (
+	SELECT 
+		app.object_id as app_id,
+		api.name,
+		api.alias as api_code,
+		api.ea_guid,
+		api.object_id,
+		m.name as method_name,
+		m.ea_guid as method_uid,
+		m.notes as method_description,
+		rps.value as rps,
+		latency.value as latency,
+		error_rate.value as error_rate
+	FROM t_object app
+		JOIN t_object pi ON pi.parentid=app.object_id
+		JOIN t_object api ON api.object_id=pi.classifier
+		JOIN t_operation m ON m.object_id=api.object_id
+		LEFT JOIN t_operationtag rps ON rps.elementid=m.operationid AND rps.property='rps'
+		LEFT JOIN t_operationtag latency ON latency.elementid=m.operationid AND latency.property='latency'
+		LEFT JOIN t_operationtag error_rate ON error_rate.elementid=m.operationid AND error_rate.property='error_rate'
+	WHERE app.stereotype='softwareSystem' 
+), cte_c4_api AS (
+	SELECT 
+		m.name AS method_name,
+		m.ea_guid AS method_uid,
+		app.name as app_name,
+		app.alias as app_code,
+		app.object_id AS app_id,
+		cn.alias as container_code,
+		cn.name as container_name,
+		it.alias as code,
+		it.name AS api_name,
+		rps.value AS rps,
+		latency.value AS latency,
+		error_rate.value AS error_rate
+	FROM t_object app 
+		JOIN cte_realization cn ON cn.start_object_id=app.object_id AND cn.stereotype='C4_Container'
+		JOIN cte_realization it ON it.start_object_id=cn.object_id AND it.object_type='Interface' AND it.alias IS NOT NULL
+		JOIN t_operation m ON m.object_id=it.object_id
+		LEFT JOIN t_operationtag rps ON rps.elementid=m.operationid AND rps.property='rps'
+		LEFT JOIN t_operationtag latency ON latency.elementid=m.operationid AND latency.property='latency'
+		LEFT JOIN t_operationtag error_rate ON error_rate.elementid=m.operationid AND error_rate.property='error_rate'
+	WHERE app.stereotype='softwareSystem'
+)
+SELECT DISTINCT
+	p.method_name,
+	p.method_uid,
+	p.rps as manual_rps,
+	p.latency as manual_latency,
+	p.error_rate as manual_error_rate,
+	c4.method_uid AS c4_method_uid,
+	c4.code,
+	c4.rps,
+	c4.latency,
+	c4.error_rate
+FROM cte_papi p
+	JOIN cte_c4_api c4 ON LOWER(c4.method_name)=LOWER(p.method_name) AND c4.app_id=p.app_id`;
+
+export const SELECT_PAPI_MAPPING_BY_NAMES = `${SELECT_PAPI_MAPPING}
+	WHERE p.method_uid=ANY($1)`;

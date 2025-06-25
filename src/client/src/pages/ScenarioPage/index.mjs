@@ -1,0 +1,99 @@
+import {
+    useParams,
+    useSearchParams
+} from "react-router-dom";
+import {
+    useEffect,
+    useState
+} from "react";
+import {
+    IconButton,
+    Progress,
+    Tab,
+    Tabs,
+    Typography
+} from "@beeline/design-system-react";
+import {
+    Box,
+    Link,
+    Alert
+} from "@mui/material";
+import { Launch } from "@mui/icons-material";
+import { buildScnearioResourcePath } from "../../resources/services.mjs";
+
+import later from "../../utils/later.mjs"
+import { ScenarioSequence } from "./scenario-sequence.mjs";
+import { ScenarioDTO } from "../../model/scenario/index.mjs";
+import { ScenarioApplications } from "./scenario-applications.mjs";
+import { ScenarioApplicationDTO } from "../../model/scenario/scenario-application-dto.mjs";
+import { ScenarioObservability } from "./components/scenario-observability.mjs";
+
+const SEQUENCE_TAB = "sequence";
+const INTERACTION_TAB = "interaction";
+const APPLICATION_TAB = "application"
+const OBSERVABILITY_TAB = "observability"
+const TAB_INDEX = {
+    [SEQUENCE_TAB]: 0,
+    [INTERACTION_TAB]: 1,
+    [APPLICATION_TAB]: 2,
+    [OBSERVABILITY_TAB]: 3
+}
+const SELECTED_TAB_PARAM = "tab"
+
+export function ScenarioPage() {
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { process_uid, uid } = useParams();
+    const [loadingScenario, setLoadingScenario] = useState();
+    const [errorLoad, setErrorLoad] = useState();
+    /**@type {[ScenarioDTO]} */
+    const [scenario, setScenario] = useState();
+
+    const loadScenario = async () => {
+        setErrorLoad(null);
+        setLoadingScenario(true);
+        setScenario(null);
+        try {
+            const responce = await fetch(buildScnearioResourcePath(uid));
+            if (responce.status !== 200) {
+                throw Error(await responce.text());
+            }
+            setScenario(ScenarioDTO.fromObject(await responce.json()));
+        } catch (err) {
+            console.error(err);
+            setErrorLoad(err.message);
+        } finally {
+            setLoadingScenario(null);
+        }
+    }
+
+    useEffect(() => {
+        loadScenario();
+    }, [process_uid, uid]);
+
+    return (
+        <Box>
+            <Box>
+                <Typography variant="h3">Сценарий Е2Е процесса</Typography>
+                <Link target="_blank" href={`/e2e/${encodeURIComponent(process_uid)}/bi/${uid}`}><Launch /> Старая версия</Link>
+            </Box>
+            <Box>
+                {loadingScenario && <Progress cycled />}
+                {errorLoad && <><Alert severity="error"><IconButton onClick={() => loadScenario()}>Обновить</IconButton>Ошибка при получении данных:{errorLoad}</Alert></>}
+                {scenario &&
+                    <Tabs selectedTabIndex={TAB_INDEX[searchParams.get(SELECTED_TAB_PARAM)] || 0}>
+                        <Tab value={SEQUENCE_TAB} label="Дерево вызовов" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: SEQUENCE_TAB })}>
+                            <ScenarioSequence sequence={scenario.sequence} />
+                        </Tab>
+                        <Tab value={INTERACTION_TAB} label="Взаимодействия" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: INTERACTION_TAB })}>
+                        </Tab>
+                        <Tab value={APPLICATION_TAB} label="Системы и интерфейсы" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: APPLICATION_TAB })}>
+                            <ScenarioApplications applications={scenario.applications} />
+                        </Tab>
+                        <Tab value={OBSERVABILITY_TAB} label="Дашборд наблюдаемости" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: OBSERVABILITY_TAB })}>
+                            <ScenarioObservability scenarioUID={uid} />
+                        </Tab>
+                    </Tabs>}
+            </Box>
+        </Box>);
+}

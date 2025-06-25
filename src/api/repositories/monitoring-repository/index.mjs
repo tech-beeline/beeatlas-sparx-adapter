@@ -10,6 +10,8 @@ import { API_METRIC_TEMPLATE_TAG } from '../../const.mjs';
 import { SELECT_SYSTEM_CONTAINERS_CODE } from '../systems-repository/systems-containers-queries.mjs';
 import { SELECT_INTERFACE_BY_CODE } from '../interfaces-repository/interfaces-queries.mjs';
 
+const GRAFANA_LINK_TAG = "grafana_link";
+
 const SELECT_ALL_SOURCES = `SELECT
 src.object_id, src.ea_guid, src.name, t.property, t.value
 FROM t_object src
@@ -203,8 +205,8 @@ export class MonitoringRepository {
     }
 
     async selectMapicMetricTempalte() {
-        const metric =  await Repository.queryOne(SELECT_MAPIC_METRIC_TEMPLATE);
-        if( metric ) return metric.api_metric_template;
+        const metric = await Repository.queryOne(SELECT_MAPIC_METRIC_TEMPLATE);
+        if (metric) return metric.api_metric_template;
         return null;
     }
 
@@ -249,5 +251,8 @@ export class MonitoringRepository {
 
             return { interfaceCode: interfaceCode, apiMetricTemplate: result.value };
         });
+    }
+    async selectScenarioDashboardLink(uid) {
+        const tags = await Repository.readObjectsTags(uid);
     }
 }

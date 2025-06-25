@@ -229,7 +229,7 @@ export class SparxRepository {
     }
 
     async find(type, condition) {
-        if( !type.name) throw Error('type is invalid');
+        if (!type.name) throw Error('type is invalid');
         const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r)));
     }
@@ -603,6 +603,17 @@ export class SparxRepository {
          * @type {Array{t_objectproperties}}
          */
         const rows = await this.queryRows(`SELECT * from t_objectproperties where object_id = ANY($1)`, [ids]);
+        return rows.reduce((map, t) => {
+            const tags = map[t.object_id] ?? (map[t.object_id] = {})
+            tags[t.property] = t.value;
+            return map;
+        }, {});
+    }
+    async readObjectTagsByObjectUID(uid) {
+        /**
+         * @type {Array{t_objectproperties}}
+         */
+        const rows = await this.query(`SELECT * from t_objectproperties where object_id = (SELECT object_id FROM t_object WHERE ea_guid=$1)`, uid);
         return rows.reduce((map, t) => {
             const tags = map[t.object_id] ?? (map[t.object_id] = {})
             tags[t.property] = t.value;

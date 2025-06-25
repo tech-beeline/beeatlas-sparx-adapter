@@ -5,10 +5,11 @@ import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { DEFAULT_STATUS, METHOD_REMOVED_TAG, REMOVED_STATUS } from '../systems-repository/const.mjs';
 import { API_LOAD_DATE_TAG, API_SPECFICATION_TAG } from './const.mjs';
 import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_API_TC, SELECT_CONTAINER_INTERFACES, SELECT_CONTAINER_INTERFACES_BY_ID, SELECT_INTERFACES_BY_CONTAINER_LIST } from './interfaces-queries.mjs';
-import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION, SELECT_METHOD_SLA, SELECT_INTERFACE_METHODS_BY_ID, SELECT_METHOD_BY_NAME_INTERFACE_ID, CHECK_METHOD_USAGE } from './methods-queries.mjs';
+import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION, SELECT_METHOD_SLA, SELECT_INTERFACE_METHODS_BY_ID, SELECT_METHOD_BY_NAME_INTERFACE_ID, CHECK_METHOD_USAGE, SELECT_PAPI_MAPPING, SELECT_PAPI_MAPPING_BY_NAMES } from './methods-queries.mjs';
 import { APIInterface, APIMethod, isAPIEquals, isMethodEquals } from '../../model/system.mjs';
 import { SystemPackage } from '../systems-repository/system-package.mjs';
 import { randomUUID } from 'node:crypto';
+import { MethodMapRecord } from './model.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
@@ -585,4 +586,17 @@ export class InterfacesRepository {
     async selectSystemProvidedAPI(appCode) {
 
     }
+    async selectMethodMapping() {
+        return Repository.query(SELECT_PAPI_MAPPING);
+    }
+
+    /**
+     * 
+     * @param {string[]} methods_uid 
+     * @returns {Promise<MethodMapRecord[]>}
+     */
+    async selectMethodMappingByUID(methods_uid) {
+        return Repository.query(SELECT_PAPI_MAPPING_BY_NAMES, methods_uid);
+    }
+
 };

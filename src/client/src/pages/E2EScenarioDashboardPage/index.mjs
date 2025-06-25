@@ -5,12 +5,14 @@ import {
 import React, { useEffect, useState } from "react";
 import { Scenario } from "./scenario-model.mjs";
 import {
-    AddCard
+    AddCard,
+    Launch
 } from "@mui/icons-material";
 
 import {
     Box,
     Breadcrumbs,
+    Link,
     List,
     ListItem,
     ListItemButton,
@@ -143,6 +145,9 @@ export function E2EScenarioDashboardPage() {
                     </div>
                 ) : (
                     <div>
+                        <Box>
+                            <Link target="_blank" href={`/e2e/${encodeURIComponent(process_uid)}/scenario/${uid}`}><Launch /> Новая версия</Link>
+                        </Box>
                         <ApplicationSection
                             applications={e2eScenario.applications}
                         />

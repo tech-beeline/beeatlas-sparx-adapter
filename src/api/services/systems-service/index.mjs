@@ -172,6 +172,13 @@ export class SystemService {
                         if (matched) {
                             m.name = `${matched.groups?.method.toUpperCase()} ${matched.groups?.endpoint.toLowerCase()}`
                         }
+                        if (it.protocol?.toLowerCase() == "soap") {
+                            const t = m.name.split(".");
+                            if (t.length > 1) {
+                                t.shift();
+                                m.name = t.join(".");
+                            }
+                        }
                         /**@type {APIMethod} */
                         let method = methodsMap[m.name];
                         if (method) {

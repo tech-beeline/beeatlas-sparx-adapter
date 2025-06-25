@@ -8,6 +8,8 @@ export const MONITORING_CONTAINER_SOURCE_RESOURCE = '/api/v4/monitoring/containe
 export const MONITORING_INTERFACES_SOURCE_RESOURCE = '/api/v4/monitoring/interfaces/source';
 export const DIGITAL_ARCHITECT_RESOURCE = `/api/v4/digital-arhitect/users`
 
-export const architectActionResource = (login)=>`${DIGITAL_ARCHITECT_RESOURCE}/${encodeURIComponent(login)}/actions`;
+export const architectActionResource = (login) => `${DIGITAL_ARCHITECT_RESOURCE}/${encodeURIComponent(login)}/actions`;
 
 export const systemApiMonitoringPath = (code) => `${SYSTEM_RESOURCE}/${code}/monitoring`;
+export const SCENARIO_RESOURCE = "/api/v4/e2e/scenarios";
+export const buildScnearioResourcePath = (uid) => `${SCENARIO_RESOURCE}/${encodeURIComponent(uid)}/sequence`;

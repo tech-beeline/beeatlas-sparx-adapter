@@ -60,9 +60,23 @@ function removeInternalMessages(msg) {
         return;
     const sequence = []
     for (const ch of msg.sequence) {
+        if (ch.method?.show_in_e2e) {
+            sequence.push(ch);
+            continue;
+        }
+        if (ch.server?.app_code === msg.server?.app_code || ch.operation_guid === msg.operation_guid || !ch.server?.app_code) {
+            ch.operation_guid = msg.operation_guid;
+            ch.server = msg.server;
+        }
         removeInternalMessages(ch);
-        if (ch.server?.app_code === msg.server?.app_code || ch.operation_guid === msg.operation_guid)
+        if (ch.server?.app_code === msg.server?.app_code || ch.operation_guid === msg.operation_guid) {
             ch.sequence && sequence.push(...ch.sequence);
+            if (ch.validationError) {
+                for (const e of ch.validationError) {
+                    msg.addValidationError(`Из дочерного вызова ${ch.display()}:\n${e}`);
+                }
+            }
+        }
         else
             sequence.push(ch);
     }
@@ -73,7 +87,7 @@ function removeInternalMessages(msg) {
  * @param {Scenario} scenario 
  * @returns 
  */
-export function buildCallTree(scenario) {
+export function buildCallTree(scenario, removeInfoMessages = false, removeError = false) {
     console.log(`Строим дерево для каждой диграммы`)
     for (const d of scenario.diagrams.toArray()) {
         d.messages.sort((a, b) => a.seqno - b.seqno);
@@ -99,7 +113,7 @@ export function buildCallTree(scenario) {
                 throw Error(`Не найдена диаграмма с UID=${msg.linked_diagram_uid} (объект ${msg.server_name}, диаграмма ${msg.diagram?.name} uid=${msg.diagram_uid}  )`);
 
             if (!msg.operation_guid) {
-                msg.addInfoMessage(`Сообщение не связано с методом operation_guid, при этом есть связь с дочерней диагаммой ${diagram.name}.\nИщем сообщшение с operation_guid выше по цепочке вызовов`);
+                msg.addValidationError(`Сообщение ${msg.display()} не связано с методом operation_guid, при этом есть связь с дочерней диагаммой ${diagram.name}.\nИщем сообщшение с operation_guid выше по цепочке вызовов`);
                 let ctx = msg.context;
                 while (ctx && !ctx.operation_guid) {
                     ctx = ctx.context;
@@ -137,6 +151,13 @@ export function buildCallTree(scenario) {
     console.log(`Схлопываем сообщения внутри одного приложения`);
     for (const msg of scenario.diagrams.get(scenario.uid)?.sequence || []) {
         removeInternalMessages(msg);
+    }
+
+    if (removeInfoMessages || removeError) {
+        for (const msg of scenario.messages) {
+            if (removeInfoMessages) msg.infoMessages = undefined;
+            if (removeError) msg.validationError = undefined;
+        }
     }
     return scenario;
 }

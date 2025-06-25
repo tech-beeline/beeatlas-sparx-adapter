@@ -128,7 +128,6 @@ export function SystemAPIPage() {
 
                 const methods = [];
                 const structurizrApi = await loadContainers();
-                console.log(structurizrApi);
 
                 for (const c of structurizrApi.containers ?? []) {
                     const containerInfo = `${c.name}`;
@@ -141,7 +140,6 @@ export function SystemAPIPage() {
                         }
                     }
                 }
-                console.log(methods);
                 setSystemMethods(methods);
             } catch (err) {
                 setError(err.message);

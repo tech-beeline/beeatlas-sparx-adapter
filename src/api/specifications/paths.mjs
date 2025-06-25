@@ -95,6 +95,7 @@ export const TECH_RADAR_TECHNOLOGY_LIST_RESOURCE = TECH_RADAR_TECHNOLOGY_LIST_RE
 //#endregion
 
 //#region Observability paths
-export const OBSERVABILITY_E2E_SCENARIOS_PATH_V4 = '/api/v4/observability/scenario/publish';
-export const OBSERVABILITY_E2E_SCENARIOS_PATH = OBSERVABILITY_E2E_SCENARIOS_PATH_V4;
+export const OBSERVABILITY_E2E_SCENARIOS_RESOURCE_V4 = '/api/v4/observability/scenario/{uid}';
+export const OBSERVABILITY_E2E_SCENARIOS_PUBLISH_RESOURCEV4 = '/api/v4/observability/scenario/publish';
+export const OBSERVABILITY_E2E_SCENARIOS_PATH = OBSERVABILITY_E2E_SCENARIOS_PUBLISH_RESOURCEV4;
 //#endregion
