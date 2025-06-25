@@ -5,7 +5,7 @@ env:
   DB_EA_DATABASE:           "ea_repository"
   IA_GIT_TOKEN:             "vault:eafdmmart/data/dev/ia#token"
   OPENMETADATA_TOKEN:       "vault:eafdmmart/data/dev/OMD#TOKEN"
-  OPENMETADATA_URL:         "https://open-metadata.dev.dmp.vimpelcom.ru"
+  OPENMETADATA_URL:         "https://open-metadata.prod.dmp.vimpelcom.ru"
   FDM_URL:                  "jdbc:postgresql://yd-fdmdevdb01.nix.vimpelcom.ru:5432/fdm_db"
   FDM_USERNAME:             "vault:eafdmmart/data/dev/fdm#username"
   FDM_PASSWORD:             "vault:eafdmmart/data/dev/fdm#password"
