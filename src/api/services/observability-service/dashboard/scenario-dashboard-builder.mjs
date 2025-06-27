@@ -4,13 +4,11 @@ import { expr } from "../../../../legacy/services/monitoring-templates/panels/pr
 import Sequence from "../../../../legacy/services/monitoring-templates/sequence.mjs";
 import { NotImplemented } from "../../../../utils/errors.mjs";
 import { GrafanaRow } from "./panels/call-tree-row.mjs";
+import { updateTargetsRef } from "./panels/index.mjs";
 import { uriRegex } from "./sources/common.mjs";
 
 const formatTitle = (msg) => `${msg.client_code} - ${msg.server_code}${msg.stereotype ? ` ${msg.stereotype}` : ""}: ${msg.method?.name ?? msg.name}`;
 
-const updateTargetsRef = (panel, id) => {
-    panel.targets.forEach(t => t.panelId = id)
-}
 
 
 export function formatQuery(template, uri, method, client_code) {

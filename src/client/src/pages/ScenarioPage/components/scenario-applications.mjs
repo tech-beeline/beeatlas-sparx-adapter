@@ -9,12 +9,12 @@ import {
     Paper,
     Typography
 } from "@mui/material";
-import { ScenarioApplicationDTO, ScenarioInterfaceDTO } from "../../model/scenario/scenario-application-dto.mjs";
+import { ScenarioApplicationDTO, ScenarioInterfaceDTO } from "../../../model/scenario/scenario-application-dto.mjs";
 import { useState } from "react";
 import { Image, Launch } from "@mui/icons-material";
-import { slaString } from "./utils.mjs";
-import webeaLogo from "../../res/images/ea-icon.ico";
-import structurizrLogo from "../../res/images/structurizr.png";
+import { slaString } from "../utils.mjs";
+import webeaLogo from "../../../res/images/ea-icon.ico";
+import structurizrLogo from "../../../res/images/structurizr.png";
 import { Table, TableBody, TableCell, TableData, TableHead, TableHeaderData, TableRow } from "@beeline/design-system-react";
 
 /**
@@ -76,7 +76,6 @@ function SparxMethodsPanel({ methods }) {
  * @returns 
  */
 function ScenarioInterfacePanel({ api }) {
-    console.log(api);
     return <Accordion defaultExpanded>
         <AccordionSummary>{api.source == "sparx" ? <img src={webeaLogo} width={24} /> : <img src={structurizrLogo} width={24} />}&nbsp;{api.title}</AccordionSummary>
         <AccordionDetails>

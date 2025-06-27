@@ -1,5 +1,6 @@
 import { ScenarioMessageDTO } from "../../../client/src/model/scenario/index.mjs";
 import { ScenarioInterfaceDTO } from "../../../client/src/model/scenario/scenario-application-dto.mjs";
+import { ScenarioMethodDTO } from "../../../client/src/model/scenario/scenario-message-dto.mjs";
 import { MethodMapRecord } from "../../repositories/interfaces-repository/model.mjs";
 
 export class ScenarioApplication {
@@ -11,6 +12,19 @@ export class ScenarioApplication {
     }
 }
 export class ScenarioInterface extends ScenarioInterfaceDTO {
+    #server_id;
+    /**
+     *
+     */
+    constructor(obj) {
+        super(obj);
+        this.#server_id = obj.server_id;
+    }
+    
+    get key() {
+        return `${this.id}-${this.#server_id}`;
+    }
+
     update(obj, app) {
         this.app_code = obj.app_code;
         this.application = app;
@@ -32,32 +46,8 @@ export class ScenarioInterface extends ScenarioInterfaceDTO {
     }
 }
 
-export class ScenarioMethod {
-    name;
-    uid
-    api_id;
-    show_in_e2e;
-    rps;
-    latency;
-    error_rate;
-    /**@type  {MethodMapRecord[]} */
-    structurizr_map;
-    #api;
-    constructor(obj) {
-        this.uid = obj.operation_guid;
-        this.name = obj.method;
-        this.api_id = obj.api_id;
-        this.rps = obj.rps;
-        this.latency = obj.latency;
-        this.error_rate = obj.error_rate;
-        this.show_in_e2e = obj.show_in_e2e || undefined;
-    }
-    set api(api) {
-        this.#api = api;
-    }
-    get api() {
-        return this.#api;
-    }
+export class ScenarioMethod extends ScenarioMethodDTO {
+
     /**
      * 
      * @param {MethodMapRecord} record 
@@ -65,12 +55,6 @@ export class ScenarioMethod {
     addStructurizrMap(record) {
         if (!this.structurizr_map) this.structurizr_map = [];
         this.structurizr_map.push(record);
-    }
-    toJSON() {
-        if (this.rps) {
-            console.log('!');
-        }
-        return this;
     }
 }
 
@@ -97,12 +81,12 @@ export class ScenarioDiagram {
 
 export class ScenarioMessage extends ScenarioMessageDTO {
 
-
     #server_id;
     #client_id
     #contex;
     #server;
     #client;
+
 
     /** @type {ScenarioMessage[]} */
     subdiagramsEntries = [];
@@ -140,6 +124,15 @@ export class ScenarioMessage extends ScenarioMessageDTO {
     get context() {
         return this.#contex;
     }
+
+    #metricSource
+    get metricSource() {
+        return this.#metricSource;
+    }
+    set metricSource(v) {
+        this.#metricSource = v;
+    }
+
 
     addValidationError(error) {
         if (!error) return;
@@ -233,9 +226,10 @@ export class ScenarioApplicationDictionary extends ScenarioDictionary {
     }
 }
 
+
 export class Scenario {
     uid;
-    /** @type {ScenarioMessage[]} */
+    /**@type {ScenarioMessage[]} */
     messages;
     /** @type {ScenarioDictionary} */
     diagrams;
@@ -257,12 +251,30 @@ export class Scenario {
         this.interfaces = interfaces;
         this.diagrams = diagrams;
     }
+    get sequence() {
+        return this.diagrams.get(this.uid)?.sequence;
+    }
+
+    /**
+     * 
+     * @param {*} sequence 
+     * @param {*} array 
+     * @returns {ScenarioMessage[]}
+     */
+    getAllMessages(sequence = this.sequence, array = []) {
+        array.push(...sequence)
+        for (const c of sequence) {
+            c.sequence && this.getAllMessages(c.sequence, array);
+        }
+        return array;
+    }
     toJSON() {
         return {
             //diagrams: this.diagrams.toArray(),
-            sequence: this.diagrams.get(this.uid)?.sequence,
+            sequence: this.sequence,
             applications: this.applications.toArray(),
             interfaces: this.interfaces.toArray().filter(i => i.methods?.length)
         }
     }
+
 }

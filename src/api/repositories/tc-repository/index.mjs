@@ -144,7 +144,7 @@ export class TechnicalCapabilitiesRepository {
 			package_id: tc_package.package_id,
 			name: tc.name,
 			object_type: ARCHIMATE_TECH_CAPABILITY,
-			author: "FDM API",
+			author: tc.author ?? "FDM API",
 			note: tc.description,
 			status: "Created",
 			version: tc.version

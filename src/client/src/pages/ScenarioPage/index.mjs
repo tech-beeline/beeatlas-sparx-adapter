@@ -18,15 +18,15 @@ import {
     Link,
     Alert
 } from "@mui/material";
-import { Launch } from "@mui/icons-material";
 import { buildScnearioResourcePath } from "../../resources/services.mjs";
 
-import later from "../../utils/later.mjs"
-import { ScenarioSequence } from "./scenario-sequence.mjs";
+import { ScenarioSequence } from "./components/scenario-sequence.mjs";
 import { ScenarioDTO } from "../../model/scenario/index.mjs";
-import { ScenarioApplications } from "./scenario-applications.mjs";
-import { ScenarioApplicationDTO } from "../../model/scenario/scenario-application-dto.mjs";
+import { ScenarioApplications } from "./components/scenario-applications.mjs";
 import { ScenarioObservability } from "./components/scenario-observability.mjs";
+import { ScenarioAppBar } from "./components/scenario-app-bar.mjs";
+
+
 
 const SEQUENCE_TAB = "sequence";
 const INTERACTION_TAB = "interaction";
@@ -73,10 +73,7 @@ export function ScenarioPage() {
 
     return (
         <Box>
-            <Box>
-                <Typography variant="h3">Сценарий Е2Е процесса</Typography>
-                <Link target="_blank" href={`/e2e/${encodeURIComponent(process_uid)}/bi/${uid}`}><Launch /> Старая версия</Link>
-            </Box>
+            <ScenarioAppBar process_uid={process_uid} uid={uid} />
             <Box>
                 {loadingScenario && <Progress cycled />}
                 {errorLoad && <><Alert severity="error"><IconButton onClick={() => loadScenario()}>Обновить</IconButton>Ошибка при получении данных:{errorLoad}</Alert></>}

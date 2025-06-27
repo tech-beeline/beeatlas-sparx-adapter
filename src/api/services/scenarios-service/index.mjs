@@ -1,4 +1,4 @@
-import { NotImplemented } from "../../../utils/errors.mjs";
+import { BadRequest, NotImplemented } from "../../../utils/errors.mjs";
 import { ProcessScenario, ScenarioMessage } from "../../model/index.mjs";
 import {
     Scenario,
@@ -42,10 +42,11 @@ export class ScenariosService {
     }
 
     async getScenarioSequence(scenarioUID, removeInfo = true, removeError = true) {
+        if (!scenarioUID) throw BadRequest(`scenarioUID не указан`);
         const messagesRows = await scenariosRepository.selectScenarioMessages(scenarioUID);
         const messages = {};
         const diagrams = new ScenarioDiagramDictionary();
-        const interfaces = new ScenarioDictionary("api_id", ScenarioInterface);
+        const interfaces = new ScenarioDictionary("server_id", ScenarioInterface);
         const methods = new ScenarioDictionary("operation_guid", ScenarioMethod);
 
         for (const msg of messagesRows) {
@@ -57,13 +58,14 @@ export class ScenariosService {
             const m = messages[msg.ea_guid] = new ScenarioMessage(msg);
             /** @type {ScenarioDiagram} */
             (m.diagram = diagrams.update(msg)).addMessage(m);
+
             if (m.method = methods.update(msg)) {
                 if ((!m.method.api) && (m.method.api = interfaces.update(msg))) {
                     m.method.api.methods.push(m.method);
                 }
             }
-            m.server = interfaces.update({ api_id: m.server_id, api_name: msg.server_name });
-            m.client = interfaces.update({ api_id: m.client_id, api_name: msg.client_name });
+            m.server = interfaces.update({ server_id: m.server_id, api_id: m.server_id, api_name: msg.server_name });
+            m.client = interfaces.update({ server_id: m.client_id, api_id: m.client_id, api_name: msg.client_name });
         }
 
         const api_id_list = interfaces.toArray().map(i => i.id);

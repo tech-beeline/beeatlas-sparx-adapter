@@ -25,7 +25,10 @@ export const updateTC = async (currentTC, targetTC) => {
         throw BadRequest('Изменение системы, владеющий ТС не предусмотрено');
 
     return eaRepository.transactionScope(async () => {
-        if (currentTC.name !== targetTC.name || currentTC.description !== targetTC.description || currentTC.version !== targetTC.version) {
+        if (currentTC.name !== targetTC.name
+            || currentTC.description !== targetTC.description
+            || currentTC.version !== targetTC.version
+            || currentTC.author !== targetTC.author) {
             await tcDataService.updateTC(targetTC);
         }
         await tcDataService.updateParentBcForTC(targetTC.code, targetTC.parents.map(p => p.code));

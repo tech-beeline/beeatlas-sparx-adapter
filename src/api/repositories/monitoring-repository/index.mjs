@@ -204,7 +204,7 @@ export class MonitoringRepository {
         return Repository.queryRows(SELECT_METHOD_SOURCES);
     }
 
-    async selectMapicMetricTempalte() {
+    async selectMapicMetricTemplate() {
         const metric = await Repository.queryOne(SELECT_MAPIC_METRIC_TEMPLATE);
         if (metric) return metric.api_metric_template;
         return null;

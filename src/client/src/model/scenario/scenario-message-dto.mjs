@@ -1,5 +1,35 @@
 import { ScenarioApplicationDTO } from "./scenario-application-dto.mjs";
 
+export class ScenarioMethodDTO {
+    name;
+    uid
+    api_id;
+    show_in_e2e;
+    rps;
+    latency;
+    error_rate;
+    /**@type  {MethodMapRecord[]} */
+    structurizr_map;
+    #api;
+    constructor(obj) {
+        this.uid = obj.operation_guid;
+        this.name = obj.method;
+        this.api_id = obj.api_id;
+        this.rps = obj.rps;
+        this.latency = obj.latency;
+        this.error_rate = obj.error_rate;
+        this.show_in_e2e = obj.show_in_e2e || undefined;
+        this.structurizr_map = this.structurizr_map;
+    }
+    set api(api) {
+        this.#api = api;
+    }
+    get api() {
+        return this.#api;
+    }
+}
+
+
 export class ScenarioMessageDTO {
     name;
     uid;
@@ -24,7 +54,7 @@ export class ScenarioMessageDTO {
     /** @type {ScenarioMessageDTO[]} */
     sequence;
     #method;
-    /** @type {ScenarioMethod} */
+    /** @type {ScenarioMethodDTO} */
     get method() {
         return this.#method;
     }

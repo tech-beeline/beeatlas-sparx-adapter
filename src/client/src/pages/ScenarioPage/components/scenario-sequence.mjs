@@ -2,8 +2,8 @@ import { Tree, TreeNode } from "@beeline/design-system-react";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import { Box } from "@mui/material";
 import { useState } from "react";
-import { ScenarioMessage } from "../../model/scenario/scenario-message-dto.mjs";
-import { distinctMessages } from "./utils.mjs";
+import { ScenarioMessage } from "../../../model/scenario/scenario-message-dto.mjs";
+import { distinctMessages } from "../utils.mjs";
 
 /**
  * 
