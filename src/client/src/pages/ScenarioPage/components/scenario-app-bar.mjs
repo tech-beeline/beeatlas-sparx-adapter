@@ -29,7 +29,7 @@ export function ScenarioAppBar({ process_uid, uid }) {
     useEffect(() => { loadData() }, [process_uid, uid]);
 
     const process = processData && processData.processList.find(p=>p.uid==process_uid);
-    const scenario = processData && processData.scenarios.find(s=>s.ea_guid=uid);
+    const scenario = processData && processData.scenarios.find(s=>s.ea_guid==uid);
 
     return <AppBar position="static" elevation={0} className={styles.appBar}>
         <Toolbar>

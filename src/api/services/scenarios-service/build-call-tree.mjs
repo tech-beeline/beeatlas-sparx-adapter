@@ -14,7 +14,7 @@ function addMessage(context, msg) {
     const message_skip = (text) => `Пропускаем сообщение ${msg.display()} : ${text || ""}`
     if (msg.is_ret == '1')
         return context.addInfoMessage(message_skip("возрат"));
-    if (EXCLUDE_NAMES[msg.name])
+    if (EXCLUDE_NAMES[msg.name?.toLowerCase()])
         return context.addInfoMessage(message_skip(`информационное сообщение`));
     if (msg.server_id == msg.client_id)
         return context.addInfoMessage(message_skip(`внутренниый вызов самого себя`));

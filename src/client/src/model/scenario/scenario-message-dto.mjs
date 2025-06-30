@@ -31,6 +31,7 @@ export class ScenarioMethodDTO {
 
 
 export class ScenarioMessageDTO {
+    /**@type {string} */
     name;
     uid;
     stereotype;

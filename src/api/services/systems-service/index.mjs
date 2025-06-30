@@ -172,7 +172,8 @@ export class SystemService {
                         if (matched) {
                             m.name = `${matched.groups?.method.toUpperCase()} ${matched.groups?.endpoint.toLowerCase()}`
                         }
-                        if (it.protocol?.toLowerCase() == "soap") {
+                        const protocol = it.protocol?.toLowerCase();
+                        if (protocol == "soap" || protocol== "grpc") {
                             const t = m.name.split(".");
                             if (t.length > 1) {
                                 t.shift();
