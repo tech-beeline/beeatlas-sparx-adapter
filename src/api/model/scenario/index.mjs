@@ -20,7 +20,7 @@ export class ScenarioInterface extends ScenarioInterfaceDTO {
         super(obj);
         this.#server_id = obj.server_id;
     }
-    
+
     get key() {
         return `${this.id}-${this.#server_id}`;
     }
@@ -226,9 +226,10 @@ export class ScenarioApplicationDictionary extends ScenarioDictionary {
     }
 }
 
-
 export class Scenario {
     uid;
+    /**@type {string} */
+    name;
     /**@type {ScenarioMessage[]} */
     messages;
     /** @type {ScenarioDictionary} */
@@ -244,8 +245,9 @@ export class Scenario {
      * @param {ScenarioDictionary} interfaces 
      * @param {ScenarioDictionary} applications 
      */
-    constructor(uid, messages, diagrams, interfaces, applications) {
+    constructor(uid, name, messages, diagrams, interfaces, applications) {
         this.uid = uid;
+        this.name = name;
         this.messages = messages;
         this.applications = applications;
         this.interfaces = interfaces;
@@ -270,6 +272,8 @@ export class Scenario {
     }
     toJSON() {
         return {
+            name: this.name,
+            uid : this.uid,
             //diagrams: this.diagrams.toArray(),
             sequence: this.sequence,
             applications: this.applications.toArray(),

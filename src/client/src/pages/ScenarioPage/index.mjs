@@ -18,13 +18,14 @@ import {
     Link,
     Alert
 } from "@mui/material";
-import { buildScnearioResourcePath } from "../../resources/services.mjs";
+import { buildScenarioResourcePath } from "../../resources/services.mjs";
 
 import { ScenarioSequence } from "./components/scenario-sequence.mjs";
 import { ScenarioDTO } from "../../model/scenario/index.mjs";
 import { ScenarioApplications } from "./components/scenario-applications.mjs";
 import { ScenarioObservability } from "./components/scenario-observability.mjs";
 import { ScenarioAppBar } from "./components/scenario-app-bar.mjs";
+import { loadScenarioSequence } from "../../resources/services/scenario-service.mjs";
 
 
 
@@ -54,11 +55,7 @@ export function ScenarioPage() {
         setLoadingScenario(true);
         setScenario(null);
         try {
-            const responce = await fetch(buildScnearioResourcePath(uid));
-            if (responce.status !== 200) {
-                throw Error(await responce.text());
-            }
-            setScenario(ScenarioDTO.fromObject(await responce.json()));
+            setScenario(await loadScenarioSequence(uid));
         } catch (err) {
             console.error(err);
             setErrorLoad(err.message);
@@ -88,7 +85,7 @@ export function ScenarioPage() {
                             <ScenarioApplications applications={scenario.applications} />
                         </Tab>
                         <Tab value={OBSERVABILITY_TAB} label="Дашборд наблюдаемости" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: OBSERVABILITY_TAB })}>
-                            <ScenarioObservability scenarioUID={uid} />
+                            <ScenarioObservability scenarioUID={uid} scenario={scenario} />
                         </Tab>
                     </Tabs>}
             </Box>

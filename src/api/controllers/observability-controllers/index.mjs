@@ -26,6 +26,18 @@ export class ObservabilityControllers {
     }
 
     /**
+      * 
+      * @param {express.Request} request 
+      * @param {express.Response} response 
+      */
+    async publishSequenceDashboard(request, response) {
+        const body = request.body;
+        if (!body?.code) throw BadRequest("Invalid request body (code==null)");
+        console.info("Publish scenario dashboard", body);
+        const result = await ObservabilityServiceInstance.publishSequenceDashboard(body);
+        response.json({ message: "Витрина сценария создана" });
+    }
+    /**
     * 
     * @param {express.Request} request 
     * @param {express.Response} response 

@@ -8,6 +8,9 @@ import { ScenariosServiceInstance } from "../index.mjs";
 import { DEFAULT_FOLDER_NAME, DEFAULT_FOLDER_UID } from "./const.mjs";
 import ScenarioDashboard from "./scenarios/scenario-dashboard.mjs";
 import { getScenarioDashboardTemplate } from "./scenarios/panels/template.mjs";
+import { Scenario } from "../../model/scenario/index.mjs";
+import { MetricSource, ScenarioSequenceDTO, SequenceCallDTO, SequenceCallMethodDTO } from "../../../client/src/model/sequence.mjs";
+import { add_metric_info } from "./add-metric-info.mjs";
 
 const grafanaService = new GrafanaService();
 const monitoringRepository = new MonitoringRepository();
@@ -54,6 +57,7 @@ export class ObservabilityService {
         }
     }
     async publishScenarioDashboard(uid) {
+        /**@type {[t_diagram, Scenario]} */
         const [scenario, sequence, mapic_source_url, method_sources, prev, template, _] = await Promise.all([
             eaRepository.first(t_diagram, { ea_guid: uid }),
             ScenariosServiceInstance.getScenarioSequence(uid),
@@ -103,8 +107,32 @@ export class ObservabilityService {
         dashboard.layout();
         return grafanaService.postDashboard(dashboard);
     }
-    async getDashboards() {
 
+    /**
+     * 
+     * @param {ScenarioSequenceDTO} sequence 
+     */
+    async publishSequenceDashboard(sequence) {
+        if (!sequence) throw Error("scenario == null");
+
+        const [mapic_source_url, method_sources, prev, template, _] = await Promise.all([
+            monitoringRepository.selectMapicMetricTemplate(),
+            monitoringRepository.selectMethodsSources(),
+            grafanaService.getDashboardByUID(sequence.code).catch(r => { }),
+            getScenarioDashboardTemplate(),
+            grafanaService.prepareGrafanaFolder(DEFAULT_FOLDER_NAME, DEFAULT_FOLDER_UID)
+        ])
+
+        await add_metric_info(sequence, mapic_source_url, method_sources);
+        
+        const dashbaord = new ScenarioDashboard(
+            sequence,
+            prev,
+            template);
+
+        return grafanaService.postDashboard(dashbaord);
+    }
+    async getDashboards() {
     }
 
     async publishApplicationDashboard(code) {

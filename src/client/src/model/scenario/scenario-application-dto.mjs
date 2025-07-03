@@ -1,5 +1,6 @@
-export class ScnearioMethod {
+export class ScenarioMethod {
     name;
+    uid;
 }
 
 export class ScenarioInterfaceDTO {
@@ -12,6 +13,7 @@ export class ScenarioInterfaceDTO {
     code;
     uid;
     #app;
+    /**@type {ScenarioMethod} */
     methods = [];
     /**@type {"sparx"|"c4"}*/
     source;
@@ -63,6 +65,7 @@ export class ScenarioApplicationDTO {
     get title() {
         return `[${this.code}] ${this.name}`;
     }
+    /**@type {ScenarioInterfaceDTO[]} */
     interfaces = [];
     /**
      * 

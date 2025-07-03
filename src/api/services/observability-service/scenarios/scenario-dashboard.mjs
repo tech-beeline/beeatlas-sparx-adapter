@@ -15,6 +15,7 @@ import {
     TBDStatPanel
 } from "./panels/index.mjs";
 import { ScenarioDashboardTemplate } from "./panels/template.mjs";
+import { ScenarioSequenceDTO } from "../../../../client/src/model/sequence.mjs";
 
 
 export default class ScenarioDashboard {
@@ -31,29 +32,31 @@ export default class ScenarioDashboard {
 
     /**
      * 
-     * @param {string} uid 
-     * @param {*} title 
+     * @param {ScenarioSequenceDTO} scenario 
      * @param {*} current 
      * @param {ScenarioDashboardTemplate} template 
      */
-    constructor(uid, title, current, template) {
-        this.uid = uid.replaceAll(/[\{\}]/g, "");
-        this.title = title;
+    constructor(scenario, current, template) {
+        if (current) {
+            Object.assign(this, current);
+        }
+        this.uid = scenario.code.replaceAll(/[\{\}]/g, "");
+        this.title = scenario.name;
         this.#template = template;
         this.#messagesTemplateJSON = JSON.stringify(template.messageTemplate);
         this.#statTemplateJSON = JSON.stringify(template.statTemplate);
         this.#legendTemplateJSON = JSON.stringify(template.legendPanel);
         this.#detailsTemplateJSON = JSON.stringify(template.interactionPanelTemplate);
 
-        if (current) {
-            this.tags = current.tags;
-        }
+
         this.get_id = this.get_id.bind(this);
         for (const p of this.#template.messageHeaderTemplate) {
             p.id = this.#id++;
             p.gridPos.y = 0;
         }
         this.#messsages.push(this.#template.messageHeaderTemplate);
+        this.addMessages(scenario.sequence);
+        this.layout();
     }
     get_id() {
         return this.#id++;

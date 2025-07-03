@@ -43,16 +43,23 @@ export const BAD_REQUST_RESPONSE = {
     }
 }
 
+
+export class SwaggerComponents {
+    schemas = {
+    }
+    addSchema(name, schema) {
+        this.schemas[name] = schema;
+        return { $ref: `#/components/schemas/${name}` };
+    }
+}
+
+
 export class SimpleServiceSpecification {
     openapi = "3.0.3"
     info;
     tags = [];
     paths = {};
-    components = {
-        schemas: {
-
-        }
-    }
+    components = new SwaggerComponents();
 
     constructor(title, description, version = API_VERSION, contact = CONTACT) {
         this.info = {
@@ -92,7 +99,6 @@ export function arraySchema(items) {
         items: items
     }
 }
-
 
 export class JSONOperation {
     tags;

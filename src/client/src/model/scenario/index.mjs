@@ -1,6 +1,6 @@
 import { ScenarioApplicationDTO, ScenarioInterfaceDTO } from "./scenario-application-dto.mjs";
 import { ScenarioMessage } from "./scenario-message-dto.mjs";
-export { ScenarioMessageDTO } from "./scenario-message-dto.mjs"
+export { ScenarioMessageDTO, ScenarioMessage } from "./scenario-message-dto.mjs"
 export { ScenarioInterfaceDTO } from "./scenario-application-dto.mjs"
 
 

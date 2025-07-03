@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { buildScenarioObsPath } from "../../../resources/paths/index.mjs";
 import later from "../../../utils/later.mjs"
 import { publishScenarioDashboard } from "../../../resources/services/index.mjs";
+import { publishSequenceDashboard } from "../../../resources/services/observability-service.mjs";
 
-export function ScenarioObservability({ scenarioUID }) {
+export function ScenarioObservability({ scenarioUID, scenario }) {
     const [dashboard, setDashbaord] = useState();
     const [loading, setLoading] = useState();
     const [error, setError] = useState();
@@ -36,7 +37,7 @@ export function ScenarioObservability({ scenarioUID }) {
         try {
             setPublishing(true);
             setPublishError(null);
-            const result = await publishScenarioDashboard(scenarioUID);
+            const result = await publishSequenceDashboard(scenarioUID, scenario);
             load();
         } catch (error) {
             setPublishError(error.message);

@@ -20,7 +20,7 @@ function ScenarioMessageItem({ message }) {
 }
 
 export function ScenarioSequence({ sequence }) {
-    return (
+    return sequence && (
         <Box>
             <Tree onChange={() => { }}
                 title="Последовательность вызовов">

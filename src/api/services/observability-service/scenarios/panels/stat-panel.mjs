@@ -4,6 +4,8 @@ import { LegendPanel } from "./legend-panel.mjs";
 import { GrafanaPanel, expr } from "../../dashboard/panels/index.mjs";
 import { formatQuery } from "../../dashboard/scenario-dashboard-builder.mjs";
 
+
+
 export class ScenarioStatPanel extends GrafanaPanel {
     /**
      * 
@@ -20,10 +22,10 @@ export class ScenarioStatPanel extends GrafanaPanel {
 
         Object.assign(this, JSON.parse(template));
         this.id = id;
-        
+
         this.title = title;
 
-        const [method, path] = message.method.name.split(' ').filter(it => it.length);
+        const [http_method, path] = message.method.name.split(' ').filter(it => it.length);
         /**@type {GrafanaPanel} */
         const panel_template = message.metricSource.template?.panels[0];
 
@@ -35,19 +37,19 @@ export class ScenarioStatPanel extends GrafanaPanel {
             if (stat_target) {
                 Object.assign(stat_target, t);
                 if (t.expr) {
-                    stat_target.expr = formatQuery(t.expr, path, method, message.client_code);
+                    stat_target.expr = formatQuery(t.expr, path, http_method, message.client_code);
                 }
                 if (t.query) {
-                    stat_target.query = formatQuery(t.query, path, method, message.client_code)
+                    stat_target.query = formatQuery(t.query, path, http_method, message.client_code)
                 }
                 if (t.rawSql)
-                    stat_target.rawSql = formatQuery(t.rawSql, path, method, message.client_code);
+                    stat_target.rawSql = formatQuery(t.rawSql, path, http_method, message.client_code);
             }
         }
-
-        const rps = message.method.structurizr_map?.[0]?.rps ?? message.method.rps ?? -1;
-        const latency = message.method.structurizr_map?.[0]?.latency ?? message.method.latency ?? -1;
-        const error_rate = message.method.structurizr_map?.[0]?.error_rate ?? message.method.error_rate ?? -1;
+        let { rps, latency, error_rate } = message.sla ?? {};
+        if (rps == null) rps = -1;
+        if (latency == null) latency = -1;
+        if (error_rate == null) error_rate = -1;
 
         for (const t of this.targets.filter(t => t.expression === '$RPS')) {
             t.expression = rps.toString();

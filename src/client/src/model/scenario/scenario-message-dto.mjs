@@ -27,6 +27,16 @@ export class ScenarioMethodDTO {
     get api() {
         return this.#api;
     }
+    #sla(name) {
+        return this.structurizr_map?.[0]?.[name] == null ? this[name] : this.structurizr_map?.[0]?.[name];
+    }
+    get sla() {
+        return {
+            rps: this.#sla("rps"),
+            latency: this.#sla("latency"),
+            error_rate: this.#sla("error_rate")
+        }
+    }
 }
 
 

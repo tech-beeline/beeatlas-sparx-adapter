@@ -1,4 +1,4 @@
-import { BadRequest, NotImplemented } from "../../../utils/errors.mjs";
+import { BadRequest, NotFound, NotImplemented } from "../../../utils/errors.mjs";
 import { ProcessScenario, ScenarioMessage } from "../../model/index.mjs";
 import {
     Scenario,
@@ -11,6 +11,8 @@ import {
     ScenarioMethod
 } from "../../model/scenario/index.mjs";
 import { InterfacesRepository, ScenarioRepository } from "../../repositories/index.mjs";
+import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
+import { t_diagram } from "../../repositories/sparx-ea-repository/index.mjs";
 import { buildCallTree } from "./build-call-tree.mjs";
 import { onMessageDouble } from "./vlidate.mjs";
 
@@ -43,7 +45,11 @@ export class ScenariosService {
 
     async getScenarioSequence(scenarioUID, removeInfo = true, removeError = true) {
         if (!scenarioUID) throw BadRequest(`scenarioUID не указан`);
-        const messagesRows = await scenariosRepository.selectScenarioMessages(scenarioUID);
+        const [messagesRows, scenario_diagram] = await Promise.all([
+            scenariosRepository.selectScenarioMessages(scenarioUID),
+            eaRepository.first(t_diagram, { ea_guid: scenarioUID })
+        ]);
+        if (!scenario_diagram) throw NotFound(`Сценарий с uid=${scenarioUID} не найден`);
         const messages = {};
         const diagrams = new ScenarioDiagramDictionary();
         const interfaces = new ScenarioDictionary("server_id", ScenarioInterface);
@@ -94,7 +100,7 @@ export class ScenariosService {
             m.addStructurizrMap(row);
         }
 
-        const sc = new Scenario(scenarioUID, Object.values(messages), diagrams, interfaces, applications);
+        const sc = new Scenario(scenarioUID, scenario_diagram?.name, Object.values(messages), diagrams, interfaces, applications);
         buildCallTree(sc, removeInfo, removeError);
         return sc;
     }

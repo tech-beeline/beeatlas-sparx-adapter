@@ -76,6 +76,7 @@ WITH RECURSIVE cte_src AS (
 		LEFT JOIN cte_src src ON src.target_id=ch.object_id
 ), cte_api AS (
 	SELECT
+		1 as manual,
 		api.name,
 		api.code,
 		api.ea_guid as api_guid,
@@ -86,6 +87,7 @@ WITH RECURSIVE cte_src AS (
 	FROM cte_provided api
 	UNION
 	SELECT
+		0,
 		api.name,
 		api.code,
 		api.uid,
@@ -96,15 +98,29 @@ WITH RECURSIVE cte_src AS (
 	FROM cte_rls api
 )
 SELECT DISTINCT
-	i.app_name, i.name, i.code, i.api_guid, m.name as method, m.ea_guid as operation_guid, i.api_metric_template,
-	latency.value as latency, rps.value as rps, error_rate.value as error_rate
+	i.manual,
+	i.app_name, 
+	i.app_code,
+	i.name, 
+	i.code, 
+	i.api_guid, 
+	m.name as method, 
+	m.ea_guid as operation_guid, 
+	i.api_metric_template,
+	latency.value as latency, 
+	rps.value as rps, 
+	error_rate.value as error_rate
 FROM cte_api i
 	JOIN t_operation m ON m.object_id=i.object_id
 	LEFT JOIN t_operationtag latency ON latency.elementid=m.operationid AND latency.property='latency'
 	LEFT JOIN t_operationtag rps ON rps.elementid=m.operationid AND rps.property='rps'
 	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=m.operationid AND error_rate.property='error_rate'`;
 
-export const SELECT_METHOD_SOURCES = `${SELECT_METHOD_ALL_SOURCES} WHERE i.api_metric_template IS NOT NULL`
+export const SELECT_METHOD_SOURCES = `${SELECT_METHOD_ALL_SOURCES} 
+WHERE i.api_metric_template IS NOT NULL 
+	OR rps.value IS NOT NULL 
+	OR latency.value IS NOT NULL 
+	OR error_rate.value IS NOT NULL`;
 
 export const SELECT_MAPIC_METRIC_TEMPLATE = `SELECT
 	t.value as api_metric_template
