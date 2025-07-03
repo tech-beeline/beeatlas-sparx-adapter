@@ -308,10 +308,9 @@ export class SystemsRepository {
 			/** @type {{system_id, package_id, containers_package_id, interfaces_package_id, root_id}} */
 			const context = systemContext.getStore() ?? (await (new SystemPackage()).prepareSystemPackage());
 
-			await Repository.removeConnectors(context.system_id, container_id, REALIZATION_CONNECTOR);
-
 			const canDelete = await Repository.canDeleteObject(container_id);
 			if (canDelete) {
+				await Repository.removeConnectors(context.system_id, container_id, REALIZATION_CONNECTOR);
 				return Repository.deleteObject(container_id);
 			}
 			await Repository.update(t_object, { status: REMOVED_STATUS }, { object_id: container_id });

@@ -412,10 +412,10 @@ export class InterfacesRepository {
                 await this.deleteMethod(method);
             }
 
-            await Repository.removeConnectors(container_id, interface_id, REALIZATION_CONNECTOR);
 
             if (await Repository.canDeleteObject(interface_id)) {
                 console.log(`Интерфейс [object_id=${interface_id}] ни с чем не связан и будет удален`);
+                await Repository.removeConnectors(container_id, interface_id, REALIZATION_CONNECTOR);
                 await Repository.deleteObject(interface_id);
             } else {
                 await Repository.update(t_object, { status: REMOVED_STATUS }, { object_id: interface_id })

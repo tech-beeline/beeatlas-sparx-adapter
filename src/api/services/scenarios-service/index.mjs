@@ -89,6 +89,7 @@ export class ScenariosService {
             });
         }
 
+        // Добавление дублей метода, загруженных из structrurizr
         const methods_mapping = await interfaceRepository.selectMethodMappingByUID(methods.toArray().map(m => m.uid));
         for (const row of methods_mapping) {
             /**@type {ScenarioMethod} */

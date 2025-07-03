@@ -60,8 +60,9 @@ function removeInternalMessages(msg) {
         return;
     const sequence = []
     for (const ch of msg.sequence) {
-        if (ch.method?.show_in_e2e) {
+        if (ch.method?.show_in_e2e && msg.operation_guid!=ch.operation_guid) {
             sequence.push(ch);
+            removeInternalMessages(ch);
             continue;
         }
         if (ch.server?.app_code === msg.server?.app_code || ch.operation_guid === msg.operation_guid || !ch.server?.app_code) {
