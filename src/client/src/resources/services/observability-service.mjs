@@ -61,7 +61,8 @@ export const publishSequenceDashboard = async (uid, scenario) => {
                         if (m.uid === msg.operation_guid) {
                             return new SequenceCallDTO(
                                 new SequenceCallApiDTO(msg.server.code, undefined, api.code),
-                                new SequenceCallMethodDTO(m.uid, m.name), m.stereotype);
+                                new SequenceCallMethodDTO(m.uid, m.name),
+                                msg.stereotype);
                         }
                     }
                 }
