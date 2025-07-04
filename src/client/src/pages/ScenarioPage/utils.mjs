@@ -4,7 +4,8 @@ import { ScenarioMessageDTO } from "../../model/scenario/scenario-message-dto.mj
 const msgKey = (m) => `${m.server_code || m.server_name}:${m.operation_guid || m.name}`;
 /**
  * 
- * @param {ScenarioMessageDTO[]} lst 
+ * @param {ScenarioMessageDTO[]} lst
+ * @returns {ScenarioMessageDTO[]} 
  */
 export function distinctMessages(lst) {
     return Object.values(lst.reduce((acc, v) => acc[msgKey(v)] ? acc : (acc[msgKey(v)] = v, acc), {}))

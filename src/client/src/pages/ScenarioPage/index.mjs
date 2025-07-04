@@ -76,15 +76,15 @@ export function ScenarioPage() {
                 {errorLoad && <><Alert severity="error"><IconButton onClick={() => loadScenario()}>Обновить</IconButton>Ошибка при получении данных:{errorLoad}</Alert></>}
                 {scenario &&
                     <Tabs selectedTabIndex={TAB_INDEX[searchParams.get(SELECTED_TAB_PARAM)] || 0}>
-                        <Tab value={SEQUENCE_TAB} label="Дерево вызовов" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: SEQUENCE_TAB })}>
+                        <Tab key={SEQUENCE_TAB} value={SEQUENCE_TAB} label="Дерево вызовов" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: SEQUENCE_TAB })}>
                             <ScenarioSequence sequence={scenario.sequence} />
                         </Tab>
-                        <Tab value={INTERACTION_TAB} label="Взаимодействия" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: INTERACTION_TAB })}>
+                        <Tab key={INTERACTION_TAB} value={INTERACTION_TAB} label="Взаимодействия" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: INTERACTION_TAB })}>
                         </Tab>
-                        <Tab value={APPLICATION_TAB} label="Системы и интерфейсы" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: APPLICATION_TAB })}>
+                        <Tab key={APPLICATION_TAB} value={APPLICATION_TAB} label="Системы и интерфейсы" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: APPLICATION_TAB })}>
                             <ScenarioApplications applications={scenario.applications} />
                         </Tab>
-                        <Tab value={OBSERVABILITY_TAB} label="Дашборд наблюдаемости" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: OBSERVABILITY_TAB })}>
+                        <Tab key={OBSERVABILITY_TAB} value={OBSERVABILITY_TAB} label="Дашборд наблюдаемости" onClick={() => setSearchParams({ [SELECTED_TAB_PARAM]: OBSERVABILITY_TAB })}>
                             <ScenarioObservability scenarioUID={uid} scenario={scenario} />
                         </Tab>
                     </Tabs>}

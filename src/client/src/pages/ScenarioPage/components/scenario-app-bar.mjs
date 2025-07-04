@@ -33,10 +33,10 @@ export function ScenarioAppBar({ process_uid, uid }) {
 
     return <AppBar position="static" elevation={0} className={styles.appBar}>
         <Toolbar>
-            <Typography>
+            <Box>
                 {scenario&&<Typography>{scenario.bi_name}</Typography> }
                 {error && <Tooltip title={`Ошибка при загруки информации о процессе: ${error}`}><Alert severity="error"></Alert></Tooltip>}
-            </Typography>
+            </Box>
             <Link target="_blank" href={`/e2e/${encodeURIComponent(process_uid)}/bi/${uid}`}><Launch /> Старая версия</Link>
         </Toolbar>
     </AppBar>

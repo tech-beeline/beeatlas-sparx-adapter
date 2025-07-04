@@ -14,7 +14,7 @@ function ScenarioMessageItem({ message }) {
     const sequence = message.sequence && distinctMessages(message.sequence);
     return (
         <TreeNode id={message.uid} title={message.title}>
-            {sequence && sequence.map(m => <ScenarioMessageItem message={m} />)}
+            {sequence && sequence.map(m => <ScenarioMessageItem key={m.uid} message={m} />)}
         </TreeNode>
     )
 }
@@ -24,7 +24,7 @@ export function ScenarioSequence({ sequence }) {
         <Box>
             <Tree onChange={() => { }}
                 title="Последовательность вызовов">
-                {sequence.map(m => <ScenarioMessageItem message={m} />)}
+                {sequence.map(m => <ScenarioMessageItem key={m.uid} message={m} />)}
             </Tree>
         </Box>
     )
