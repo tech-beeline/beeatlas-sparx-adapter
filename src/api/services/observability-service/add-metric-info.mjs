@@ -71,7 +71,7 @@ export async function add_metric_info(sequence, mapic_source_url, method_sources
             t.latency = sla.latency;
             t.error_rate = sla.latency;
             t.sla = { rps: sla.rps, latency: sla.latency, error_rate: sla.error_rate };
-            if (!t.metricSource)
+            if (!t.metricSource && sla.api_metric_template)
                 t.metricSource = metric_sources[sla.api_metric_template] ??
                     (metric_sources[sla.api_metric_template] = new MetricSource(sla.api_metric_template));
         }
@@ -98,11 +98,13 @@ export async function add_metric_info(sequence, mapic_source_url, method_sources
                 }
                 return c;
             }
+            /*
             throw Error(`Не найден метод ${c.method.name} с ea_guid=${c.method.uid} в интерфейсе ${c.api.name ?? ""} code=${c.api.interace_code}, cmdb=${c.api.app_code}.
 Скорее всего на сообщении стоит не правильный operation_guid. Такое бывает, например, когда у lifeline удаляется/меняется classifier (интерфейс)`);
+*/
         }
-        //Интерфейс из структурайзера. При этом есть несколько методов с одним навзванием
-        const interface_src = call_source.find(m => m.code.toLowerCase() === c.api.interace_code?.toLowerCase())
+        //Интерфейс из структурайзера. При этом есть несколько методов с одним названием
+        const interface_src = call_source.find(m => m.code?.toLowerCase() === c.api.interace_code?.toLowerCase())
         if (interface_src) {
             update_sla(c, interface_src);
             return c;

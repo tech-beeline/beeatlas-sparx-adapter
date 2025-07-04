@@ -65,16 +65,19 @@ export class ScenariosService {
             /** @type {ScenarioDiagram} */
             (m.diagram = diagrams.update(msg)).addMessage(m);
 
+            if (msg.server_type === 'Object') continue;
+
             if (m.method = methods.update(msg)) {
                 if ((!m.method.api) && (m.method.api = interfaces.update(msg))) {
                     m.method.api.methods.push(m.method);
                 }
+                if (!m.method.api.app_code) m.method.api.app_code = msg.server_code;
             }
-            m.server = interfaces.update({ server_id: m.server_id, api_id: m.server_id, api_name: msg.server_name });
+            m.server = interfaces.update({ server_id: m.server_id, api_id: m.server_id, api_name: msg.server_name, app_code: msg.server_code });
             m.client = interfaces.update({ server_id: m.client_id, api_id: m.client_id, api_name: msg.client_name });
         }
 
-        const api_id_list = interfaces.toArray().map(i => i.id);
+        const api_id_list = [...interfaces.toArray().map(i => i.id), ...interfaces.toArray().map(i => i.server_id)];
         const interfaces_rows = await scenariosRepository.selectScenarioInterfaces(api_id_list);
         const applications = new ScenarioApplicationDictionary();
 

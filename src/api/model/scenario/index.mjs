@@ -25,6 +25,10 @@ export class ScenarioInterface extends ScenarioInterfaceDTO {
         return `${this.id}-${this.#server_id}`;
     }
 
+    get server_id() {
+        return this.#server_id;
+    }
+
     update(obj, app) {
         this.app_code = obj.app_code;
         this.application = app;
@@ -44,6 +48,9 @@ export class ScenarioInterface extends ScenarioInterfaceDTO {
             methods: this.methods.length ? this.methods : undefined
         }
     }
+    toString() {
+        return this.app_code ? `${this.app_code}.${this.name}` : `${this.name}`
+    }
 }
 
 export class ScenarioMethod extends ScenarioMethodDTO {
@@ -55,6 +62,17 @@ export class ScenarioMethod extends ScenarioMethodDTO {
     addStructurizrMap(record) {
         if (!this.structurizr_map) this.structurizr_map = [];
         this.structurizr_map.push(record);
+    }
+    toJSON() {
+        return {
+            name: this.name,
+            uid: this.uid,
+            api_id: this.api_id,
+            rps: this.rps,
+            latency: this.latency,
+            error_rate: this.error_rate,
+            structurizr_map: this.structurizr_map
+        }
     }
 }
 
@@ -77,6 +95,9 @@ export class ScenarioDiagram {
     toJSON() {
         return { name: this.name, uid: this.uid };
     }
+    toString() {
+        return `${this.name}`;
+    }
 }
 
 export class ScenarioMessage extends ScenarioMessageDTO {
@@ -91,7 +112,7 @@ export class ScenarioMessage extends ScenarioMessageDTO {
     /** @type {ScenarioMessage[]} */
     subdiagramsEntries = [];
 
-    constructor(obj) {
+    constructor(obj = {}) {
         super(obj);
         this.#server_id = obj.server_id;
         this.#client_id = obj.client_id;
@@ -167,6 +188,9 @@ export class ScenarioMessage extends ScenarioMessageDTO {
         ret.subdiagramsEntries = undefined;
         return ret;
     }
+    toString() {
+        return `${this.name}:${this.server_name}`
+    }
 }
 
 export class ProcessScenario {
@@ -226,6 +250,7 @@ export class ScenarioApplicationDictionary extends ScenarioDictionary {
     }
 }
 
+
 export class Scenario {
     uid;
     /**@type {string} */
@@ -270,14 +295,39 @@ export class Scenario {
         }
         return array;
     }
+    /**
+     * 
+     * @param {ScenarioMessage[]} sequence 
+     */
+    activateMetods(sequence = this.sequence) {
+        for (const msg of sequence) {
+            if (msg.sequence) this.activateMetods(msg.sequence);
+            if (msg.method) {
+                msg.method.active = true;
+                if (msg.method.api) {
+                    msg.method.api.active = true;
+                    if (msg.method.api.application) msg.method.api.application.active = true;
+                }
+            }
+        }
+    }
     toJSON() {
+
+        this.activateMetods();
+
+
+
         return {
             name: this.name,
-            uid : this.uid,
+            uid: this.uid,
             //diagrams: this.diagrams.toArray(),
             sequence: this.sequence,
-            applications: this.applications.toArray(),
-            interfaces: this.interfaces.toArray().filter(i => i.methods?.length)
+            applications: this.applications.toArray().filter(a => a.active),
+            interfaces: this.interfaces.toArray().filter(i => i.active && i.methods?.length).map(i => {
+                const it = new ScenarioInterfaceDTO(i);
+                it.methods = it.methods?.filter(m=>m.active);
+                return it;
+            })
         }
     }
 

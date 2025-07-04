@@ -58,28 +58,45 @@ function tryAddSubDiagrmamEntry(msg, diagram) {
 function removeInternalMessages(msg) {
     if (!msg.sequence)
         return;
-    const sequence = []
-    for (const ch of msg.sequence) {
-        if (ch.method?.show_in_e2e && msg.operation_guid!=ch.operation_guid) {
-            sequence.push(ch);
-            removeInternalMessages(ch);
-            continue;
+    const sequence = [];
+    const skip_message = (m) => {
+        // [ ] Подумать про упрощение
+        if (m.server?.app_code === msg.server?.app_code || m.operation_guid === msg.operation_guid || !m.server?.app_code) {
+            m.operation_guid = msg.operation_guid;
+            m.server = msg.server;
         }
-        if (ch.server?.app_code === msg.server?.app_code || ch.operation_guid === msg.operation_guid || !ch.server?.app_code) {
-            ch.operation_guid = msg.operation_guid;
-            ch.server = msg.server;
-        }
-        removeInternalMessages(ch);
-        if (ch.server?.app_code === msg.server?.app_code || ch.operation_guid === msg.operation_guid) {
-            ch.sequence && sequence.push(...ch.sequence);
-            if (ch.validationError) {
-                for (const e of ch.validationError) {
-                    msg.addValidationError(`Из дочерного вызова ${ch.display()}:\n${e}`);
-                }
+
+        removeInternalMessages(m);
+
+        m.sequence && sequence.push(...m.sequence);
+        if (m.validationError) {
+            for (const e of m.validationError) {
+                msg.addValidationError(`Из дочерного вызова ${m.display()}:\n${e}`);
             }
         }
+    };
+    const add_message = (m) => {
+        removeInternalMessages(m);
+        sequence.push(m);
+    }
+    for (const ch of msg.sequence) {
+
+        if (ch.method?.app_front) {
+            skip_message(ch);
+            continue;
+        }
+        if (ch.method?.show_in_e2e && msg.operation_guid != ch.operation_guid) {
+            add_message(ch);
+            continue;
+        }
+
+        if (ch.server?.app_code === msg.server?.app_code ||
+            ch.operation_guid === msg.operation_guid ||
+            !ch.server?.app_code) {
+            skip_message(ch);
+        }
         else
-            sequence.push(ch);
+            add_message(ch);
     }
     msg.sequence = sequence.length ? sequence : undefined;
 }
@@ -150,9 +167,16 @@ export function buildCallTree(scenario, removeInfoMessages = false, removeError 
     }
 
     console.log(`Схлопываем сообщения внутри одного приложения`);
+    const final_sequence = []
     for (const msg of scenario.diagrams.get(scenario.uid)?.sequence || []) {
-        removeInternalMessages(msg);
+        const ctx = new ScenarioMessage();
+        ctx.sequence = [msg];
+        removeInternalMessages(ctx);
+        final_sequence.push(...ctx.sequence ?? []);
     }
+
+    scenario.diagrams.get(scenario.uid).sequence = final_sequence;
+
 
     if (removeInfoMessages || removeError) {
         for (const msg of scenario.messages) {

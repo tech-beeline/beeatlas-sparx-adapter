@@ -1,15 +1,17 @@
-import { ScenarioApplicationDTO } from "./scenario-application-dto.mjs";
+import { ScenarioApplicationDTO, ScenarioInterfaceDTO } from "./scenario-application-dto.mjs";
 
 export class ScenarioMethodDTO {
     name;
     uid
     api_id;
     show_in_e2e;
+    app_front;
     rps;
     latency;
     error_rate;
     /**@type  {MethodMapRecord[]} */
     structurizr_map;
+    /**@type {ScenarioInterfaceDTO} */
     #api;
     constructor(obj) {
         this.uid = obj.operation_guid;
@@ -19,6 +21,7 @@ export class ScenarioMethodDTO {
         this.latency = obj.latency;
         this.error_rate = obj.error_rate;
         this.show_in_e2e = obj.show_in_e2e || undefined;
+        this.app_front = obj.app_front || undefined;
         this.structurizr_map = this.structurizr_map;
     }
     set api(api) {
@@ -36,6 +39,9 @@ export class ScenarioMethodDTO {
             latency: this.#sla("latency"),
             error_rate: this.#sla("error_rate")
         }
+    }
+    toString(){
+        return `${this.name}[${this.#api}]`;
     }
 }
 
@@ -82,7 +88,7 @@ export class ScenarioMessageDTO {
         this.#diagram = d;
     }
 
-    constructor(obj) {
+    constructor(obj = {}) {
         this.name = obj.name;
         this.uid = obj.uid;
         this.stereotype = obj.stereotype;
@@ -105,9 +111,22 @@ export class ScenarioMessageDTO {
     }
 }
 
+
+const find_method = (uid, app) => {
+    if (!(uid && app)) return null;
+
+    for (const api of app.interfaces ?? []) {
+        for (const method of api.methods ?? []) {
+            if (uid === method.uid) {
+                return method;
+            }
+        }
+    }
+    return null;
+}
 export class ScenarioMessage extends ScenarioMessageDTO {
-    #server;
     /**@type {ScenarioApplicationDTO} */
+    #server;
     get server() {
         return this.#server;
     }
@@ -122,15 +141,17 @@ export class ScenarioMessage extends ScenarioMessageDTO {
     constructor(obj, app_map = {}) {
         super(obj);
         this.#client = app_map[this.client_code];
+
         this.#server = app_map[this.server_code];
         if (this.sequence)
             this.sequence = this.sequence.map(m => new ScenarioMessage(m, app_map));
+        this.method = find_method(this.operation_guid, this.#server);
     }
     get sla() {
-        return ["rps", "latency", "error_rate"].filter(k => this[k]).map(k => `${k}=${this[k]}`).join(";")
+        return this.rps && this.latency && this.error_rate && ["rps", "latency", "error_rate"].filter(k => this[k]).map(k => `${k}=${this[k]}`).join(";")
     }
     get title() {
-        return `${this.server?.title ?? this.server_name}:${this.name} ${this.sla}`;
+        return `${this.server?.title ?? this.server_code ?? this.server_name}${this.stereotype ? ` ${this.stereotype}` : ""}:${this.method?.name ?? this.name} ${this.sla || ""}`;
     }
 
 }

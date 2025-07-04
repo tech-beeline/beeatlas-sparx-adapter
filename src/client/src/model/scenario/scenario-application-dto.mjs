@@ -13,7 +13,7 @@ export class ScenarioInterfaceDTO {
     code;
     uid;
     #app;
-    /**@type {ScenarioMethod} */
+    /**@type {ScenarioMethod[]} */
     methods = [];
     /**@type {"sparx"|"c4"}*/
     source;

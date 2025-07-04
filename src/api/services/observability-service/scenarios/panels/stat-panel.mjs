@@ -29,7 +29,8 @@ export class ScenarioStatPanel extends GrafanaPanel {
         /**@type {GrafanaPanel} */
         const panel_template = message.metricSource.template?.panels[0];
 
-        if (!panel_template) throw Error(`No template panel found on ${message.metricSource.template.title}`);
+        if (!panel_template) 
+            throw Error(`${message.name}: No template panel found on ${message.metricSource.template?.title}`);
 
         this.datasource = panel_template.datasource;
         for (const t of panel_template.targets) {
