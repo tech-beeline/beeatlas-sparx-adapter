@@ -180,7 +180,8 @@ export class ScenarioMessage extends ScenarioMessageDTO {
         msg.#contex = this;
     }
     display(add_diagram) {
-        return add_diagram ? `${this.uid} ${this.client_name}->${this.server_name || ""}:"${this.name || ""}" Диаграмма ${this.diagram?.name} uid=${this.diagram_uid}` : `${this.uid} ${this.client_name}->${this.server_name || ""}:"${this.name || ""}"`
+        return add_diagram ? `${this.uid} ${this.client_name}->${this.server_name || ""}:"${this.name || ""}" Диаграмма ${this.diagram?.name} uid=${this.diagram_uid}` :
+            `${this.uid} ${this.client_name}->${this.server_name || ""}:"${this.name || ""}"`
     }
     toJSON() {
         const ret = { ...this };
@@ -325,7 +326,7 @@ export class Scenario {
             applications: this.applications.toArray().filter(a => a.active),
             interfaces: this.interfaces.toArray().filter(i => i.active && i.methods?.length).map(i => {
                 const it = new ScenarioInterfaceDTO(i);
-                it.methods = it.methods?.filter(m=>m.active);
+                it.methods = it.methods?.filter(m => m.active);
                 return it;
             })
         }

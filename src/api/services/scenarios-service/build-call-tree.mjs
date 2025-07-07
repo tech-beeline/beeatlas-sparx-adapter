@@ -112,7 +112,8 @@ export function buildCallTree(scenario, removeInfoMessages = false, removeError 
 
         console.log(`Обработка диаграммы [${d.uid}] "${d.name}"`);
 
-        let context = new ScenarioMessage({ server_id: 0, sequence: d.sequence });
+
+        let context = new ScenarioMessage({ server_id: 0, sequence: d.sequence, client_name: "Пользователь", name: "Вход в диаграмму", server_name: d.name });
         for (const msg of d.messages) {
             context = addMessage(context, msg);
         }

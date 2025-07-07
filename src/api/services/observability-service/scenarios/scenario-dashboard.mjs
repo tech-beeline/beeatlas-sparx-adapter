@@ -40,7 +40,7 @@ export default class ScenarioDashboard {
         if (current) {
             Object.assign(this, current);
         }
-        this.uid = scenario.code.replaceAll(/[\{\}]/g, "");
+        if (this.uid) this.uid = scenario.code.replaceAll(/[\{\}]/g, "");
         this.title = scenario.name;
         this.#template = template;
         this.#messagesTemplateJSON = JSON.stringify(template.messageTemplate);

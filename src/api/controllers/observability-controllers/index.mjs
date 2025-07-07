@@ -22,7 +22,7 @@ export class ObservabilityControllers {
         if (!body?.uid) throw BadRequest("Invalid request body");
         console.info("Publish scenario dashboard", body);
         const result = await ObservabilityServiceInstance.publishScenarioDashboard(body.uid);
-        response.json({ message: "Витрина сценария создана" });
+        response.json(result);
     }
 
     /**
@@ -32,10 +32,9 @@ export class ObservabilityControllers {
       */
     async publishSequenceDashboard(request, response) {
         const body = request.body;
-        if (!body?.code) throw BadRequest("Invalid request body (code==null)");
         console.info("Publish scenario dashboard", body);
         const result = await ObservabilityServiceInstance.publishSequenceDashboard(body);
-        response.json({ message: "Витрина сценария создана" });
+        response.json(result);
     }
     /**
     * 
