@@ -29,6 +29,8 @@ export default class ScenarioDashboard {
     title;
     panels = [];
     #id = 1;
+    /**@type {{version:number}} */
+    meta;
 
     /**
      * 
@@ -39,8 +41,9 @@ export default class ScenarioDashboard {
     constructor(scenario, current, template) {
         if (current) {
             Object.assign(this, current);
+            if (this.meta) this.meta.version = null;
         }
-        if (this.uid) this.uid = scenario.code.replaceAll(/[\{\}]/g, "");
+        if (scenario.code) this.uid = scenario.code.replaceAll(/[\{\}]/g, "");
         this.title = scenario.name;
         this.#template = template;
         this.#messagesTemplateJSON = JSON.stringify(template.messageTemplate);
@@ -73,10 +76,15 @@ export default class ScenarioDashboard {
      * @param {ScenarioMessage} msg 
      */
     #stat(msg) {
-        return msg.metricSource
+        const ret = msg.metricSource
             ? new ScenarioStatPanel(this.#id++, msg, this.order.toString(), this.#statTemplateJSON)
             : new TBDStatPanel(this.#id++, this.order.toString(), this.#legendTemplateJSON);
+        const displayName = `${this.order}. ${messageTitle(msg)}`;
+        if (ret?.fieldConfig?.defaults) ret.fieldConfig.defaults.displayName = displayName;
+        ret.description = displayName;
+        return ret;
     }
+
     #setInteraction(msg) {
         const title = messageTitle(msg);
         if (!this.#interactions[title]) {

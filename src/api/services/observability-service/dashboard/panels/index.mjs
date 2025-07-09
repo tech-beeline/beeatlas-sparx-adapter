@@ -10,6 +10,14 @@ class GrafanaDatasource {
     type;
     uid;
 }
+class FieldConfigDefaults{
+    /**@type {string} */
+    displayName;
+}
+class FieldConfig {
+    /**@type {FieldConfigDefaults} */
+    defaults;
+}
 export class GrafanaPanel {
     id;
     /** @type {{x,y,h,w}} */
@@ -20,6 +28,10 @@ export class GrafanaPanel {
     targets;
     /**@type {{ type, uid}} */
     datasource;
+    /**@type {FieldConfig} */
+    fieldConfig;
+    /**@type {string} */
+    description;
 }
 
 export const SYSTEMS_HEALTH_HEADER_PANEL = (get_id, stage) => ({

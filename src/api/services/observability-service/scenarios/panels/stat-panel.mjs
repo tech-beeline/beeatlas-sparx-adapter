@@ -3,6 +3,7 @@ import { ScenarioMessage } from "../../../../model/index.mjs";
 import { LegendPanel } from "./legend-panel.mjs";
 import { GrafanaPanel, expr } from "../../dashboard/panels/index.mjs";
 import { formatQuery } from "../../dashboard/scenario-dashboard-builder.mjs";
+import { messageTitle } from "../../utils.mjs";
 
 
 
@@ -24,6 +25,7 @@ export class ScenarioStatPanel extends GrafanaPanel {
         this.id = id;
 
         this.title = title;
+        this.fieldConfig.defaults.displayName = messageTitle(message);
 
         const [http_method, path] = message.method.name.split(' ').filter(it => it.length);
         /**@type {GrafanaPanel} */

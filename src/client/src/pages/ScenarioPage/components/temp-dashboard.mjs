@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, Progress, TextField, Typography } from "@beeline/design-system-react";
-import { Alert, Box, DialogActions, DialogContentText, DialogTitle, Link } from "@mui/material";
+import { Alert, Box, DialogContentText, DialogTitle, Link } from "@mui/material";
 import { publishSequenceDashboard } from "../../../resources/services/observability-service.mjs";
 import { useRef, useState } from "react";
 import { GRAFANA_URL } from "../../../resources/paths/index.mjs";
@@ -20,6 +20,7 @@ export function TempararyDashbaordDialog({ open, onClose, scenario }) {
             setPublishError(false);
 
             const tmp_scenario = Object.assign({}, scenario);
+            if (scenario.name === nameRef.current.value) throw Error("Название временного дашборда не доллжэно совпадать с основным");
             tmp_scenario.name = nameRef.current.value;
             setResult(await publishSequenceDashboard(null, tmp_scenario));
 
