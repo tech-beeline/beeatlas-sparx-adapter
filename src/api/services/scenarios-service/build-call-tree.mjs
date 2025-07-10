@@ -80,6 +80,11 @@ function removeInternalMessages(msg) {
         sequence.push(m);
     }
     for (const ch of msg.sequence) {
+        if (msg.app_front && !ch.method) {
+            ch.app_front = 1;
+            skip_message(ch);
+            continue;
+        }
 
         if (ch.method?.app_front) {
             skip_message(ch);
@@ -172,6 +177,8 @@ export function buildCallTree(scenario, removeInfoMessages = false, removeError 
     for (const msg of scenario.diagrams.get(scenario.uid)?.sequence || []) {
         const ctx = new ScenarioMessage();
         ctx.sequence = [msg];
+        ctx.app_front = 1;
+
         removeInternalMessages(ctx);
         final_sequence.push(...ctx.sequence ?? []);
     }

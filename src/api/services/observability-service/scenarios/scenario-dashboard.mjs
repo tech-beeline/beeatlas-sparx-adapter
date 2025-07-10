@@ -159,13 +159,15 @@ export default class ScenarioDashboard {
             this.panels.push(interaction.stat);
         }
         const messages_row = new GrafanaRow(y_pos + 1 + Math.floor(order / 24), "Последовательность вызовов", []);
-
+        messages_row.collapsed = false;
+        this.panels.push(messages_row);
+        
         y_pos = messages_row.gridPos.y + 1;
 
         for (const m of this.#messsages) {
             for (const p of m) {
                 p.gridPos.y = y_pos;
-                messages_row.panels.push(p);
+                this.panels.push(p);
             }
             y_pos++;
         }
@@ -181,6 +183,6 @@ export default class ScenarioDashboard {
             y_pos++;
             this.panels.push(details);
         }
-        this.panels.push(messages_row);
+
     }
 }

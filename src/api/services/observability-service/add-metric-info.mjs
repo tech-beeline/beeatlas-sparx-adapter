@@ -3,6 +3,14 @@ import { GrafanaService } from "../../resources/index.mjs";
 
 
 const grafanaService = new GrafanaService();
+
+async function tryLoadDatasource(name) {
+    try {
+        return grafanaService.getDatasourceByName(name);
+    } catch (error) {
+        throw Error(`Ошибка при получении источника данных ${name}`, { cause: error });
+    }
+}
 /**
  * 
  * @param {MetricSource} target
@@ -14,7 +22,7 @@ async function buildApiMetricTemlate(target) {
 
         const dashboard = await grafanaService.getDashboardByUID(target.uid);
         const selectedDatasourceName = GrafanaService.getVariableCurrentValue(dashboard.dashboard, 'DATASOURCE');
-        const datasource = await grafanaService.getDatasourceByName(selectedDatasourceName);
+        const datasource = await tryLoadDatasource(selectedDatasourceName);
 
         for (const panel of dashboard.dashboard.panels) {
             panel.datasource.uid = datasource.uid;

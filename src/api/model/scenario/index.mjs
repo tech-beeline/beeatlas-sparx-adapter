@@ -107,6 +107,7 @@ export class ScenarioMessage extends ScenarioMessageDTO {
     #contex;
     #server;
     #client;
+    app_front;
 
 
     /** @type {ScenarioMessage[]} */
