@@ -116,3 +116,34 @@ export const SELECT_TC_OBJECT_ID = `SELECT
 FROM t_object
 WHERE LOWER(alias)=LOWER($1) AND stereotype='${ARCHIMATE_TECH_CAPABILITY}';
 `;
+
+export const SELECT_ALL_APP_TC = `WITH RECURSIVE  cte_sys_package AS (
+	SELECT 
+		p.package_id, p.name, o.alias as code
+	FROM t_object o
+		JOIN t_package p ON p.ea_guid=o.ea_guid
+	WHERE o.stereotype='TechCapabilitiesCatalogue'
+	UNION
+	SELECT 
+		p.package_id, p.name, coalesce( o.alias, parent.code)
+	FROM cte_sys_package parent
+		JOIN t_package p ON p.parent_id=parent.package_Id
+		JOIN t_object o ON o.ea_guid=p.ea_guid	
+)
+SELECT
+	p.name AS package,
+	p.code as sys_code,
+	tc.name,
+	tc.alias AS tc_code,
+	tc.note AS description,
+	tc.status,
+	tc.author,
+	tc.version,
+	tc.createdDate as "createdDate",
+	tc.modifiedDate as "modifiedDate",
+	tc.object_id
+FROM cte_sys_package p
+	JOIN t_object tc ON tc.package_id=p.package_id AND tc.stereotype='ArchiMate_TechnicalCapability'
+WHERE LOWER(code)=LOWER($1)`
+
+export const SELECT_ALL_APP_TC_BY_CODE = `${SELECT_ALL_APP_TC} AND LOWER(tc.alias)=LOWER($2)`

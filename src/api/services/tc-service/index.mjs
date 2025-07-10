@@ -41,7 +41,9 @@ export class TechnicalCapabiliiesService {
      * @returns {Promise<TechnicalCapability>}
      */
     async putTC(targetTC) {
-        const [currentTC] = await tcDataService.selectTCByCode(targetTC.code);
+        if (!targetTC.system?.code) throw Error("У ТС не найден код системы system.code");
+        
+        const [currentTC] = await tcDataService.selectAppTcByCode(targetTC.system.code, targetTC.code);
         if (currentTC) currentTC.system = { code: currentTC.sys_code };
 
         currentTC ? (await updateTC(currentTC, targetTC)) :

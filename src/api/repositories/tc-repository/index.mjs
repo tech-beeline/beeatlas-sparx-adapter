@@ -6,7 +6,7 @@ import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.m
 import { ARCHIMATE_TECH_CAPABILITY } from '../sparx-ea-repository/stereotypes/index.mjs';
 import { TC_PACKAGE_NAME, TC_TAGS_NAMES } from './const.mjs';
 import { SELECT_BC_FOR_TC, SELECT_PARENT_BC, prepareBcRealizationDiagram, DELETE_BC_TC_LINKS, DELETE_BC_TC_CONNECTOR } from './tc-parents-queries.mjs';
-import { SELECT_ALL_TEC, SELECT_TC_BY_CODE, SELECT_TC_OBJECT_ID } from './tc-queries.mjs';
+import { SELECT_ALL_APP_TC_BY_CODE, SELECT_ALL_TEC, SELECT_TC_BY_CODE, SELECT_TC_OBJECT_ID } from './tc-queries.mjs';
 
 const capabilityRepository = new CapabilitiesRepository();
 
@@ -151,5 +151,9 @@ export class TechnicalCapabilitiesRepository {
 		});
 
 		return Repository.updateObjectTags(tc_object.object_id, tc, TC_TAGS_NAMES);
+	}
+
+	async selectAppTcByCode(appCode, tcCode){
+		return Repository.query( SELECT_ALL_APP_TC_BY_CODE, appCode, tcCode)
 	}
 }
