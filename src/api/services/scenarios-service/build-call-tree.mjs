@@ -168,7 +168,7 @@ export function buildCallTree(scenario, removeInfoMessages = false, removeError 
         else
             msg.sequence.length = 0;
         for (const s of subentries) {
-            msg.sequence.push(...s.sequence);
+            if (s.sequence && s.sequence.length) msg.sequence.push(...s.sequence);
         }
     }
 
