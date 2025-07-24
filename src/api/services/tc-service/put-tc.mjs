@@ -28,7 +28,10 @@ export const updateTC = async (currentTC, targetTC) => {
         if (currentTC.name !== targetTC.name
             || currentTC.description !== targetTC.description
             || currentTC.version !== targetTC.version
-            || currentTC.author !== targetTC.author) {
+            || currentTC.author !== targetTC.author
+            || currentTC.status !== targetTC.status
+            || currentTC.goal_from !== targetTC.goal_from
+            || currentTC.goal_to !== targetTC.goal_to) {
             await tcDataService.updateTC(targetTC);
         }
         await tcDataService.updateParentBcForTC(targetTC.code, targetTC.parents.map(p => p.code));

@@ -102,7 +102,7 @@ FROM cte_tbc tc
 	JOIN cte_sys_package sys ON sys.package_id=tc.cap_package_id
 	LEFT JOIN t_objectproperties goal_to ON goal_to.object_id=tc.object_id AND goal_to.property='goal_to'
 	LEFT JOIN t_objectproperties goal_from ON goal_from.object_id=tc.object_id AND goal_from.property='goal_from'
-WHERE type='ArchiMate_TechnicalCapability'`;
+WHERE type='ArchiMate_TechnicalCapability' AND sys.code IS NOT NULL`;
 
 export const SELECT_TC_BY_CODE = `${SELECT_ALL_TEC}
 	AND LOWER(tc.code)=LOWER($1)

@@ -29,12 +29,14 @@ class TechnicalCapability {
      */
     constructor(cap) {
         if (!cap) return;
+        if( !cap.sys_code) throw Error( `Отсутсвтует код системы для TC ${JSON.stringify(cap)}`);
 
         for (const prop in this) {
             this[prop] = cap[prop] ?? undefined;
         }
+        
         this.system = {
-            code: cap.sys_code,
+            code: cap.sys_code.toLowerCase(),
             name: cap.sys_name,
             href: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(cap.sys_code)}`)
         }

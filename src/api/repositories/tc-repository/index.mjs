@@ -1,4 +1,5 @@
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
+import TechnicalCapability from '../../model/technical-capability-model.mjs';
 import { CapabilitiesRepository, SystemsRepository } from '../index.mjs';
 import Repository, { ARCHIMATE_AGGREGATION, t_diagramobjects, t_object, t_package, t_xref } from '../sparx-ea-repository/index.mjs'
 
@@ -42,7 +43,7 @@ export class TechnicalCapabilitiesRepository {
 
 	/**
 	  * 
-	  * @param {{ code, name, description, author, status, version, goal_from, goal_to }} tc
+	  * @param {TechnicalCapability} tc
 	  */
 	async updateTC(tc) {
 		const { code, name, description, author, status, version } = tc;
@@ -51,14 +52,19 @@ export class TechnicalCapabilitiesRepository {
 		 * @type { t_object[]}
 		 */
 		const currentTC = await this.#selectTCObject(code);
-
-		await Repository.update(t_object, {
+		/**@type {t_object} */
+		const tc_row = await Repository.update(t_object, {
 			name: name,
 			note: description,
 			author: author,
 			version: version,
-			status: status
+			status: status,
+			modifiedDate: new Date()
 		}, { object_id: currentTC.object_id });
+		tc.author = tc_row.author;
+		tc.status = tc_row.status;
+		tc.createdDate = tc_row.createddate;
+		tc.modifiedDate = tc_row.modifieddate;
 
 		return Repository.updateObjectTags(currentTC.object_id, tc, TC_TAGS_NAMES);
 	}
@@ -78,7 +84,6 @@ export class TechnicalCapabilitiesRepository {
 	async selectParentBCForTC(tcCode) {
 		return Repository.queryRows(SELECT_BC_FOR_TC, [SparxRepositoryPackagesOptions.BusinessCapabilitiesCatalogue.ea_guid, tcCode]);
 	}
-
 
 	/**
 	 * 
@@ -127,6 +132,11 @@ export class TechnicalCapabilitiesRepository {
 		])
 	}
 
+	/**
+	 * 
+	 * @param {TechnicalCapability} tc 
+	 * @returns 
+	 */
 	async insertTC(tc) {
 		let sys_package = await Repository.getPackageByAlias(tc.system.code);
 
@@ -149,11 +159,16 @@ export class TechnicalCapabilitiesRepository {
 			status: "Created",
 			version: tc.version
 		});
+		tc.createdDate = tc_object.createddate;
+		tc.modifiedDate = tc_object.modifieddate;
+		tc.status = tc_object.status;
+		tc.author = tc_object.author;
+		tc.version= tc_object.version;
 
 		return Repository.updateObjectTags(tc_object.object_id, tc, TC_TAGS_NAMES);
 	}
 
-	async selectAppTcByCode(appCode, tcCode){
-		return Repository.query( SELECT_ALL_APP_TC_BY_CODE, appCode, tcCode)
+	async selectAppTcByCode(appCode, tcCode) {
+		return Repository.query(SELECT_ALL_APP_TC_BY_CODE, appCode, tcCode)
 	}
 }
