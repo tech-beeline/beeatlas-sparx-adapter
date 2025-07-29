@@ -79,3 +79,14 @@ export class TBDStatPanel extends LegendPanel {
         this.targets.push(expr("-1", "ErrorState"));
     }
 }
+
+export class DatabaseStatPanel extends LegendPanel {
+    /**
+     *
+     */
+    constructor(id, title, template) {
+        super(id, title, template);
+        this.targets[0] && (this.targets[0].csvContent = "state");
+        this.targets.push(expr("-2", "ErrorState"));
+    }
+}

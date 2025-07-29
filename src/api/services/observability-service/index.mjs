@@ -121,7 +121,7 @@ export class ObservabilityService {
             grafanaService.getDashboardByUID(sequence.code).catch(r => { }),
             getScenarioDashboardTemplate(),
             grafanaService.prepareGrafanaFolder(DEFAULT_FOLDER_NAME, DEFAULT_FOLDER_UID)
-        ])
+        ]);
 
         await add_metric_info(sequence, mapic_source_url, method_sources);
         

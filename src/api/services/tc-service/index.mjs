@@ -37,8 +37,7 @@ export class TechnicalCapabiliiesService {
 
         currentTC ? (await updateTC(currentTC, targetTC)) :
             await createTC(targetTC);
-        tc_cache.invalidate();
 
-        return targetTC;
+        return tc_cache.update(targetTC);
     }
 }

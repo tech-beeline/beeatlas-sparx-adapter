@@ -28,7 +28,7 @@ import {
 import { ProvidedApiBox } from "./provider-api.mjs";
 
 
-function CapabilityBox({ capabilityCode }) {
+export function CapabilityBox({ capabilityCode }) {
     const [capability, setCapability] = useState(null);
 
 
@@ -37,7 +37,7 @@ function CapabilityBox({ capabilityCode }) {
             try {
                 if (!capabilityCode)
                     return;
-                const req = await fetch(`/api/tech-capabilities/${encodeURIComponent(capabilityCode)}`);
+                const req = await fetch(`/api/v4/tc/${encodeURIComponent(capabilityCode)}`);
                 if (req.status !== 200) {
                     throw Error(await req.text());
                 }

@@ -79,6 +79,8 @@ export async function add_metric_info(sequence, mapic_source_url, method_sources
             t.latency = sla.latency;
             t.error_rate = sla.latency;
             t.sla = { rps: sla.rps, latency: sla.latency, error_rate: sla.error_rate };
+            t.protocol = sla.protocol;
+            
             if (!t.metricSource && sla.api_metric_template)
                 t.metricSource = metric_sources[sla.api_metric_template] ??
                     (metric_sources[sla.api_metric_template] = new MetricSource(sla.api_metric_template));

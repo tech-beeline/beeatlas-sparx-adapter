@@ -16,14 +16,14 @@ const formatTitle = (msg) => `${msg.client_code} - ${msg.server_code}${msg.stere
  */
 const caseInsensitive = (str) => str.replaceAll(/[a-zA-Z]/g, (s) => `[${s.toLowerCase()}${s.toUpperCase()}]`);
 
-export function uriRegexCaseInsensitive(uri) {
+export function uriRegexCaseInsensitive(path) {
     return path?.split('/')
         .map(a => a.startsWith('{') && a.endsWith('}') ? `([^/]+)` : caseInsensitive(a))
         .join('\\/');
 }
 
 export function formatQuery(template, uri, method, client_code) {
-    const uri_regex = uriRegex(uri);
+    const uri_regex = uriRegexCaseInsensitive(uri);
 
     let variables = {
         REGEX_URI: uri_regex, "REGEX_URI:raw": uri_regex,

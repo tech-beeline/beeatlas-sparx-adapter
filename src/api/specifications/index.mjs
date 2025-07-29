@@ -19,6 +19,8 @@ import observabilityServiceSpec from './observability/index.mjs';
 import { STRUCTURIZR_JSON_CHECK_SPEC } from './structurizr/check-dsl-spec.mjs';
 import maintenanceSpec from '../maintenance/specification/index.mjs'
 import { digitalArchitectSwagger } from '../digital-architect/index.mjs'
+import { historyConstrollerSwagger } from '../history/index.mjs'
+import { mapicConstrollerSwagger } from '../mapic/index.mjs';
 
 
 const SUMMARY_TITLE = "Полное API управления архитектурными артефактами и представлениями"
@@ -57,7 +59,9 @@ const API_ROUTES = {
     "tech-radar-service": techRadarServiceSpec,
     "structurizr-service": STRUCTURIZR_JSON_CHECK_SPEC,
     "maintenance-service": maintenanceSpec,
-    "digital-architect-service": digitalArchitectSwagger
+    "digital-architect-service": digitalArchitectSwagger,
+    "history-service" : historyConstrollerSwagger,
+    "mapic-service" : mapicConstrollerSwagger
     /*
     "monitoring-source-service": monitoringSourceReoutes,
     */

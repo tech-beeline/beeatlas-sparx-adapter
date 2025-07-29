@@ -8,6 +8,7 @@ const tcDataService = new TechnicalCapabilitiesRepository();
 const REFRESH_PERIOD = 60 * 15;
 
 export class TechnicalCapabilityCache {
+    #loadDate;
     #data;
     /**@type {Promise} */
     #loading = null;
@@ -32,21 +33,33 @@ export class TechnicalCapabilityCache {
                 tc.addParent({ code: row.parent_code });
             }
             this.#data = tc_map;
+            this.#loadDate = new Date();
             console.info("Загрузка кеша ТС завершена");
         } catch (err) {
             console.err(err);
-            throw Error("Ошибка при запросе списка ТС", err);
+            //throw Error("Ошибка при запросе списка ТС", err);
         } finally {
             this.#loading = null;
-            setTimeout(() => this.load(), REFRESH_PERIOD * 1000);
+        }
+    }
+    async checkAndLoad() {
+        if (!this.#data) await this.load();
+        if (this.#loadDate < new Date() - REFRESH_PERIOD * 1000) {
+            this.invalidate();
         }
     }
     async all() {
-        return this.#loading ? this.#loading.then(() => Object.values(this.#data)) : Object.values(this.#data);
+        await this.checkAndLoad();
+        return Object.values(this.#data);
     }
     async byCode(code) {
         if (!code) throw BadRequest("code is null or undefined");
-        return this.#loading ? this.#loading.then(() => this.#data[code.toLowerCase()]) : () => this.#data[code.toLowerCase()];
+        await this.checkAndLoad();
+        return this.#data[code.toLowerCase()];
+    }
+    async update(tc) {
+        this.invalidate();
+        return this.#data[tc.code.toLowerCase()] = tc;
     }
 }
 const instance = new TechnicalCapabilityCache();

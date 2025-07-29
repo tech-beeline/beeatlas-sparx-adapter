@@ -16,6 +16,7 @@ import {
 } from "./panels/index.mjs";
 import { ScenarioDashboardTemplate } from "./panels/template.mjs";
 import { ScenarioSequenceDTO } from "../../../../client/src/model/sequence.mjs";
+import { DatabaseStatPanel } from "./panels/stat-panel.mjs";
 
 
 export default class ScenarioDashboard {
@@ -76,10 +77,12 @@ export default class ScenarioDashboard {
      * @param {ScenarioMessage} msg 
      */
     #stat(msg) {
+        const displayName = `${this.order}. ${messageTitle(msg)}`;
+
         const ret = msg.metricSource
             ? new ScenarioStatPanel(this.#id++, msg, this.order.toString(), this.#statTemplateJSON)
-            : new TBDStatPanel(this.#id++, this.order.toString(), this.#legendTemplateJSON);
-        const displayName = `${this.order}. ${messageTitle(msg)}`;
+            : msg.protocol?.toLowerCase() === "sql" ? new DatabaseStatPanel(this.#id++, this.order.toString(), this.#legendTemplateJSON) : new TBDStatPanel(this.#id++, this.order.toString(), this.#legendTemplateJSON);
+
         if (ret?.fieldConfig?.defaults) ret.fieldConfig.defaults.displayName = displayName;
         ret.description = displayName;
         return ret;
@@ -161,7 +164,7 @@ export default class ScenarioDashboard {
         const messages_row = new GrafanaRow(y_pos + 1 + Math.floor(order / 24), "Последовательность вызовов", []);
         messages_row.collapsed = false;
         this.panels.push(messages_row);
-        
+
         y_pos = messages_row.gridPos.y + 1;
 
         for (const m of this.#messsages) {

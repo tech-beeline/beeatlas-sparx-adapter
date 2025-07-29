@@ -5,8 +5,8 @@ export class ApiMethod {
     error_rate;
     apiInterface;
     containerInfo;
-    implementsTC;
-    apiImplementsTC;
+    implements;
+    apiImplements;
     constructor(method) {
         Object.assign(this, method);
     }
