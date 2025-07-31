@@ -14,15 +14,17 @@ COMMENT ON COLUMN mapic.products.load_date  IS 'Время последнего 
 
 CREATE TABLE IF NOT EXISTS mapic.capabilities
 (
-    id          INT PRIMARY KEY,                     -- ID возможности в MAPIC
-    product_id  INT REFERENCES mapic.products(id),   -- ID продукта в MAPIC
-    status      VARCHAR(255)                         -- Статус возможности MAPIC
+    id          INT PRIMARY KEY,                    -- ID возможности в MAPIC
+    product_id  INT REFERENCES mapic.products(id),  -- ID продукта в MAPIC
+    name        TEXT,                               -- Название   
+    status      VARCHAR(255)                        -- Статус возможности MAPIC
 );
 
 COMMENT ON TABLE mapic.capabilities IS 'Возможности продукта';
 
 COMMENT ON COLUMN mapic.capabilities.id         IS 'ID возможности в MAPIC';
 COMMENT ON COLUMN mapic.capabilities.product_id IS 'ID продукта в MAPIC';
+COMMENT ON COLUMN mapic.capabilities.name       IS 'Название возможности';
 COMMENT ON COLUMN mapic.capabilities.status     IS 'Статус возможности MAPIC';
 
 
