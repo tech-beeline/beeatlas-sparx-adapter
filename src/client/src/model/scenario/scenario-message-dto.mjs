@@ -151,7 +151,7 @@ export class ScenarioMessage extends ScenarioMessageDTO {
         return this.rps && this.latency && this.error_rate && ["rps", "latency", "error_rate"].filter(k => this[k]).map(k => `${k}=${this[k]}`).join(";")
     }
     get title() {
-        return `${this.server?.title ?? this.server_code ?? this.server_name}${this.stereotype ? ` ${this.stereotype}` : ""}:${this.method?.name ?? this.name} ${this.sla || ""}`;
+        return `${this.client_code?? this.client_name}->${this.server?.title ?? this.server_code ?? this.server_name}${this.stereotype ? ` ${this.stereotype}` : ""}:${this.method?.name ?? this.name} ${this.sla || ""}`;
     }
 
 }

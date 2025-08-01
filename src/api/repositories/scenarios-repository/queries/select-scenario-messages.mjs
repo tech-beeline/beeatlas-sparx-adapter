@@ -51,6 +51,7 @@ SELECT
 	m.start_object_id as client_id, 
 	cl.name as client_name,
 	cl.object_type AS client_type,
+	cl.alias as client_code,
 	m.end_object_id as server_id, 
 	srv.name as server_name,
 	srv.alias AS server_code,
