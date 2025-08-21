@@ -71,7 +71,7 @@ export const SELECT_METHOD_ALL_SOURCES = `WITH RECURSIVE cte_src AS (
 			AND c.connector_type='Realisation'
 		LEFT JOIN t_object ch ON ch.object_id=c.end_object_id
 			AND (ch.object_type = 'Interface' OR ch.stereotype='C4_Container')
-			AND COALESCE(ch.status,'') <> 'REMOVED'
+			--AND COALESCE(ch.status,'') <> 'REMOVED'
 		LEFT JOIN cte_src src ON src.target_id=ch.object_id
 ), cte_api AS (
 	SELECT

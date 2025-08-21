@@ -133,6 +133,7 @@ export class ObservabilityService {
         return grafanaService.postDashboard(dashbaord);
     }
     async getDashboards() {
+        NotImplemented();
     }
 
     async publishApplicationDashboard(code) {
