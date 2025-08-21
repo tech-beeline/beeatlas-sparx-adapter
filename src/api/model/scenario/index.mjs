@@ -202,6 +202,9 @@ export class ProcessScenario {
     version;
     author;
     involvedIn;
+    process_uid;
+    process_name;
+    
     constructor(obj) {
         for (const prop in this) {
             this[prop] = obj[prop] ?? undefined;

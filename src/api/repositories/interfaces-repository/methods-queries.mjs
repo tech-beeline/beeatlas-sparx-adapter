@@ -1,5 +1,5 @@
 
-export const SELECT_ALL_METHODS = `SELECT 
+export const SELECT_ALL_METHODS = `SELECT DISTINCT
 	it.alias as interface_code,
 	it.object_id as interface_id,
 	it.name as interface_name,
@@ -25,8 +25,7 @@ FROM t_object it
 	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=m.operationid AND error_rate.property='error_rate'
 	LEFT JOIN t_operationtag removed_date ON removed_date.elementid=m.operationid AND removed_date.property='removedDate'
 	LEFT JOIN t_operationtag implements ON implements.elementid=m.operationid AND implements.property='implements'
-WHERE it.object_type='Interface'
-`
+WHERE it.object_type='Interface'`;
 
 export const SELECT_INTERFACE_METHODS = `${SELECT_ALL_METHODS} AND LOWER(it.alias) = LOWER($1)`;
 export const SELECT_INTERFACE_METHODS_BY_ID = `${SELECT_ALL_METHODS} AND it.object_id = $1`;

@@ -1,4 +1,4 @@
-import { NotImplemented } from "../../../utils/errors.mjs";
+import { NotFound, NotImplemented } from "../../../utils/errors.mjs";
 import { E2EProcess, ProcessScenario } from "../../model/index.mjs";
 import { E2EProcessRepository } from "../../repositories/index.mjs";
 
@@ -22,6 +22,9 @@ export class E2EProcessService {
         return processesRepository.selectE2EScenarios(uid)
             .then(rows => rows.map(row => new ProcessScenario(row)));
     }
+    async getAll2EScenarios(uid) {
+        return processesRepository.selectAllScenarios().then(rows => rows.map(row => new ProcessScenario(row)));
+    }
     async getE2EMessages(uid) {
         const e2e = await processesRepository.selectE2EByUID(uid);
         if (!e2e) throw NotFound(`Process with uid = "${uid}" not found`);
@@ -32,7 +35,7 @@ export class E2EProcessService {
                 .then(ml => ({ bi: bi, messages: ml }))));
         return biMessages;
     }
-    
+
     async getBIMessages(uid) {
         return (await processesRepository.selectBIMessages(uid))
             .filter(m => m.name);

@@ -70,6 +70,7 @@ export const E2ELink = (uid) => buildHREF(`${E2E_LIST_RESOURCE}/${uid}`);
 export const E2E_RESOURCE_V4 = `${E2E_LIST_RESOURCE_V4}/{uid}`
 export const E2E_RESOURCE = E2E_RESOURCE_V4;
 
+export const ALL_E2E_SCENARIO_LIST_RESOURCE_V4 = '/api/v4/e2e-scenarios'
 export const E2E_SCENARIO_LIST_RESOURCE_V4 = '/api/v4/e2e/{uid}/scenarios'
 export const E2E_SCENARIO_LIST_RESOURCE = E2E_SCENARIO_LIST_RESOURCE_V4;
 export const E2EScenariosLink = (uid) => buildHREF(`${E2E_LIST_RESOURCE}/${encodeURIComponent(uid)}/scenarios`);
