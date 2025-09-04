@@ -24,7 +24,71 @@ join t_package pp on pp.ea_guid=p.ea_guid`
 
 export const BC_PACKAGE_QUERY_BY_ID = `${BC_PACKAGE_QUERY} where btc.object_id=$2`;
 
-export const SELECT_ALL_BC =
+export const SELECT_ALL_BC =`WITH RECURSIVE cte_domains AS (
+         SELECT p.package_id,
+            o_1.object_id,
+            o_1.alias AS code,
+            NULL::text AS parent_code
+           FROM t_object o_1
+             JOIN t_package p ON p.ea_guid::text = o_1.ea_guid::text
+          WHERE o_1.stereotype::text = 'BusinessCapabilitiesCatalogue'::text
+        UNION
+         SELECT p.package_id,
+            o_1.object_id,
+            o_1.alias,
+            parent.code
+           FROM cte_domains parent
+             JOIN t_package p ON p.parent_id = parent.package_id
+             JOIN t_object o_1 ON o_1.ea_guid::text = p.ea_guid::text
+        ), cte_bc AS (
+         SELECT cte_domains.package_id,
+            cte_domains.object_id,
+            cte_domains.code,
+            cte_domains.parent_code,
+            true AS "isDomain",
+            cte_domains.code AS domain_code
+           FROM cte_domains
+          WHERE cte_domains.code IS NOT NULL
+        UNION
+         SELECT p.package_id,
+            bc_1.object_id,
+            bc_1.alias,
+            p.code,
+            false AS bool,
+            p.domain_code
+           FROM cte_bc p
+             JOIN t_diagram d ON d.package_id = p.package_id
+             JOIN t_diagramobjects po ON po.diagram_id = d.diagram_id AND po.object_id = p.object_id
+             JOIN t_connector c ON (c.stereotype::text = ANY (ARRAY['ArchiMate_Aggregation'::character varying::text, 'ArchiMate_Composition'::character varying::text])) AND c.start_object_id = p.object_id
+             JOIN t_object bc_1 ON bc_1.object_id = c.end_object_id AND bc_1.stereotype::text = 'ArchiMate_Capability'::text
+             JOIN t_diagramobjects co ON co.diagram_id = d.diagram_id AND co.object_id = bc_1.object_id
+        ), cte_owners AS (
+         SELECT obe.name,
+            co.end_object_id AS object_id
+           FROM t_connector co,
+            t_object obe
+          WHERE obe.object_id = co.start_object_id AND co.stereotype::text = 'Responsibility'::text AND obe.stereotype::text = 'ArchiMate_BusinessActor'::text
+          GROUP BY obe.name, co.end_object_id
+        )
+ SELECT DISTINCT 
+    bc.code,
+	o.object_id,
+    o.name,
+    bc."isDomain",
+	bc.parent_code as parent,
+    own.name AS owner,
+    o.note AS description,
+    o.createddate AS "createdDate",
+    o.modifieddate,
+    o.status,
+    o.author,
+    o.version
+   FROM t_object o
+     JOIN cte_bc bc ON o.object_id = bc.object_id
+     LEFT JOIN cte_owners own ON own.object_id = bc.object_id
+WHERE 1=1
+`;
+/*
 `-- Список BC
 
 WITH RECURSIVE cte_bc_pkg AS (
@@ -134,6 +198,7 @@ DISTINCT
 	bc.owner
 FROM cte_tbc bc
 WHERE bc.type IN ('ArchiMate_Capability', 'Domain')`;
+*/
 
 export const SELECT_BC_DOMAIN = `WITH RECURSIVE
 ${CTE_BC}

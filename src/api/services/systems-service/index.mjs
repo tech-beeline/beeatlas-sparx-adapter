@@ -173,7 +173,7 @@ export class SystemService {
                             m.name = `${matched.groups?.method.toUpperCase()} ${matched.groups?.endpoint.toLowerCase()}`
                         }
                         const protocol = it.protocol?.toLowerCase();
-                        if (protocol == "soap" || protocol== "grpc") {
+                        if (protocol == "soap" || protocol == "grpc") {
                             const t = m.name.split(".");
                             if (t.length > 1) {
                                 t.shift();
@@ -203,6 +203,69 @@ export class SystemService {
 
     /**
      * 
+     * @param {Container} container 
+     */
+    async repairMultipleContainers(container) {
+        for( const c of container.current){
+            
+        }
+    }
+
+    async #updateSystemContainers(systemCode, containers) {
+        const container_map = {};
+        systemCode = systemCode.toLowerCase();
+        for (const container of containers) {
+            container.code = container.code.toLowerCase();
+            if (container_map[container.code]) throw Error(`В запросе более одного контейнера с кодом ${container.code}`);
+            container.current = [];
+            container_map[container.code] = container;
+        }
+        const current_containers = await systemsRepository.selectSystemContainers(systemCode);
+        for (const current_container of current_containers) {
+            current_container.code = current_container.code.toLowerCase();
+            const container = container_map[current_container.code] ?? { current: [], needDelete: true };
+            container.current.push(current_container);
+        }
+
+        for (const container_code in container_map) {
+            /** @type {Container} */
+            const container = container_map[container_code];
+            if (container.needDelete) {
+                for (const c of container.current) {
+                    console.log(`Удаление контейнера с кодом ${container_code}, object_id=${c.container_id}`);
+                    await systemsRepository.deleteSystemContainer(systemCode, { containerCode: c.code, container_id: c.container_id });
+                }
+                continue;
+            }
+            if (container.current.length == 0) {
+                console.log(`Добавление нового контейнера с кодом ${container_code}`);
+                await systemsRepository.insertSystemContainer(container);
+            }
+            if (container.current.length == 1) {
+                container.container_id = container.current[0].container_id;
+                if (!isContainersEquals(container, container.current[0])) {
+                    console.log(`Обновление информации о контейнере с кодом ${container_code}`);
+                    await systemsRepository.updateContainer(
+                        container.container_id,
+                        container.name,
+                        container.code,
+                        container.author,
+                        container.version,
+                        container.description,
+                        container.status);
+                } else {
+                    console.log(`Обновление контейнера с кодом ${container_code} не треубется`);
+                }
+            }
+            if (container.current.length > 1) {
+                console.warn(`В репозитории найдено несколько (${container.current.length}) контейнеров с кодом ${container_code}`);
+                await this.repairMultipleContainers(container);
+            }
+        }
+    }
+
+    /**
+     * 
      * @param {string} systemCode 
      * @param {System} system 
      */
@@ -226,6 +289,7 @@ export class SystemService {
         try {
             await runSystemContext(systemCode, async () =>
                 eaRepository.transactionScope(async () => {
+
                     const [newContainers, outdateContainers, existingContainers] = diffContainers(await systemsRepository.selectSystemContainers(systemCode), containers);
 
                     for (const c of newContainers) {

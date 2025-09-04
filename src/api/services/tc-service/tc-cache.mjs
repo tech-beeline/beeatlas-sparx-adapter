@@ -7,7 +7,7 @@ const tcDataService = new TechnicalCapabilitiesRepository();
 
 const REFRESH_PERIOD = 60 * 15;
 
-export class TechnicalCapabilityCache {
+class TechnicalCapabilityCache {
     #loadDate;
     #data;
     /**@type {Promise} */
@@ -43,7 +43,7 @@ export class TechnicalCapabilityCache {
         }
     }
     async checkAndLoad() {
-        if (!this.#data) await this.load();
+        if (!this.#data) await (this.#loading ?? this.load());
         if (this.#loadDate < new Date() - REFRESH_PERIOD * 1000) {
             this.invalidate();
         }

@@ -124,12 +124,13 @@ export class ObservabilityService {
         ]);
 
         await add_metric_info(sequence, mapic_source_url, method_sources);
-        
+
         const dashbaord = new ScenarioDashboard(
             sequence,
             prev,
             template);
 
+        console.log('Дашборд сформирован, идет публикация в платформу наблюдаемости');
         return grafanaService.postDashboard(dashbaord);
     }
     async getDashboards() {

@@ -18,7 +18,7 @@ const caseInsensitive = (str) => str.replaceAll(/[a-zA-Z]/g, (s) => `[${s.toLowe
 
 export function uriRegexCaseInsensitive(path) {
     return path?.split('/')
-        .map(a => a.startsWith('{') && a.endsWith('}') ? `([^\/]+)` : caseInsensitive(a))
+        .map(a => a.startsWith('{') && a.endsWith('}') ? `([^\\/]+)` : caseInsensitive(a))
         .join('\\/');
 }
 

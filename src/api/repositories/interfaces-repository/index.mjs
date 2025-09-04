@@ -569,7 +569,6 @@ export class InterfacesRepository {
                 await this.addContainerInterface(systemCode, { container_id: container_id }, newApi);
             }
             for (const api of interfaces) {
-                console.log(api.name);
                 const existingApi = existingApiList.find(e => e.code.toLowerCase() === api.code.toLowerCase());
                 if (!existingApi) {
                     console.log(`Не найден существующий интерфес для code=${api.code}`);

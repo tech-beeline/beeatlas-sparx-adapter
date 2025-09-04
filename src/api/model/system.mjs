@@ -418,8 +418,9 @@ export const isContainersEquals = (a, b) =>
     && (a.description ?? "") === (b.description ?? "")
     && (a.status ?? "") === (b.status ?? "")
     && (a.version ?? "") === (b.version ?? "")
-    && a.code === b.code;
-    
+    && a.code === b.code
+    && (a.author ?? "") === (b.author ?? "");
+
 export const isAPIEquals = (a, b) => a.name === b.name
     && (a.description ?? "") === (b.description ?? "")
     && (a.version ?? "") === (b.version ?? "")

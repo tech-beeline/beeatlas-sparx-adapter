@@ -1,6 +1,6 @@
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import TechnicalCapability from '../../model/technical-capability-model.mjs';
-import { CapabilitiesRepository, SystemsRepository } from '../index.mjs';
+import { CapabilitiesRepository, capabilityRepositoryInstance, SystemsRepository } from '../index.mjs';
 import Repository, { ARCHIMATE_AGGREGATION, t_diagramobjects, t_object, t_package, t_xref } from '../sparx-ea-repository/index.mjs'
 
 import { SparxRepositoryPackagesOptions } from '../sparx-ea-repository/options.mjs';
@@ -9,7 +9,7 @@ import { TC_PACKAGE_NAME, TC_TAGS_NAMES } from './const.mjs';
 import { SELECT_BC_FOR_TC, SELECT_PARENT_BC, prepareBcRealizationDiagram, DELETE_BC_TC_LINKS, DELETE_BC_TC_CONNECTOR } from './tc-parents-queries.mjs';
 import { SELECT_ALL_APP_TC_BY_CODE, SELECT_ALL_TEC, SELECT_TC_BY_CODE, SELECT_TC_OBJECT_ID } from './tc-queries.mjs';
 
-const capabilityRepository = new CapabilitiesRepository();
+const capabilityRepository = capabilityRepositoryInstance;
 
 export class TechnicalCapabilitiesRepository {
 	/**

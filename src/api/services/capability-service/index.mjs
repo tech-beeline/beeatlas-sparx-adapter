@@ -1,5 +1,5 @@
 import { BadRequest, NotFound, NotImplemented } from "../../../utils/errors.mjs";
-import { CapabilitiesRepository } from "../../repositories/index.mjs";
+import { capabilityRepositoryInstance } from "../../repositories/index.mjs";
 import { Capability } from "../../model/index.mjs";
 import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
 
@@ -8,7 +8,7 @@ export class CapabilityService {
     capabilitiesRepository
 
     constructor(config) {
-        this.capabilitiesRepository = new CapabilitiesRepository(config);
+        this.capabilitiesRepository = capabilityRepositoryInstance
 
         this.getAll = this.getAll.bind(this);
         this.searchByName = this.searchByName.bind(this);
@@ -74,7 +74,12 @@ export class CapabilityService {
                 capabilityData.status);
 
             await this.capabilitiesRepository.setCapabilityOwner(capability.code, capabilityData.owner);
+            capability.owner = capabilityData.owner;
             return this.getByCode(code);
         })
     }
 }
+
+export const capabilitServiceInstance = new CapabilityService();
+
+export default capabilitServiceInstance;

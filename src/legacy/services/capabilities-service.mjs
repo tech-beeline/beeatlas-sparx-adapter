@@ -9,8 +9,9 @@ import Repository,
     t_object
 } from "../../api/repositories/sparx-ea-repository/index.mjs";
 import { CapabilitiesRepository } from "../../api/repositories/index.mjs";
+import { capabilityRepositoryInstance } from "../../api/repositories/capabilities-repository/index.mjs";
 
-const capabilitiesRepository = new CapabilitiesRepository();
+const capabilitiesRepository = capabilityRepositoryInstance
 
 class CapabiliiesService {
 
@@ -123,25 +124,39 @@ class CapabiliiesService {
         if (!parent) throw BadRequest(`Не найден родительская возможность/домен с кодом ${capabilityData.parent}`);
         const capability_asis = await capabilitiesRepository.selectByCode(code);
 
-        if (!capability_asis) {
-            if (capabilityData.isDomain) {
-                //Создаем домен
-                const domainDTO = await capabilitiesRepository.createDomain(capabilityData.parent, code, capabilityData.name, capabilityData.description, capabilityData.author, capabilityData.status);
-                if (capabilityData.owner) {
-                    await capabilitiesRepository.setCapabilityOwner(code, capabilityData.owner);
-                    domainDTO.owner = capabilityData.owner;
-                }
-                return new Capability(domainDTO);
-            }
-            // Создание возможности
-            const capabilityDTO = await capabilitiesRepository.createCapability(capabilityData.parent, code, capabilityData.name, capabilityData.description, capabilityData.author, capabilityData.status);
-            if (capabilityData.owner && capabilityData.owner.length) {
-                await capabilitiesRepository.setCapabilityOwner(code, capabilityData.owner);
-                capabilityDTO.owner = capabilityData.owner;
-            }
-            return new Capability(capabilityDTO);
+        if (capability_asis && capability_asis.isDomain != capabilityData.isDomain)
+            throw BadRequest('Нельзя менять тип возможности (Домен на BC и BC на Домен');
+
+        const capabilityDTO = capability_asis ?
+            (await capabilitiesRepository.updateCapability(
+                capabilityData.parent,
+                capabilityData.code,
+                capabilityData.isDomain,
+                capabilityData.name,
+                capabilityData.description,
+                capabilityData.author,
+                capabilityData.status)) :
+            capabilityData.isDomain ?
+                (await capabilitiesRepository.createDomain(
+                    capabilityData.parent,
+                    code,
+                    capabilityData.name,
+                    capabilityData.description,
+                    capabilityData.author,
+                    capabilityData.status)) :
+                (await capabilitiesRepository.createCapability(
+                    capabilityData.parent,
+                    code,
+                    capabilityData.name,
+                    capabilityData.description,
+                    capabilityData.author,
+                    capabilityData.status));
+
+        if (capabilityData.owner && capabilityData.owner.length) {
+            await capabilitiesRepository.setCapabilityOwner(code, capabilityData.owner);
+            capabilityDTO.owner = capabilityData.owner;
         }
-        return this.#updateBC(capability_asis, capabilityData, parent);
+        return new Capability(capabilityDTO);
     }
 
     async getCapabilityOwners(capability) {

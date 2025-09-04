@@ -803,6 +803,7 @@ export class SparxRepository {
             await this.query(`DELETE FROM t_package WHERE package_id=$1`, package_id);
         });
     }
+
     async canDeleteObject(object_id) {
         if (!object_id) throw Error("object_id==null");
 
@@ -818,6 +819,16 @@ export class SparxRepository {
         await this.delete(t_operationparams, { operationid: operation_id });
         await this.delete(t_operationtag, { elementid: operation_id });
         await this.delete(t_operation, { operationid: operation_id });
+    }
+
+    async mergeElements( target_id, source_id){
+        // Связи
+        // Диаграммы
+        // методы
+        // tagged values
+        // t_xref
+        // Родители
+        NotImplemented();
     }
 }
 

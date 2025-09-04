@@ -245,9 +245,9 @@ export class SystemsRepository {
 	}
 
 	async updateContainer(container_id, name, code, author, version, description, status) {
-		if (!container_id) throw Error('Contianer object_id is not specified');
+		if (!container_id) throw Error('Container object_id is not specified');
 
-		await Repository.updateObjectTags(container_id, { API_LOAD_DATE_TAG: new Date() });
+		await Repository.updateObjectTags(container_id, { [API_LOAD_DATE_TAG]: new Date() });
 
 		return Repository.update(t_object,
 			{
@@ -320,13 +320,13 @@ export class SystemsRepository {
 
 	/**
 	 * 
-	 * @param {*} systemCode 
+	 * @param {string} systemCode 
 	 * @param {Container} container 
 	 */
 	async addSystemContainer(systemCode, container) {
-		const systemOption = await this.packagesOptions.prepareSystemPackage(systemCode);
-
 		return Repository.transactionScope(async () => {
+			const systemOption = await this.packagesOptions.prepareSystemPackage(systemCode);
+
 			const c = await this.#insertContainer(systemOption.system_id,
 				systemOption.containers_package_id,
 				container.name, container.code, "FDM API", container.version, container.description, container.status ?? "Proposed"
@@ -336,6 +336,24 @@ export class SystemsRepository {
 			for (const it of apiList) {
 				await this.interfaceRepository.addContainerInterface(systemCode, container, it);
 			}
+		});
+	}
+
+	/**
+	 * 
+	 * @param {string} systemCode 
+	 * @param {Container} container 
+	 */
+	async insertSystemContainer(systemCode, container) {
+		return Repository.transactionScope(async () => {
+			const systemOption = await this.packagesOptions.prepareSystemPackage(systemCode);
+
+			const c = await this.#insertContainer(systemOption.system_id,
+				systemOption.containers_package_id,
+				container.name, container.code, "FDM API", container.version, container.description, container.status ?? "Proposed"
+			)
+			container.container_id = c.container_id;
+			return container;
 		});
 	}
 }
