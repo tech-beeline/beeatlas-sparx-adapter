@@ -8,10 +8,11 @@ import Repository,
     t_package,
     t_object
 } from "../../api/repositories/sparx-ea-repository/index.mjs";
-import { CapabilitiesRepository } from "../../api/repositories/index.mjs";
 import { capabilityRepositoryInstance } from "../../api/repositories/capabilities-repository/index.mjs";
+import capabilitServiceInstance from "../../api/services/capability-service/index.mjs";
 
 const capabilitiesRepository = capabilityRepositoryInstance
+const actualService = capabilitServiceInstance;
 
 class CapabiliiesService {
 
@@ -23,10 +24,9 @@ class CapabiliiesService {
      * }>>}
      */
     async getCapabitiesAsFlatList() {
-        return (await capabilitiesRepository.selectAll())
-            .map(c => {
-                return new Capability(c);
-            })
+        const ret = await actualService.getAll();
+        ret.forEach(c => c.parent = c.parent?.code);
+        return ret;
     }
     async getCapabilitiesTree() {
         const flat_data = await this.getCapabitiesAsFlatList();
@@ -53,11 +53,12 @@ class CapabiliiesService {
      * @returns {Promise<Capability>}
      */
     async getCapabilityByCode(code) {
-        const caps = await capabilitiesRepository.selectByCode(code);
+
+        const caps = await actualService.getByCode(code);
         if (!caps)
             return null;
-
-        return new Capability(caps);
+        caps.parent = caps.parent?.code;
+        return caps;
     }
     /**
      * 
@@ -69,42 +70,6 @@ class CapabiliiesService {
             .map(c => new Capability(c));
     }
 
-    async #createDomain(capability, parent) {
-        const code = capability.code;
-        if (!parent.isDomain) throw BadRequest(`Объект с кодом ${capability.parent} не является доменом (при создании домена)`)
-        if (!code.startsWith('DMN') && !code.startsWith('GRP')) throw BadRequest(`Код домена должен начинаться на DMN или на GRP`);
-
-        const ea_parent = await Repository.first(t_package, { ea_guid: parent.ea_guid });
-        const new_pkg = await Repository.createPackage({
-            name: capability.name, notes: capability.description, alias: code, parent_id: ea_parent.package_id,
-            author: capability.author, status: capability.status
-        });
-        return this.getCapabilityByCode(code);
-    }
-
-    /**
-     * 
-     * @param {Capability} capability_asis 
-     * @param {Capability} capability 
-     * @param {Capability} parent 
-     */
-    async #updateBC(capability_asis, capability, parent) {
-        if (capability_asis.isDomain !== capability.isDomain) throw BadRequest('Нельзя менять тип возможности (Домен на BC и BC на Домен');
-
-        const updated = await Repository.update(t_object, { name: capability.name, note: capability.description, status: capability.status, author: capability.author }, { object_id: capability_asis.object_id });
-        if (updated.length) {
-            if (capability.isDomain) await Repository.update(t_package, { name: capability.name, notes: capability.description }, { ea_guid: updated[0].ea_guid });
-        }
-
-        if (capability.owner !== capability_asis.owner) {
-            await capabilitiesRepository.setCapabilityOwner(capability.code, capability.owner);
-        }
-
-        if (capability_asis.parent != capability.parent) {
-            NotImplemented('Изменение родителя не реализовано');
-        }
-        return this.getCapabilityByCode(capability.code);
-    }
     /**
      * 
      * @param {string} code 

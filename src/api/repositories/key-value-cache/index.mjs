@@ -6,14 +6,16 @@ export class KeyValueCache {
     #key;
     #processFn;
     #loadPromise = null;
-    constructor(key, loadFn, processFn, period = 60 * 15) {
+    #entity;
+    constructor({ key, loadFn, processFn, period = 60 * 15, entity }) {
         this.#invalidatePeriod = period;
         this.#loadFn = loadFn;
         this.#key = key;
         this.#processFn = processFn ?? (this.#processFn = (c, r) => r);
+        this.#entity = entity;
         this.invalidate();
     }
-    
+
     invalidate() {
         if (this.#loadPromise) return;
         this.#loadPromise = this.load();
@@ -21,7 +23,7 @@ export class KeyValueCache {
 
     async load() {
         try {
-            console.info("Начата загрузка кеша")
+            console.info(`Начата загрузка кеша [${this.#entity}]`)
             const rows = await this.#loadFn();
             const values = {};
 
@@ -31,9 +33,9 @@ export class KeyValueCache {
             }
             this.#values = values;
             this.#loadDate = new Date();
-            console.info("Загрузка кеша завершена");
+            console.info(`Загрузка кеша завершена [${this.#entity}]`);
         } catch (err) {
-            console.err(err);
+            console.error(err);
         } finally {
             this.#loadPromise = null;
         }
@@ -48,6 +50,10 @@ export class KeyValueCache {
     async all() {
         await this.#check();
         return Object.values(this.#values);
+    }
+    async map() {
+        await this.#check();
+        return this.#values;
     }
     async byKey(key) {
         if (!key) throw Error(`key value is noit specified`);

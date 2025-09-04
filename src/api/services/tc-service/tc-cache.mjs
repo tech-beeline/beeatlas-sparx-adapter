@@ -36,7 +36,7 @@ class TechnicalCapabilityCache {
             this.#loadDate = new Date();
             console.info("Загрузка кеша ТС завершена");
         } catch (err) {
-            console.err(err);
+            console.error(err);
             //throw Error("Ошибка при запросе списка ТС", err);
         } finally {
             this.#loading = null;

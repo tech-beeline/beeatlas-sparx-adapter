@@ -16,11 +16,12 @@ import Repository, {
 } from '../sparx-ea-repository/index.mjs'
 
 import { INSERT_DIAGRAM_LINK, INSERT_DIAGRAM_OBJECTS, INSERT_DOMAIN_DIAGRAM, SELECT_ALL_BC, SELECT_BC_DOMAIN, SELECT_DIAGRAM_HIERARCHY, SELECT_DOMAIN_BY_CODE, SELECT_DOMAIN_DIAGRAM_BY_CODE, SELECT_DOMAIN_DIAGRAM_BY_PACKAGE_ID } from './capability-queries.mjs';
-import { loadDomainStructure } from './domain-strcuture.mjs';
+import { loadDomainStructure } from './domain-structure.mjs';
 import { CapabilityDTO, CapabilityDTOInternal } from './model.mjs';
 import { OwnersCatalogue } from './owners-catalogue.mjs';
-export { BC_PACKAGE_QUERY_BY_ID } from './capability-queries.mjs'
-
+export { BC_PACKAGE_QUERY_BY_ID } from './capability-queries.mjs';
+export { bcRepository } from './bc-repoository.mjs';
+export { domainsRepositoryInstance } from './domains-repository.mjs';
 
 const ownersCatalogue = new OwnersCatalogue();
 
@@ -40,8 +41,12 @@ const throwIsNotDomain = (code) => {
 }
 
 export class CapabilitiesRepository {
-	
-	#cache = new KeyValueCache("code", () => Repository.queryRows(SELECT_ALL_BC));
+
+	#cache = new KeyValueCache({
+		key: "code",
+		loadFn: () => Repository.queryRows(SELECT_ALL_BC),
+		entity: "capability"
+	});
 	/**
 	  * @returns {Promise<Array<{code, name, isDomain, description, createdDate, parent,status, author, version,owner}>>}
 	  */
@@ -263,7 +268,7 @@ export class CapabilitiesRepository {
 				current_capability.parent = parentCode;
 				return this.#cache.updateValue(code, current_capability);
 			}
-			
+
 
 			const domainStructure = await loadDomainStructure(parentCode);
 			const domain = domainStructure.domain;
