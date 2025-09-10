@@ -24,6 +24,7 @@ import { NotImplemented } from '../../../utils/errors.mjs';
 
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { DELETE_OBJECT, SELECT_OBJECT_RELATIONS } from './ea-queries/delete/index.mjs';
+import { created_package } from './ea-model/t_package.mjs';
 
 const transactionClient = new AsyncLocalStorage();
 
@@ -380,8 +381,8 @@ export class SparxRepository {
     }
     /**
      * 
-     * @param {t_package} pkg 
-     * @returns 
+     * @param {created_package} pkg 
+     * @returns {Promise<created_package>}
      */
     async createPackage(pkg) {
         /**
@@ -393,6 +394,7 @@ export class SparxRepository {
             name: new_pkg.name, ea_guid: new_pkg.ea_guid, object_type: 'Package',
             package_id: pkg.parent_id, author: pkg.author ?? 'FDM API', version: '1.0', pdata1: new_pkg.package_id, status: pkg.status ?? 'Proposed', note: pkg.notes, alias: pkg.alias
         });
+        Object.assign(new_pkg, obj);
         return new_pkg;
     }
 
@@ -821,7 +823,7 @@ export class SparxRepository {
         await this.delete(t_operation, { operationid: operation_id });
     }
 
-    async mergeElements( target_id, source_id){
+    async mergeElements(target_id, source_id) {
         // Связи
         // Диаграммы
         // методы

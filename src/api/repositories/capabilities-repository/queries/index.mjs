@@ -1,2 +1,3 @@
-export { SELECT_DOMAINS } from "./domain-queries.mjs";
-export { SELECT_BC } from "./bc-queries.mjs"
+export { selectDomains } from "./select-domains.mjs";
+export { selectBC } from "./select-bc.mjs"
+export { selectOwners } from './select-owners.mjs'

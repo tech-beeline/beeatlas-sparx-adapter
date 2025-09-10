@@ -50,8 +50,13 @@ export class OwnersCatalogue {
      * @returns {Promise<OwnerDTO>}
      */
     async insertOwner(name) {
+        console.log(`Влвделец с именем ${name} не найден, добьавляем вледблцеа в каталог владельцев`);
         const root = await this.getOwnerRootPackage();
         if (!root) throw Error(`Не удалось найти каталог владельцев`);
-        return Repository.createObject({ name: name, object_type: ARCHIMATE_BUSINESS_ACTOR, package_id: root.package_id })
+        const ret =  Repository.createObject({ name: name, object_type: ARCHIMATE_BUSINESS_ACTOR, package_id: root.package_id })
+        console.log(`Влвдельец ${name} добавлен`);
+        return ret;
     }
 }
+
+export const ownersRepository = new OwnersCatalogue();

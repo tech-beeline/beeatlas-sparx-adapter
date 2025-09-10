@@ -2,6 +2,7 @@ import { StructurizrRepository, SystemsRepository, TechnicalCapabilitiesReposito
 import { Workspace } from "./model.mjs";
 import { apiContainerWithoutCode, noCmdbError, cmdbWarning, containerWithoutCode, noSystemComment, WorkspaceCheckResult, systemNotFound, apiCandidateComment, tooManySystems, apiWithoutExternalName, apiWithoutSpecification, scriptLineComment, scriptNotFoundComment, apiWithWrongTC } from "./comments.mjs";
 import { NotImplemented } from "../../../utils/errors.mjs";
+import fdmStorage from "../../repositories/fdm-storage.mjs";
 
 
 const tcRepositoiry = new TechnicalCapabilitiesRepository();
@@ -109,10 +110,10 @@ export class WorkspaceValidator {
                                 if (!previewApi.api_url) {
                                     result.push(apiWithoutSpecification(system, container, api));
                                 }
-                                if( previewApi.tc){
-                                    const tcRows = await tcRepositoiry.selectTCByCode( previewApi.tc);
-                                    if( !tcRows.length) {
-                                        result.push( apiWithWrongTC(system, container, api) );
+                                if (previewApi.tc) {
+                                    const tcRows = await tcRepositoiry.selectTCByCode(previewApi.tc);
+                                    if (!tcRows.length) {
+                                        result.push(apiWithWrongTC(system, container, api));
                                         result.preview.fail = `Ничего не будет загруждено, так как есть API с не правильным ТС`
                                     }
                                 }
@@ -184,5 +185,10 @@ export class StructurizrService {
             this.repository.getWorkspaceJson(workspaceId),
             this.repository.getWorkspaceDSL(workspaceId)]);
         return (new WorkspaceValidator(workspaceJson, workspaceDSL)).check();
+    }
+    async getProduct(code) {
+        const result =await  fdmStorage.query("SELECT alias, git_url, structurizr_workspace_name, structurizr_api_url FROM product.product WHERE LOWER(alias)=LOWER($1)", code);
+        if( result.length ) return result[0];
+        return null
     }
 }

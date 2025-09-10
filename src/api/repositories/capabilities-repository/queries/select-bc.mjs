@@ -1,3 +1,6 @@
+import { NotImplemented } from "../../../../utils/errors.mjs";
+import eaRepository from "../../sparx-ea-repository/ea-repository.mjs";
+
 export const SELECT_BC = `
 WITH RECURSIVE cte_domains AS 
 (
@@ -31,7 +34,8 @@ WITH RECURSIVE cte_domains AS
 	SELECT DISTINCT
 		od.object_id,
 		o.alias as code,
-		p.alias as parent,
+		p.alias as parent_code,
+		dmn.code as domain_code,
 		o.name,
 		o.note as description,
 		o.author,
@@ -50,3 +54,11 @@ SELECT
 	o.name as owner
 FROM cte_all_bc bc
 	LEFT JOIN cte_owners o ON o.object_id=bc.object_id`;
+class BC_DTO {
+	package_id; object_id; code; parent_code; name; description; author; status; createdDate; domain_code;
+}
+/**
+ * 
+ * @returns {Promise<BC_DTO[]>}
+ */
+export const selectBC = () => eaRepository.query(SELECT_BC);

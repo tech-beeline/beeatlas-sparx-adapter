@@ -1,4 +1,3 @@
-import { BC_PACKAGE_QUERY_BY_ID } from "../capabilities-repository/index.mjs";
 import Repository, { t_object, t_package } from "../sparx-ea-repository/index.mjs";
 import { SparxRepositoryPackagesOptions } from "../sparx-ea-repository/options.mjs";
 import { BC_TC_REALIZATION_DIAGRAM } from "./const.mjs";

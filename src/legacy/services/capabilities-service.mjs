@@ -8,10 +8,9 @@ import Repository,
     t_package,
     t_object
 } from "../../api/repositories/sparx-ea-repository/index.mjs";
-import { capabilityRepositoryInstance } from "../../api/repositories/capabilities-repository/index.mjs";
+
 import capabilitServiceInstance from "../../api/services/capability-service/index.mjs";
 
-const capabilitiesRepository = capabilityRepositoryInstance
 const actualService = capabilitServiceInstance;
 
 class CapabiliiesService {

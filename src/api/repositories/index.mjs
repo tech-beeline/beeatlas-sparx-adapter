@@ -1,5 +1,4 @@
 export { SparxRepository, REALIZATION_CONNECTOR } from './sparx-ea-repository/index.mjs'
-export { CapabilitiesRepository, capabilityRepositoryInstance } from './capabilities-repository/index.mjs'
 export { GlossariesRepository } from './glossaries-repository/index.mjs'
 export { TechnicalCapabilitiesRepository } from './tc-repository/index.mjs'
 export { InterfacesRepository } from './interfaces-repository/index.mjs'

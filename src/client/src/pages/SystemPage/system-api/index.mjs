@@ -144,12 +144,12 @@ export function SystemContainers({ system }) {
             </AccordionSummary>
             <AccordionDetails>
                 <Tabs bodyClassName="classForAllTabs">
-                    <Tab label="Старый вариант" key={1}>
+                    <Tab label="Контейнеры в structurizr" key={1}>
                         <Box component={Paper}>
                             {(system.containers ?? []).map((container, i) => <ContainerAccordion key={i} container={container} />)}
                         </Box>
                     </Tab>
-                    <Tab label="Structurizr" key={2}>Здесь будет новая версия</Tab>
+
                     <Tab label="Добавленные вручную" key={3}><ProvidedApiBox app={system} /></Tab>
                 </Tabs>
             </AccordionDetails>
