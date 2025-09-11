@@ -6,10 +6,13 @@ const DELETE_REMOVED_OBJECTS = `
 
 const SELECT_LINKS = `
 SELECT
-	c.start_object_id, c.end_object_id
+	c.start_object_id, c.end_object_id, l.instance_id
 FROM t_diagramlinks l
 	JOIN t_connector c ON c.connector_id=l.connectorid
 WHERE l.diagramid=$1`;
+
+const SELECT_OBJECTS = `
+`
 
 export const deleteRemoveOjbects = (diagramId, actualIdList) => {
     return eaRepository.query(`DELETE FROM t_diagramobjects WHEERE diagram_id=$1 AND NOT (object_id = ANY($2))`,
@@ -31,4 +34,15 @@ export const updateNewOjbects = async (diagramId, actualIdList) => {
     NotImplemented();
 }
 
+/**
+ * 
+ * @param {number} diagramId 
+ * @returns {Promise<{start_object_id, end_object_id, instance_id}[]>}
+ */
 export const selectLinks = (diagramId) => eaRepository.query(SELECT_LINKS, diagramId);
+/**
+ * 
+ * @param {number} diagramId 
+ * @returns {Promise<{object_id, recttop, rectleft, rectright, rectbottom}[]>}
+ */
+export const selectObjects = (diagramId) => eaRepository.query(`SELECT * FROM t_diagramobjects WHERE diagram_id=$1`, diagramId);

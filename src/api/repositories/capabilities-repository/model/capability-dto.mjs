@@ -11,6 +11,7 @@ export class CapabilityBaseDTO {
     object_id;
     #owner;
     parent_code;
+    /** @type {CapabilityBaseDTO[]} */
     children = [];
     /**@type {CapabilityBaseDTO} */
     #parent;
@@ -38,13 +39,26 @@ export class CapabilityBaseDTO {
     set owner(val) {
         this.#owner = val;
     }
+    get parent() {
+        return this.#parent;
+    }
+    set parent(v) {
+        this.#parent = v;
+    }
+    /**
+     * 
+     * @returns {CapabilityBaseDTO[]}
+     */
+    childrenRecursive() {
+        return [...this.children, ...this.children.reduce((r, v) => [...r, ...v.childrenRecursive()], [])];
+    }
     /**
      * 
      * @param {CapabilityBaseDTO} parent 
      */
     setParent(parent) {
         if (this.#parent) {
-            parent.children = parent.children.filter(c => c != this);
+            this.#parent.children = this.#parent.children.filter(c => c != this);
         }
         if (parent) {
             this.#parent = parent;
@@ -57,8 +71,14 @@ export class CapabilityBaseDTO {
      * @param {DomainDTO} domain 
      */
     setDomain(domain) {
+        if (this.domain) {
+            this.domain.members = this.domain.members.filter(bc => bc != this);
+        }
         this.domain = domain;
         domain.members.push(this);
+        for (const c of this.children) {
+            c.setDomain(domain);
+        }
     }
     /**
      * 

@@ -1,14 +1,14 @@
 import { BadRequest, NotFound, NotImplemented } from "../../../utils/errors.mjs";
 import { KeyValueCache } from "../key-value-cache/index.mjs";
-import eaRepository, { ARCHIMATE_AGGREGATION } from "../sparx-ea-repository/ea-repository.mjs";
+import eaRepository, { ARCHIMATE_AGGREGATION, UML_RESPONSIBILITY } from "../sparx-ea-repository/ea-repository.mjs";
 import { CapabilityDTO, CapabilityDTOInternal } from "./model.mjs";
 
-import { capabilityAttributesEquals } from "./utils/index.mjs";
+import { capabilityAttributesEquals, domainDiagramName } from "./utils/index.mjs";
 import { CapabilityBaseDTO, DomainDTO } from "./model/index.mjs";
 import { loadCapabilities } from "./load-capabilities.mjs";
 import { BC_PACKAGE_NAME } from "./consts.mjs";
 import { ARCHIMATE_CAPABILITY, t_object, t_package } from "../sparx-ea-repository/index.mjs";
-import { arrangeDomainDiagramObjects, updateDomainDiagram } from "./arrange-domain-objects.mjs";
+import { arrangeDomain, calculateObjectPositions, updateDomainDiagram } from "./arrange-domain-objects.mjs";
 import { ownersRepository } from "./owners-catalogue.mjs";
 
 
@@ -74,6 +74,18 @@ class BCRepository {
         return domain;
     }
 
+    async prepareDomainBCPackage(domain) {
+        if (!domain.bcPackageId) {
+            console.log(`Не найдена папка "BC" у домена ${domain}, создаем...`);
+            const bc_package = await eaRepository.createPackage({
+                parent_id: domain.package_id,
+                name: BC_PACKAGE_NAME
+            });
+            domain.bcPackageId = bc_package.package_id;
+            console.log(`Создана папка package_id=${bc_package.package_id},\n\t object_id=${bc_package.object_id}, ea_guid=${bc_package.ea_guid}`);
+        }
+    }
+
     /**
      * 
      * @param {CapabilityBaseDTO} capability 
@@ -87,15 +99,7 @@ class BCRepository {
         const domain = parent.domain;
         if (!domain) throw Error(`не найден домен у родительской возможности`);
 
-        if (!domain.bcPackageId) {
-            console.log(`Не найдена папка "BC" у домена ${domain}, создаем...`);
-            const bc_package = await eaRepository.createPackage({
-                parent_id: domain.package_id,
-                name: BC_PACKAGE_NAME
-            });
-            domain.bcPackageId = bc_package.package_id;
-            console.log(`Создана папка package_id=${bc_package.package_id},\n\t object_id=${bc_package.object_id}, ea_guid=${bc_package.ea_guid}`);
-        }
+        await this.prepareDomainBCPackage(domain);
 
         console.log(`Создаем t_object для BC ${capability.code}`)
         const obj = await eaRepository.createObject({
@@ -125,9 +129,7 @@ class BCRepository {
         result.setDomain(domain);
         result.setParent(parent);
 
-        console.log(`Обновляем диаграмму "[AOTO] ${domain.name}" для домена ${domain.code}`);
-        arrangeDomainDiagramObjects(domain);
-        await updateDomainDiagram(domain);
+        await arrangeDomain(domain)
 
         return result;
     }
@@ -148,6 +150,31 @@ class BCRepository {
             return false;
         }
         return true;
+    }
+
+
+    /**
+    * 
+    * @param {CapabilityBaseDTO} capability 
+    * @param {CapabilityBaseDTO} current
+    * @returns {Promise<CapabilityBaseDTO>}
+    */
+    async updateObjectAttributes(capability, current) {
+        /** @type {t_object[]} */
+        const [obj] = await eaRepository.update(t_object,
+            {
+                name: capability.name,
+                note: capability.description,
+                status: capability.status,
+                author: capability.author
+            },
+            { object_id: current.object_id }
+        );
+        current.name = obj.name;
+        current.author = obj.author;
+        current.status = obj.status;
+        current.description = obj.note;
+        return current;
     }
     /**
      * 
@@ -184,20 +211,7 @@ class BCRepository {
             pkg_data,
             { package_id: current.package_id });
 
-        /** @type {t_object[]} */
-        const [obj] = await eaRepository.update(t_object,
-            {
-                name: domain.name,
-                note: domain.description,
-                status: domain.status,
-                author: domain.author
-            },
-            { object_id: current.object_id }
-        );
-        current.name = obj.name;
-        current.author = obj.author;
-        current.status = obj.status;
-        current.description = obj.note;
+        await this.updateObjectAttributes(domain, current);
 
         if (domain.parent_code !== current.parent_code) {
             current.setParent(parent);
@@ -205,8 +219,66 @@ class BCRepository {
         return current;
     }
 
+    /**
+     * 
+     * @param {CapabilityBaseDTO} capability 
+     * @param {CapabilityBaseDTO} current
+     * @returns {Promise<CapabilityBaseDTO>}
+     */
+    async updateBC(capability, current) {
+        if( capability.code.toLowerCase() === capability.parent_code.toLowerCase())
+            throw BadRequest(`Попытка установить родительской возможность. саму себя (${capability.code})`);
+        if (capabilityAttributesEquals(capability, current)
+            && capability.parent_code?.toLowerCase() == current.parent_code?.toLowerCase()) {
+            console.log(`Обновление атрибутов для возможности ${capability.code} не требуется`);
+            return current;
+        }
+
+        if (!capabilityAttributesEquals(capability, current)) {
+            await this.updateObjectAttributes(capability, current);
+        }
+
+        if (capability.parent_code?.toLowerCase() === current.parent_code?.toLowerCase())
+            return current;
+        if (!current.parent)
+            throw Error('parent is null');
+
+        const parent = await this.byCode(capability.parent_code);
+        if (!parent)
+            throw Error(`не найден целевой родительской домен ${capability.parent_code}`);
+
+        if (capability.parent_code !== current.parent_code) {
+            if (parent.hasParent(capability.code))
+                throw Error(`У возможности ${capability.code} в дочерних доменах найден целевая родительская возможность (${parent.code})\nЭто приведет к циклическим зависимостям`);
+            console.log(`Меняем родительскую возможность для ${capability.code} (${current.parent_code}->${capability.parent_code})`);
+            await eaRepository.deleteAllObjectsConnector(current.object_id, current.parent.object_id);
+            console.log(`Cвязь ${capability.code} с ${current.parent.code} удалена`);
+            const connector = await eaRepository.putConnector(
+                parent.object_id,
+                current.object_id,
+                ARCHIMATE_AGGREGATION);
+            console.log(`Cвязь ${capability.code} с ${parent.code} добавлена`);
+            current.setParent(parent);
+        }
+
+        const domain = parent.domain;
+        if (domain != current.domain) {
+            console.log(`Для возможность ${current.code} меняем домен ${current.domain.code}->${domain.code}`);
+            const current_domain = current.domain;
+            const bc_list = [current, ...current.childrenRecursive()];
+            await this.prepareDomainBCPackage(domain);
+            await eaRepository.updateObjectsPackage(domain.bcPackageId, bc_list.map(b => b.object_id));
+
+            bc_list.forEach(b => b.package_id = domain.bcPackageId);
+            current.setDomain(domain);
+            await arrangeDomain(current_domain);
+        }
+        await arrangeDomain(domain);
+        return current;
+    }
+
     async update(capability, current) {
-        return capability.isDomain ? this.updateDomain(capability, current) : NotImplemented()
+        return capability.isDomain ? this.updateDomain(capability, current) : this.updateBC(capability, current);
     }
 
     /**

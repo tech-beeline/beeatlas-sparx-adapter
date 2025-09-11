@@ -93,9 +93,8 @@ export class CapabilityService {
 
                 return this.getByCode(code);
 
-            } catch (err) {
+            } finally {
                 bcRepository.invalidateCache();
-                throw Error(`Ошибка при обновлении домена ${code}`, { cause: err });
             }
         })
     }

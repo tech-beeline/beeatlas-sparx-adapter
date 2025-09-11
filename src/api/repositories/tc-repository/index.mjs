@@ -1,5 +1,6 @@
 import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import TechnicalCapability from '../../model/technical-capability-model.mjs';
+import { bcRepository } from '../capabilities-repository/bc-repoository.mjs';
 import { SystemsRepository } from '../index.mjs';
 import Repository, { ARCHIMATE_AGGREGATION, t_diagramobjects, t_object, t_package, t_xref } from '../sparx-ea-repository/index.mjs'
 
@@ -118,10 +119,11 @@ export class TechnicalCapabilitiesRepository {
 		const newParentCodes = bcCodeList.filter(bc => !currentParentCodes.includes(bc));
 		const parentsForRemove = currentParentCodes.filter(bc => !bcCodeList.includes(bc));
 
-		const parentBCList = await capabilityRepository.selectCapabilityList(newParentCodes);
-		// check all parents exists
-		for (const code of newParentCodes) {
-			if (!parentBCList.find(c => c.code === code)) throw NotFound(`BC with code = '${code}' not found`);
+
+		for (const parentCode of newParentCodes) {
+			if (!await bcRepository.byCode(parentCode)) {
+				throw Error(`BC с кодом ${parentCode} не найдена`);
+			}
 		}
 
 		return Promise.all([
@@ -161,7 +163,7 @@ export class TechnicalCapabilitiesRepository {
 		tc.modifiedDate = tc_object.modifieddate;
 		tc.status = tc_object.status;
 		tc.author = tc_object.author;
-		tc.version= tc_object.version;
+		tc.version = tc_object.version;
 
 		return Repository.updateObjectTags(tc_object.object_id, tc, TC_TAGS_NAMES);
 	}

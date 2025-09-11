@@ -24,7 +24,14 @@ import { NotImplemented } from '../../../utils/errors.mjs';
 
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { DELETE_OBJECT, SELECT_OBJECT_RELATIONS } from './ea-queries/delete/index.mjs';
+import {
+    INSERT_DIAGRAMOBJECTS,
+    UPDATE_DIAGRAMOBJECT
+} from './ea-queries/diagram/index.mjs';
+
 import { created_package } from './ea-model/t_package.mjs';
+import { DELETE_ALL_OBJECTS_CONNECTORS, DELETE_ALL_OBJECTS_LINKS } from './ea-queries/connector/index.mjs';
+
 
 const transactionClient = new AsyncLocalStorage();
 
@@ -162,8 +169,8 @@ export class SparxRepository {
             await client.end();
             return rows;
         } catch (error) {
-            console.log(sql?.text ?? sql);
-            throw error;
+            console.trace(`Ошибка при выполнении запроса ${sql?.text ?? sql}: ${error.message}`);
+            throw Error(`Ошибка при выполнении запроса к базе sparx ea`, { cause: error });
         }
     }
 
@@ -725,6 +732,10 @@ export class SparxRepository {
         await this.queryOne(DELETE_LINK_BY_CONNECTOR_ID, [connector_id]);
         return this.queryOne(DELETE_CONNECTOR_BY_ID, [connector_id]);
     }
+    async deleteAllObjectsConnector(object_id_a, object_id_b) {
+        await this.query(DELETE_ALL_OBJECTS_LINKS, object_id_a, object_id_b);
+        return this.query(DELETE_ALL_OBJECTS_CONNECTORS, object_id_a, object_id_b);
+    }
     /**
      * 
      * @param {*} alias 
@@ -832,6 +843,50 @@ export class SparxRepository {
         // t_xref
         // Родители
         NotImplemented();
+    }
+
+    /**
+     * 
+     * @param {number[]} linksIds 
+     */
+    async removeDiagramLinks(linksIds) {
+        return this.query('DELETE FROM t_diagramlinks WHERE instance_id = ANY($1)', linksIds);
+    }
+    /**
+     * 
+     * @param {number[]} objectsIds 
+     */
+    async removeDiagramObjects(objectsIds) {
+        return this.query('DELETE FROM t_diagramobjects WHERE object_id = ANY($1)', objectsIds);
+    }
+
+    /**
+     * 
+     * @param {number} diagramId
+     * @param {t_diagramobjects} objects 
+     */
+    async insertDiagramObjects(diagramId, objects) {
+        if (!diagramId)
+            throw Error(`diagramId не задано при добавлениии t_diagramobjects`);
+        if (!objects)
+            throw Error(`Список объектов не задан при добавлении t_diagramojbects`);
+        if (objects.find(c => !c))
+            throw Error(`Найдены не заданные object_id в списке при добавлении t_diagramobjects`);
+        return this.query(INSERT_DIAGRAMOBJECTS, diagramId, JSON.stringify(objects));
+    }
+    /**
+     * 
+     * @param {number} diagramId
+     * @param {t_diagramobjects} objects 
+     */
+    async updateDiagramObjects(diagramId, objects) {
+        return this.query(UPDATE_DIAGRAMOBJECT, diagramId, JSON.stringify(objects));
+    }
+    async updateObjectsPackage(packageId, objectIds) {
+        if( !packageId) throw Error(`package id is not specified`);
+        if( !objectIds) throw Error(`object list is null`);
+
+        return this.query(`UPDATE t_object SET package_id=$1 WHERE object_id = ANY($2)`, packageId, objectIds);
     }
 }
 

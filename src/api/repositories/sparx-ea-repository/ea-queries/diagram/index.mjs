@@ -1,0 +1,1 @@
+export { INSERT_DIAGRAMOBJECTS, UPDATE_DIAGRAMOBJECT } from './diagram-objects.mjs'
