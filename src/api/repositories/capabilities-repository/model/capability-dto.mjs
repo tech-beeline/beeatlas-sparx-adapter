@@ -83,6 +83,7 @@ export class CapabilityBaseDTO {
 export class DomainDTO extends CapabilityBaseDTO {
     autoDiagramId;
     bcPackageId;
+    /**@type {CapabilityBaseDTO[]} */
     members = [];
     /**
      *

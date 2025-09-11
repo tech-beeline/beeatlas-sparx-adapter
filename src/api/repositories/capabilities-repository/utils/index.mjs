@@ -10,3 +10,5 @@ export const capabilityAttributesEquals = (a, b) => a.name === b.name &&
     a.author === b.author &&
     a.status === b.status &&
     a.description == b.description;
+
+export const domainDiagramName = (domain) => `[AUTO] ${domain.name}`;

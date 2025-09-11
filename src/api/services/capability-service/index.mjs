@@ -67,7 +67,7 @@ export class CapabilityService {
             console.log(`Обновляемый домен с кодом ${current.code} не найден, сбрасываем кеш`);
             current = null;
         }
-        
+
         if (current && capabilityAttributesEquals(capabilityData, current)
             && capabilityData.parent.code?.toLowerCase() === current.parent_code?.toLowerCase()
             && capabilityData.owner === current.owner) {
@@ -95,7 +95,7 @@ export class CapabilityService {
 
             } catch (err) {
                 bcRepository.invalidateCache();
-                throw Error(`Ошбика при обновлении домена ${code}`, err)
+                throw Error(`Ошибка при обновлении домена ${code}`, { cause: err });
             }
         })
     }

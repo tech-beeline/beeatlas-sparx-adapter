@@ -394,8 +394,9 @@ export class SparxRepository {
             name: new_pkg.name, ea_guid: new_pkg.ea_guid, object_type: 'Package',
             package_id: pkg.parent_id, author: pkg.author ?? 'FDM API', version: '1.0', pdata1: new_pkg.package_id, status: pkg.status ?? 'Proposed', note: pkg.notes, alias: pkg.alias
         });
-        Object.assign(new_pkg, obj);
-        return new_pkg;
+
+        Object.assign(obj, new_pkg);
+        return obj;
     }
 
     async setMethodsDeleted(methodIds) {

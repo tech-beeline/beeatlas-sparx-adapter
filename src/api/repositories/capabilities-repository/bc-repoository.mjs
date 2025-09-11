@@ -8,7 +8,7 @@ import { CapabilityBaseDTO, DomainDTO } from "./model/index.mjs";
 import { loadCapabilities } from "./load-capabilities.mjs";
 import { BC_PACKAGE_NAME } from "./consts.mjs";
 import { ARCHIMATE_CAPABILITY, t_object, t_package } from "../sparx-ea-repository/index.mjs";
-import { arrangeDomainDiagramObjects } from "./arrange-domain-objects.mjs";
+import { arrangeDomainDiagramObjects, updateDomainDiagram } from "./arrange-domain-objects.mjs";
 import { ownersRepository } from "./owners-catalogue.mjs";
 
 
@@ -97,20 +97,23 @@ class BCRepository {
             console.log(`Создана папка package_id=${bc_package.package_id},\n\t object_id=${bc_package.object_id}, ea_guid=${bc_package.ea_guid}`);
         }
 
+        console.log(`Создаем t_object для BC ${capability.code}`)
         const obj = await eaRepository.createObject({
             package_id: domain.bcPackageId,
             name: capability.name,
             author: capability.author,
             status: capability.status,
             note: capability.description,
-            aslias: capability.code,
+            alias: capability.code,
             object_type: ARCHIMATE_CAPABILITY
         });
 
+        console.log(`t_object для BC ${capability.code} создан, добавляем связь с ${parent.code}`);
         const connector = await eaRepository.putConnector(
             parent.object_id,
             obj.object_id,
             ARCHIMATE_AGGREGATION);
+        console.log(`Cвязь ${capability.code} с ${parent.code} добавлена`);
 
         const result = new CapabilityBaseDTO(
             {
@@ -122,7 +125,9 @@ class BCRepository {
         result.setDomain(domain);
         result.setParent(parent);
 
+        console.log(`Обновляем диаграмму "[AOTO] ${domain.name}" для домена ${domain.code}`);
         arrangeDomainDiagramObjects(domain);
+        await updateDomainDiagram(domain);
 
         return result;
     }
@@ -243,7 +248,7 @@ class BCRepository {
             console.log(`Cвязь ${code} с владельцем ${owner} добавлена`);
         }
     }
-    invalidateCache(){
+    invalidateCache() {
         this.#cache.invalidate();
     }
 }
