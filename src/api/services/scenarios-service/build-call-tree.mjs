@@ -138,7 +138,7 @@ export function buildCallTree(scenario, removeInfoMessages = false, removeError 
                 continue;
                 //throw Error(`Не найдена диаграмма с UID=${msg.linked_diagram_uid} (объект ${msg.server_name}, диаграмма ${msg.diagram?.name} uid=${msg.diagram_uid}  )`);
             }
-            
+
 
             if (!msg.operation_guid) {
                 msg.addValidationError(`Сообщение ${msg.display()} не связано с методом operation_guid, при этом есть связь с дочерней диагаммой ${diagram.name}.\nИщем сообщшение с operation_guid выше по цепочке вызовов`);
@@ -188,7 +188,6 @@ export function buildCallTree(scenario, removeInfoMessages = false, removeError 
     }
 
     scenario.diagrams.get(scenario.uid).sequence = final_sequence;
-
 
     if (removeInfoMessages || removeError) {
         for (const msg of scenario.messages) {

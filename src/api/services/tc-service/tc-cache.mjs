@@ -4,7 +4,6 @@ import { TechnicalCapabilitiesRepository } from "../../repositories/index.mjs";
 
 const tcDataService = new TechnicalCapabilitiesRepository();
 
-
 const REFRESH_PERIOD = 60 * 15;
 
 class TechnicalCapabilityCache {

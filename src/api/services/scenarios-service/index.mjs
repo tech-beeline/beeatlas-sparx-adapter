@@ -55,6 +55,16 @@ export class ScenariosService {
         const interfaces = new ScenarioDictionary("server_id", ScenarioInterface);
         const methods = new ScenarioDictionary("operation_guid", ScenarioMethod);
 
+        if (!messagesRows.length) {
+            return {
+                name: scenario_diagram.name,
+                uid: scenario_diagram.ea_guid,
+                sequence: [],
+                applications: [],
+                interfaces: []
+            }
+        }
+
         for (const msg of messagesRows) {
             if (messages[msg.ea_guid]) {
                 onMessageDouble(messages[msg.ea_guid], msg);
