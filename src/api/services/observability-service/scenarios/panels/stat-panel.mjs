@@ -27,6 +27,9 @@ export class ScenarioStatPanel extends GrafanaPanel {
         this.title = title;
         this.fieldConfig.defaults.displayName = messageTitle(message);
 
+        if (!message.method.name) 
+            throw Error(`Пустое имя метода для сообщения ${JSON.stringify(message)}.\nВозможно у сообщения указан не существующий operation_guid`);
+
         const [http_method, path] = message.method.name.split(' ').filter(it => it.length);
         /**@type {GrafanaPanel} */
         const panel_template = message.metricSource.template?.panels[0];

@@ -41,8 +41,7 @@ export default class ScenarioDashboard {
      */
     constructor(scenario, current, template) {
         if (current) {
-            Object.assign(this, current);
-            if (this.meta) this.meta.version = null;
+            this.tags= current.dashboard?.tags;
         }
         if (scenario.code) this.uid = scenario.code.replaceAll(/[\{\}]/g, "");
         this.title = scenario.name;
