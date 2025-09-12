@@ -61,17 +61,18 @@ export async function add_metric_info(sequence, mapic_source_url, method_sources
         }
         if (!c.api) return c;
 
+        if (c.stereotype === "via MAPIC") {
+            c.metricSource = metric_sources.MAPIC;
+        }
+
         /**@type {{api_metric_template:string, code:string, method:string, app_code:string}[]} */
         const call_source = method_sources.filter(s =>
             s.app_code?.toLowerCase() === c.api.app_code?.toLowerCase() &&
             s.method.toLowerCase() === c.method.name?.toLowerCase());
+
         if (!call_source.length) {
             console.log(`Не найден источник метрик для ${JSON.stringify(c.method)}`);
             return c;
-        }
-
-        if (c.stereotype === "via MAPIC") {
-            c.metricSource = metric_sources.MAPIC;
         }
 
         const update_sla = (t, sla) => {
@@ -80,7 +81,7 @@ export async function add_metric_info(sequence, mapic_source_url, method_sources
             t.error_rate = sla.latency;
             t.sla = { rps: sla.rps, latency: sla.latency, error_rate: sla.error_rate };
             t.protocol = sla.protocol;
-            
+
             if (!t.metricSource && sla.api_metric_template)
                 t.metricSource = metric_sources[sla.api_metric_template] ??
                     (metric_sources[sla.api_metric_template] = new MetricSource(sla.api_metric_template));

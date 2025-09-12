@@ -42,7 +42,11 @@ const COLUMNS_MAP = {
     "API.02": {
         link: "nfr_link",
         ts: "nfr_ts"
-    }
+    },
+    "SEC.01": {
+        link: "idm_link",
+        ts: "idm_ts"
+    },
 }
 
 const buildUpdateSource = (src) => src ? `${src}='FDM API', ` : "";
