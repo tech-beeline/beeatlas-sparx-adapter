@@ -56,7 +56,15 @@ export async function getJSON(url, options) {
 }
 
 export async function postJSON(url, options, body) {
-    //body = JSON.stringify(body);
+    body = JSON.stringify(body);
+    options = Object.assign({ method: "POST" }, options);
+    options.headers = Object.assign({}, options.headers)
+    options.headers["Content-Type"] = "application/json"
+    options.headers.Accept = "application/json"
+    options.headers["Content-Length"] = Buffer.byteLength(body);
+
+    return request(url, options, body).then(buffer => JSON.parse(buffer));
+    /*//body = JSON.stringify(body);
     options = Object.assign({ method: "POST" }, options);
     options.headers = Object.assign({}, options.headers)
     options.headers["Content-Type"] = "application/json"
@@ -68,4 +76,5 @@ export async function postJSON(url, options, body) {
         throw Error(`HTTP status ${response.status}:${await response.text()} `);
     }
     return response.json();
+    */
 }
