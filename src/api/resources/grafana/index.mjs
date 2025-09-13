@@ -30,10 +30,11 @@ export class GrafanaService {
             message: message,
             dashboard: dashboard
         };
+        console.log(GRAFANA_HTTP_OPTIONS);
         return postJSON(`${GRAFANA_URL}${DASHBOARD_API_PATH}`, GRAFANA_HTTP_OPTIONS, body);
     }
 
-    
+
     async getDatasourceByName(name) {
         return this.datasourceMap[name] ?? getJSON(`${GRAFANA_URL}${GET_DATASOURCE_BY_NAME_PATH}${name}`, GRAFANA_HTTP_OPTIONS);
     }
