@@ -11,6 +11,7 @@ export class GrafanaService {
      * @returns 
      */
     async getDashboardByUID(dashboardUID) {
+        console.log(`Получение дашборда uid=${dashboardUID}`)
         return getJSON(`${GRAFANA_URL}${GET_DASHBOARD_BY_UID_PATH}${dashboardUID.replaceAll(/[\{\}]/g, "")}`, GRAFANA_HTTP_OPTIONS);
     }
     async getScenarioTemplate() {
@@ -22,6 +23,7 @@ export class GrafanaService {
     }
 
     async postDashboard(dashboard, folderUid = DEFAULT_FOLDER_UID, override = true, message) {
+        console.log(`Публикация дашборда uid=${dashboard.name}`)
         const body = {
             folderUid: folderUid,
             overwrite: override,
