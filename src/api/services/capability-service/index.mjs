@@ -84,7 +84,7 @@ export class CapabilityService {
                     name: capabilityData.name,
                     author: capabilityData.author,
                     description: capabilityData.description,
-                    status: capabilityData.status,
+                    status: capabilityData.status ?? "Proposed",
                     parent_code: capabilityData.parent.code
                 });
 
