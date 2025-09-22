@@ -82,45 +82,13 @@ class CapabiliiesService {
             throw BadRequest('Capability parent is not specified');
         }
 
-        capabilityData.code = code;
-        const parent = await capabilitiesRepository.selectByCode(capabilityData.parent);
+        capabilityData.parent = { code: capabilityData.parent };
 
-        if (!parent) throw BadRequest(`Не найден родительская возможность/домен с кодом ${capabilityData.parent}`);
-        const capability_asis = await capabilitiesRepository.selectByCode(code);
+        const result = await capabilitServiceInstance.putCapability(code, capabilityData);
 
-        if (capability_asis && capability_asis.isDomain != capabilityData.isDomain)
-            throw BadRequest('Нельзя менять тип возможности (Домен на BC и BC на Домен');
+        result.parent = result.parent?.code;
 
-        const capabilityDTO = capability_asis ?
-            (await capabilitiesRepository.updateCapability(
-                capabilityData.parent,
-                capabilityData.code,
-                capabilityData.isDomain,
-                capabilityData.name,
-                capabilityData.description,
-                capabilityData.author,
-                capabilityData.status)) :
-            capabilityData.isDomain ?
-                (await capabilitiesRepository.createDomain(
-                    capabilityData.parent,
-                    code,
-                    capabilityData.name,
-                    capabilityData.description,
-                    capabilityData.author,
-                    capabilityData.status)) :
-                (await capabilitiesRepository.createCapability(
-                    capabilityData.parent,
-                    code,
-                    capabilityData.name,
-                    capabilityData.description,
-                    capabilityData.author,
-                    capabilityData.status));
-
-        if (capabilityData.owner && capabilityData.owner.length) {
-            await capabilitiesRepository.setCapabilityOwner(code, capabilityData.owner);
-            capabilityDTO.owner = capabilityData.owner;
-        }
-        return new Capability(capabilityDTO);
+        return result;
     }
 
     async getCapabilityOwners(capability) {
