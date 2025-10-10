@@ -47,6 +47,10 @@ const COLUMNS_MAP = {
         link: "idm_link",
         ts: "idm_ts"
     },
+    "GIT.01": {
+        link: "git_link",
+        ts: "git_ts"
+    },
 }
 
 const buildUpdateSource = (src) => src ? `${src}='FDM API', ` : "";
