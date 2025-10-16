@@ -325,6 +325,8 @@ export class SystemsRepository {
 	 */
 	async addSystemContainer(systemCode, container) {
 		return Repository.transactionScope(async () => {
+			console.log(`Добавление контейнера ${container.code}`);
+			
 			const systemOption = await this.packagesOptions.prepareSystemPackage(systemCode);
 
 			const c = await this.#insertContainer(systemOption.system_id,

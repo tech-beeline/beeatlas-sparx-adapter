@@ -362,11 +362,11 @@ export default class System {
     addContainer(container) {
         if (!(container instanceof Container)) container = new Container(container);
         if (!this.containers) this.containers = [];
-        this.containers.push(container)
-        return container;
+        return (this.containers.find(c => c.code?.toLowerCase() === container.code?.toLowerCase()))
+            || (this.containers.push(container), container);
     }
     containerByCode(code) {
-        return this.containers?.find(c => c.code === code);
+        return this.containers?.find(c => c.code?.toLowerCase() === code?.toLowerCase());
     }
 }
 

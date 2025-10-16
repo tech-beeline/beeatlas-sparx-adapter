@@ -412,12 +412,12 @@ export class InterfacesRepository {
                 await this.deleteMethod(method);
             }
 
-
             if (await Repository.canDeleteObject(interface_id)) {
                 console.log(`Интерфейс [object_id=${interface_id}] ни с чем не связан и будет удален`);
                 await Repository.removeConnectors(container_id, interface_id, REALIZATION_CONNECTOR);
                 await Repository.deleteObject(interface_id);
             } else {
+                console.log(`Интерфейс [object_id=${interface_id}] Не может быть удален, помечаем как удаленный`);
                 await Repository.update(t_object, { status: REMOVED_STATUS }, { object_id: interface_id })
                 await Repository.updateObjectTags(interface_id, { [API_LOAD_DATE_TAG]: new Date() });
             }
@@ -454,6 +454,7 @@ export class InterfacesRepository {
             version: it.version,
             object_type: 'Interface',
             author: "FDM API",
+            status: it.status ?? "Proposed",
             note: it.description,
             status: it.status,
             backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
@@ -489,7 +490,6 @@ export class InterfacesRepository {
      */
     async addContainerInterface(systemCode, { code: containerCode, container_id }, api) {
         if (!container_id) throw Error('container_id==null');
-
 
         const systemOptions = await this.packagesOptions.prepareSystemPackage(systemCode);
         const new_api = await this.#insertInterface(container_id, systemOptions.interfaces_package_id, api);

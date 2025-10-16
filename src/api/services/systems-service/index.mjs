@@ -206,8 +206,8 @@ export class SystemService {
      * @param {Container} container 
      */
     async repairMultipleContainers(container) {
-        for( const c of container.current){
-            
+        for (const c of container.current) {
+
         }
     }
 
@@ -273,6 +273,8 @@ export class SystemService {
         if (!systemCode) throw BadRequest('Code parameter is not specified');
         if (!system) throw BadRequest('System is not specified');
 
+        console.log(`Обновление системы [${systemCode}]`);
+
         const containerWithoutCode = system.containers?.find(c => !c.code);
         if (containerWithoutCode) {
             throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`);
@@ -291,6 +293,12 @@ export class SystemService {
                 eaRepository.transactionScope(async () => {
 
                     const [newContainers, outdateContainers, existingContainers] = diffContainers(await systemsRepository.selectSystemContainers(systemCode), containers);
+                    console.log(`[${systemCode}] Новых контейнеров ${newContainers.length}`);
+                    newContainers.forEach(c => console.log(`\t[${c.code}] ${c.name} будет добавлен`));
+                    console.log(`[${systemCode}] Устаревщших контейнеров ${newContainers.length}`);
+                    outdateContainers.forEach(c => console.log(`\t[${c.code}] ${c.name} будет удален`));
+                    console.log(`[${systemCode}] Измененных контейнеров ${newContainers.length}`);
+                    existingContainers.forEach(c => console.log(`\t[${c.exists.code}] ${c.exists.name} будет изменен (текущий статус ${c.exists.status})`));
 
                     for (const c of newContainers) {
                         await systemsRepository.addSystemContainer(systemCode, c);
