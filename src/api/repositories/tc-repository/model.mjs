@@ -17,7 +17,9 @@ export class TCDto {
     /**@type {string} */
     sys_code;
     /**
-     *
+     * 
+     * @param {TCDto} data 
+     * @returns 
      */
     constructor(data) {
         if (!data) return;
@@ -26,8 +28,12 @@ export class TCDto {
         }
     }
     addParentCode(code) {
-        if( !this.parentCodes) this.parentCodes = [];
+        if (!this.parentCodes) this.parentCodes = [];
         if (this.parentCodes.find(c => c === code)) return;
         this.parentCodes.push(code);
+    }
+    removeParentCode(code) {
+        if (!this.parentCodes) return;
+        this.parentCodes = this.parentCodes.filter(c => c.toLowerCase() !== code.toLowerCase());
     }
 }

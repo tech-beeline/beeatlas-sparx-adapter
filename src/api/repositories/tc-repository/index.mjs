@@ -1,4 +1,4 @@
-import { NotFound, NotImplemented } from '../../../utils/errors.mjs';
+import { BadRequest, NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import TechnicalCapability from '../../model/technical-capability-model.mjs';
 import { BCRepository, bcRepository } from '../capabilities-repository/bc-repoository.mjs';
 import { SystemsRepository } from '../index.mjs';
@@ -76,25 +76,35 @@ export class TechnicalCapabilitiesRepository {
 	async updateTC(tc) {
 		const { code, name, description, author, status, version } = tc;
 
-		/**
-		 * @type { t_object[]}
-		 */
-		const currentTC = await this.#selectTCObject(code);
+		const current_tc = await this.byCode(code);
 		/**@type {t_object} */
-		const tc_row = await Repository.update(t_object, {
+		const [tc_row] = await Repository.update(t_object, {
 			name: name,
 			note: description,
 			author: author,
 			version: version,
 			status: status,
-			modifiedDate: new Date()
-		}, { object_id: currentTC.object_id });
+			modifieddate: new Date()
+		}, { object_id: current_tc.object_id });
+		if (!tc_row)
+			throw Error(`Ошибка при обновлении t_object (0 обьектов обновлено)`);
+
 		tc.author = tc_row.author;
 		tc.status = tc_row.status;
 		tc.createdDate = tc_row.createddate;
 		tc.modifiedDate = tc_row.modifieddate;
 
-		return Repository.updateObjectTags(currentTC.object_id, tc, TC_TAGS_NAMES);
+		await Repository.updateObjectTags(current_tc.object_id, tc, TC_TAGS_NAMES);
+		current_tc.author = tc_row.author;
+		current_tc.version = tc_row.version;
+		current_tc.status = tc_row.status;
+		current_tc.description = tc_row.note;
+		current_tc.name = tc_row.name;
+		current_tc.createdDate = tc_row.createddate;
+		current_tc.modifiedDate = tc_row.modifieddate;
+		current_tc.goal_from = tc.goal_from;
+		current_tc.goal_to = tc.goal_to;
+		return current_tc;
 	}
 
 	/**
@@ -119,8 +129,8 @@ export class TechnicalCapabilitiesRepository {
 	 * @param {Array<string>} bcCodes Список кодов возможностей, в реализации которы участвет ТС
 	 */
 	async setParentsBCForTC(tcCode, bcCodes) {
-		/** @type {t_object} */
-		const tc_object = await this.#selectTCObject(tcCode);
+
+		const tc_object = await this.byCode(tcCode);
 
 		for (const bcCode of bcCodes) {
 			/** @type {t_object} */
@@ -136,18 +146,24 @@ export class TechnicalCapabilitiesRepository {
 
 			const connector = await Repository.putConnector(bc_object.object_id, tc_object.object_id, ARCHIMATE_AGGREGATION);
 			await Repository.putDiagramLink(diagramInfo.diagram_id, { connectorid: connector.connector_id, geometry: 'EDGE=3;$LLB=;LLT=;LMT=;LMB=;LRT=;LRB=;IRHS=;ILHS=;' })
+			tc_object.addParentCode(bcCode);
 		}
 	}
+
 	async removeParentsBCForTC(tcCode, bcCodes) {
 		await Repository.queryOne(DELETE_BC_TC_LINKS, [tcCode, bcCodes]);
-		return Repository.queryOne(DELETE_BC_TC_CONNECTOR, [tcCode, bcCodes]);
+		await Repository.queryOne(DELETE_BC_TC_CONNECTOR, [tcCode, bcCodes]);
+		const tc = await this.byCode(tcCode);
+		bcCodes.forEach(c => tc.removeParentCode(c));
 	}
 
 	async updateParentBcForTC(tcCode, bcCodeList) {
+		if (!bcCodeList || !bcCodeList.length)
+			throw BadRequest(`Не указана хотя бы 1 родительская BC`);
+
 		const currentParentCodes = (await this.selectParentBCForTC(tcCode)).map(v => v.bc_code)
 		const newParentCodes = bcCodeList.filter(bc => !currentParentCodes.includes(bc));
 		const parentsForRemove = currentParentCodes.filter(bc => !bcCodeList.includes(bc));
-
 
 		for (const parentCode of newParentCodes) {
 			if (!await bcRepository.byCode(parentCode)) {
@@ -194,7 +210,20 @@ export class TechnicalCapabilitiesRepository {
 		tc.author = tc_object.author;
 		tc.version = tc_object.version;
 
-		return Repository.updateObjectTags(tc_object.object_id, tc, TC_TAGS_NAMES);
+		await Repository.updateObjectTags(tc_object.object_id, tc, TC_TAGS_NAMES);
+		return this.#cache.updateValue(tc.code, new TCDto({
+			name: tc_object.name,
+			code: tc_object.alias,
+			description: tc_object.note,
+			author: tc_object.author,
+			status: tc_object.status,
+			version: tc_object.version,
+			createdDate: tc_object.createddate,
+			modifiedDate: tc_object.modifieddate,
+			goal_from: tc.goal_from,
+			goal_to: tc.goal_to
+		}));
+
 	}
 
 	async selectAppTcByCode(appCode, tcCode) {
