@@ -1,12 +1,12 @@
-import { InterfacesRepository, SystemsRepository } from "../../repositories/index.mjs";
+import { appRepository, InterfacesRepository } from "../../repositories/index.mjs";
 import System, { Container } from "../../model/system.mjs";
 
 const interfaceDataService = new InterfacesRepository();
-const systemDataService = new SystemsRepository();
+const systemDataService = appRepository;
 
 
 export const GET_ALL_SYSTEMS_HANDLERS = {
-    systems:{
+    systems: {
     },
     containers: async (addRemoved) => {
         const [systemsRows, containersRows] = await Promise.all([

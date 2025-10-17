@@ -12,11 +12,11 @@ import { arrangeDomain, calculateObjectPositions, updateDomainDiagram } from "./
 import { ownersRepository } from "./owners-catalogue.mjs";
 
 
-class BCRepository {
+export class BCRepository {
 
     #cache = new KeyValueCache({
         key: "code",
-        entity: "bc",
+        entity: "BC",
         loadFn: loadCapabilities
     });
     /**

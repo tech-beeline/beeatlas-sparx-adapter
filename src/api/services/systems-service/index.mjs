@@ -16,12 +16,13 @@ import System, {
 } from "../../model/system.mjs";
 
 import {
+    appRepository,
     ArchMetricsRepository,
     InterfacesRepository,
     MonitoringRepository,
     PtrArtifactsRepository,
     SystemsRepository,
-    TechnicalCapabilitiesRepository
+    tcRepository
 } from "../../repositories/index.mjs";
 import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
 import {
@@ -53,14 +54,14 @@ const STEREOTYPE_MAP = {
 }
 
 const interfacesRepository = new InterfacesRepository();
-const systemsRepository = new SystemsRepository();
+const systemsRepository = appRepository;
+
 const ptrArtifactsRepositoryInstance = new PtrArtifactsRepository();
 const monitoringRepository = new MonitoringRepository();
-const tcRepository = new TechnicalCapabilitiesRepository();
 
 const checkTC = async (code, context) => {
-    const tc = await tcRepository.selectTCByCode(code);
-    if (!tc.length) throw Error(`TC с кодом [${code}] не найден. ${context ?? ""} `);
+    const tc = await tcRepository.byCode(code);
+    if (!tc) throw Error(`TC с кодом [${code}] не найден. ${context ?? ""} `);
 }
 export class SystemService {
     constructor() {

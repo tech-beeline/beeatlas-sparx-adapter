@@ -10,11 +10,13 @@ import { APIInterface, APIMethod, isAPIEquals, isMethodEquals } from '../../mode
 import { SystemPackage } from '../systems-repository/system-package.mjs';
 import { randomUUID } from 'node:crypto';
 import { MethodMapRecord } from './model.mjs';
+import tcRepository from '../tc-repository/index.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
 
-const tcRepository = new TechnicalCapabilitiesRepository();
+
+//const tcRepository = new TechnicalCapabilitiesRepository();
 
 export class InterfacesRepository {
     /** @type {SystemPackage} */

@@ -264,6 +264,7 @@ class LoadStatus {
             const products = await this.getProducts();
             this.setStatus(`${LOAD_STATUS.LOAD_PRODUCTS}, Список продуктов получен, получена информация о ${products.length} продуктах`)
             await this.loadProducts(products);
+            console.log(`Загрузка данных MAPIC закончена`);
         } catch (error) {
             this.setStatus(error.message);
             console.error("Ошибка при выгрузке из MAPIC", error);

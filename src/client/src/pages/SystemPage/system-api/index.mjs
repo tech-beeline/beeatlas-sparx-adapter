@@ -26,35 +26,10 @@ import {
     Tabs
 } from "@beeline/design-system-react";
 import { ProvidedApiBox } from "./provider-api.mjs";
+import { CapabilityBox } from "../../../components/index.mjs";
 
 
-export function CapabilityBox({ capabilityCode }) {
-    const [capability, setCapability] = useState(null);
 
-
-    useEffect(() => {
-        async function loadCapability() {
-            try {
-                if (!capabilityCode)
-                    return;
-                const req = await fetch(`/api/v4/tc/${encodeURIComponent(capabilityCode)}`);
-                if (req.status !== 200) {
-                    throw Error(await req.text());
-                }
-                setCapability(await req.json());
-
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        loadCapability();
-    }, [capabilityCode]);
-
-    return (
-        <Link href={`https://beeatlas.vimpelcom.ru/models/search?request=${encodeURIComponent(capabilityCode)}`} target="_blank">{capability ? capability.name : capabilityCode}
-        </Link>)
-}
 
 function MethodsTable({ methods }) {
     if (!methods || !methods.length) {

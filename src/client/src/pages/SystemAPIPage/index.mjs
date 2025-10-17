@@ -11,7 +11,7 @@ import {
 } from "@beeline/design-system-react";
 
 import { useSearchParams } from 'react-router-dom';
-import { CapabilityBox } from "../SystemPage/system-api/index.mjs";
+import { CapabilityBox } from "../../components/index.mjs";
 
 function SystemInfo({ code }) {
     return <>{code}</>

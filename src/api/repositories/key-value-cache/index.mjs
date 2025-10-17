@@ -2,17 +2,19 @@ export class KeyValueCache {
     #values;
     #loadDate;
     #loadFn;
+    #loadByKeyFn;
     #invalidatePeriod = 60 * 15;
     #key;
     #processFn;
     #loadPromise = null;
     #entity;
-    constructor({ key, loadFn, processFn, period = 60 * 15, entity }) {
+    constructor({ key, loadFn, processFn, period = 60 * 15, entity, loadByKeyFn }) {
         this.#invalidatePeriod = period;
         this.#loadFn = loadFn;
         this.#key = key;
         this.#processFn = processFn ?? (this.#processFn = (c, r) => r);
         this.#entity = entity;
+        this.#loadByKeyFn = loadByKeyFn;
         this.invalidate();
     }
 
@@ -23,7 +25,8 @@ export class KeyValueCache {
 
     async load() {
         try {
-            console.log(`${(new Date()).toISOString()} Начата загрузка кеша [${this.#entity}]`)
+            console.log(`${(new Date()).toISOString()} Начата загрузка кеша [${this.#entity}]`);
+
             const start_time = performance.now();
             const rows = await this.#loadFn();
             const values = {};
@@ -48,6 +51,7 @@ export class KeyValueCache {
             this.invalidate();
         }
     }
+
     async all() {
         await this.#check();
         return Object.values(this.#values);
@@ -57,8 +61,10 @@ export class KeyValueCache {
         return this.#values;
     }
     async byKey(key) {
-        if (!key) throw Error(`key value is noit specified`);
+        if (!key) throw Error(`key value is not specified`);
         await this.#check();
+        if (this.#loadByKeyFn && !this.#values[key.toLowerCase()]) {
+        }
         return this.#values[key.toLowerCase()];
     }
     /**
@@ -68,7 +74,7 @@ export class KeyValueCache {
      * @returns
      */
     async updateValue(key, value) {
-        if (!key) throw Error(`key value is noit specified`);
+        if (!key) throw Error(`key value is not specified`);
 
         this.invalidate();
         return this.#values[key.toLowerCase()] = value;

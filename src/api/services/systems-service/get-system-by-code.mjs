@@ -1,13 +1,14 @@
 import { NotFound } from "../../../utils/errors.mjs";
 import System, { Container } from "../../model/system.mjs";
 import {
+    appRepository,
     InterfacesRepository,
     SystemsRepository
 } from "../../repositories/index.mjs";
 import { REMOVED_STATUS } from "../../repositories/systems-repository/const.mjs";
 
 const interfaceDataService = new InterfacesRepository();
-const systemDataService = new SystemsRepository();
+const systemDataService = appRepository;
 
 class GetSystemByCode {
     async system(systemCode, addRemoved) {

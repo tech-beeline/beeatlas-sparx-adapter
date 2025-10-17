@@ -1,5 +1,5 @@
 import TechnicalCapability from "../model/technical-capability-model-legacy.mjs";
-import { TechnicalCapabilitiesRepository } from '../../api/repositories/index.mjs'
+import { tcRepository, TechnicalCapabilitiesRepository } from '../../api/repositories/index.mjs'
 
 import Repository, {
 	ARCHIMATE_AGGREGATION,
@@ -28,7 +28,7 @@ const STEREOTYPE_MAP = {
 	type: (s) => STEREOTYPE_MAP[s] ?? 'Unknown'
 }
 
-const tcDataService = new TechnicalCapabilitiesRepository();
+const tcDataService = tcRepository;
 
 class TechnicalCapabilityService {
 	static app_package;

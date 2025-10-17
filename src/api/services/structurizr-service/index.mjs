@@ -1,11 +1,11 @@
-import { StructurizrRepository, SystemsRepository, TechnicalCapabilitiesRepository } from "../../repositories/index.mjs";
+import { StructurizrRepository, SystemsRepository, tcRepository, TechnicalCapabilitiesRepository } from "../../repositories/index.mjs";
 import { Workspace } from "./model.mjs";
 import { apiContainerWithoutCode, noCmdbError, cmdbWarning, containerWithoutCode, noSystemComment, WorkspaceCheckResult, systemNotFound, apiCandidateComment, tooManySystems, apiWithoutExternalName, apiWithoutSpecification, scriptLineComment, scriptNotFoundComment, apiWithWrongTC } from "./comments.mjs";
 import { NotImplemented } from "../../../utils/errors.mjs";
 import fdmStorage from "../../repositories/fdm-storage.mjs";
 
 
-const tcRepositoiry = new TechnicalCapabilitiesRepository();
+const tcRepositoiry = tcRepository;
 
 export class WorkspaceValidator {
     /** @type {Workspace} */
