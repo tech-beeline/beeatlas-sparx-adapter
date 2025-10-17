@@ -95,10 +95,10 @@ export class Container {
     constructor({ name, code, version, tags, interfaces, description, status } = {}) {
         this.name = name;
         this.code = code;
-        this.version = version;
+        this.version = version || undefined;
         this.tags = tags;
         this.interfaces = interfaces;
-        this.status = status;
+        this.status = status || undefined;
         this.description = description ?? undefined;
     }
     addInterface(i) {

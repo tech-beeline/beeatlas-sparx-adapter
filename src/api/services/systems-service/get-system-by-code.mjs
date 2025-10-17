@@ -6,6 +6,7 @@ import {
     SystemsRepository
 } from "../../repositories/index.mjs";
 import { REMOVED_STATUS } from "../../repositories/systems-repository/const.mjs";
+import { containerRepository } from "../../repositories/systems-repository/container-repository.mjs";
 
 const interfaceDataService = new InterfacesRepository();
 const systemDataService = appRepository;
@@ -19,14 +20,15 @@ class GetSystemByCode {
     async withContainers(systemCode, addRemoved) {
         const [system, containersRows] = await Promise.all([
             this.system(systemCode, addRemoved),
-            systemDataService.selectSystemContainers(systemCode)
+            containerRepository.bySystemCode(systemCode)
         ]);
         const containersMap = {};
 
-        (addRemoved ? containersRows : containersRows.filter(c => c.status !== "REMOVED"))
-            .forEach(row => {
-                system.addContainer(containersMap[row.code.toLowerCase()] = new Container(row));
-            });
+        const filtered = (addRemoved ? containersRows : containersRows.filter(c => c.status !== "REMOVED"));
+        
+        filtered.forEach(row => {
+            system.addContainer(containersMap[row.code.toLowerCase()] = new Container(row));
+        });
         return { system: system, containersMap: containersMap };
     }
     async withInterfaces(systemCode, addRemoved) {
@@ -37,7 +39,7 @@ class GetSystemByCode {
         for (const containerCode of Object.keys(containersMap)) {
             const apiRows = await interfaceDataService.selectContainerInterfaces(containerCode);
             for (const row of apiRows) {
-                if( !row.code) {
+                if (!row.code) {
                     console.error(`Обнаружен интерфейс с пустым кодом, ${JSON.stringify(row)}`);
                 }
                 if (row.status !== REMOVED_STATUS || addRemoved) {
@@ -54,7 +56,7 @@ class GetSystemByCode {
             .map(interfaceCode =>
                 interfaceDataService.selectInterfaceMethods(interfaceCode)
                     .then(methodsRows => {
-                        methodsRows.forEach(methodRow => 
+                        methodsRows.forEach(methodRow =>
                             interfacesMap[interfaceCode].addMethod(methodRow))
                     }));
 

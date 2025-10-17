@@ -24,6 +24,7 @@ import { Container, isContainersEquals } from '../../model/system.mjs';
 import { InterfacesRepository } from '../index.mjs';
 import { API_LOAD_DATE_TAG } from '../interfaces-repository/const.mjs';
 import { KeyValueCache } from '../key-value-cache/index.mjs';
+import { containerRepository } from './container-repository.mjs';
 
 
 const Repository = new SparxRepository();
@@ -114,7 +115,7 @@ export class SystemsRepository {
      * @returns {Promise<Array<{ sys_code, sys_name, code, name, description, version, status}>>}
      */
     async selectSystemsContainers() {
-        return Repository.queryRows(SELECT_SYSTEM_CONTAINERS)
+        return containerRepository.all();
     }
 
     /**
