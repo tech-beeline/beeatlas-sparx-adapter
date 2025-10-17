@@ -1,5 +1,6 @@
 import { TechnicalCapabilitiesRepository } from '../index.mjs';
 import Repository, { REALIZATION_CONNECTOR, t_connector, t_object, t_operation, t_operationparams, t_operationtag } from '../sparx-ea-repository/index.mjs';
+import { methodRepository, MethodRepository } from './method-repository.mjs';
 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { DEFAULT_STATUS, METHOD_REMOVED_TAG, REMOVED_STATUS } from '../systems-repository/const.mjs';
@@ -11,14 +12,40 @@ import { SystemPackage } from '../systems-repository/system-package.mjs';
 import { randomUUID } from 'node:crypto';
 import { MethodMapRecord } from './model.mjs';
 import tcRepository from '../tc-repository/index.mjs';
+import { KeyValueCache } from '../key-value-cache/index.mjs';
+import eaRepository from '../sparx-ea-repository/ea-repository.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
-
-
-//const tcRepository = new TechnicalCapabilitiesRepository();
+class InterfaceEntity {
+    app_name;
+    app_code;
+    container_code;
+    container_name;
+    code;
+    name;
+    description;
+    version;
+    status;
+    object_id;
+    interface_id;
+    specification;
+    protocol;
+    tcCode;
+}
+/**
+ * 
+ * @returns {Promise<InterfaceEntity[]>}
+ */
+const loadInterfaces = async () => eaRepository.query(SELECT_ALL_CONTAINERS_INTERFACES);
 
 export class InterfacesRepository {
+    #cache = new KeyValueCache({
+        entity: "Interface",
+        key: "code",
+        loadFn: loadInterfaces,
+        indexes: ["container_code"]
+    });
     /** @type {SystemPackage} */
     packagesOptions;
     constructor(packagesOptions) {
@@ -29,7 +56,7 @@ export class InterfacesRepository {
      * @returns {Promise<Array<{ container_code, code,name, derscription,version, status}>>}
      */
     async selectAllContainersInterfaces() {
-        return Repository.queryRows(SELECT_ALL_CONTAINERS_INTERFACES);
+        return this.#cache.all();
     }
 
     /**
@@ -37,8 +64,7 @@ export class InterfacesRepository {
      * @param {string} interfaceCode 
      */
     async selectInterfaceByCode(interfaceCode) {
-        return Repository.first(t_object, { object_type: 'Interface', alias: interfaceCode })
-            .then(it => it ? { name: it.name, code: it.code, description: it.note, version: it.version, object_id: it.object_id } : null);
+        return this.#cache.byKey(interfaceCode);
     }
 
     async selectInterfaceByUID(interfaceUID) {
@@ -46,8 +72,13 @@ export class InterfacesRepository {
             .then(it => it ? { name: it.name, code: it.code, description: it.note, version: it.version, object_id: it.object_id } : null);
     }
 
+    /**
+     * 
+     * @param {string} containerCode 
+     * @returns {Promise<InterfaceEntity[]>}
+     */
     async selectContainerInterfaces(containerCode) {
-        return Repository.queryRows(SELECT_CONTAINER_INTERFACES, [containerCode]);
+        return this.#cache.byIndex("container_code", containerCode);
     }
 
     async selectInterfacesBySystemCode(systemCode) {
@@ -70,7 +101,7 @@ export class InterfacesRepository {
      * @returns {Promise<Array<{ interface_code, interface_name,name, description, return_value, uid}>>}
      */
     async selectAllMethods() {
-        return Repository.queryRows(SELECT_ALL_METHODS);
+        return methodRepository.all();
     }
     /**
      * 
@@ -78,7 +109,7 @@ export class InterfacesRepository {
      * @returns {Promise<Array<{ name, description, return_value, uid}>>}
      */
     async selectInterfaceMethods(interfaceCode) {
-        return Repository.queryRows(SELECT_INTERFACE_METHODS, [interfaceCode]).then(rows => rows.filter(r => !r.removed_date));
+        return methodRepository.byInterfaceCode(interfaceCode);
     }
 
     /**
@@ -601,3 +632,8 @@ export class InterfacesRepository {
     }
 
 };
+
+
+export const interfaceRepository = new InterfacesRepository();
+
+export { methodRepository };

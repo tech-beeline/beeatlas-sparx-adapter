@@ -101,6 +101,11 @@ export class Container {
         this.status = status || undefined;
         this.description = description ?? undefined;
     }
+    /**
+     * 
+     * @param {*} i 
+     * @returns {APIInterface}
+     */
     addInterface(i) {
         if (!(i instanceof APIInterface)) i = new APIInterface(i)
         if (!this.interfaces) this.interfaces = [];
@@ -357,13 +362,18 @@ export default class System {
     /**
      * 
      * @param {{name: String, code:String, version:String, interfaces: Array<{name, code, version}>}} container 
-     * @returns 
+     * @returns {Container}
      */
     addContainer(container) {
-        if (!(container instanceof Container)) container = new Container(container);
         if (!this.containers) this.containers = [];
-        return (this.containers.find(c => c.code?.toLowerCase() === container.code?.toLowerCase()))
-            || (this.containers.push(container), container);
+
+        const c = this.containers.find(c => c.code.toLowerCase() === container.code.toLowerCase());
+        if (c) return c;
+
+        if (!(container instanceof Container)) container = new Container(container);
+
+        this.containers.push(container);
+        return container;
     }
     containerByCode(code) {
         return this.containers?.find(c => c.code?.toLowerCase() === code?.toLowerCase());

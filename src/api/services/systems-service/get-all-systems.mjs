@@ -1,7 +1,7 @@
-import { appRepository, InterfacesRepository } from "../../repositories/index.mjs";
+import { appRepository, interfaceRepository, InterfacesRepository } from "../../repositories/index.mjs";
 import System, { Container } from "../../model/system.mjs";
 
-const interfaceDataService = new InterfacesRepository();
+const interfaceDataService = interfaceRepository;
 const systemDataService = appRepository;
 
 
@@ -54,6 +54,8 @@ export class GetAllSystems {
         return systemDataService.selectSystems()
             .then(rows => rows.map(s => new System(s)))
     }
+
+
     async withContainers(addRemoved) {
         const [systemsRows, containersRows] = await Promise.all([
             systemDataService.selectSystems(),
@@ -71,6 +73,8 @@ export class GetAllSystems {
 
         return { systems: Object.values(systemsMap), systemsMap: systemsMap, containersMap: containersMap };
     }
+
+
     async withInterfaces(addRemoved) {
         const [{ systems, systemsMap, containersMap }, interfacesRows] = await Promise.all([
             this.withContainers(addRemoved),
@@ -84,6 +88,9 @@ export class GetAllSystems {
 
         return { systems: systems, systemsMap: systemsMap, containersMap: containersMap, interfacesMap: interfacesMap };
     }
+
+
+
     async withMethods(addRemoved) {
         const [{ systems, systemsMap, interfacesMap }, methodsRows] = await Promise.all([
             this.withInterfaces(addRemoved),

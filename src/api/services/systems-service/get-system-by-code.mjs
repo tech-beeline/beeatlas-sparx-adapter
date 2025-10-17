@@ -2,13 +2,14 @@ import { NotFound } from "../../../utils/errors.mjs";
 import System, { Container } from "../../model/system.mjs";
 import {
     appRepository,
+    interfaceRepository,
     InterfacesRepository,
     SystemsRepository
 } from "../../repositories/index.mjs";
 import { REMOVED_STATUS } from "../../repositories/systems-repository/const.mjs";
 import { containerRepository } from "../../repositories/systems-repository/container-repository.mjs";
 
-const interfaceDataService = new InterfacesRepository();
+const interfaceDataService = interfaceRepository;
 const systemDataService = appRepository;
 
 class GetSystemByCode {
@@ -25,7 +26,7 @@ class GetSystemByCode {
         const containersMap = {};
 
         const filtered = (addRemoved ? containersRows : containersRows.filter(c => c.status !== "REMOVED"));
-        
+
         filtered.forEach(row => {
             system.addContainer(containersMap[row.code.toLowerCase()] = new Container(row));
         });
@@ -52,15 +53,14 @@ class GetSystemByCode {
     }
     async withMethods(code, addRemoved) {
         const { system, interfacesMap } = await this.withInterfaces(code, addRemoved);
-        const selectMethodsPromises = Object.keys(interfacesMap) // TODO Пекределать на пакетный вызов
-            .map(interfaceCode =>
-                interfaceDataService.selectInterfaceMethods(interfaceCode)
-                    .then(methodsRows => {
-                        methodsRows.forEach(methodRow =>
-                            interfacesMap[interfaceCode].addMethod(methodRow))
-                    }));
 
-        await Promise.all(selectMethodsPromises);
+        for (const api_code in interfacesMap) {
+            const methods = await interfaceDataService.selectInterfaceMethods(api_code);
+            for (const m of methods) {
+                interfacesMap[api_code].addMethod(m);
+            }
+        }
+
         return system;
     }
 }

@@ -18,10 +18,10 @@ import System, {
 import {
     appRepository,
     ArchMetricsRepository,
-    InterfacesRepository,
+    interfaceRepository,
+    methodRepository,
     MonitoringRepository,
     PtrArtifactsRepository,
-    SystemsRepository,
     tcRepository
 } from "../../repositories/index.mjs";
 import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
@@ -44,6 +44,8 @@ import GetSystemByCode from "./get-system-by-code.mjs";
 import { SystemContainerService } from './containers/index.mjs'
 import { runSystemContext } from "../../repositories/systems-repository/system-package.mjs";
 import { logErrorPutSystem, logSuccessPutSystem } from "./log/index.mjs";
+import { containerRepository } from "../../repositories/systems-repository/container-repository.mjs";
+import { REMOVED_STATUS } from "../../repositories/systems-repository/const.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -53,7 +55,6 @@ const STEREOTYPE_MAP = {
     Domain: "Domain"
 }
 
-const interfacesRepository = new InterfacesRepository();
 const systemsRepository = appRepository;
 
 const ptrArtifactsRepositoryInstance = new PtrArtifactsRepository();
@@ -101,22 +102,35 @@ export class SystemService {
      */
     async getByCode(code, options = {}) {
         const { level = SYSTEM_LEVEL, addRemoved } = options;
-        switch (level) {
-            case SYSTEM_LEVEL: {
-                return GetSystemByCode.system(code)
-            }
-            case CONTAINERS_LEVEL: {
-                return GetSystemByCode.withContainers(code, addRemoved)
-                    .then(d => d.system)
-            }
-            case INTERFACES_LEVEL: {
-                return GetSystemByCode.withInterfaces(code, addRemoved)
-                    .then(d => d.system)
-            }
-            case METHODS_LEVEL: {
-                return GetSystemByCode.withMethods(code, addRemoved);
+
+        const sys_entity = await appRepository.selectSystemByCode(code);
+        if (!sys_entity) throw NotFound(`System with code = ${systemCode} was not found`);
+
+        const system = new System(sys_entity);
+        if (level != SYSTEM_LEVEL) {
+            for (const c of await containerRepository.bySystemCode(code)) {
+                if (addRemoved || c.status !== REMOVED_STATUS) {
+                    const container = system.addContainer(c);
+                    if (level != CONTAINERS_LEVEL) {
+                        for (const it of await interfaceRepository.selectContainerInterfaces(c.code)) {
+                            if (addRemoved || it.status !== REMOVED_STATUS) {
+                                const api_interface = container.addInterface(it);
+                                if (level === METHODS_LEVEL) {
+                                    const methods = await methodRepository.byInterfaceCode(api_interface.code);
+                                    for (const m of methods) {
+                                        if (addRemoved || !m.removed_date) {
+                                            api_interface.addMethod(m);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        return system;
     }
 
     async getSystemContainers(systemCode) {
@@ -314,7 +328,7 @@ export class SystemService {
                             await systemsRepository.updateContainer(diff.exists.container_id, diff.target.name, diff.target.code,
                                 "FDM API", diff.target.version, diff.target.description, diff.target.status);
                         }
-                        await interfacesRepository.updateContainerInterfaces(systemCode, diff.exists.container_id, diff.target.interfaces);
+                        await interfaceRepository.updateContainerInterfaces(systemCode, diff.exists.container_id, diff.target.interfaces);
                     }
                 }));
             const result = await this.getByCode(systemCode, { level: "methods" });

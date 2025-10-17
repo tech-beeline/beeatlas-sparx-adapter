@@ -1,7 +1,7 @@
 export { SparxRepository, REALIZATION_CONNECTOR } from './sparx-ea-repository/index.mjs'
 export { GlossariesRepository } from './glossaries-repository/index.mjs'
 export { TechnicalCapabilitiesRepository, tcRepository } from './tc-repository/index.mjs'
-export { InterfacesRepository } from './interfaces-repository/index.mjs'
+export { InterfacesRepository, interfaceRepository, methodRepository } from './interfaces-repository/index.mjs'
 export { SystemsRepository, appRepository } from './systems-repository/index.mjs'
 export { ArchMetricsRepository } from './arch-metrics-repository/index.mjs'
 export { E2EProcessRepository } from './e2e-repository/index.mjs'

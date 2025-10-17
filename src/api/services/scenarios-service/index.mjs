@@ -10,14 +10,17 @@ import {
     ScenarioInterface,
     ScenarioMethod
 } from "../../model/scenario/index.mjs";
-import { InterfacesRepository, ScenarioRepository } from "../../repositories/index.mjs";
+import {
+    interfaceRepository,
+    ScenarioRepository
+} from "../../repositories/index.mjs";
 import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
 import { t_diagram } from "../../repositories/sparx-ea-repository/index.mjs";
 import { buildCallTree } from "./build-call-tree.mjs";
 import { onMessageDouble } from "./vlidate.mjs";
 
 const scenariosRepository = new ScenarioRepository();
-const interfaceRepository = new InterfacesRepository();
+
 
 export class ScenariosService {
     async getAll() {

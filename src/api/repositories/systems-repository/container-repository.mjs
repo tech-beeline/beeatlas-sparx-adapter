@@ -41,6 +41,11 @@ class ContainerRepository {
     async byCode(code) {
         return this.#data.byKey(code);
     }
+    /**
+     * 
+     * @param {string} code 
+     * @returns {Promise<ContainerEntity[]}
+     */
     async bySystemCode(code) {
         return this.#data.byIndex("sys_code", code);
     }

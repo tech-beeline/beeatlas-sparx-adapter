@@ -52,6 +52,11 @@ class EntityData {
         const key = val[this.#key]?.toLowerCase();
         if (!key) throw Error(`key is null ${JSON.stringify(val)}`);
 
+        if (this.#data[key]) {
+            console.warn(`Попытка вставить дублирующая запись для ${JSON.stringify(this.#data[key])} (${JSON.stringify(val)})`);
+            Object.assign(this.#data[key], val);
+            return;
+        }
         this.#data[key] = val;
         for (const index in this.#indexes) {
             this.#indexes[index].add(val);

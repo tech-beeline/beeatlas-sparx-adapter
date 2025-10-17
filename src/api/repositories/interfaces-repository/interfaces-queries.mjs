@@ -2,7 +2,7 @@ import { REALIZATION_CONNECTOR } from "../index.mjs";
 import { CONTAINER_STEREOTYPE } from "../systems-repository/const.mjs"
 import { API_SPECFICATION_TAG } from "./const.mjs";
 
-export const SELECT_ALL_CONTAINERS_INTERFACES = `WiTH cte_realization AS ( select 
+export const SELECT_ALL_CONTAINERS_INTERFACES = `WITH cte_realization AS ( select 
     DISTINCT r.start_object_id, c.*
     FROM t_connector r 
         JOIN t_object c ON  c.object_id=r.end_object_id

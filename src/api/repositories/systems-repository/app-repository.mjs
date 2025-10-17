@@ -21,7 +21,7 @@ import { SELECT_SYSTEM_PACKAGES, selectApplications } from './queries/select-sys
 import { SELECT_SYSTEM_CONTAINER_BY_CODE } from './queries/select-containers.mjs';
 import { systemContext, SystemPackage } from './system-package.mjs';
 import { Container, isContainersEquals } from '../../model/system.mjs';
-import { InterfacesRepository } from '../index.mjs';
+import { interfaceRepository, InterfacesRepository } from '../index.mjs';
 import { API_LOAD_DATE_TAG } from '../interfaces-repository/const.mjs';
 import { KeyValueCache } from '../key-value-cache/index.mjs';
 import { containerRepository } from './container-repository.mjs';
@@ -54,9 +54,9 @@ export class SystemsRepository {
     /** @type {InterfacesRepository} */
     interfaceRepository;
 
-    constructor(packagesOptions, interfaceRepository) {
+    constructor(packagesOptions) {
         this.packagesOptions = packagesOptions ?? (new SystemPackage());
-        this.interfaceRepository = interfaceRepository ?? (new InterfacesRepository());
+        this.interfaceRepository = interfaceRepository;
     }
     /**
      * Получение информации о системам
