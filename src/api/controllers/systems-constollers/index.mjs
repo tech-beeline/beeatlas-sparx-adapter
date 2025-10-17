@@ -1,19 +1,31 @@
 import express from 'express'
 import {
-    SystemServiceInstance,
-    GET_ALL_SYSTEMS_HANDLERS
+    SystemServiceInstance
 } from '../../services/index.mjs';
 
 import { BadRequest, NotFound, NotImplemented } from '../../../utils/errors.mjs';
 import { logRequestDecorator } from '../log-request-decorator.mjs';
 import interfacesService from '../../services/interfaces-service/index.mjs';
+import {
+    CONTAINERS_LEVEL,
+    INTERFACES_LEVEL,
+    METHODS_LEVEL,
+    SYSTEM_LEVEL
+} from '../../services/systems-service/const.mjs';
 
+
+const LEVELS = {
+    [SYSTEM_LEVEL]: true,
+    [CONTAINERS_LEVEL]: true,
+    [INTERFACES_LEVEL]: true,
+    [METHODS_LEVEL]: true
+}
 /**
  * 
  * @param {express.Request} request 
  */
 function checkGetOptions(request) {
-    if (request.query.level && !GET_ALL_SYSTEMS_HANDLERS[request.query.level]) {
+    if (request.query.level && !LEVELS[request.query.level]) {
         throw BadRequest(`Wrong level parameter value (${request.query.level})`);
     }
     if (request.query["add-removed"] && request.query["add-removed"] !== 'false' && request.query["add-removed"] != "true")
@@ -158,11 +170,11 @@ export class SystemsControllers {
     */
     async postMethodSLA(request, response) {
         const sla = request.body;
-        if( !sla.interface_code && !sla.interface_uid)
+        if (!sla.interface_code && !sla.interface_uid)
             throw BadRequest("Должен быть задан код интерфейса (interface_code) или uid (interface_uid)");
-        if( !sla.method_name)
+        if (!sla.method_name)
             throw BadRequest("Должно быть задано имя метода (method_name)");
-        
+
         response.json(await interfacesService.updateMethodSLA(sla));
     }
 }

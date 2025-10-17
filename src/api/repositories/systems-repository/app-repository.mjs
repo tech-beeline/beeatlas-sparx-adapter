@@ -121,17 +121,6 @@ export class SystemsRepository {
     /**
      * 
      * @param {string} systemCode 
-     * @returns {Promise<Array<{container_id, sys_code, sys_name, code:string, name, description,version, status}>>}
-     */
-    async selectSystemContainers(systemCode) {
-        if (!systemCode) throw "systemCode==null";
-
-        return Repository.queryRows(SELECT_SYSTEM_CONTAINERS_BY_SYS_CODE, [systemCode])
-    }
-
-    /**
-     * 
-     * @param {string} systemCode 
      * @param {string} containerCode 
      * @returns {Promise<{ container_id, code:string}>}>}
      */

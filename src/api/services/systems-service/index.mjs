@@ -12,7 +12,8 @@ import System, {
     E2EProcessContext,
     isSystemEquals,
     isContainersEquals,
-    SysemAssessmentStatus
+    SysemAssessmentStatus,
+    APIInterface
 } from "../../model/system.mjs";
 
 import {
@@ -39,9 +40,6 @@ import { diffContainers } from "./containers/diff.mjs";
 
 export { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL };
 
-import GetAllSystems from "./get-all-systems.mjs";
-import GetSystemByCode from "./get-system-by-code.mjs";
-import { SystemContainerService } from './containers/index.mjs'
 import { runSystemContext } from "../../repositories/systems-repository/system-package.mjs";
 import { logErrorPutSystem, logSuccessPutSystem } from "./log/index.mjs";
 import { containerRepository } from "../../repositories/systems-repository/container-repository.mjs";
@@ -75,25 +73,54 @@ export class SystemService {
      */
     async getAll(options = {}) {
         const { level = SYSTEM_LEVEL, addRemoved } = options;
-
-        switch (level) {
-            case SYSTEM_LEVEL: {
-                return GetAllSystems.systems(addRemoved)
-            }
-            case CONTAINERS_LEVEL: {
-                return GetAllSystems.withContainers(addRemoved)
-                    .then(d => d.systems)
-            }
-            case INTERFACES_LEVEL: {
-                return GetAllSystems.withInterfaces(addRemoved)
-                    .then(d => d.systems)
-            }
-            case METHODS_LEVEL: {
-                return GetAllSystems.withMethods(addRemoved);
+        let systems = await systemsRepository.selectSystems().then(sl => sl.map(s => new System(s)));
+        if (level !== SYSTEM_LEVEL) {
+            for (const s of systems) {
+                s.containers = await this.getSystemContainers(s.code, level, addRemoved);
             }
         }
+        return systems;
     }
 
+    async getInterfaceMethods(interfaceCode, level, addRemoved) {
+        let methods = await methodRepository.byInterfaceCode(interfaceCode);
+        if (!addRemoved) methods = (await methods).filter(m => !m.removed_date);
+        methods = methods.map(m => new APIMethod(m));
+        return methods;
+    }
+
+    async getContainerInterfaces(containerCode, level, addRemoved) {
+        let interfaces = await interfaceRepository.selectContainerInterfaces(containerCode);
+
+        if (!addRemoved) interfaces = interfaces.filter(i => i.status != REMOVED_STATUS);
+        interfaces = interfaces.map(i => new APIInterface(i));
+
+        if (level === METHODS_LEVEL) {
+            for (const it of interfaces) {
+                it.methods = await this.getInterfaceMethods(it.code, level, addRemoved);
+            }
+        }
+        return interfaces;
+    }
+    /**
+     * 
+     * @param {string} systemCode 
+     * @param {string} level 
+     * @param {string} addRemoved 
+     */
+    async getSystemContainers(systemCode, level, addRemoved) {
+        let containers = await containerRepository.bySystemCode(systemCode);
+
+        if (!addRemoved) containers = containers.filter(c => c.status !== REMOVED_STATUS);
+        containers = containers.map(c => new Container(c));
+
+        if (level != CONTAINERS_LEVEL) {
+            for (const c of containers) {
+                c.interfaces = await this.getContainerInterfaces(c.code, level, addRemoved);
+            }
+        }
+        return containers;
+    }
     /**
      * 
      * @param {string} code 
@@ -108,36 +135,11 @@ export class SystemService {
 
         const system = new System(sys_entity);
         if (level != SYSTEM_LEVEL) {
-            for (const c of await containerRepository.bySystemCode(code)) {
-                if (addRemoved || c.status !== REMOVED_STATUS) {
-                    const container = system.addContainer(c);
-                    if (level != CONTAINERS_LEVEL) {
-                        for (const it of await interfaceRepository.selectContainerInterfaces(c.code)) {
-                            if (addRemoved || it.status !== REMOVED_STATUS) {
-                                const api_interface = container.addInterface(it);
-                                if (level === METHODS_LEVEL) {
-                                    const methods = await methodRepository.byInterfaceCode(api_interface.code);
-                                    for (const m of methods) {
-                                        if (addRemoved || !m.removed_date) {
-                                            api_interface.addMethod(m);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            system.containers = await this.getSystemContainers(code, level, addRemoved);
         }
 
         return system;
     }
-
-    async getSystemContainers(systemCode) {
-        return systemsRepository.selectSystemContainers(systemCode)
-            .then(rows => rows.map(row => new Container(row)));
-    }
-
 
     /**
      * 
