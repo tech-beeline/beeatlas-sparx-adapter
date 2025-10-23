@@ -585,7 +585,14 @@ export class InterfacesRepository {
             }
         );
     }
-    async delete(container_id, api_id) {
+    async delete(container_id, api) {
+        const api_id = api.interface_id;
+        if (api.tcCode) {
+            const tc = await tcRepository.byCode(api.tcCode);
+            if (tc) {
+                await eaRepository.removeConnectors(api_id, tc.object_id, REALIZATION_CONNECTOR);
+            }
+        }
         await eaRepository.removeConnectors(container_id, api_id, REALIZATION_CONNECTOR);
 
         const can_delete = await eaRepository.canDeleteObject(api_id);

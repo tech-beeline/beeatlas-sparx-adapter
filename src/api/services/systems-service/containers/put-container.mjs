@@ -33,7 +33,7 @@ async function putInterfaceMethods(api, data) {
 }
 
 export async function putInterface(app, container, api) {
-    const existing_api = container.interfaces[api.code.toLowerCase()];
+    const existing_api = container.interfaces?.[api.code.toLowerCase()];
     if (existing_api && !isAPIEquals(existing_api, api)) {
         await interfaceRepository.update(existing_api, api);
     }
@@ -88,5 +88,5 @@ export async function putContainer(app, container) {
         container.status
     ));
 
-    await putContainerInterfaces(app, existing_container, container);
+    await putContainerInterfaces(app, container_obj, container);
 }
