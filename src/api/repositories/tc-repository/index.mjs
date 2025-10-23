@@ -57,19 +57,6 @@ export class TechnicalCapabilitiesRepository {
 	}
 
 	/**
-	 * Получить сырой t_object по коду ТС. Предполагается, что такая записьсуществует и уникальна. 
-	 * В противном случае генерируется исключения
-	 * @param {string} code 
-	 * @returns {Promise<t_object>}
-	 */
-	async #selectTCObject(code) {
-		const currentTcList = await Repository.queryRows(SELECT_TC_OBJECT_ID, [code]);
-		if (!currentTcList.length) throw NotFound(`TC with code ${code} not found`);
-		if (currentTcList.length > 1) throw Error(`Слишком много ТС с кодом ${code}`);
-		return currentTcList[0];
-	}
-
-	/**
 	  * 
 	  * @param {TechnicalCapability} tc
 	  */
@@ -211,6 +198,7 @@ export class TechnicalCapabilitiesRepository {
 		tc.version = tc_object.version;
 
 		await Repository.updateObjectTags(tc_object.object_id, tc, TC_TAGS_NAMES);
+		
 		return this.#cache.updateValue(tc.code, new TCDto({
 			name: tc_object.name,
 			code: tc_object.alias,

@@ -223,6 +223,8 @@ export class SparxRepository {
         if (!condition) throw Error('update condition is null ');
         let field_values = Object.entries(value);//.filter(([k, v]) => v);
         let condition_list = Object.entries(condition);
+        if (!condition_list.length) throw Error('update condition is null ');
+
         const text = `UPDATE ${type.name} SET ${field_values.map(([k, v], i) => `${k} = $${i + 1}`).join(', ')} 
         WHERE ${Object.entries(condition).map(([k, v], i) => `${k} = $${i + 1 + field_values.length}`).join(' AND ')} RETURNING *`;
         return this.query(text, ...field_values.map(([k, v]) => v), ...condition_list.map(([k, v]) => v));
@@ -684,17 +686,26 @@ export class SparxRepository {
     async updateOperationTags(operation_id, tags) {
         const currentTags = await this.queryRows('SELECT * FROM t_operationtag WHERE elementid=$1 AND property=ANY($2)', [operation_id, Object.keys(tags)]);
         for (const tag in tags) {
-            const currentTag = currentTags.find(t => t.property === tag);
+            const current_values = currentTags.filter(t => t.property === tag);
             const targetValue = tags[tag];
-            if (currentTag?.value == targetValue) continue;
-            if (!targetValue) {
+
+            if (!targetValue && current_values.length) {
                 await this.queryOne(`DELETE FROM t_operationtag WHERE elementid=$1 AND property=$2`, [operation_id, tag]);
                 continue;
             }
-            if (!currentTag) {
+
+            if (targetValue && !current_values.length) {
                 await this.insert(t_operationtag, { value: targetValue, elementid: operation_id, property: tag });
                 continue;
             }
+
+            if (current_values.length === 1 && current_values[0].value == targetValue) continue;
+            if (current_values.length > 1) {
+                await this.query(`DELETE FROM t_operationtag WHERE elementid=$1 AND property=$2`, operation_id, tag);
+                await this.insert(t_operationtag, { value: targetValue, elementid: operation_id, property: tag });
+                continue;
+            }
+
             await this.update(t_operationtag, { value: targetValue }, { elementid: operation_id, property: tag });
         }
     }
@@ -829,6 +840,7 @@ export class SparxRepository {
         }
         return true;
     }
+
     async deleteOperation(operation_id) {
         await this.delete(t_operationparams, { operationid: operation_id });
         await this.delete(t_operationtag, { elementid: operation_id });
@@ -883,8 +895,8 @@ export class SparxRepository {
         return this.query(UPDATE_DIAGRAMOBJECT, diagramId, JSON.stringify(objects));
     }
     async updateObjectsPackage(packageId, objectIds) {
-        if( !packageId) throw Error(`package id is not specified`);
-        if( !objectIds) throw Error(`object list is null`);
+        if (!packageId) throw Error(`package id is not specified`);
+        if (!objectIds) throw Error(`object list is null`);
 
         return this.query(`UPDATE t_object SET package_id=$1 WHERE object_id = ANY($2)`, packageId, objectIds);
     }

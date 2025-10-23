@@ -1,53 +1,87 @@
-import { Container } from "../../model/system.mjs";
+import { NotImplemented } from "../../../utils/errors.mjs";
+import { Container, isContainersEquals } from "../../model/system.mjs";
 import { KeyValueCache } from "../key-value-cache/index.mjs";
 import eaRepository from "../sparx-ea-repository/ea-repository.mjs";
+import { REALIZATION_CONNECTOR, t_object } from "../sparx-ea-repository/index.mjs";
+import { CONTAINER_STEREOTYPE } from "./const.mjs";
+import { SystemDTOInternal } from "./model.mjs";
+import { appPackages } from "./system-package.mjs";
 import { SELECT_SYSTEM_CONTAINERS } from "./systems-containers-queries.mjs";
 
 
-class ContainerEntity {
-    sys_code;
-    sys_name;
-    code;
-    name;
-    description;
-    version;
-    status;
-    object_id;
-    container_id;
-}
-async function loadContainers() {
-    return eaRepository.query(SELECT_SYSTEM_CONTAINERS);
-}
-
 class ContainerRepository {
-    #data = new KeyValueCache({
-        entity: "Container",
-        key: "code",
-        loadFn: loadContainers,
-        indexes: ["sys_code"]
-    });
+
+
     /**
      * 
-     * @returns {Promise<ContainerEntity[]>}
+     * @param {SystemDTOInternal} appCode 
+     * @param {ContainerEntity} container 
      */
-    async all() {
-        return this.#data.all();
+    async put(appCode, container) {
+        const current = await this.byCode(container.code)
+        if (!current) {
+            console.log(`\t[${appCode}]: контейнер [${container.code}] не найден, создаем`);
+            const { containers_package_id, system_id } = await appPackages.prepare(appCode);
+            if (!containers_package_id)
+                throw Error('containers_package_id is null');
+
+            const obj = await eaRepository.createObject({
+                package_id: containers_package_id,
+                name: container.name,
+                object_type: "Component",
+                author: container.author,
+                alias: container.code.toLowerCase(),
+                version: container.version,
+                note: container.description,
+                status: container.status,
+                stereotype: CONTAINER_STEREOTYPE,
+                backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
+            });
+
+            await eaRepository.putConnector(system_id, obj.object_id, 'Realisation');
+
+            console.log(`\t[${appCode}]: контейнер [${container.code}] создан`);
+            container.sys_code = appCode;
+            container.container_id = obj.object_id;
+
+            return container;
+        }
+
+        if (isContainersEquals(current, container))
+            return current;
+
+
+        const [obj] = await eaRepository.update(t_object, {
+            name: container.name,
+            author: container.author,
+            alias: container.code.toLowerCase(),
+            version: container.version,
+            note: container.description,
+            status: container.status,
+            modifieddate: new Date()
+        }, { object_id: current.container_id });
+
+        current.name = obj.name;
+        current.code = obj.alias;
+        current.description = obj.note;
+        current.version = obj.version;
+        current.status = obj.status;
+        return current;
     }
-    /**
-     * 
-     * @param {string} code 
-     * @returns {Promise<ContainerEntity>}
-     */
-    async byCode(code) {
-        return this.#data.byKey(code);
-    }
-    /**
-     * 
-     * @param {string} code 
-     * @returns {Promise<ContainerEntity[]}
-     */
-    async bySystemCode(code) {
-        return this.#data.byIndex("sys_code", code);
+
+    async delete(system_id, container) {
+
+        const container_id = container.container_id;
+        await eaRepository.removeConnectors(system_id, container_id, REALIZATION_CONNECTOR);
+
+        const can_delete = await eaRepository.canDeleteObject(container_id);
+        if (can_delete) {
+            return eaRepository.deleteObject(container_id);
+        }
+
+        await eaRepository.putConnector(system_id, container_id, REALIZATION_CONNECTOR);
+        await eaRepository.update(t_object, { status: REMOVED_STATUS }, { object_id: container_id });
+        return eaRepository.updateObjectTags(container_id, { [API_LOAD_DATE_TAG]: new Date() });
     }
 }
 

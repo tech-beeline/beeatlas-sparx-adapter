@@ -7,7 +7,7 @@ import { Container } from "../../../model/system.mjs";
  * @returns {[newContianers:Container[], outdate: { code:string}[], existing: { exists:Container, 
  *      target:{sys_code, sys_name, code:string, name, description,version, status} }[]]}
  */
-export function diffContainers(existing, target) {
+export function compareContainers(existing, target) {
     const result = {}
     for (const c of existing) {
         result[c.code.toLowerCase()] = { exists: c };

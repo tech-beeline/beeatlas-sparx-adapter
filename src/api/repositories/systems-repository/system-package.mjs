@@ -1,5 +1,5 @@
 import eaRepository from "../sparx-ea-repository/ea-repository.mjs";
-import { CONTAINERS_SUBPACKAGE_NAME, INTERFACES_SUBPACKAGE_NAME } from "./const.mjs";
+import { CONTAINERS_SUBPACKAGE_NAME, INTERFACES_SUBPACKAGE_NAME, TC_SUBPACKAGE_NAME } from "./const.mjs";
 import { SELECT_SYSTEM_PACKAGES } from "./queries/index.mjs";
 import { AsyncLocalStorage } from 'node:async_hooks';
 
@@ -14,7 +14,7 @@ export async function runSystemContext(systemCode, fn) {
         return fn();
 
     const option = new SystemPackage();
-    const context = await option.prepareSystemPackage(systemCode)
+    const context = await option.prepare(systemCode)
 
     return systemContext.run(context, fn);
 }
@@ -25,7 +25,7 @@ export async function runSystemContext(systemCode, fn) {
  * @returns {Promise<{system_id, package_id, containers_package_id, interfaces_package_id, root_id}>}
  */
 export async function getSystemContext(systemCode) {
-    return systemContext.getStore() ?? (await (new SystemPackage()).prepareSystemPackage(systemCode));
+    return systemContext.getStore() ?? (await (new SystemPackage()).prepare(systemCode));
 }
 
 
@@ -33,15 +33,15 @@ export class SystemPackage {
     /**
      * 
      * @param {string} systemCode 
-     * @returns {Promise<{system_id, package_id, containers_package_id, interfaces_package_id, root_id}>}
+     * @returns {Promise<{system_id, package_id, containers_package_id, interfaces_package_id, tc_package_id, root_id}>}
      */
-    async prepareSystemPackage(systemCode) {
+    async prepare(systemCode) {
         const store = systemContext.getStore();
         if (store) return store;
 
         const code = systemCode.toLowerCase();
 
-        /** @type {{system_id, package_id, containers_package_id, interfaces_package_id, root_id}} */
+        /** @type {{system_id, package_id, containers_package_id, interfaces_package_id, tc_package_id, root_id}} */
         const ret = await eaRepository.queryOne(SELECT_SYSTEM_PACKAGES, [code]);
         if (!ret) throw Error(`Не найдена информация о системе с кодом ${systemCode}`);
         if (!ret.root_id) throw Error('Не удалось найти каталог ТС');
@@ -59,6 +59,12 @@ export class SystemPackage {
             const p = await eaRepository.createPackage({ name: INTERFACES_SUBPACKAGE_NAME, parent_id: ret.package_id });
             ret.interfaces_package_id = p.package_id;
         }
+        if (!ret.tc_package_id) {
+            const p = await eaRepository.createPackage({ name: TC_SUBPACKAGE_NAME, parent_id: ret.package_id });
+            ret.tc_package_id = p.package_id;
+        }
         return ret;
     }
 }
+
+export const appPackages = new SystemPackage();

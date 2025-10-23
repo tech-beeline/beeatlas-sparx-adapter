@@ -24,6 +24,13 @@ class EntityIndex {
             items.push(val);
         }
     }
+    remove(val) {
+        const key = val[this.#key]?.toLowerCase();
+        if (key && this.#data[key]) {
+            var tt = [];
+            this.#data[key] = this.#data[key].filter(v => v !== val);
+        }
+    }
     get(key) {
         if (!key) throw Error(`key is not specified`);
 
@@ -35,6 +42,7 @@ class EntityData {
     #key;
     #data = {}
     #indexes = {};
+    #KeyDobuleHandler
     /**
      * 
      * @param {CacheOptions} options 
@@ -45,6 +53,11 @@ class EntityData {
         for (const index of indexes) {
             this.#indexes[index] = new EntityIndex({ key: index });
         }
+        this.#KeyDobuleHandler = options.onKeyDouble ?? ((a, val) => {
+            console.warn(`Попытка вставить дублирующая запись для ${JSON.stringify(a)} (${JSON.stringify(val)})`);
+            Object.assign(a, val);
+            return;
+        });
     }
     set(val) {
         if (!val) throw Error('value is not specified');
@@ -53,27 +66,22 @@ class EntityData {
         if (!key) throw Error(`key is null ${JSON.stringify(val)}`);
 
         if (this.#data[key]) {
-            console.warn(`Попытка вставить дублирующая запись для ${JSON.stringify(this.#data[key])} (${JSON.stringify(val)})`);
-            Object.assign(this.#data[key], val);
-            return;
+            this.#KeyDobuleHandler(this.#data[key], val);
         }
         this.#data[key] = val;
         for (const index in this.#indexes) {
             this.#indexes[index].add(val);
         }
     }
+    remove(key) {
+        if (!key) throw Error(`key is not specified`);
+        key = key.toLowerCase();
 
-    removeByKey(key) {
-        NotImplemented();
-        const val = get(key);
-
+        const val = this.#data[key];
         for (const index in this.#indexes) {
-            const index_key = val[index]?.toLowerCase();
-            if (index_key)
-                delete this.#indexes[index][index_key];
+            this.#indexes[index].remove(val);
         }
-
-        delete this.#data[key.toLowerCase()];
+        delete this.#data[key];
     }
     /**
      * 
@@ -113,6 +121,7 @@ export class KeyValueCache {
     #loadPromise = null;
     #entity;
     #indexes;
+    #options;
 
     /**
      * 
@@ -121,6 +130,7 @@ export class KeyValueCache {
     constructor(options) {
         const { key, loadFn, processFn, invalidatePeriod = 60 * 15, entity, indexes } = options;
 
+        this.#options = options;
         this.#invalidatePeriod = invalidatePeriod;
         this.#loadFn = loadFn;
         this.#key = key;
@@ -130,8 +140,8 @@ export class KeyValueCache {
     }
 
     invalidate() {
-        if (this.#loadPromise) return;
-        this.#loadPromise = this.load();
+        if (this.#loadPromise) return this.#loadPromise;
+        return this.#loadPromise = this.load();
     }
 
     async load() {
@@ -141,11 +151,7 @@ export class KeyValueCache {
             const start_time = performance.now();
             const rows = await this.#loadFn();
 
-            const data = new EntityData({
-                entity: this.#entity,
-                key: this.#key,
-                indexes: this.#indexes
-            })
+            const data = new EntityData(this.#options);
 
             for (const row of rows) {
                 data.set(row);
@@ -162,7 +168,8 @@ export class KeyValueCache {
     }
 
     async #waitLoad() {
-        if (!this.#data) await this.load();
+        if (!this.#data) return await this.invalidate();
+
         if (this.#loadDate < new Date() - this.#invalidatePeriod * 1000) {
             this.invalidate();
         }
@@ -200,7 +207,14 @@ export class KeyValueCache {
         if (!key) throw Error(`key value is not specified`);
 
         this.invalidate();
-        value[this.#key] = key;
-        return this.#data.set(value);
+        if (!value[this.#key])
+            this.#data.set(value);
+        else
+            Object.assign(value[this.#key], value);
+
+        return value[this.#key];
+    }
+    remove(key) {
+        this.#data.remove(key);
     }
 }
