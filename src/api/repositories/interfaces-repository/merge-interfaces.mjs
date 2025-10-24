@@ -11,7 +11,7 @@ export async function mergeMethod(method, source) {
     return eaRepository.deleteOperation(source.operationid);
 }
 
-async function mergeObject(target_id, source_id) {
+export async function mergeObject(target_id, source_id) {
     if( !target_id) throw Error(`target_id is not specified`);
     if( !source_id) throw Error(`source_id is not specified`);
 
@@ -38,7 +38,7 @@ export async function mergeInterface(target, source_id) {
 
     const target_methods = await eaRepository.query('SELECT * FROM t_operation WHERE object_id=$1', target.interface_id);
     const source_methods = await eaRepository.query('SELECT * FROM t_operation WHERE object_id=$1', source_id);
-    
+
     for (const source_method of source_methods) {
         if (!source_method.name) continue;
 

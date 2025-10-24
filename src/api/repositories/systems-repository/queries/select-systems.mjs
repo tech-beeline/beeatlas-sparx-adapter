@@ -225,6 +225,7 @@ export const loadApps = async () => {
 
 export async function loadApp(app) {
 	const app_code = app.code.toLowerCase();
+	delete app.hasDoubles;
 
 	const [api_rows, method_rows] = await Promise.all([
 		selectAppInterfaces(app_code),

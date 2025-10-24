@@ -67,7 +67,7 @@ export async function putContainer(app, container) {
     const existing_container = app.container(container.code);
 
     if (existing_container && (existing_container.doubles || !isContainersEquals(existing_container, container))) {
-        await appRepository.updateContainer(existing_container.container_id,
+        await appRepository.updateContainer(existing_container,
             container.name,
             container.code,
             container.author,

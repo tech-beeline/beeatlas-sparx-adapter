@@ -26,6 +26,7 @@ import { API_LOAD_DATE_TAG } from '../interfaces-repository/const.mjs';
 import { KeyValueCache } from '../key-value-cache/index.mjs';
 import { containerRepository } from './container-repository.mjs';
 import eaRepository from '../sparx-ea-repository/ea-repository.mjs';
+import { mergeContainers } from './merge-contianers.mjs';
 
 
 const Repository = new SparxRepository();
@@ -144,10 +145,9 @@ export class SystemsRepository {
         return { name: container.name, description: container.note, container_id: container.object_id, code: container.alias };
     }
 
-    async updateContainer(container_id, name, code, author, version, description, status) {
+    async updateContainer(container, name, code, author, version, description, status) {
+        const container_id = container.container_id;
         if (!container_id) throw Error('Container object_id is not specified');
-
-        await Repository.updateObjectTags(container_id, { [API_LOAD_DATE_TAG]: new Date() });
 
         await Repository.update(t_object,
             {
@@ -159,6 +159,17 @@ export class SystemsRepository {
                 alias: code
             },
             { object_id: container_id });
+
+        if (container.doubles) {
+            console.log(`ДУБЛИ КОНТЕЙНЕРОВ`);
+            for (const d of container.doubles) {
+                console.warn(`Объединяем ${d.container_id}`);
+                await mergeContainers(container, d);
+            }
+        }
+
+
+        await Repository.updateObjectTags(container_id, { [API_LOAD_DATE_TAG]: new Date() });
     }
 
     /**
