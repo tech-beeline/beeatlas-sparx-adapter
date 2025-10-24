@@ -25,7 +25,7 @@ async function loadAllTC(bcRep) {
 		const code = row.code.toLowerCase();
 		const bc = await bcRep.byCode(row.parent_code);
 		if (!bc) {
-			console.warn(`Для ТС [${code}] не найдена родителськая BC с кодом ${row.parent_code}`);
+			console.warn(`Для ТС [${code}] не найдена родительская BC с кодом ${row.parent_code}`);
 			continue;
 		}
 		/**@type {TCDto} */

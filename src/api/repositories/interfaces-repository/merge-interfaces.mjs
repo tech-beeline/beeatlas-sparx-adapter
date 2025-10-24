@@ -1,5 +1,6 @@
 import eaRepository from "../sparx-ea-repository/ea-repository.mjs";
 import { t_object } from "../sparx-ea-repository/index.mjs";
+import { selectInterfaceMethods } from "../systems-repository/queries/select-methods.mjs";
 import { mergeClassifiers, mergeConnectors, mergeDiagramObjects, mergeObjectTags } from "./queries/merge.mjs";
 
 
@@ -12,8 +13,8 @@ export async function mergeMethod(method, source) {
 }
 
 export async function mergeObject(target_id, source_id) {
-    if( !target_id) throw Error(`target_id is not specified`);
-    if( !source_id) throw Error(`source_id is not specified`);
+    if (!target_id) throw Error(`target_id is not specified`);
+    if (!source_id) throw Error(`source_id is not specified`);
 
     /** @type {[t_object, t_object]} */
     const [target, source] = await Promise.all([
@@ -21,8 +22,8 @@ export async function mergeObject(target_id, source_id) {
         eaRepository.first(t_object, { object_id: source_id })
     ]);
 
-    if( !target) throw Error(`target not found`);
-    if( !source) throw Error(`source not found`);
+    if (!target) throw Error(`target not found`);
+    if (!source) throw Error(`source not found`);
 
     await Promise.all([
         mergeClassifiers(target, source),
@@ -39,6 +40,8 @@ export async function mergeInterface(target, source_id) {
     const target_methods = await eaRepository.query('SELECT * FROM t_operation WHERE object_id=$1', target.interface_id);
     const source_methods = await eaRepository.query('SELECT * FROM t_operation WHERE object_id=$1', source_id);
 
+
+    const methods = []
     for (const source_method of source_methods) {
         if (!source_method.name) continue;
 
@@ -50,4 +53,5 @@ export async function mergeInterface(target, source_id) {
         await eaRepository.query(`UPDATE t_operation SET object_id=$1 WHERE operationid=$2`, target.interface_id, source_method.operationid);
     }
     await mergeObject(target.interface_id, source_id);
+    target.methods = await selectInterfaceMethods();
 }

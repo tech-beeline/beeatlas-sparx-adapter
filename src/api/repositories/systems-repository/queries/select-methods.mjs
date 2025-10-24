@@ -63,3 +63,5 @@ export const selectAllMethods = async () => eaRepository.query(SELECT_METHODS);
  * @returns {Promise<MethodEntity[]>}
  */
 export const selectAppMethods = async (code) => eaRepository.query(`${SELECT_METHODS} AND LOWER(app.alias)=$1`, code.toLowerCase());
+
+export const selectInterfaceMethods = async (interface_id) => eaRepository.query(`${SELECT_METHODS} AND api.object_id=$1`, interface_id);

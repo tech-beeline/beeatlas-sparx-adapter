@@ -150,7 +150,7 @@ function processMethod(app, method_row) {
 		app.hasDoubles = true;
 		const doubles = m.doubles ?? (m.doubles = []);
 		if (!doubles.find(i => i.operation_guid == method_row.operation_guid)) {
-			doubles.push(method_row.operation_guid);
+			doubles.push({ operationid: method_row.operationid, ea_guid: method_row.operation_guid });
 			return;
 		}
 		m.tagsDoubles = true;
@@ -211,10 +211,10 @@ export const loadApps = async () => {
 		processMethod(app, method_row);
 	}
 
-	const app_with_doubles = Object.values(app_map).filter( a=>a.hasDoubles);
-	if( app_with_doubles.length){
+	const app_with_doubles = Object.values(app_map).filter(a => a.hasDoubles);
+	if (app_with_doubles.length) {
 		console.warn(`Количество приложений с дублями ${app_with_doubles.length}:`)
-		for( const a of app_with_doubles){
+		for (const a of app_with_doubles) {
 			console.warn(`\t[${a.code}] ${a.name}`);
 		}
 	}

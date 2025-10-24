@@ -67,7 +67,7 @@ export class TechnicalCapabiliiesService {
         const is_att_equals = isTCAttributesEquals(targetTC, currentTC);
         const is_parents_equals = isArrayEquals(targetTC.parents.map(p => p.code), currentTC.parentCodes);
         if (is_att_equals && is_parents_equals) {
-            console.log(`Измекнение ТС code=${targetTC.code}: изменение не требуется`);
+            console.log(`Изменение ТС [${targetTC.code}]: изменение не требуется`);
             return this.getByCode(targetTC.code);
         }
 

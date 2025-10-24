@@ -5,6 +5,7 @@ import eaRepository from "../sparx-ea-repository/ea-repository.mjs";
 import { t_operation } from "../sparx-ea-repository/index.mjs";
 import { SELECT_METHODS } from "./methods-queries.mjs";
 import { tcRepository } from "../index.mjs";
+import { mergeMethod } from "./merge-interfaces.mjs";
 
 class MethodEntity {
     app_code;
@@ -40,7 +41,7 @@ const dobuleMethodHandler = (a, val) => {
 }
 
 export class MethodRepository {
- 
+
 
     async insert(api_id, method) {
         if (!api_id) throw Error(`api_id is not specified`);
@@ -81,7 +82,15 @@ export class MethodRepository {
             },
             { ea_guid: method.operation_guid });
         if (!operation)
-            throw Error(`Ошибка приобновлении t_operation, вернулос 0 записей для ea_guid=${method.operation_guid}`);
+            throw Error(`Ошибка приобновлении t_operation, вернулось 0 записей для ea_guid=${method.operation_guid}`);
+
+        if (method.doubles) {
+            console.warn(`Обнаружены дубли метода ${method.name}`);
+            for (const m of method.doubles.filter(d => d.operationid !== method.operationid)) {
+                await mergeMethod({ operationid: method.operationid, ea_guid: method.operation_guid }, m);
+            }
+        }
+
         return eaRepository.updateOperationTags(operation.operationid, {
             rps: data.rps,
             latency: data.latency,

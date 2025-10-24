@@ -9,7 +9,7 @@ import { removeInterface } from "./remove-container.mjs";
 async function putMethod(api, method) {
     const existing_method = api.methods?.find(m => m.name.toLowerCase() === method.name.toLowerCase());
     if (existing_method) {
-        if (!isMethodEquals(existing_method, method)) {
+        if (existing_method.doubles || !isMethodEquals(existing_method, method)) {
             return methodRepository.update(existing_method, method);
         }
         console.log(`Метод ${method.name} не требует изменений`)
