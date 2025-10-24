@@ -137,7 +137,7 @@ export class SystemService {
         const { level = SYSTEM_LEVEL, addRemoved } = options;
 
         const sys_entity = await appRepository.byCode(code);
-        if (!sys_entity) throw NotFound(`System with code = ${systemCode} was not found`);
+        if (!sys_entity) throw NotFound(`System with code = ${code} was not found`);
 
         const system = new System(sys_entity);
 
@@ -159,7 +159,7 @@ export class SystemService {
             throw NotFound(`Система с кодом ${systemCode} не найдена`);
         }
 
-        if (isSystemEquals(current_state, system)) {
+        if (!current_state.hasDoubles() && isSystemEquals(current_state, system)) {
             console.info(`Система [${systemCode}] "${system.name}" не требует обновления`);
             return current_state;
         }

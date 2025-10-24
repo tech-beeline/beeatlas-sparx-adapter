@@ -44,6 +44,9 @@ export const validatePutData = async (systemCode, system) => {
             if (api_map[api.code]) {
                 throw BadRequest(`${systemCode}:В запросе более оодного интерфейса с одним и тем же кодом\n${c.code}\n${JSON.stringify(api_map[api.code])}\n${JSON.stringify(api)}`);
             }
+            api_map[api.code] = api;
+
+
             await validateTC(api.implements, `Интерфейс ${api.code}`);
 
             const method_map = {};

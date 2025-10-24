@@ -101,6 +101,64 @@ FROM  t_object s
 	LEFT JOIN t_package tc ON tc.parent_id=c.package_id AND tc.name='${TC_SUBPACKAGE_NAME}'
 WHERE LOWER(s.alias)=LOWER($1) AND s.stereotype='softwareSystem'`;
 
+
+
+function processContainer(app, api_row) {
+	const container = app.containers[api_row.container_code.toLowerCase()] ??
+		(app.containers[api_row.container_code.toLowerCase()] = { ...api_row });
+
+	if (container.container_id != api_row.container_id) {
+		const doubles = container.doubles ?? (container.doubles = []);
+		app.hasDoubles = true;
+		if (doubles.find(d => d == api_row.container_id))
+			return;
+		doubles.push(api_row.container_id);
+	}
+
+	if (!container.interfaces) container.interfaces = {};
+
+	if (!api_row.interface_code) return;
+
+	if (container.interfaces[api_row.interface_code.toLowerCase()]) {
+		console.warn(`Дубль интерфейса ${api_row.interface_code}`);
+
+		if (!container.interfaces[api_row.interface_code.toLowerCase()].doubles) {
+			container.interfaces[api_row.interface_code.toLowerCase()].doubles = [];
+		}
+		app.hasDoubles = true;
+		container.interfaces[api_row.interface_code.toLowerCase()].doubles.push(api_row);
+	} else {
+		container.interfaces[api_row.interface_code.toLowerCase()] = api_row;
+		api_row.methods = [];
+	}
+}
+
+function processMethod(app, method_row) {
+	const cn = app.containers[method_row.container_code.toLowerCase()];
+	if (!cn) {
+		console.warn(`Не найден контейнер для метода`, method_row);
+		return;
+	}
+	const api = cn.interfaces[method_row.interface_code.toLowerCase()];
+	if (!api) {
+		console.warn(`Не найден интерфейс для метода`, method_row);
+		return;
+	}
+	const m = api.methods.find(m => m.name.toLowerCase() == method_row.name.toLowerCase());
+	if (m) {
+		console.warn(`Найден дубль метода ${m.name}`, method_row, m);
+		app.hasDoubles = true;
+		const doubles = m.doubles ?? (m.doubles = []);
+		if (!doubles.find(i => i.operation_guid == method_row.operation_guid)) {
+			doubles.push(method_row.operation_guid);
+			return;
+		}
+		m.tagsDoubles = true;
+		return;
+	}
+	api.methods.push(method_row);
+}
+
 export const loadApps = async () => {
 	const app_map = {};
 	const [app_rows, api_rows, method_rows] = await Promise.all([
@@ -134,32 +192,10 @@ export const loadApps = async () => {
 			console.warn(`Не указан container_code`, api_row);
 			continue;
 		}
-		const container = app.containers[api_row.container_code.toLowerCase()] ??
-			(app.containers[api_row.container_code.toLowerCase()] = { ...api_row });
 
-		if (container.container_id != api_row.container_id) {
-			const doubles = container.doubles ?? (container.doubles = []);
-			if (doubles.find(d => d == api_row.container_id))
-				continue;
-			doubles.push(api_row.container_id);
-		}
-
-		if (!container.interfaces) container.interfaces = {};
-
-		if (!api_row.interface_code) continue;
-
-		if (container.interfaces[api_row.interface_code.toLowerCase()]) {
-			console.warn(`Дубль интерфейса ${api_row.interface_code}`);
-			if (!container.interfaces[api_row.interface_code.toLowerCase()].doubles) {
-				container.interfaces[api_row.interface_code.toLowerCase()].doubles = [];
-			}
-			container.interfaces[api_row.interface_code.toLowerCase()].doubles.push(api_row);
-		} else {
-			container.interfaces[api_row.interface_code.toLowerCase()] = api_row;
-			api_row.methods = [];
-		}
+		processContainer(app, api_row);
 	}
-	
+
 
 	for (const method_row of method_rows) {
 		if (!method_row.name) {
@@ -172,26 +208,15 @@ export const loadApps = async () => {
 			console.warn(`Не найдено приложение для метода`, method_row);
 			continue;
 		}
-		const cn = app.containers[method_row.container_code.toLowerCase()];
-		if (!cn) {
-			console.warn(`Не найден контейнер для метода`, method_row);
-			continue;
+		processMethod(app, method_row);
+	}
+
+	const app_with_doubles = Object.values(app_map).filter( a=>a.hasDoubles);
+	if( app_with_doubles.length){
+		console.warn(`Количество приложений с дублями ${app_with_doubles.length}:`)
+		for( const a of app_with_doubles){
+			console.warn(`\t[${a.code}] ${a.name}`);
 		}
-		const api = cn.interfaces[method_row.interface_code.toLowerCase()];
-		if (!api) {
-			console.warn(`Не найден интерфейс для метода`, method_row);
-			continue;
-		}
-		const m = api.methods.find(m => m.name.toLowerCase() == method_row.name.toLowerCase());
-		if (m) {
-			console.warn(`Найден дубль метода ${m.name}`, method_row, m);
-			const doubles = m.doubles ?? (m.doubles = []);
-			if (!doubles.find(i => i.operation_guid == method_row.operation_guid)) {
-				doubles.push(method_row.operation_guid);
-			}
-			continue;
-		}
-		api.methods.push(method_row);
 	}
 
 	return Object.values(app_map);
@@ -206,7 +231,7 @@ export async function loadApp(app) {
 		selectAppMethods(app_code)
 	]);
 
-	const containers = {}
+	app.containers = {};
 
 	for (const api_row of api_rows) {
 
@@ -219,47 +244,13 @@ export async function loadApp(app) {
 			continue;
 		}
 
-		const container = containers[api_row.container_code.toLowerCase()] ??
-			(containers[api_row.container_code.toLowerCase()] = { ...api_row });
-
-		if (!container.interfaces) container.interfaces = {};
-
-		if (!api_row.interface_code || !api_row.interface_code.length) {
-			//console.log(`Ну указан код интерфейса. Считаем, что контейнер пустой`, api_row);
-			continue;
-		}
-		if (container.interfaces[api_row.interface_code.toLowerCase()]) {
-			console.warn(`Дубль интерфейса ${api_row.code}`);
-		} else {
-			container.interfaces[api_row.interface_code.toLowerCase()] = api_row;
-			api_row.methods = [];
-		}
+		processContainer(app, api_row);
 	}
 
 	for (const method_row of method_rows) {
-		if (!method_row.name) {
-			console.warn(`Метод с путым именем`, method_row);
-			continue;
-		}
-
-		const cn = containers[method_row.container_code.toLowerCase()];
-		if (!cn) {
-			console.warn(`Не найден контейнер для метода`, method_row);
-			continue;
-		}
-		const api = cn.interfaces[method_row.interface_code.toLowerCase()];
-		if (!api) {
-			console.warn(`Не найден интерфейс для метода`, method_row);
-			continue;
-		}
-		const m = api.methods.find(m => m.name.toLowerCase() == method_row.name.toLowerCase());
-		if (m) {
-			console.warn(`Найден дубль метода ${m.name}`, method_row, m);
-			continue;
-		}
-		api.methods.push(method_row);
+		processMethod(app, method_row);
 	}
 
-	app.containers = containers;
+
 	return app;
 }

@@ -15,6 +15,7 @@ import tcRepository from '../tc-repository/index.mjs';
 import { KeyValueCache } from '../key-value-cache/index.mjs';
 import eaRepository from '../sparx-ea-repository/ea-repository.mjs';
 import { BadRequest, NotImplemented } from '../../../utils/errors.mjs';
+import { mergeInterface } from './merge-interfaces.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
@@ -574,6 +575,14 @@ export class InterfacesRepository {
             const e_tc = await tcRepository.byCode(api.tcCode);
             if (api.tcCode)
                 await eaRepository.removeConnectors(api_id, e_tc.object_id, REALIZATION_CONNECTOR);
+        }
+
+        if (api.doubles) {
+            console.warn(`ДУБЛИ ИНТЕРФЕЙСА ${api.interface_code}`);
+            for (const d of api.doubles) {
+                console.warn(`Объединяем ${d.interface_id}`);
+                await mergeInterface(api, d.interface_id);
+            }
         }
 
         return eaRepository.updateObjectTags(

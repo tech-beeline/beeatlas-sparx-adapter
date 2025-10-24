@@ -842,6 +842,8 @@ export class SparxRepository {
     }
 
     async deleteOperation(operation_id) {
+        if( !operation_id) throw Error(`operation_id is not specified`);
+        
         await this.delete(t_operationparams, { operationid: operation_id });
         await this.delete(t_operationtag, { elementid: operation_id });
         await this.delete(t_operation, { operationid: operation_id });

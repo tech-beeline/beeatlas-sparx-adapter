@@ -352,8 +352,9 @@ export default class System {
      */
     containers = [];
     links = {};
+    #hasDoubles;
 
-    constructor({ name, code, version, tags, containers, author, description, ea_guid, FQName, packageName, status, modifiedDate } = {}) {
+    constructor({ name, code, version, tags, containers, author, description, ea_guid, FQName, packageName, status, modifiedDate, hasDoubles } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
@@ -366,12 +367,16 @@ export default class System {
         this.package = packageName;
         this.status = status;
         this.modifiedDate = modifiedDate;
+        this.#hasDoubles = hasDoubles;
         this.links = {
             self: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}`),
             purpose: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}/purpose`),
             e2e: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}/e2e`),
             assessments: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}/e2e`)
         }
+    }
+    hasDoubles() {
+        return this.#hasDoubles;
     }
     /**
      * 
@@ -438,21 +443,21 @@ export const SYSTEM_MONITORING_RESULT_SCHEMA = {
 }
 
 export const isContainersEquals = (a, b) =>
-    a.name === b.name
-    && (a.description ?? "") === (b.description ?? "")
-    && (a.status ?? "") === (b.status ?? "")
-    && (a.version ?? "") === (b.version ?? "")
-    && a.code.toLowerCase() === b.code.toLowerCase()
+    (a.name || a.container_name) === (b.name || b.container_name)
+    && ((a.description || a.container_description) ?? "") === (b.description ?? "")
+    && (a.status || a.container_status || "") === (b.status ?? "")
+    && (a.version || a.container_version || "") === (b.version ?? "")
+    && ((a.code || a.container_code).toLowerCase()) === b.code.toLowerCase()
     && (a.author ?? "") === (b.author ?? "");
 
-export const isAPIEquals = (a, b) => a.name === b.name
-    && (a.description ?? "") === (b.description ?? "")
-    && (a.version ?? "") === (b.version ?? "")
-    && (a.status ?? "") === (b.status ?? "")
+export const isAPIEquals = (a, b) => (a.name || a.interface_name) === b.name
+    && (a.description || a.interface_description || "") === (b.description ?? "")
+    && (a.version || a.interface_version || "") === (b.version ?? "")
+    && (a.status || a.interface_status || "") === (b.status ?? "")
     && (a.specification ?? "") === (b.specification ?? "")
-    && (a.implements ?? "") === (b.implements ?? "")
+    && (a.implements || a.tcCode || "")?.toLowerCase() === (b.implements?.toLowerCase() ?? "")
     && (a.protocol ?? "") === (b.protocol ?? "")
-    && a.code.toLowerCase() === b.code.toLowerCase();
+    && (a.code || a.interface_code).toLowerCase() === b.code.toLowerCase();
 
 const codeCompare = (a, b) => a.code.toLowerCase().localeCompare(b.code.toLowerCase());
 const nameCompare = (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase());
