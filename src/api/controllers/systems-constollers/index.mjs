@@ -177,6 +177,24 @@ export class SystemsControllers {
 
         response.json(await interfacesService.updateMethodSLA(sla));
     }
+    /**
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
+    async getChanges(request, response) {
+        if (!request.params.code) throw BadRequest(`code is not specifed`);
+        console.log(`from`, request.query.from);
+
+        response.json(await SystemServiceInstance.getChanges(request.params.code));
+    }
+    /**
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
+    async getChanges(request, response) {
+        if (!request.params.id) throw BadRequest(`code is not specifed`);
+        response.json(await SystemServiceInstance.getChangeDetails(request.params.id));
+    }
 }
 
 export default new SystemsControllers();

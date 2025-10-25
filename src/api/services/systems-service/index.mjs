@@ -54,6 +54,7 @@ import { prepareSystemPackages } from "../../repositories/systems-repository/app
 import { putContainer, putContainerInterfaces } from "./containers/put-container.mjs";
 import { loadApp } from "../../repositories/systems-repository/queries/select-systems.mjs";
 import { removeContainer } from "./containers/remove-container.mjs";
+import { selectSystemChangeByChangeId, selectSystemChanges } from "../../repositories/arch-metrics-repository/queries.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -330,6 +331,12 @@ export class SystemService {
             });
         }
         return Object.values(apiMap);
+    }
+    async getChanges(code, count = 100, from_id) {
+        return selectSystemChanges(code);
+    }
+    async getChangeDetails(id) {
+        return selectSystemChangeByChangeId(id);
     }
 }
 

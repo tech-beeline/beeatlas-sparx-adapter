@@ -20,6 +20,8 @@ import TC_QUERY from './sql/tech-capabilities.mjs'
 import applicationService from "./application-service.mjs";
 import { ArchMetricsRepository } from "../../api/repositories/index.mjs";
 import { TC_TAGS_NAMES } from "../../api/repositories/tc-repository/const.mjs";
+import { tcService } from "../../client/src/resources/services/tc-service.mjs";
+import { TCServiceInstance, TechnicalCapabiliiesService } from "../../api/services/index.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -32,20 +34,9 @@ const tcDataService = tcRepository;
 
 class TechnicalCapabilityService {
 	static app_package;
-	async #readTags(map) {
-		const arr = Object.values(map);
-		let tags = await Repository.readObjectsTags(arr.map(tc => tc.object_id()));
-		arr.forEach(tc => {
-			const tc_tags = tags[tc.object_id()];
-			if (tc_tags) Object.assign(tc, tc_tags);
-		})
-	}
-	async getTechnicalCapabilities() {
-		const tc_map = (await tcDataService.selectTCList())
-			.reduce((acc, v) =>
-				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.parent_code), acc), {})
 
-		return Object.values(tc_map);
+	async getTechnicalCapabilities() {
+		return TCServiceInstance.getAll();
 	}
 
 	/**
@@ -55,12 +46,7 @@ class TechnicalCapabilityService {
 	 */
 	async getTechnicalCapability({ code } = {}) {
 		if (!code) throw BadRequest('Не указан code для получения capability');
-
-		const tc_map = (await tcDataService.selectTCByCode(code))
-			.reduce((acc, v) =>
-				((acc[v.code] = acc[v.code] ?? new TechnicalCapability(v)).addParent(v.parent_code), acc), {})
-
-		return tc_map[code];
+		return TCServiceInstance.getByCode(code);
 	}
 	/**
  * 

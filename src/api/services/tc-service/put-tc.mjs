@@ -17,6 +17,7 @@ export const createTC = async (tc) => {
     });
 }
 
+
 /**
  * 
  * @param {TechnicalCapability} currentTC 

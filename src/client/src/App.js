@@ -29,6 +29,7 @@ import { MethodDoublesPage } from "./pages/MethodDoublesPage/index.mjs";
 import { DigitalArchitectActionsPage } from "./pages/DigitalArchitectActionsPage/index.mjs";
 import { SystemAPIPage } from "./pages/SystemAPIPage/index.mjs";
 import { ScenarioPage } from "./pages/ScenarioPage/index.mjs";
+import { SystemChangeLogPage } from "./pages/SystemChangeLogPage/index.mjs";
 
 function App() {
     return (
@@ -60,6 +61,10 @@ function App() {
                 <Route
                     path="/systems/:code/api"
                     element={<SystemAPIPage />}
+                />
+                <Route
+                    path="/systems/:code/change-log"
+                    element={<SystemChangeLogPage />}
                 />
             </Routes>
         </Router>
