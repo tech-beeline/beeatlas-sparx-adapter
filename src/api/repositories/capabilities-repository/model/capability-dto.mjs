@@ -87,6 +87,8 @@ export class CapabilityBaseDTO {
     addChildrenRecursive(arr) {
         arr.push(...this.children);
         for (const c of this.children) {
+            if (!c.#owner) c.#owner = this.#owner;
+
             c.addChildrenRecursive(arr);
         }
         return arr;
