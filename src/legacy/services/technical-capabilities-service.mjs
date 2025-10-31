@@ -36,7 +36,7 @@ class TechnicalCapabilityService {
 	static app_package;
 
 	async getTechnicalCapabilities() {
-		return TCServiceInstance.getAll();
+		return tcDataService.all().then(data => data.map(t => new TechnicalCapability(t)));
 	}
 
 	/**
@@ -46,7 +46,9 @@ class TechnicalCapabilityService {
 	 */
 	async getTechnicalCapability({ code } = {}) {
 		if (!code) throw BadRequest('Не указан code для получения capability');
-		return TCServiceInstance.getByCode(code);
+		const tc = await tcRepository.byCode(code);
+		if (!tc) throw NotFound(`TC c кодом ${code} не найден`);
+		return new TechnicalCapability(tc);
 	}
 	/**
  * 

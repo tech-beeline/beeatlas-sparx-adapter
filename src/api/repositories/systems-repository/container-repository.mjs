@@ -1,9 +1,10 @@
 import { NotImplemented } from "../../../utils/errors.mjs";
 import { Container, isContainersEquals } from "../../model/system.mjs";
+import { API_LOAD_DATE_TAG } from "../interfaces-repository/const.mjs";
 import { KeyValueCache } from "../key-value-cache/index.mjs";
 import eaRepository from "../sparx-ea-repository/ea-repository.mjs";
 import { REALIZATION_CONNECTOR, t_object } from "../sparx-ea-repository/index.mjs";
-import { CONTAINER_STEREOTYPE } from "./const.mjs";
+import { CONTAINER_STEREOTYPE, REMOVED_STATUS } from "./const.mjs";
 import { SystemDTOInternal } from "./model.mjs";
 import { appPackages } from "./system-package.mjs";
 import { SELECT_SYSTEM_CONTAINERS } from "./systems-containers-queries.mjs";
@@ -80,7 +81,7 @@ class ContainerRepository {
         }
 
         await eaRepository.putConnector(system_id, container_id, REALIZATION_CONNECTOR);
-        await eaRepository.update(t_object, { status: REMOVED_STATUS }, { object_id: container_id });
+        await eaRepository.update(t_object, { status: REMOVED_STATUS, name: `[LEGACY] ${container.name || container.container_name}` }, { object_id: container_id });
         return eaRepository.updateObjectTags(container_id, { [API_LOAD_DATE_TAG]: new Date() });
     }
 }

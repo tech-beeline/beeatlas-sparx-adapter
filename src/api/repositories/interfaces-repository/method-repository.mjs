@@ -6,6 +6,7 @@ import { t_operation } from "../sparx-ea-repository/index.mjs";
 import { SELECT_METHODS } from "./methods-queries.mjs";
 import { tcRepository } from "../index.mjs";
 import { mergeMethod } from "./merge-interfaces.mjs";
+import { SET_E2E_MSG_LEGACY, SET_E2E_MSG_VALID } from "./queries/methods.mjs";
 
 class MethodEntity {
     app_code;
@@ -67,6 +68,7 @@ export class MethodRepository {
             })
         }
     }
+
     async update(method, data) {
         if (!method.operation_guid) throw Error(`operation_guid is not specified`);
         if (data.implements) {
@@ -91,6 +93,10 @@ export class MethodRepository {
             }
         }
 
+        if (method.removed_date && !data.removed) {
+            await eaRepository.query(SET_E2E_MSG_VALID, method.operation_guid);
+        }
+
         return eaRepository.updateOperationTags(operation.operationid, {
             rps: data.rps,
             latency: data.latency,
@@ -111,6 +117,7 @@ export class MethodRepository {
         if (using_rows.cnt == 0) {
             return eaRepository.deleteOperation(method.operationid);
         }
+        await eaRepository.query(SET_E2E_MSG_LEGACY, method.operation_guid);
         return eaRepository.updateOperationTags(method.operationid, { removedDate: new Date() });
     }
 }

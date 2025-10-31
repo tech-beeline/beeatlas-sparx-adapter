@@ -611,7 +611,7 @@ export class InterfacesRepository {
 
         await eaRepository.putConnector(container_id, api_id, REALIZATION_CONNECTOR);
 
-        await eaRepository.update(t_object, { status: REMOVED_STATUS }, { object_id: api_id });
+        await eaRepository.update(t_object, { status: REMOVED_STATUS, name: `[LEGACY] ${api.name || api.interface_name}` }, { object_id: api_id });
         return eaRepository.updateObjectTags(api_id, { [API_LOAD_DATE_TAG]: new Date() });
     }
 };
