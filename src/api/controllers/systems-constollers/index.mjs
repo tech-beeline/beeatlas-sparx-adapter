@@ -191,8 +191,8 @@ export class SystemsControllers {
     * @param {express.Request} request 
     * @param {express.Response} response 
     */
-    async getChanges(request, response) {
-        if (!request.params.id) throw BadRequest(`code is not specifed`);
+    async getChangeDetails(request, response) {
+        if (!request.params.id) throw BadRequest(`id is not specifed`);
         response.json(await SystemServiceInstance.getChangeDetails(request.params.id));
     }
 }

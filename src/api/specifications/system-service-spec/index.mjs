@@ -207,7 +207,7 @@ SWAGGER
     .defineGet(SYSTEM_PROVIDED_API_RESOURCE_V4, new GetJSONOperation(GET_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getProvidedApi))
     .definePost(METHOD_SLA_RESOURCE, new JSONOperation(POST_METHOD_SLA_SUMMARY, [], METHOD_SLA_SCHEMA_REF, METHOD_SLA_SCHEMA_REF, systemsControllers.postMethodSLA))
     .defineGet(SYSTEM_CHANGES_RESOURCE_V4, new GetJSONOperation(GET_SYSTEM_CHANGES_SUMMARY, [SYSTEM_CODE_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getChanges))
-    .defineGet(SYS_CHANGES_DETAILS_RESOURCE_V4, new GetJSONOperation(GET_SYSTEM_CHANGES_SUMMARY, [CHANGE_ID_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getChanges))
+    .defineGet(SYS_CHANGES_DETAILS_RESOURCE_V4, new GetJSONOperation(GET_SYSTEM_CHANGES_SUMMARY, [CHANGE_ID_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getChangeDetails))
 
 //#endregion
 

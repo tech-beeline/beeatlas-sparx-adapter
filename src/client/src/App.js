@@ -8,6 +8,7 @@ import {
     SystemPage,
     MainPage,
     WorkspaceCheckPage,
+    SystemChangeLogPage
 } from "./pages/index.mjs";
 
 import "./App.css";
@@ -29,7 +30,6 @@ import { MethodDoublesPage } from "./pages/MethodDoublesPage/index.mjs";
 import { DigitalArchitectActionsPage } from "./pages/DigitalArchitectActionsPage/index.mjs";
 import { SystemAPIPage } from "./pages/SystemAPIPage/index.mjs";
 import { ScenarioPage } from "./pages/ScenarioPage/index.mjs";
-import { SystemChangeLogPage } from "./pages/SystemChangeLogPage/index.mjs";
 
 function App() {
     return (
