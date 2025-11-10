@@ -1,4 +1,5 @@
 import express from 'express'
+import https from 'https';
 import {
     arraySchema,
     booleanProperty,
@@ -225,22 +226,24 @@ class LoadStatus {
         console.log(this.summary = status);
     }
     async auth() {
+        const agent = new https.Agent({ rejectUnauthorized: false });
         const response = await fetch(AUTH_RESUORCE, {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
             },
-            body: new URLSearchParams({ grant_type: "password", username: MAPIC_USER, password: MAPIC_PASSWORD }),
+            body: new URLSearchParams({ grant_type: "password", username: MAPIC_USER, password: MAPIC_PASSWORD })
         });
-        if (response.status !== 200) {
+        if (!response.ok) {
             throw Error(`Ошибка при аутентификации: ${await response.text()}`);
         }
         const responce_body = await response.json();
         this.access_token = responce_body.access_token;
         if (!this.access_token) throw Error("Не получен токен при аутентификации");
 
-        this.request_options = { headers: { Authorization: `Bearer ${this.access_token}` } };
+        this.request_options = { headers: { Authorization: `Bearer ${this.access_token}` }, rejectUnauthorized: false };
     }
+
     async getProducts() {
         const response = await fetch(PRODUCTS_RESUORCE, this.request_options);
         if (response.status !== 200) {

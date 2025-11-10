@@ -204,15 +204,15 @@ export class KeyValueCache {
      * @returns
      */
     async updateValue(key, value) {
-        if (!key) throw Error(`key value is not specified`);
 
-        this.invalidate();
-        if (!value[this.#key])
+        const current_value = await this.byKey( key );
+
+        if( current_value ){
+            Object.assign( current_value, value);
+        } else {
             this.#data.set(value);
-        else
-            Object.assign(value[this.#key], value);
-
-        return value[this.#key];
+        }
+        return current_value || value;
     }
     remove(key) {
         this.#data.remove(key);

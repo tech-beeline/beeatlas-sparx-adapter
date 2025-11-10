@@ -118,6 +118,7 @@ export class TechnicalCapabilitiesRepository {
 	async setParentsBCForTC(tcCode, bcCodes) {
 
 		const tc_object = await this.byCode(tcCode);
+		if( !tc_object) throw Error(`TC [${tcCode}] not found`)
 
 		for (const bcCode of bcCodes) {
 			/** @type {t_object} */
@@ -200,6 +201,7 @@ export class TechnicalCapabilitiesRepository {
 		await Repository.updateObjectTags(tc_object.object_id, tc, TC_TAGS_NAMES);
 		
 		return this.#cache.updateValue(tc.code, new TCDto({
+			object_id: tc_object.object_id,
 			name: tc_object.name,
 			code: tc_object.alias,
 			description: tc_object.note,
@@ -209,9 +211,9 @@ export class TechnicalCapabilitiesRepository {
 			createdDate: tc_object.createddate,
 			modifiedDate: tc_object.modifieddate,
 			goal_from: tc.goal_from,
-			goal_to: tc.goal_to
+			goal_to: tc.goal_to,
+			sys_code: tc.system.code
 		}));
-
 	}
 
 	async selectAppTcByCode(appCode, tcCode) {
