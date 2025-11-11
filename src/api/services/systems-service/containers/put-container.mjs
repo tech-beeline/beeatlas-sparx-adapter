@@ -47,7 +47,8 @@ export async function putInterface(app, container, api) {
 export async function putContainerInterfaces(app, container, data) {
     for (const code in container.interfaces) {
         const api_data = data.interfaces?.find(i => i.code.toLowerCase() == code.toLowerCase())
-        if (api_data || container.interfaces[code].status === REMOVED_STATUS) {
+        const interface_status = container.interfaces[code].status || container.interfaces[code].interface_status;
+        if (api_data || interface_status === REMOVED_STATUS) {
             continue;
         }
         await removeInterface(container, container.interfaces[code]);

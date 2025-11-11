@@ -81,7 +81,11 @@ class ContainerRepository {
         }
 
         await eaRepository.putConnector(system_id, container_id, REALIZATION_CONNECTOR);
-        await eaRepository.update(t_object, { status: REMOVED_STATUS, name: `[LEGACY] ${container.name || container.container_name}` }, { object_id: container_id });
+        let c_name = container.name || container.container_name;
+        if (!c_name.startsWith('[LEGACY]')) {
+            c_name = `[LEGACY] ${c_name}`;
+        }
+        await eaRepository.update(t_object, { status: REMOVED_STATUS, name: c_name }, { object_id: container_id });
         return eaRepository.updateObjectTags(container_id, { [API_LOAD_DATE_TAG]: new Date() });
     }
 }

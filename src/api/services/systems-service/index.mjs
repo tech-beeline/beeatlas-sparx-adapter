@@ -177,7 +177,7 @@ export class SystemService {
 
                 for (const code in app.containers ?? {}) {
                     const ec = system.containers.find(c => c.code.toLowerCase() === code.toLowerCase());
-                    if (ec || app.containers[code].status === REMOVED_STATUS)
+                    if (ec || (app.containers[code].status || app.containers[code].container_status) === REMOVED_STATUS)
                         continue;
                     await removeContainer(app, app.containers[code]);
                 }
@@ -188,7 +188,6 @@ export class SystemService {
                     container.code = container.code.toLowerCase();
 
                     await putContainer(app, container);
-
                 }
 
                 await loadApp(app);

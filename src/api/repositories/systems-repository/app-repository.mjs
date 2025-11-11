@@ -32,8 +32,6 @@ import { mergeContainers } from './merge-contianers.mjs';
 const Repository = new SparxRepository();
 
 
-
-
 /**
  * Учет систем
  */
