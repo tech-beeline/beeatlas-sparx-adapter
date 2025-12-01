@@ -168,6 +168,7 @@ WITH RECURSIVE cte_bc_pkg AS (
 	FROM cte_tbc tc
 		JOIN cte_sys_package sys ON sys.package_id=tc.cap_package_id AND sys.code IS NOT NULL
 	WHERE type='ArchiMate_TechnicalCapability'
+		AND tc.code IS NOT NULL
 	UNION DISTINCT
 	SELECT 
 		ch.sys_code,
