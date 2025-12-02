@@ -22,6 +22,9 @@ async function loadAllTC(bcRep) {
 	const rows = await Repository.query(SELECT_ALL_TEC);
 	const tc_map = {};
 	for (const row of rows) {
+		if (!row.code)
+			continue;
+
 		const code = row.code.toLowerCase();
 		const bc = await bcRep.byCode(row.parent_code);
 		if (!bc) {
@@ -49,7 +52,7 @@ export class TechnicalCapabilitiesRepository {
 	}
 	/**
 	 * 
-	 * @param {stirng} code 
+	 * @param {string} code 
 	 * @returns {Promise<TCDto>}
 	 */
 	async byCode(code) {
@@ -118,7 +121,7 @@ export class TechnicalCapabilitiesRepository {
 	async setParentsBCForTC(tcCode, bcCodes) {
 
 		const tc_object = await this.byCode(tcCode);
-		if( !tc_object) throw Error(`TC [${tcCode}] not found`)
+		if (!tc_object) throw Error(`TC [${tcCode}] not found`)
 
 		for (const bcCode of bcCodes) {
 			/** @type {t_object} */
@@ -199,7 +202,7 @@ export class TechnicalCapabilitiesRepository {
 		tc.version = tc_object.version;
 
 		await Repository.updateObjectTags(tc_object.object_id, tc, TC_TAGS_NAMES);
-		
+
 		return this.#cache.updateValue(tc.code, new TCDto({
 			object_id: tc_object.object_id,
 			name: tc_object.name,

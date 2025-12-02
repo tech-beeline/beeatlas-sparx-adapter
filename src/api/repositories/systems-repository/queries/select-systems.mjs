@@ -110,14 +110,14 @@ function processContainer(app, api_row) {
 	if (container.container_id != api_row.container_id) {
 		const doubles = container.doubles ?? (container.doubles = []);
 		app.hasDoubles = true;
-		if (doubles.find(d => d == api_row.container_id))
-			return;
-		doubles.push(api_row.container_id);
+		if (!doubles.find(d => d == api_row.container_id))
+			doubles.push(api_row.container_id);
 	}
 
 	if (!container.interfaces) container.interfaces = {};
 
-	if (!api_row.interface_code) return;
+	if (!api_row.interface_code)
+		return;
 
 	if (container.interfaces[api_row.interface_code.toLowerCase()]) {
 		console.warn(`Дубль интерфейса ${api_row.interface_code}`);
@@ -199,7 +199,7 @@ export const loadApps = async () => {
 
 	for (const method_row of method_rows) {
 		if (!method_row.name) {
-			console.warn(`Метод с путым именем`, method_row);
+			console.warn(`Метод с пустым именем`, method_row);
 			continue;
 		}
 

@@ -32,7 +32,7 @@ SELECT
 	LIMIT 1) as "tcCode"
 FROM t_object app
 	JOIN cte_realization cn ON cn.start_object_id=app.object_id AND cn.stereotype='C4_Container'
-	LEFT JOIN cte_realization it ON it.start_object_id=cn.object_id
+	LEFT JOIN cte_realization it ON it.start_object_id=cn.object_id AND it.object_type='Interface'
 	LEFT JOIN t_objectproperties spec ON spec.object_id=it.object_id AND spec.property='specification'
 	LEFT JOIN t_objectproperties protocol ON protocol.object_id=it.object_id AND protocol.property='protocol'
 WHERE  app.stereotype='softwareSystem'`
