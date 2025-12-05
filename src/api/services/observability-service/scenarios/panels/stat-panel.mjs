@@ -4,6 +4,7 @@ import { LegendPanel } from "./legend-panel.mjs";
 import { GrafanaPanel, expr } from "../../dashboard/panels/index.mjs";
 import { formatQuery } from "../../dashboard/scenario-dashboard-builder.mjs";
 import { messageTitle } from "../../utils.mjs";
+import { ERROR_PANEL_REF_ID } from "./const.mjs";
 
 
 
@@ -27,7 +28,7 @@ export class ScenarioStatPanel extends GrafanaPanel {
         this.title = title;
         this.fieldConfig.defaults.displayName = messageTitle(message);
 
-        if (!message.method.name) 
+        if (!message.method.name)
             throw Error(`Пустое имя метода для сообщения ${JSON.stringify(message)}.\nВозможно у сообщения указан не существующий operation_guid`);
 
         const [http_method, path] = message.method.name.split(' ').filter(it => it.length);
@@ -52,6 +53,7 @@ export class ScenarioStatPanel extends GrafanaPanel {
                     stat_target.rawSql = formatQuery(t.rawSql, path, http_method, message.client_code);
             }
         }
+
         let { rps, latency, error_rate } = message.sla ?? {};
         if (rps == null) rps = -1;
         if (latency == null) latency = -1;
