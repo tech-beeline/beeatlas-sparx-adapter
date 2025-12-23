@@ -142,14 +142,10 @@ export default function SystemE2EParticipionPage() {
     const navigate = useNavigate()
     const [systemCode, setSystemCode] = useState(code);
 
-
-
-
     const handleSelectSystem = (sys) => {
         console.log(`select ${sys.code}`);
         navigate(`/systems/${sys.code.toLowerCode()}`);
         setSystemCode(sys.code)
-        //loadData(sys.code);
     }
 
 

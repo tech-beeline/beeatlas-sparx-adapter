@@ -19,6 +19,8 @@ import observabilityServiceSpec from './observability/index.mjs';
 import { STRUCTURIZR_JSON_CHECK_SPEC } from './structurizr/check-dsl-spec.mjs';
 import maintenanceSpec from '../maintenance/specification/index.mjs'
 import { digitalArchitectSwagger } from '../digital-architect/index.mjs'
+import { historyConstrollerSwagger } from '../history/index.mjs'
+import { mapicConstrollerSwagger } from '../mapic/index.mjs';
 
 
 const SUMMARY_TITLE = "Полное API управления архитектурными артефактами и представлениями"
@@ -57,7 +59,9 @@ const API_ROUTES = {
     "tech-radar-service": techRadarServiceSpec,
     "structurizr-service": STRUCTURIZR_JSON_CHECK_SPEC,
     "maintenance-service": maintenanceSpec,
-    "digital-architect-service": digitalArchitectSwagger
+    "digital-architect-service": digitalArchitectSwagger,
+    "history-service" : historyConstrollerSwagger,
+    "mapic-service" : mapicConstrollerSwagger
     /*
     "monitoring-source-service": monitoringSourceReoutes,
     */
@@ -82,10 +86,12 @@ const SUMMARY_SWAGGER = {
 }
 
 for (const service_name in API_ROUTES) {
-    apiRouter.use(`/swagger-ui/${service_name}`, express.static('./src/resources/html/swagger-page.html'));
+    const swagger_path = `/swagger-ui/${service_name}`;
+    apiRouter.use(swagger_path, express.static('./src/resources/html/swagger-page.html'));
 
     const serviceSpec = API_ROUTES[service_name];
-    SUMMARY_SWAGGER.tags.push(...serviceSpec.tags ?? []);
+    SUMMARY_SWAGGER.info.description += `<br/> ${serviceSpec.info.title} : <a href="${swagger_path}">${swagger_path}</a>`;
+    SUMMARY_SWAGGER.tags.push(...(serviceSpec.tags ?? []));
     Object.assign(SUMMARY_SWAGGER.components.schemas, serviceSpec.components.schemas);
     Object.assign(SUMMARY_SWAGGER.components.responses, serviceSpec.components.responses);
 

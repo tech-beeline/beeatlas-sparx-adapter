@@ -14,7 +14,7 @@ function addMessage(context, msg) {
     const message_skip = (text) => `Пропускаем сообщение ${msg.display()} : ${text || ""}`
     if (msg.is_ret == '1')
         return context.addInfoMessage(message_skip("возрат"));
-    if (EXCLUDE_NAMES[msg.name])
+    if (EXCLUDE_NAMES[msg.name?.toLowerCase()])
         return context.addInfoMessage(message_skip(`информационное сообщение`));
     if (msg.server_id == msg.client_id)
         return context.addInfoMessage(message_skip(`внутренниый вызов самого себя`));
@@ -58,13 +58,50 @@ function tryAddSubDiagrmamEntry(msg, diagram) {
 function removeInternalMessages(msg) {
     if (!msg.sequence)
         return;
-    const sequence = []
+    const sequence = [];
+    const skip_message = (m) => {
+        // [ ] Подумать про упрощение
+        if (m.server?.app_code === msg.server?.app_code || m.operation_guid === msg.operation_guid || !m.server?.app_code) {
+            m.operation_guid = msg.operation_guid;
+            m.server = msg.server;
+        }
+
+        removeInternalMessages(m);
+
+        m.sequence && sequence.push(...m.sequence);
+        if (m.validationError) {
+            for (const e of m.validationError) {
+                msg.addValidationError(`Из дочерного вызова ${m.display()}:\n${e}`);
+            }
+        }
+    };
+    const add_message = (m) => {
+        removeInternalMessages(m);
+        sequence.push(m);
+    }
     for (const ch of msg.sequence) {
-        removeInternalMessages(ch);
-        if (ch.server?.app_code === msg.server?.app_code || ch.operation_guid === msg.operation_guid)
-            ch.sequence && sequence.push(...ch.sequence);
+        if (msg.app_front && !ch.method) {
+            ch.app_front = 1;
+            skip_message(ch);
+            continue;
+        }
+
+        if (ch.method?.app_front) {
+            skip_message(ch);
+            continue;
+        }
+        if (ch.method?.show_in_e2e && msg.operation_guid != ch.operation_guid) {
+            add_message(ch);
+            continue;
+        }
+
+        if (ch.server?.app_code === msg.server?.app_code ||
+            ch.operation_guid === msg.operation_guid ||
+            !ch.server?.app_code) {
+            skip_message(ch);
+        }
         else
-            sequence.push(ch);
+            add_message(ch);
     }
     msg.sequence = sequence.length ? sequence : undefined;
 }
@@ -73,14 +110,15 @@ function removeInternalMessages(msg) {
  * @param {Scenario} scenario 
  * @returns 
  */
-export function buildCallTree(scenario) {
+export function buildCallTree(scenario, removeInfoMessages = false, removeError = false) {
     console.log(`Строим дерево для каждой диграммы`)
     for (const d of scenario.diagrams.toArray()) {
         d.messages.sort((a, b) => a.seqno - b.seqno);
 
         console.log(`Обработка диаграммы [${d.uid}] "${d.name}"`);
 
-        let context = new ScenarioMessage({ server_id: 0, sequence: d.sequence });
+
+        let context = new ScenarioMessage({ server_id: 0, sequence: d.sequence, client_name: "Пользователь", name: "Вход в диаграмму", server_name: d.name });
         for (const msg of d.messages) {
             context = addMessage(context, msg);
         }
@@ -95,11 +133,15 @@ export function buildCallTree(scenario) {
             }
             /** @type {ScenarioDiagram} */
             const diagram = scenario.diagrams.get(msg.linked_diagram_uid);
-            if (!diagram)
-                throw Error(`Не найдена диаграмма с UID=${msg.linked_diagram_uid} (объект ${msg.server_name}, диаграмма ${msg.diagram?.name} uid=${msg.diagram_uid}  )`);
+            if (!diagram) {
+                msg.addValidationError(`Не найдена диаграмма с UID=${msg.linked_diagram_uid} или на этой диаграмме нет взаимодействий (объект ${msg.server_name}, диаграмма ${msg.diagram?.name} uid=${msg.diagram_uid} )`);
+                continue;
+                //throw Error(`Не найдена диаграмма с UID=${msg.linked_diagram_uid} (объект ${msg.server_name}, диаграмма ${msg.diagram?.name} uid=${msg.diagram_uid}  )`);
+            }
+
 
             if (!msg.operation_guid) {
-                msg.addInfoMessage(`Сообщение не связано с методом operation_guid, при этом есть связь с дочерней диагаммой ${diagram.name}.\nИщем сообщшение с operation_guid выше по цепочке вызовов`);
+                msg.addValidationError(`Сообщение ${msg.display()} не связано с методом operation_guid, при этом есть связь с дочерней диагаммой ${diagram.name}.\nИщем сообщшение с operation_guid выше по цепочке вызовов`);
                 let ctx = msg.context;
                 while (ctx && !ctx.operation_guid) {
                     ctx = ctx.context;
@@ -130,13 +172,28 @@ export function buildCallTree(scenario) {
         else
             msg.sequence.length = 0;
         for (const s of subentries) {
-            msg.sequence.push(...s.sequence);
+            if (s.sequence && s.sequence.length) msg.sequence.push(...s.sequence);
         }
     }
 
     console.log(`Схлопываем сообщения внутри одного приложения`);
+    const final_sequence = []
     for (const msg of scenario.diagrams.get(scenario.uid)?.sequence || []) {
-        removeInternalMessages(msg);
+        const ctx = new ScenarioMessage();
+        ctx.sequence = [msg];
+        ctx.app_front = 1;
+
+        removeInternalMessages(ctx);
+        final_sequence.push(...ctx.sequence ?? []);
+    }
+
+    scenario.diagrams.get(scenario.uid).sequence = final_sequence;
+
+    if (removeInfoMessages || removeError) {
+        for (const msg of scenario.messages) {
+            if (removeInfoMessages) msg.infoMessages = undefined;
+            if (removeError) msg.validationError = undefined;
+        }
     }
     return scenario;
 }

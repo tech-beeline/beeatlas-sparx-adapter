@@ -1,19 +1,40 @@
 import { TechnicalCapabilitiesRepository } from '../index.mjs';
 import Repository, { REALIZATION_CONNECTOR, t_connector, t_object, t_operation, t_operationparams, t_operationtag } from '../sparx-ea-repository/index.mjs';
+import { methodRepository, MethodRepository } from './method-repository.mjs';
 
 import { PREPARE_INTERFACES_PACKAGE } from '../sql/system-container-sql.mjs';
 import { DEFAULT_STATUS, METHOD_REMOVED_TAG, REMOVED_STATUS } from '../systems-repository/const.mjs';
 import { API_LOAD_DATE_TAG, API_SPECFICATION_TAG } from './const.mjs';
 import { SELECT_ALL_CONTAINERS_INTERFACES, SELECT_API_TC, SELECT_CONTAINER_INTERFACES, SELECT_CONTAINER_INTERFACES_BY_ID, SELECT_INTERFACES_BY_CONTAINER_LIST } from './interfaces-queries.mjs';
-import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION, SELECT_METHOD_SLA, SELECT_INTERFACE_METHODS_BY_ID, SELECT_METHOD_BY_NAME_INTERFACE_ID, CHECK_METHOD_USAGE } from './methods-queries.mjs';
+import { INSERT_INTERFACE_METHOD, SELECT_ALL_METHODS, SELECT_INTERFACE_METHODS, SELECT_METHOD_BY_NAME_INTERFACE_CODE, UPDATE_OPERATION, SELECT_METHOD_SLA, SELECT_INTERFACE_METHODS_BY_ID, SELECT_METHOD_BY_NAME_INTERFACE_ID, CHECK_METHOD_USAGE, SELECT_PAPI_MAPPING, SELECT_PAPI_MAPPING_BY_NAMES } from './methods-queries.mjs';
 import { APIInterface, APIMethod, isAPIEquals, isMethodEquals } from '../../model/system.mjs';
-import { SystemPackage } from '../systems-repository/system-package.mjs';
+import { appPackages, systemContext, SystemPackage } from '../systems-repository/system-package.mjs';
 import { randomUUID } from 'node:crypto';
+import { MethodMapRecord } from './model.mjs';
+import tcRepository from '../tc-repository/index.mjs';
+import { KeyValueCache } from '../key-value-cache/index.mjs';
+import eaRepository from '../sparx-ea-repository/ea-repository.mjs';
+import { BadRequest, NotImplemented } from '../../../utils/errors.mjs';
+import { mergeInterface } from './merge-interfaces.mjs';
 
 const INTERFACES_FOLDER = 'Interfaces'
 
-
-const tcRepository = new TechnicalCapabilitiesRepository();
+class InterfaceEntity {
+    app_name;
+    app_code;
+    container_code;
+    container_name;
+    code;
+    name;
+    description;
+    version;
+    status;
+    object_id;
+    interface_id;
+    specification;
+    protocol;
+    tcCode;
+}
 
 export class InterfacesRepository {
     /** @type {SystemPackage} */
@@ -21,31 +42,11 @@ export class InterfacesRepository {
     constructor(packagesOptions) {
         this.packagesOptions = packagesOptions ?? (new SystemPackage())
     }
-    /**
-     * 
-     * @returns {Promise<Array<{ container_code, code,name, derscription,version, status}>>}
-     */
-    async selectAllContainersInterfaces() {
-        return Repository.queryRows(SELECT_ALL_CONTAINERS_INTERFACES);
-    }
-
-    /**
-     * 
-     * @param {string} interfaceCode 
-     */
-    async selectInterfaceByCode(interfaceCode) {
-        return Repository.first(t_object, { object_type: 'Interface', alias: interfaceCode })
-            .then(it => it ? { name: it.name, code: it.code, description: it.note, version: it.version, object_id: it.object_id } : null);
-    }
-
     async selectInterfaceByUID(interfaceUID) {
         return Repository.first(t_object, { object_type: 'Interface', ea_guid: interfaceUID })
             .then(it => it ? { name: it.name, code: it.code, description: it.note, version: it.version, object_id: it.object_id } : null);
     }
 
-    async selectContainerInterfaces(containerCode) {
-        return Repository.queryRows(SELECT_CONTAINER_INTERFACES, [containerCode]);
-    }
 
     async selectInterfacesBySystemCode(systemCode) {
         return Repository.queryRows(SELECT_INTERFACES_BY_CONTAINER_LIST, [systemCode]);
@@ -67,7 +68,7 @@ export class InterfacesRepository {
      * @returns {Promise<Array<{ interface_code, interface_name,name, description, return_value, uid}>>}
      */
     async selectAllMethods() {
-        return Repository.queryRows(SELECT_ALL_METHODS);
+        return methodRepository.all();
     }
     /**
      * 
@@ -75,54 +76,7 @@ export class InterfacesRepository {
      * @returns {Promise<Array<{ name, description, return_value, uid}>>}
      */
     async selectInterfaceMethods(interfaceCode) {
-        return Repository.queryRows(SELECT_INTERFACE_METHODS, [interfaceCode]).then(rows => rows.filter(r => !r.removed_date));
-    }
-
-    /**
-    * 
-    * @param {string} systemCode 
-    * @returns {Promise<{package_id}>}
-    */
-    async prepareInterfacesPackage(containerCode) {
-        // [ ] Надо ли кешировать идентификаторы папок?
-        // [ ] Уточнить структуру папок
-        return Repository.queryOne(PREPARE_INTERFACES_PACKAGE, [INTERFACES_FOLDER, containerCode]);
-    }
-
-    async insertInterface(containerCode, name, code, version, description, status, specification, tcCode, protocol) {
-        const [packageInfo, container] = await Promise.all([
-            this.prepareInterfacesPackage(containerCode),
-            Repository.first(t_object, { stereotype: 'C4_Container', alias: containerCode })]
-        );
-
-        if (!container) throw Error(`Container with code = ${containerCode} not found`)
-
-        const it = await Repository.createObject({
-            package_id: packageInfo.package_id,
-            name: name,
-            alias: code,
-            version: version,
-            object_type: 'Interface',
-            author: "FDM API",
-            note: description,
-            status: status,
-            backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
-        });
-
-        await Repository.updateObjectTags(it.object_id, { [API_SPECFICATION_TAG]: specification, [API_LOAD_DATE_TAG]: (new Date()).toLocaleString() }, [API_SPECFICATION_TAG, API_LOAD_DATE_TAG]);
-
-        if (tcCode) {
-            const targetTcList = await tcRepository.selectTCByCode(tcCode);
-            if (!targetTcList.length) throw Error(`TC with code=${tcCode} not found`);
-
-            for (const tc of targetTcList) {
-                await Repository.putConnector(it.object_id, tc.object_id, REALIZATION_CONNECTOR);
-            }
-        }
-
-        await Repository.putConnector(container.object_id, it.object_id, REALIZATION_CONNECTOR);
-
-        return { name: it.name, code: it.alias, description: it.note, object_id: it.object_id };
+        return methodRepository.byInterfaceCode(interfaceCode);
     }
 
     /**
@@ -156,12 +110,10 @@ export class InterfacesRepository {
             }
 
             if (api.implements) {
-                const targetTcList = await tcRepository.selectTCByCode(api.implements);
-                if (!targetTcList.length) throw Error(`TC with code=${api.implements} not found`);
+                const targetTC = await tcRepository.byCode(api.implements);
+                if (!targetTC) throw Error(`TC with code=${api.implements} not found`);
 
-                for (const tc of targetTcList) {
-                    await Repository.putConnector(interface_id, tc.object_id, REALIZATION_CONNECTOR);
-                }
+                await Repository.putConnector(interface_id, targetTC.object_id, REALIZATION_CONNECTOR);
             }
         });
     }
@@ -210,8 +162,8 @@ export class InterfacesRepository {
         }) //Repository.queryOne(INSERT_INTERFACE_METHOD, [code, name, description, returnType]);
 
         if (tcCode) {
-            const tc = await tcRepository.selectTCByCode(tcCode);
-            if (!tc.length) throw Error(`TC с кодом =[${tcCode}] для метода ${name} не найден`);
+            const tc = await tcRepository.byCode(tcCode);
+            if (!tc) throw Error(`TC с кодом =[${tcCode}] для метода ${name} не найден`);
         }
 
         const tags = {
@@ -220,24 +172,17 @@ export class InterfacesRepository {
             error_rate: error_rate,
             implements: tcCode
         }
-        for (const tag in tags) {
-            if (!tags[tag]) continue;
-            await Repository.insert(t_operationtag,
-                {
-                    elementid: method.operationid,
-                    property: tag,
-                    value: tags[tag]
-                });
-        }
+        await Repository.updateOperationTags(method.operationid, tags);
     }
 
     async updateMethod(operationid, { name, description, returnType, rps, latency, error_rate, implements: tcCode }) {
         if (!operationid) throw Error('operationid is not specified');
 
         if (tcCode) {
-            const tc = await tcRepository.selectTCByCode(tcCode);
-            if (!tc.length) throw Error(`TC с кодом =[${tcCode}] для метода ${name} не найден`);
+            const tc = await tcRepository.byCode(tcCode);
+            if (!tc) throw Error(`TC с кодом =[${tcCode}] для метода ${name} не найден`);
         }
+
         console.info('Обновляем метод', name);
         //const updatedMethods = await Repository.queryRows(UPDATE_OPERATION, [interfaceCode, name, description, returnType]);
         const method = await Repository.update(t_operation, { name: name, notes: description, type: returnType }, { operationid: operationid })
@@ -411,12 +356,12 @@ export class InterfacesRepository {
                 await this.deleteMethod(method);
             }
 
-            await Repository.removeConnectors(container_id, interface_id, REALIZATION_CONNECTOR);
-
             if (await Repository.canDeleteObject(interface_id)) {
                 console.log(`Интерфейс [object_id=${interface_id}] ни с чем не связан и будет удален`);
+                await Repository.removeConnectors(container_id, interface_id, REALIZATION_CONNECTOR);
                 await Repository.deleteObject(interface_id);
             } else {
+                console.log(`Интерфейс [object_id=${interface_id}] Не может быть удален, помечаем как удаленный`);
                 await Repository.update(t_object, { status: REMOVED_STATUS }, { object_id: interface_id })
                 await Repository.updateObjectTags(interface_id, { [API_LOAD_DATE_TAG]: new Date() });
             }
@@ -441,7 +386,7 @@ export class InterfacesRepository {
      * @param {APIInterface} it 
      * @returns 
      */
-    async #insertInterface(container_id, package_id, it) {
+    async insertInterface(container_id, package_id, it) {
         if (!container_id) throw Error('container_id==null')
         if (!package_id) throw Error('package_id==null')
         if (!it) throw Error('container==null')
@@ -453,6 +398,7 @@ export class InterfacesRepository {
             version: it.version,
             object_type: 'Interface',
             author: "FDM API",
+            status: it.status ?? "Proposed",
             note: it.description,
             status: it.status,
             backcolor: -1, bordercolor: -1, borderwidth: -1, fontcolor: -1
@@ -468,17 +414,21 @@ export class InterfacesRepository {
             });
 
         if (it.implements) {
-            const targetTcList = await tcRepository.selectTCByCode(it.implements);
-            if (!targetTcList.length) throw Error(`TC with code=${it.implements} not found`);
+            const tc = await tcRepository.byCode(it.implements);
+            if (!tc) throw Error(`TC with code=${it.implements} not found`);
 
-            for (const tc of targetTcList) {
-                await Repository.putConnector(created.object_id, tc.object_id, REALIZATION_CONNECTOR);
-            }
+            await Repository.putConnector(created.object_id, tc.object_id, REALIZATION_CONNECTOR);
         }
 
         await Repository.putConnector(container_id, created.object_id, REALIZATION_CONNECTOR);
 
-        return { name: it.name, code: it.alias, description: it.note, object_id: it.interface_id, interface_id: it.interface_id };
+        return {
+            name: it.name,
+            code: it.alias,
+            description: it.note,
+            object_id: it.interface_id,
+            interface_id: it.interface_id
+        };
     }
 
     /**
@@ -489,9 +439,8 @@ export class InterfacesRepository {
     async addContainerInterface(systemCode, { code: containerCode, container_id }, api) {
         if (!container_id) throw Error('container_id==null');
 
-
-        const systemOptions = await this.packagesOptions.prepareSystemPackage(systemCode);
-        const new_api = await this.#insertInterface(container_id, systemOptions.interfaces_package_id, api);
+        const systemOptions = await this.packagesOptions.prepare(systemCode);
+        const new_api = await this.insertInterface(container_id, systemOptions.interfaces_package_id, api);
         if (!api.interface_id) throw Error("api.interface_id==null");
         const methods = api.methods ?? [];
         for (const method of methods) {
@@ -568,7 +517,6 @@ export class InterfacesRepository {
                 await this.addContainerInterface(systemCode, { container_id: container_id }, newApi);
             }
             for (const api of interfaces) {
-                console.log(api.name);
                 const existingApi = existingApiList.find(e => e.code.toLowerCase() === api.code.toLowerCase());
                 if (!existingApi) {
                     console.log(`Не найден существующий интерфес для code=${api.code}`);
@@ -585,4 +533,94 @@ export class InterfacesRepository {
     async selectSystemProvidedAPI(appCode) {
 
     }
+    async selectMethodMapping() {
+        return Repository.query(SELECT_PAPI_MAPPING);
+    }
+
+    /**
+     * 
+     * @param {string[]} methods_uid 
+     * @returns {Promise<MethodMapRecord[]>}
+     */
+    async selectMethodMappingByUID(methods_uid) {
+        return Repository.query(SELECT_PAPI_MAPPING_BY_NAMES, methods_uid);
+    }
+
+    /**
+     * 
+     * @param {Number} api_id 
+     * @param {InterfaceEntity} data 
+     */
+    async update(api, data) {
+        const api_id = api.interface_id;
+
+        if (!api_id) throw Error('api_id is not specified');
+        if (data.implements) {
+            const tc = await tcRepository.byCode(data.implements);
+            if (!tc) throw Error(`TC  с кодом ${data.implements} не найдена`)
+            if (api.tcCode?.toLowerCase() !== data.implements?.toLowerCase())
+                await eaRepository.putConnector(api_id, tc.object_id, REALIZATION_CONNECTOR);
+        }
+
+        await eaRepository.update(t_object, {
+            name: data.name,
+            alias: data.code,
+            note: data.description,
+            status: data.status,
+            version: data.version
+        }, { object_id: api_id });
+
+
+        if (api.tcCode && api.tcCode?.toLowerCase() !== data.implements?.toLowerCase()) {
+            const e_tc = await tcRepository.byCode(api.tcCode);
+            if (api.tcCode)
+                await eaRepository.removeConnectors(api_id, e_tc.object_id, REALIZATION_CONNECTOR);
+        }
+
+        if (api.doubles) {
+            console.warn(`ДУБЛИ ИНТЕРФЕЙСА ${api.interface_code}`);
+            for (const d of api.doubles) {
+                console.warn(`Объединяем ${d.interface_id}`);
+                await mergeInterface(api, d.interface_id);
+            }
+        }
+
+        return eaRepository.updateObjectTags(
+            api_id,
+            {
+                [API_SPECFICATION_TAG]: data.specification,
+                [API_LOAD_DATE_TAG]: (new Date()).toLocaleString(),
+                "protocol": data.protocol
+            }
+        );
+    }
+    async delete(container_id, api) {
+        const api_id = api.interface_id;
+        if (api.tcCode) {
+            const tc = await tcRepository.byCode(api.tcCode);
+            if (tc) {
+                await eaRepository.removeConnectors(api_id, tc.object_id, REALIZATION_CONNECTOR);
+            }
+        }
+        await eaRepository.removeConnectors(container_id, api_id, REALIZATION_CONNECTOR);
+
+        const can_delete = await eaRepository.canDeleteObject(api_id);
+        if (can_delete) {
+            return eaRepository.deleteObject(api_id);
+        }
+
+        await eaRepository.putConnector(container_id, api_id, REALIZATION_CONNECTOR);
+
+        let api_name = (api.name || api.interface_name);
+        if (!api_name.startsWith("[LEGACY]")) {
+            api_name = `[LEGACY] ${api_name}`;
+        }
+        await eaRepository.update(t_object, { status: REMOVED_STATUS, name: api_name }, { object_id: api_id });
+        return eaRepository.updateObjectTags(api_id, { [API_LOAD_DATE_TAG]: new Date() });
+    }
 };
+
+
+export const interfaceRepository = new InterfacesRepository();
+
+export { methodRepository };

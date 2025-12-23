@@ -1,5 +1,6 @@
 import {
     BadRequest,
+    NotFound,
     NotImplemented
 } from "../../../utils/errors.mjs";
 import { API_METRIC_TEMPLATE_TAG } from "../../const.mjs";
@@ -12,16 +13,18 @@ import System, {
     E2EProcessContext,
     isSystemEquals,
     isContainersEquals,
-    SysemAssessmentStatus
+    SysemAssessmentStatus,
+    APIInterface
 } from "../../model/system.mjs";
 
 import {
+    appRepository,
     ArchMetricsRepository,
-    InterfacesRepository,
+    interfaceRepository,
+    methodRepository,
     MonitoringRepository,
     PtrArtifactsRepository,
-    SystemsRepository,
-    TechnicalCapabilitiesRepository
+    tcRepository
 } from "../../repositories/index.mjs";
 import eaRepository from "../../repositories/sparx-ea-repository/ea-repository.mjs";
 import {
@@ -34,15 +37,24 @@ import {
     METHODS_LEVEL,
     SYSTEM_LEVEL
 } from "./const.mjs";
-import { diffContainers } from "./containers/diff.mjs";
+import {
+    compareContainers
+} from "./containers/compare.mjs";
 
 export { CONTAINERS_LEVEL, INTERFACES_LEVEL, METHODS_LEVEL, SYSTEM_LEVEL };
 
-import GetAllSystems from "./get-all-systems.mjs";
-import GetSystemByCode from "./get-system-by-code.mjs";
-import { SystemContainerService } from './containers/index.mjs'
 import { runSystemContext } from "../../repositories/systems-repository/system-package.mjs";
 import { logErrorPutSystem, logSuccessPutSystem } from "./log/index.mjs";
+import { containerRepository } from "../../repositories/systems-repository/container-repository.mjs";
+import { REMOVED_STATUS } from "../../repositories/systems-repository/const.mjs";
+import { validatePutData as validatePutInformation } from "./validate.mjs";
+import { SystemDTOInternal } from "../../repositories/systems-repository/model.mjs";
+import { getContainers } from "./containers/build-system.mjs";
+import { prepareSystemPackages } from "../../repositories/systems-repository/app-repository.mjs";
+import { putContainer, putContainerInterfaces } from "./containers/put-container.mjs";
+import { loadApp } from "../../repositories/systems-repository/queries/select-systems.mjs";
+import { removeContainer } from "./containers/remove-container.mjs";
+import { selectSystemChangeByChangeId, selectSystemChanges } from "../../repositories/arch-metrics-repository/queries.mjs";
 
 
 const STEREOTYPE_MAP = {
@@ -52,16 +64,15 @@ const STEREOTYPE_MAP = {
     Domain: "Domain"
 }
 
-const interfacesRepository = new InterfacesRepository();
-const systemsRepository = new SystemsRepository();
 const ptrArtifactsRepositoryInstance = new PtrArtifactsRepository();
 const monitoringRepository = new MonitoringRepository();
-const tcRepository = new TechnicalCapabilitiesRepository();
 
 const checkTC = async (code, context) => {
-    const tc = await tcRepository.selectTCByCode(code);
-    if (!tc.length) throw Error(`TC с кодом [${code}] не найден. ${context ?? ""} `);
+    const tc = await tcRepository.byCode(code);
+    if (!tc) throw Error(`TC с кодом [${code}] не найден. ${context ?? ""} `);
 }
+
+
 export class SystemService {
     constructor() {
         this.getByCode = this.getByCode.bind(this);
@@ -73,124 +84,67 @@ export class SystemService {
      */
     async getAll(options = {}) {
         const { level = SYSTEM_LEVEL, addRemoved } = options;
+        const systems = await appRepository.selectSystems();
+        return systems.map(s => new System({ ...s, containers: getContainers(s, level) }));
+    }
 
-        switch (level) {
-            case SYSTEM_LEVEL: {
-                return GetAllSystems.systems(addRemoved)
-            }
-            case CONTAINERS_LEVEL: {
-                return GetAllSystems.withContainers(addRemoved)
-                    .then(d => d.systems)
-            }
-            case INTERFACES_LEVEL: {
-                return GetAllSystems.withInterfaces(addRemoved)
-                    .then(d => d.systems)
-            }
-            case METHODS_LEVEL: {
-                return GetAllSystems.withMethods(addRemoved);
+    async getInterfaceMethods(interfaceCode, level, addRemoved) {
+        let methods = await methodRepository.byInterfaceCode(interfaceCode);
+        if (!addRemoved) methods = (await methods).filter(m => !m.removed_date);
+        methods = methods.map(m => new APIMethod(m));
+        return methods;
+    }
+
+    async getContainerInterfaces(containerCode, level, addRemoved) {
+        let interfaces = await interfaceRepository.selectContainerInterfaces(containerCode);
+
+        if (!addRemoved) interfaces = interfaces.filter(i => i.status != REMOVED_STATUS);
+        interfaces = interfaces.map(i => new APIInterface(i));
+
+        if (level === METHODS_LEVEL) {
+            for (const it of interfaces) {
+                it.methods = await this.getInterfaceMethods(it.code, level, addRemoved);
             }
         }
+        return interfaces;
+    }
+    /**
+     * 
+     * @param {string} systemCode 
+     * @param {string} level 
+     * @param {string} addRemoved 
+     */
+    async getSystemContainers(systemCode, level, addRemoved) {
+        let containers = await containerRepository.bySystemCode(systemCode);
+
+        if (!addRemoved) containers = containers.filter(c => c.status !== REMOVED_STATUS);
+        containers = containers.map(c => new Container(c));
+
+        if (level != CONTAINERS_LEVEL) {
+            for (const c of containers) {
+                c.interfaces = await this.getContainerInterfaces(c.code, level, addRemoved);
+            }
+        }
+        return containers;
     }
 
     /**
      * 
      * @param {string} code 
-     * @param {{ level:"systems"|"containers"| "interfaces"|"methods"}} options 
+     * @param {{ level:"systems"|"containers"| "interfaces"|"methods", addRemoved:boolean}} options 
      * @returns {Promise<System>}
      */
     async getByCode(code, options = {}) {
         const { level = SYSTEM_LEVEL, addRemoved } = options;
-        switch (level) {
-            case SYSTEM_LEVEL: {
-                return GetSystemByCode.system(code)
-            }
-            case CONTAINERS_LEVEL: {
-                return GetSystemByCode.withContainers(code, addRemoved)
-                    .then(d => d.system)
-            }
-            case INTERFACES_LEVEL: {
-                return GetSystemByCode.withInterfaces(code, addRemoved)
-                    .then(d => d.system)
-            }
-            case METHODS_LEVEL: {
-                return GetSystemByCode.withMethods(code, addRemoved);
-            }
-        }
-    }
 
-    async getSystemContainers(systemCode) {
-        return systemsRepository.selectSystemContainers(systemCode)
-            .then(rows => rows.map(row => new Container(row)));
-    }
+        const sys_entity = await appRepository.byCode(code);
+        if (!sys_entity) throw NotFound(`System with code = ${code} was not found`);
 
+        const system = new System(sys_entity);
 
-    /**
-     * 
-     * @param {Container[]} targetContainers 
-     * @param {Container[]} currentContainers 
-     */
-    async prepareContainersMethods(systemCode, targetContainers, currentContainers) {
-        const preparedContainers = [];
-        for (const c of targetContainers) {
-            if (!c.code) {
-                throw BadRequest(`Не задан код контейнера "${c.name}"`)
-            }
-            c.code = c.code.toLowerCase();
-            if (!c.code.endsWith(systemCode.toLowerCase())) {
-                throw BadRequest(`Полный код контейнера должен иметь вид <код контейнера внутри системы>.<код системы>. Код контейнера="${c.code}", код системы="${systemCode}"`);
-            }
+        system.containers = getContainers(sys_entity, level)
 
-            const container = { ...c }
-            const currentContainer = currentContainers.find(cc => cc.code?.toLowerCase() === container.code.toLowerCase());
-            container.interfaces = [];
-            const currentInterfaces = currentContainer?.interfaces ?? [];
-            preparedContainers.push(container);
-            for (const it of c.interfaces ?? []) {
-                if (!it.code) {
-                    throw BadRequest(`Не указан код интерфейса "${it.name} (контейнер "${c.name}", code=[${c.code}])"`);
-                }
-                it.code = it.code.toLowerCase();
-
-                if (!it.code.endsWith(c.code)) {
-                    throw BadRequest(`Полный код интерфейса должен иметь вид <код интерфейса внутри контейнера>.<код контейнера>. Код интерфейса="${it.code}", код системы="${c.code}"`);
-                }
-
-                const api = { ...it };
-                const currentAPI = currentInterfaces.find(cit => cit.code?.toLowerCase() === api.code.toLowerCase());
-                if (api.implements && api.implements !== currentAPI?.implements) {
-                    await checkTC(api.implements, `Интерфейс [${api.code}] "${api.name}"`);;
-                }
-
-                container.interfaces.push(api);
-                api.methods = [];
-                const currentMethods = currentAPI?.methods ?? [];
-
-                if ((it.methods ?? []).length) {
-                    const methodsMap = {};
-                    for (const m of it.methods) {
-                        const matched = m.name.match(/^(?<method>(get)|(post)|(put)|(delete)|(patch))\s+(?<endpoint>.*)/i)
-                        if (matched) {
-                            m.name = `${matched.groups?.method.toUpperCase()} ${matched.groups?.endpoint.toLowerCase()}`
-                        }
-                        /**@type {APIMethod} */
-                        let method = methodsMap[m.name];
-                        if (method) {
-                            console.warn(`Обнаружен дубль метода ${m.name} интерфейс [${it.code}] ${it.name}`);
-                            Object.assign(method, m);
-                        }
-                        if (!method) {
-                            method = methodsMap[m.name] = { ...m };
-                        }
-                        const currentMethod = currentMethods.find(cm => cm.name.toLowerCase() == m.name.toLowerCase());
-                        if (method.implements && currentMethod?.implements !== method.implements) {
-                            await checkTC(method.implements, `Метод "${method.name}", интефрейс [${api.code}] "${api.name}"`);
-                        }
-                    }
-                    api.methods = Object.values(methodsMap);
-                }
-            }
-        }
-        return preparedContainers;
+        return system;
     }
 
     /**
@@ -199,55 +153,59 @@ export class SystemService {
      * @param {System} system 
      */
     async putSystem(systemCode, system) {
-        if (!systemCode) throw BadRequest('Code parameter is not specified');
-        if (!system) throw BadRequest('System is not specified');
+        await validatePutInformation(systemCode, system);
 
-        const containerWithoutCode = system.containers?.find(c => !c.code);
-        if (containerWithoutCode) {
-            throw BadRequest(`Container ${JSON.stringify(containerWithoutCode)} has no code`);
+        const current_state = await this.getByCode(systemCode, { level: "methods", addRemoved: true });
+        if (!current_state) {
+            throw NotFound(`Система с кодом ${systemCode} не найдена`);
         }
-        const currentState = await this.getByCode(systemCode, { level: "methods" });
 
-        const containers = await this.prepareContainersMethods(system.code, system.containers ?? [], currentState.containers ?? []);
-
-        if (isSystemEquals(currentState, system)) {
+        if (!current_state.hasDoubles() && isSystemEquals(current_state, system)) {
             console.info(`Система [${systemCode}] "${system.name}" не требует обновления`);
-            return currentState;
+            return current_state;
         }
+
+        const pkg = await prepareSystemPackages(systemCode);
 
         try {
-            await runSystemContext(systemCode, async () =>
-                eaRepository.transactionScope(async () => {
-                    const [newContainers, outdateContainers, existingContainers] = diffContainers(await systemsRepository.selectSystemContainers(systemCode), containers);
+            await eaRepository.transactionScope(async () => {
 
-                    for (const c of newContainers) {
-                        await systemsRepository.addSystemContainer(systemCode, c);
-                    }
+                const app = await appRepository.byCode(systemCode);
 
-                    for (const c of outdateContainers) {
-                        await systemsRepository.deleteSystemContainer(systemCode, c);
-                    }
+                if (!system.containers)
+                    system.containers = [];
 
-                    for (const diff of existingContainers) {
-                        if (!isContainersEquals(diff.exists, diff.target)) {
-                            await systemsRepository.updateContainer(diff.exists.container_id, diff.target.name, diff.target.code,
-                                "FDM API", diff.target.version, diff.target.description, diff.target.status);
-                        }
-                        await interfacesRepository.updateContainerInterfaces(systemCode, diff.exists.container_id, diff.target.interfaces);
-                    }
-                }));
+                for (const code in app.containers ?? {}) {
+                    const ec = system.containers.find(c => c.code.toLowerCase() === code.toLowerCase());
+                    if (ec || (app.containers[code].status || app.containers[code].container_status) === REMOVED_STATUS)
+                        continue;
+                    await removeContainer(app, app.containers[code]);
+                }
+
+
+                for (const container of system.containers) {
+                    console.log(`Добавление/изменение контейнера ${container.code}`);
+                    container.code = container.code.toLowerCase();
+
+                    await putContainer(app, container);
+                }
+
+                await loadApp(app);
+            });
+
+
             const result = await this.getByCode(systemCode, { level: "methods" });
             console.log(`Обновление системы с кодом = ${systemCode} завершено`);
-            await logSuccessPutSystem(systemCode, currentState, system, result);
+            await logSuccessPutSystem(systemCode, current_state, system, result);
             return result;
         } catch (err) {
-            await logErrorPutSystem(systemCode, currentState, system, err);
+            await logErrorPutSystem(systemCode, current_state, system, err);
             throw err;
         }
     }
 
     async getPurpose(systemCode) {
-        const rows = await systemsRepository.selectSystemCapabilities(systemCode);
+        const rows = await appRepository.selectSystemCapabilities(systemCode);
 
         const capabilityMap = {};
 
@@ -269,7 +227,7 @@ export class SystemService {
     }
 
     async getE2EParticipition(systemCode) {
-        return (await systemsRepository.selectSystemE2EParticipition(systemCode))
+        return (await appRepository.selectSystemE2EParticipition(systemCode))
             .map(r => new E2EProcessContext(r));
     }
 
@@ -347,14 +305,14 @@ export class SystemService {
      * @returns {Promise<{systemCode,apiMetricTemplate }>}
      */
     async setAppMonitoringTemplate(systemCode, apiMetricTemplate) {
-        await systemsRepository.setSystemTag(systemCode, API_METRIC_TEMPLATE_TAG, apiMetricTemplate);
-        const result = await systemsRepository.getSystemTag(systemCode, API_METRIC_TEMPLATE_TAG);
+        await appRepository.setSystemTag(systemCode, API_METRIC_TEMPLATE_TAG, apiMetricTemplate);
+        const result = await appRepository.getSystemTag(systemCode, API_METRIC_TEMPLATE_TAG);
         return { systemCode: systemCode, apiMetricTemplate: result?.value };
     }
 
     async getProvidedApi(systemCode) {
         const [methods, { providedRows }] = await Promise.all([
-            systemsRepository.selectProvidedApi(systemCode),
+            appRepository.selectProvidedApi(systemCode),
             monitoringRepository.selectApiSources(systemCode)
         ]);
         const apiMap = providedRows.reduce((map, s) => (map[s.ea_guid] = { ...s, methods: [] }, map), {})
@@ -372,6 +330,12 @@ export class SystemService {
             });
         }
         return Object.values(apiMap);
+    }
+    async getChanges(code, count = 100, from_id) {
+        return selectSystemChanges(code);
+    }
+    async getChangeDetails(id) {
+        return selectSystemChangeByChangeId(id);
     }
 }
 

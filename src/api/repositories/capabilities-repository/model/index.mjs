@@ -1,0 +1,1 @@
+export { CapabilityBaseDTO, DomainDTO } from './capability-dto.mjs'

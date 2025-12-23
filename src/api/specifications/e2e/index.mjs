@@ -1,7 +1,7 @@
 import { API_VERSION, CONTACT } from "../../../resources/const.mjs"
 import { GetJSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, schemasRef, stringProperty } from "../helpers.mjs"
 import e2eControllers from '../../controllers/e2e-processes-controllers/index.mjs'
-import { E2E_LIST_RESOURCE, E2E_RESOURCE, E2E_SCENARIO_LIST_RESOURCE, SCENARIO_MESSAGES_RESOURCE } from "../paths.mjs"
+import { ALL_E2E_SCENARIO_LIST_RESOURCE_V4, E2E_LIST_RESOURCE, E2E_RESOURCE, E2E_SCENARIO_LIST_RESOURCE, SCENARIO_MESSAGES_RESOURCE } from "../paths.mjs"
 import { E2E_PROCESS_SCHEMA } from "./e2e-schema.mjs"
 import { SCENARIO_SCHEMA } from "../scenarios-service-spec/scnearios-service-chemas.mjs"
 
@@ -44,6 +44,10 @@ E2E_SWAGGER
             [PROCESS_UID_PARAMETER],
             E2E_PROCESS_SCHEMA_REF)
             .setContoller(e2eControllers.getE2E))
+    .defineGet(ALL_E2E_SCENARIO_LIST_RESOURCE_V4,
+        new GetJSONOperation(
+            "Получение списка всех шагов процессов", [], arraySchema(PROCESS_SCENARIO_SCHEMA_REF), e2eControllers.getAllE2EScenarios
+        ))
     .defineGet(
         E2E_SCENARIO_LIST_RESOURCE,
         new GetJSONOperation(GET_E2E_SCNARIOS_SUMMARY,

@@ -18,3 +18,4 @@ FROM t_object app
 	JOIN cte_realization cn ON cn.start_object_id=app.object_id AND cn.stereotype='C4_Container'
 WHERE  app.stereotype='softwareSystem'
 	AND LOWER(app.alias)=LOWER($1) AND LOWER( cn.alias)=LOWER($2)`;
+

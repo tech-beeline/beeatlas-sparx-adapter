@@ -26,35 +26,10 @@ import {
     Tabs
 } from "@beeline/design-system-react";
 import { ProvidedApiBox } from "./provider-api.mjs";
+import { CapabilityBox } from "../../../components/index.mjs";
 
 
-function CapabilityBox({ capabilityCode }) {
-    const [capability, setCapability] = useState(null);
 
-
-    useEffect(() => {
-        async function loadCapability() {
-            try {
-                if (!capabilityCode)
-                    return;
-                const req = await fetch(`/api/tech-capabilities/${encodeURIComponent(capabilityCode)}`);
-                if (req.status !== 200) {
-                    throw Error(await req.text());
-                }
-                setCapability(await req.json());
-
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        loadCapability();
-    }, [capabilityCode]);
-
-    return (
-        <Link href={`https://beeatlas.vimpelcom.ru/models/search?request=${encodeURIComponent(capabilityCode)}`} target="_blank">{capability ? capability.name : capabilityCode}
-        </Link>)
-}
 
 function MethodsTable({ methods }) {
     if (!methods || !methods.length) {
@@ -87,7 +62,7 @@ function ApiAccorion({ api }) {
     return (
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}><ApiIcon />
-                <Box fontWeight='fontWeightMedium' display='inline'>[{api.code}] {api.name}</Box><CapabilityBox capabilityCode={api.capabilityCode} />
+                <Box fontWeight='fontWeightMedium' display='inline' color={api.status==="REMOVED"?"red":null}> {api.status?`status=${api.status}`:null} [{api.code}] {api.name}</Box><CapabilityBox capabilityCode={api.capabilityCode} />
             </AccordionSummary>
             <AccordionDetails>
                 <Box component={Paper}>
@@ -123,7 +98,7 @@ function ContainerAccordion({ container }) {
     return (
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}><ContainerIcon />
-                <Box fontWeight='fontWeightMedium' display='inline'>[{container.code}] {container.name}
+                <Box fontWeight='fontWeightMedium' display='inline' color={container.status==='REMOVED'?"red":null}>{container.status?`status=${container.status}`:null} [{container.code}] {container.name} 
                 </Box>
             </AccordionSummary>
             <AccordionDetails>
@@ -144,12 +119,12 @@ export function SystemContainers({ system }) {
             </AccordionSummary>
             <AccordionDetails>
                 <Tabs bodyClassName="classForAllTabs">
-                    <Tab label="Старый вариант" key={1}>
+                    <Tab label="Контейнеры в structurizr" key={1}>
                         <Box component={Paper}>
                             {(system.containers ?? []).map((container, i) => <ContainerAccordion key={i} container={container} />)}
                         </Box>
                     </Tab>
-                    <Tab label="Structurizr" key={2}>Здесь будет новая версия</Tab>
+
                     <Tab label="Добавленные вручную" key={3}><ProvidedApiBox app={system} /></Tab>
                 </Tabs>
             </AccordionDetails>

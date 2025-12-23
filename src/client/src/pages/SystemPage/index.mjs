@@ -26,6 +26,7 @@ export function SystemPage() {
     const { code } = useParams();
 
     const [system, setSystem] = React.useState(null);
+    const [product, setProduct] = useState(null);
 
     const [dashboardDialogOpen, setDashboardDialogOpen] = useState(false);
     const navigate = useNavigate();
@@ -48,8 +49,16 @@ export function SystemPage() {
             const s = await response.json();
             setSystem(s);
         }
+        async function loadProduct(code) {
+            const response = await fetch(`/api/v4/fdm/products/${code}`);
+            if (response.status !== 200) {
+                return;
+            }
+            const s = await response.json();
+            setProduct(s);
+        }
         loadData(code);
-
+        loadProduct(code);
     }, [code]);
 
     const contextMenu = (
@@ -91,7 +100,7 @@ export function SystemPage() {
                     <Box>Ошибка при загрузке данных: {system.error}</Box>
                 ) : (
                     <Box component={Paper}>
-                        <SystemSummary system={system} />
+                        <SystemSummary system={system} product={product} />
                         <SystemCapabilitiesAccordion system={system} />
                         <SystemApiMonitoringAccordion system={system} />
                         <SystemContainers system={system} />

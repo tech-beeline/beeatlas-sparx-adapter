@@ -4,17 +4,26 @@ import { expr } from "../../../../legacy/services/monitoring-templates/panels/pr
 import Sequence from "../../../../legacy/services/monitoring-templates/sequence.mjs";
 import { NotImplemented } from "../../../../utils/errors.mjs";
 import { GrafanaRow } from "./panels/call-tree-row.mjs";
+import { updateTargetsRef } from "./panels/index.mjs";
 import { uriRegex } from "./sources/common.mjs";
 
 const formatTitle = (msg) => `${msg.client_code} - ${msg.server_code}${msg.stereotype ? ` ${msg.stereotype}` : ""}: ${msg.method?.name ?? msg.name}`;
 
-const updateTargetsRef = (panel, id) => {
-    panel.targets.forEach(t => t.panelId = id)
+/**
+ * 
+ * @param {string} str 
+ * @returns 
+ */
+const caseInsensitive = (str) => str.replaceAll(/[a-zA-Z]/g, (s) => `[${s.toLowerCase()}${s.toUpperCase()}]`);
+
+export function uriRegexCaseInsensitive(path) {
+    return path?.split('/')
+        .map(a => a.startsWith('{') && a.endsWith('}') ? `([^\\/]+)` : caseInsensitive(a))
+        .join('\\/');
 }
 
-
 export function formatQuery(template, uri, method, client_code) {
-    const uri_regex = uriRegex(uri);
+    const uri_regex = uriRegexCaseInsensitive(uri);
 
     let variables = {
         REGEX_URI: uri_regex, "REGEX_URI:raw": uri_regex,
@@ -103,7 +112,7 @@ export class SecnarioDashboardBuilder {
                 if (t.query) {
                     target.query = formatQuery(t.query, path, method, message.client_code)
                 }
-                if( t.rawSql )
+                if (t.rawSql)
                     target.rawSql = formatQuery(t.rawSql, path, method, message.client_code);
             }
         }

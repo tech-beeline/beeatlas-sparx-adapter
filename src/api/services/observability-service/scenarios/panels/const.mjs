@@ -1,0 +1,1 @@
+export const ERROR_PANEL_REF_ID = 'E4xx';

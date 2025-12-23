@@ -15,3 +15,4 @@ export const SYSTEM_OBJECTS_RESOURCE = '/api/v4/monitoring/objects/source';
 export const CONTAINER_SOURCE_RESOURCE = '/api/v4/monitoring/containers/source';
 export const INTERFACE_SOURCE_RESOURCE = '/api/v4/monitoring/interfaces/source';
 export const STRUCTURIZR_JSON_CHECK_RESOURCE = "/api/v4/structirizr/{id}/json-check";
+export const FDM_PRODUCT_RESOURCE = "/api/v4/fdm/products/{code}";

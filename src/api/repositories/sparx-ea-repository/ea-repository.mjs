@@ -24,6 +24,14 @@ import { NotImplemented } from '../../../utils/errors.mjs';
 
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { DELETE_OBJECT, SELECT_OBJECT_RELATIONS } from './ea-queries/delete/index.mjs';
+import {
+    INSERT_DIAGRAMOBJECTS,
+    UPDATE_DIAGRAMOBJECT
+} from './ea-queries/diagram/index.mjs';
+
+import { created_package } from './ea-model/t_package.mjs';
+import { DELETE_ALL_OBJECTS_CONNECTORS, DELETE_ALL_OBJECTS_LINKS } from './ea-queries/connector/index.mjs';
+
 
 const transactionClient = new AsyncLocalStorage();
 
@@ -161,8 +169,8 @@ export class SparxRepository {
             await client.end();
             return rows;
         } catch (error) {
-            console.log(sql?.text ?? sql);
-            throw error;
+            console.trace(`Ошибка при выполнении запроса ${sql?.text ?? sql}: ${error.message}`);
+            throw Error(`Ошибка при выполнении запроса к базе sparx ea`, { cause: error });
         }
     }
 
@@ -215,6 +223,8 @@ export class SparxRepository {
         if (!condition) throw Error('update condition is null ');
         let field_values = Object.entries(value);//.filter(([k, v]) => v);
         let condition_list = Object.entries(condition);
+        if (!condition_list.length) throw Error('update condition is null ');
+
         const text = `UPDATE ${type.name} SET ${field_values.map(([k, v], i) => `${k} = $${i + 1}`).join(', ')} 
         WHERE ${Object.entries(condition).map(([k, v], i) => `${k} = $${i + 1 + field_values.length}`).join(' AND ')} RETURNING *`;
         return this.query(text, ...field_values.map(([k, v]) => v), ...condition_list.map(([k, v]) => v));
@@ -229,7 +239,7 @@ export class SparxRepository {
     }
 
     async find(type, condition) {
-        if( !type.name) throw Error('type is invalid');
+        if (!type.name) throw Error('type is invalid');
         const text = `SELECT * FROM ${type.name} where ${Object.entries(condition).map(([k, v], i) => ` ${k}=$${i + 1} `).join('AND')}`
         return this.queryRows({ text: text, values: Object.values(condition) }).then(rows => rows.map(r => new type(r)));
     }
@@ -380,8 +390,8 @@ export class SparxRepository {
     }
     /**
      * 
-     * @param {t_package} pkg 
-     * @returns 
+     * @param {created_package} pkg 
+     * @returns {Promise<created_package>}
      */
     async createPackage(pkg) {
         /**
@@ -393,7 +403,9 @@ export class SparxRepository {
             name: new_pkg.name, ea_guid: new_pkg.ea_guid, object_type: 'Package',
             package_id: pkg.parent_id, author: pkg.author ?? 'FDM API', version: '1.0', pdata1: new_pkg.package_id, status: pkg.status ?? 'Proposed', note: pkg.notes, alias: pkg.alias
         });
-        return new_pkg;
+
+        Object.assign(obj, new_pkg);
+        return obj;
     }
 
     async setMethodsDeleted(methodIds) {
@@ -609,6 +621,17 @@ export class SparxRepository {
             return map;
         }, {});
     }
+    async readObjectTagsByObjectUID(uid) {
+        /**
+         * @type {Array{t_objectproperties}}
+         */
+        const rows = await this.query(`SELECT * from t_objectproperties where object_id = (SELECT object_id FROM t_object WHERE ea_guid=$1)`, uid);
+        return rows.reduce((map, t) => {
+            const tags = map[t.object_id] ?? (map[t.object_id] = {})
+            tags[t.property] = t.value;
+            return map;
+        }, {});
+    }
     /**
      * 
      * @param {*} object_id 
@@ -663,17 +686,26 @@ export class SparxRepository {
     async updateOperationTags(operation_id, tags) {
         const currentTags = await this.queryRows('SELECT * FROM t_operationtag WHERE elementid=$1 AND property=ANY($2)', [operation_id, Object.keys(tags)]);
         for (const tag in tags) {
-            const currentTag = currentTags.find(t => t.property === tag);
+            const current_values = currentTags.filter(t => t.property === tag);
             const targetValue = tags[tag];
-            if (currentTag?.value == targetValue) continue;
-            if (!targetValue) {
+
+            if (!targetValue && current_values.length) {
                 await this.queryOne(`DELETE FROM t_operationtag WHERE elementid=$1 AND property=$2`, [operation_id, tag]);
                 continue;
             }
-            if (!currentTag) {
+
+            if (targetValue && !current_values.length) {
                 await this.insert(t_operationtag, { value: targetValue, elementid: operation_id, property: tag });
                 continue;
             }
+
+            if (current_values.length === 1 && current_values[0].value == targetValue) continue;
+            if (current_values.length > 1) {
+                await this.query(`DELETE FROM t_operationtag WHERE elementid=$1 AND property=$2`, operation_id, tag);
+                await this.insert(t_operationtag, { value: targetValue, elementid: operation_id, property: tag });
+                continue;
+            }
+
             await this.update(t_operationtag, { value: targetValue }, { elementid: operation_id, property: tag });
         }
     }
@@ -710,6 +742,10 @@ export class SparxRepository {
     async deleteConnector(connector_id) {
         await this.queryOne(DELETE_LINK_BY_CONNECTOR_ID, [connector_id]);
         return this.queryOne(DELETE_CONNECTOR_BY_ID, [connector_id]);
+    }
+    async deleteAllObjectsConnector(object_id_a, object_id_b) {
+        await this.query(DELETE_ALL_OBJECTS_LINKS, object_id_a, object_id_b);
+        return this.query(DELETE_ALL_OBJECTS_CONNECTORS, object_id_a, object_id_b);
     }
     /**
      * 
@@ -792,6 +828,7 @@ export class SparxRepository {
             await this.query(`DELETE FROM t_package WHERE package_id=$1`, package_id);
         });
     }
+
     async canDeleteObject(object_id) {
         if (!object_id) throw Error("object_id==null");
 
@@ -803,10 +840,67 @@ export class SparxRepository {
         }
         return true;
     }
+
     async deleteOperation(operation_id) {
+        if( !operation_id) throw Error(`operation_id is not specified`);
+        
         await this.delete(t_operationparams, { operationid: operation_id });
         await this.delete(t_operationtag, { elementid: operation_id });
         await this.delete(t_operation, { operationid: operation_id });
+    }
+
+    async mergeElements(target_id, source_id) {
+        // Связи
+        // Диаграммы
+        // методы
+        // tagged values
+        // t_xref
+        // Родители
+        NotImplemented();
+    }
+
+    /**
+     * 
+     * @param {number[]} linksIds 
+     */
+    async removeDiagramLinks(linksIds) {
+        return this.query('DELETE FROM t_diagramlinks WHERE instance_id = ANY($1)', linksIds);
+    }
+    /**
+     * 
+     * @param {number[]} objectsIds 
+     */
+    async removeDiagramObjects(objectsIds) {
+        return this.query('DELETE FROM t_diagramobjects WHERE object_id = ANY($1)', objectsIds);
+    }
+
+    /**
+     * 
+     * @param {number} diagramId
+     * @param {t_diagramobjects} objects 
+     */
+    async insertDiagramObjects(diagramId, objects) {
+        if (!diagramId)
+            throw Error(`diagramId не задано при добавлениии t_diagramobjects`);
+        if (!objects)
+            throw Error(`Список объектов не задан при добавлении t_diagramojbects`);
+        if (objects.find(c => !c))
+            throw Error(`Найдены не заданные object_id в списке при добавлении t_diagramobjects`);
+        return this.query(INSERT_DIAGRAMOBJECTS, diagramId, JSON.stringify(objects));
+    }
+    /**
+     * 
+     * @param {number} diagramId
+     * @param {t_diagramobjects} objects 
+     */
+    async updateDiagramObjects(diagramId, objects) {
+        return this.query(UPDATE_DIAGRAMOBJECT, diagramId, JSON.stringify(objects));
+    }
+    async updateObjectsPackage(packageId, objectIds) {
+        if (!packageId) throw Error(`package id is not specified`);
+        if (!objectIds) throw Error(`object list is null`);
+
+        return this.query(`UPDATE t_object SET package_id=$1 WHERE object_id = ANY($2)`, packageId, objectIds);
     }
 }
 

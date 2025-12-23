@@ -26,7 +26,7 @@ export class Capability {
     /** @type {{ code:string}} */
     parent;
     owner;
-    children;
+    //children;
     ea_guid;
     self;
 
@@ -35,6 +35,9 @@ export class Capability {
             this[prop] = cap[prop] ?? undefined;
         }
         this.self = buildHREF(`${CAPABILITY_LIST_RESOURCE}/${this.code}`)
+
+        if (cap.parent_code)
+            this.parent = cap.parent_code;
 
         if (this.parent) {
             this.parent = {

@@ -11,6 +11,7 @@ import {
 } from "@beeline/design-system-react";
 
 import { useSearchParams } from 'react-router-dom';
+import { CapabilityBox } from "../../components/index.mjs";
 
 function SystemInfo({ code }) {
     return <>{code}</>
@@ -69,6 +70,8 @@ function SystemApiMethods({ systemMethods }) {
                     <TableCell>{m.apiInterface}</TableCell>
                     <TableCell>{m.name}</TableCell>
                     <TableCell>{m.sla}</TableCell>
+                    <TableCell><CapabilityBox capabilityCode={m.apiImplements}/></TableCell>
+                    <TableCell><CapabilityBox capabilityCode={m.implements}/></TableCell>
                 </TableRow>)}
         </TableBody>
     </Table>
@@ -128,7 +131,6 @@ export function SystemAPIPage() {
 
                 const methods = [];
                 const structurizrApi = await loadContainers();
-                console.log(structurizrApi);
 
                 for (const c of structurizrApi.containers ?? []) {
                     const containerInfo = `${c.name}`;
@@ -136,12 +138,13 @@ export function SystemAPIPage() {
                         const apiInfo = `[${api.code}] ${api.name}`;
                         for (const m of api.methods ?? []) {
                             m.apiInterface = apiInfo;
+                            m.apiImplements = api.implements;
                             m.containerInfo = containerInfo;
+                            //m.apiImplements = api.
                             methods.push(new ApiMethod(m))
                         }
                     }
                 }
-                console.log(methods);
                 setSystemMethods(methods);
             } catch (err) {
                 setError(err.message);

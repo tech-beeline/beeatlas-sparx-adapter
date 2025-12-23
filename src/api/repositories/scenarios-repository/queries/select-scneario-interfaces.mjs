@@ -30,7 +30,7 @@ export const SELECT_SCENARIO_INTERFACES=`WITH cte_realization AS (
 		1 as manual,
 		app.name app_name, app.code AS app_code, app.app_id,
 		pr_api.name as container, pr_api.alias as container_code, pr_api.object_id as container_id,
-		api.name as api_name, COALESCE( api.alias, api.name) as api_code, api.object_id as api_id
+		api.name as api_name, COALESCE( api.alias, api.name) as api_code, api.object_id as api_id, api.ea_guid as api_uid
 	FROM t_object pr_api
 		JOIN cte_app app ON app.app_id=pr_api.parentid
 		JOIN t_object api ON api.object_id=pr_api.classifier
@@ -40,7 +40,7 @@ export const SELECT_SCENARIO_INTERFACES=`WITH cte_realization AS (
 		0 as manual,
 		app.name AS app_name, app.alias AS app_code, app.object_id AS app_id,
 		container.name AS container, container.alias AS container_code, container.object_id as container_id,
-		api.name AS api_name, api.alias AS api_code, api.object_id AS api_id
+		api.name AS api_name, api.alias AS api_code, api.object_id AS api_id, api.ea_guid as api_uid
 	FROM cte_realization app
 		JOIN cte_realization container ON container.object_id=app.from_id AND  container.stereotype='C4_Container'
 		JOIN t_object api ON api.object_id=container.from_id AND api.object_type='Interface'

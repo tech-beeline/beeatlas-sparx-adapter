@@ -34,6 +34,14 @@ export class E2EProcessControllers {
      * @param {express.Request} request 
      * @param {express.Response} response 
      */
+    async getAllE2EScenarios(request, response) {
+        return response.json(await e2eService.getAll2EScenarios());
+    }
+    /**
+     * 
+     * @param {express.Request} request 
+     * @param {express.Response} response 
+     */
     async getE2EScenarios(request, response) {
         if (!request.params.uid) throw BadRequest('Process uid is not specified');
         response.json(await e2eService.getE2EScenarios(request.params.uid))
@@ -60,7 +68,7 @@ export class E2EProcessControllers {
      * @param {express.Response} response 
      */
     async getBIMessages(request, response) {
-        if( !request.params.uid)
+        if (!request.params.uid)
             throw BadRequest(`Не задан UID для сценария`);
         console.log(`Получение сообщения для сценария uid=${request.params.uid}`);
         response.json(await e2eService.getBIMessages(request.params.uid));

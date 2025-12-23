@@ -41,7 +41,8 @@ SELECT
 	latency.value as latency,
 	error_rate.value as error_rate,
 	COALESCE( api.name, srv.name) AS api_name,
-	show_e2e.value as show_in_e2e,
+	show_e2e.value AS show_in_e2e,
+	app_front.value AS app_front,
 	api.object_id as api_id,
 	d.ea_guid as diagram_uid, 
 	d.name as diagram, 
@@ -49,8 +50,12 @@ SELECT
 	m.ea_guid as uid,
 	m.start_object_id as client_id, 
 	cl.name as client_name,
+	cl.object_type AS client_type,
+	cl.alias as client_code,
 	m.end_object_id as server_id, 
 	srv.name as server_name,
+	srv.alias AS server_code,
+	srv.object_type AS server_type,
 	m.stereotype, 
 	m.ea_guid, 
 	m.notes,
@@ -66,6 +71,7 @@ FROM cte_diagrams d
 	LEFT JOIN t_operation ms ON ms.ea_guid=op.value
 	LEFT JOIN t_object api ON api.object_id=ms.object_id
 	LEFT JOIN t_objectproperties show_e2e ON show_e2e.object_id=api.object_id AND show_e2e.property='show_in_e2e'
+	LEFT JOIN t_objectproperties app_front ON app_front.object_id=api.object_id AND app_front.property='app_front'
 	LEFT JOIN t_operationtag rps ON rps.elementid=ms.operationid AND rps.property='rps'
 	LEFT JOIN t_operationtag latency ON latency.elementid=ms.operationid AND latency.property='latency'
 	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=ms.operationid AND error_rate.property='error_rate'

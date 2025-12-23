@@ -458,14 +458,13 @@ class MonitoringService {
         const template = await this.getE2EScenarioTemplate();
 
         const scenario = await E2EProcessService.getBIScenario(code);
-        const sources = new SourceFactory();
+
         const methodsSourcesRows = await monitoringRepository.selectMethodsSources();
-        const mapicMetricSource = await monitoringRepository.selectMapicMetricTempalte();
+        const mapicMetricSource = await monitoringRepository.selectMapicMetricTemplate();
         if (!mapicMetricSource) throw Error('Не найдена ссылка на настройку для метрик MAPIC');
 
         const apiMetricTemplates = {};
         const methodSourcesMap = {};
-
 
         const mapicTempalteUID = GrafanaService.dashboardUIDFromURL(mapicMetricSource);
         if (!mapicTempalteUID) throw Error(`Не корректный адрес для шаблона дашборда MAPIC`);
