@@ -62,7 +62,7 @@ function ApiAccorion({ api }) {
     return (
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}><ApiIcon />
-                <Box fontWeight='fontWeightMedium' display='inline'>[{api.code}] {api.name}</Box><CapabilityBox capabilityCode={api.capabilityCode} />
+                <Box fontWeight='fontWeightMedium' display='inline' color={api.status==="REMOVED"?"red":null}> {api.status?`status=${api.status}`:null} [{api.code}] {api.name}</Box><CapabilityBox capabilityCode={api.capabilityCode} />
             </AccordionSummary>
             <AccordionDetails>
                 <Box component={Paper}>
@@ -98,7 +98,7 @@ function ContainerAccordion({ container }) {
     return (
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}><ContainerIcon />
-                <Box fontWeight='fontWeightMedium' display='inline'>[{container.code}] {container.name}
+                <Box fontWeight='fontWeightMedium' display='inline' color={container.status==='REMOVED'?"red":null}>{container.status?`status=${container.status}`:null} [{container.code}] {container.name} 
                 </Box>
             </AccordionSummary>
             <AccordionDetails>

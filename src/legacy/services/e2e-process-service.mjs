@@ -211,9 +211,7 @@ class E2EProcessService {
     async getProcessBusinessInterctions(code) {
         let rows = await Repository.queryRows(`${QUERIES.E2E_PROCESS_BI_QUERY} where p.ea_guid=$1 order by m.seqno`, [code]);
         rows.sort((a, b) => b.recttop - a.recttop);
-        const valid_rows = rows.filter(r => r.seqno);
-        const invalid_rows = rows.filter(r => !valid_rows.some(v => v.ea_guid === r.ea_guid)).map(r => Object.assign(r, { alert: `Не связано с сообщением или MessageEndpoint не является дочерним элементом для диаграммы` }))
-        return [...valid_rows, ...invalid_rows];
+        return rows;
     }
 
     async getProcessSummary(code) {
