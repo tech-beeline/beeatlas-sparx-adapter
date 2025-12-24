@@ -22,6 +22,11 @@ export class E2EProcessService {
         return processesRepository.selectE2EScenarios(uid)
             .then(rows => rows.map(row => new ProcessScenario(row)));
     }
+    /**
+     * 
+     * @param {*} uid 
+     * @returns {Promise<ProcessScenario[]>}
+     */
     async getAll2EScenarios(uid) {
         return processesRepository.selectAllScenarios().then(rows => rows.map(row => new ProcessScenario(row)));
     }

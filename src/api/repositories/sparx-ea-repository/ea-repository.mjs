@@ -833,7 +833,8 @@ export class SparxRepository {
         if (!object_id) throw Error("object_id==null");
 
         const relations = await this.queryOne(SELECT_OBJECT_RELATIONS, [object_id]);
-        if (!relations) throw Error(`Не найден элемент с object_id=${object_id}`);
+        if (!relations) return true;
+        
         for (const f in relations) {
             if (f !== 'object_id' && relations[f] != 0)
                 return false;

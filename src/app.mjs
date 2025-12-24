@@ -1,14 +1,8 @@
 import { bootstrapAPI } from './api/bootstrap.mjs';
 import app from './index.mjs'
+import { onAppStart } from './start/index.mjs';
 
 process.env.API_PORT = process.env.API_PORT ?? 8080;
-
-
-async function queryOnStart() {
-   
-}
-
-//queryOnStart();
 
 async function start() {
     await bootstrapAPI.init();
@@ -22,6 +16,8 @@ async function start() {
         server.close();
     })
 }
+
+//onAppStart();
 
 start();
 
