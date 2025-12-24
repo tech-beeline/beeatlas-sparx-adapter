@@ -22,6 +22,11 @@ export const TERM_LIST_RESOURCE_V4 = '/api/v4/glossary-terms';
 export const TERM_LIST_RESOURCE = TERM_LIST_RESOURCE_V4;
 export const TERM_RESOURCE_V4 = '/api/v4/glossary-terms/{id}';
 export const TERM_RESOURCE = TERM_RESOURCE_V4;
+
+export const DATABASE_SERVICES_RESOURCE_V4 = '/api/v4/database-services';
+export const DATABASE_SERVICE_LIST_RESOURCE = DATABASE_SERVICES_RESOURCE_V4;
+export const DATABASE_SERVICE_RESOURCE = `${DATABASE_SERVICE_LIST_RESOURCE}/{id}`;
+
 //#endregion
 
 //#region technical capability paths
@@ -45,6 +50,8 @@ export const SYSTEM_E2E_RESOURCE_V4 = '/api/v4/systems/{code}/e2e';
 export const SYSTEM_ASSESSMENT_RESOURCE_V4 = '/api/v4/systems/{code}/assessments';
 export const SYSTEM_API_MONITORING_RESOURCE_V4 = '/api/v4/systems/{code}/monitoring';
 export const SYSTEM_PROVIDED_API_RESOURCE_V4 = '/api/v4/systems/{code}/p-api';
+export const SYSTEM_CHANGES_RESOURCE_V4 = '/api/v4/systems/{code}/changes';
+export const SYS_CHANGES_DETAILS_RESOURCE_V4 = '/api/v4/sys-changes-details/{id}';
 
 export const SYSTEM_SEARCH_RESOURCE = SYSTEM_SEARCH_RESOURCE_V4;
 export const SYSTEM_LIST_RESOURCE = SYSTEM_LIST_RESOURCE_V4;
@@ -65,6 +72,7 @@ export const E2ELink = (uid) => buildHREF(`${E2E_LIST_RESOURCE}/${uid}`);
 export const E2E_RESOURCE_V4 = `${E2E_LIST_RESOURCE_V4}/{uid}`
 export const E2E_RESOURCE = E2E_RESOURCE_V4;
 
+export const ALL_E2E_SCENARIO_LIST_RESOURCE_V4 = '/api/v4/e2e-scenarios'
 export const E2E_SCENARIO_LIST_RESOURCE_V4 = '/api/v4/e2e/{uid}/scenarios'
 export const E2E_SCENARIO_LIST_RESOURCE = E2E_SCENARIO_LIST_RESOURCE_V4;
 export const E2EScenariosLink = (uid) => buildHREF(`${E2E_LIST_RESOURCE}/${encodeURIComponent(uid)}/scenarios`);
@@ -76,8 +84,8 @@ export const ScenarioLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${enc
 export const SCENARIO_MESSAGES_RESOURCE = `${SCENARIO_RESOURCE}/messages`;
 export const ScenarioMessagesLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/messages`);
 
-export const SCENARIO_CALL_TREE_RESOURCE = `${SCENARIO_RESOURCE}/call-tree`;
-export const ScenarioCallTreeLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/call-tree`);
+export const SCENARIO_SEQUENCE_RESOURCE = `${SCENARIO_RESOURCE}/sequence`;
+export const ScenarioCallTreeLink = (uid) => buildHREF(`${SCENARIOS_LIST_RESOURCE}/${encodeURIComponent(uid)}/sequences`);
 
 //#endregion
 
@@ -90,6 +98,7 @@ export const TECH_RADAR_TECHNOLOGY_LIST_RESOURCE = TECH_RADAR_TECHNOLOGY_LIST_RE
 //#endregion
 
 //#region Observability paths
-export const OBSERVABILITY_E2E_SCENARIOS_PATH_V4 = '/api/v4/observability/scenario/publish';
-export const OBSERVABILITY_E2E_SCENARIOS_PATH = OBSERVABILITY_E2E_SCENARIOS_PATH_V4;
+export const OBSERVABILITY_E2E_SCENARIOS_RESOURCE_V4 = '/api/v4/observability/scenario/{uid}';
+export const OBSERVABILITY_E2E_SCENARIOS_PUBLISH_RESOURCEV4 = '/api/v4/observability/scenario/publish';
+export const OBSERVABILITY_E2E_SCENARIOS_PATH = OBSERVABILITY_E2E_SCENARIOS_PUBLISH_RESOURCEV4;
 //#endregion

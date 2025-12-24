@@ -35,6 +35,16 @@ export class CapabilityControllers {
         if (!capabilty) throw NotFound(`The capability with the code ${request.params.code} was not found`)
         response.json(capabilty);
     }
+
+    /**
+    * 
+    * @param {express.Request} request 
+    * @param {express.Response} response 
+    */
+    async putCapability(request, response) {
+        if (!request.params.code) throw BadRequest(`The code is not specified`);
+        response.json(await capabilityService.putCapability(request.params.code, request.body));
+    }
 }
 
 export default new CapabilityControllers();

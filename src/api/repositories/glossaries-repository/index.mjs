@@ -3,17 +3,23 @@ import { getJSON } from "../../../utils/http-request-promise.mjs";
 const OMD_URL = process.env.OPENMETADATA_URL ?? `https://open-metadata-stage.prod.dmp.vimpelcom.ru`
 const GLOSSARY_TERMS_PATH = '/api/v1/glossaryTerms'
 const REFRESH_TIME = process.env.OPENMETADATA_REFRESH_TIME ?? 60 * 60 * 1000;
+const DATABASE_SERVICE_PATH = '/api/v1/services/databaseServices?fields=owners%2Cdomain&limit=3000'
+
 
 export class GlossariesRepository {
     #glossaryCache = {
     };
 
     #terms;
+    #databaseServices;
 
     #refreshTime = Date.now();
     get #token() {
         if (!process.env.OPENMETADATA_TOKEN) throw Error('OPENMETADATA_TOKEN is not set')
         return process.env.OPENMETADATA_TOKEN;
+    }
+    async getJSON(url) {
+        return getJSON(url, this.#defaultRequestOption);
     }
     get #defaultRequestOption() {
         return {
@@ -63,5 +69,11 @@ export class GlossariesRepository {
         return this.getGlossarById(id).then(g => g.terms);
     }
     async getAllTerms() {
+    }
+
+    async getDatabaseServices() {
+        const result = await this.getJSON( `${OMD_URL}${DATABASE_SERVICE_PATH}`);
+        console.log( result);
+        return result.data;
     }
 }

@@ -7,3 +7,4 @@ export { SystemPage } from "./SystemPage/index.mjs";
 export { E2EProcessesListPage } from "./E2EProcessesListPage/index.mjs";
 export { MainPage } from "./MainPage/index.mjs";
 export { WorkspaceCheckPage } from "./WorkspaceCheckPage/index.mjs";
+export { SystemChangeLogPage } from './SystemChangeLogPage/index.mjs'

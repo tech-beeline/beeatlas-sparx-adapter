@@ -1,6 +1,6 @@
 import { BAD_REQUST_RESPONSE, GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, pathParameter, queryParameter, schemasRef, stringProperty } from "../helpers.mjs"
 import { INTERFACE_SCHEMA, METHOD_SCHEMA } from "../interfaces-service-spec.mjs";
-import { SYSTEM_API_MONITORING_RESOURCE, SYSTEM_ASSESSMENTS_RESOURCE, SYSTEM_E2E_RESOURCE, SYSTEM_LIST_RESOURCE, SYSTEM_PROVIDED_API_RESOURCE_V4, SYSTEM_PURPOSE_RESOURCE, SYSTEM_RESOURCE, SYSTEM_SEARCH_RESOURCE } from "../paths.mjs";
+import { SYS_CHANGES_DETAILS_RESOURCE_V4, SYSTEM_API_MONITORING_RESOURCE, SYSTEM_ASSESSMENTS_RESOURCE, SYSTEM_CHANGES_RESOURCE_V4, SYSTEM_E2E_RESOURCE, SYSTEM_LIST_RESOURCE, SYSTEM_PROVIDED_API_RESOURCE_V4, SYSTEM_PURPOSE_RESOURCE, SYSTEM_RESOURCE, SYSTEM_SEARCH_RESOURCE } from "../paths.mjs";
 import { SYSTEM_ASSESSMENT_RESULT_SCHEMA, SYSTEM_MONITORING_RESULT_SCHEMA, SYSTEM_PURPOSE_SCHEMA } from "../../model/system.mjs";
 import { SystemsControllersInstance as systemsControllers } from "../../controllers/index.mjs";
 import { METHOD_SLA_RESOURCE } from "./paths.mjs";
@@ -18,6 +18,7 @@ const GET_SYSTEM_E2E_SUMMARY = "Получение информации о то�
 const GET_SYSTEM_ASSESSMENT_SUMMARY = "Актуальная оценка системы";
 const GET_SYSTEM_MONITORING_SUMMARY = "Настройки наблюдаемости системы";
 const POST_SYSTEM_MONITORING_SUMMARY = "Изменение ссылки на шаблон для настройки метрик";
+const GET_SYSTEM_CHANGES_SUMMARY = "Изменение истории изменений";
 const POST_SYSTEM_ASSESSMENT_SUMMARY = "Публикация результата оценки системы архитектурной фитнес-функцией";
 const POST_METHOD_SLA_SUMMARY = "Установка SLA для метода";
 
@@ -154,7 +155,7 @@ const SYSTEM_PROVIDED_API_REF = SWAGGER.defineEntitySchema("SystemProvidedApi", 
     properties: {
         uid: stringProperty("UID интерфейса", { example: "{1E23CE52-8EC8-4074-B1E8-3DB5056E779F}" }),
         name: stringProperty("Название интерфейса", { example: "Поиск сущности" }),
-        apiMetricTemplate : stringProperty("Ссылка на шаблон для настройки метрик", { example: "https://inside.beeline.ru/d/0NbLn3cNk/opensearch-ensemble-logstash-f4ac-waltz?orgId=1" }),
+        apiMetricTemplate: stringProperty("Ссылка на шаблон для настройки метрик", { example: "https://inside.beeline.ru/d/0NbLn3cNk/opensearch-ensemble-logstash-f4ac-waltz?orgId=1" }),
     }
 });
 //#endregion
@@ -162,6 +163,9 @@ const SYSTEM_PROVIDED_API_REF = SWAGGER.defineEntitySchema("SystemProvidedApi", 
 //#region Определение параметров
 const SEARCH_TERMS_PARAMETER = queryParameter("terms", "Поисковая строка", true, "system")
 export const SYSTEM_CODE_PARAMETER = pathParameter("code", "Код системы", "SYSTEM_CODE");
+
+export const CHANGE_ID_PARAMETER = pathParameter("id", "id изменения", "8179");
+
 const GET_SYSTEMS_LEVEL_PARAMETER = {
     name: "level",
     in: "query",
@@ -200,8 +204,11 @@ SWAGGER
     .definePost(SYSTEM_ASSESSMENTS_RESOURCE, new JSONOperation(POST_SYSTEM_ASSESSMENT_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, systemsControllers.postSystemAssessment))
     .defineGet(SYSTEM_API_MONITORING_RESOURCE, new GetJSONOperation(GET_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], SYSTEM_MONITORING_RESULT_SCHEMA_REF, systemsControllers.getApiMonitoring))
     .definePost(SYSTEM_API_MONITORING_RESOURCE, new JSONOperation(POST_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], POST_SYSTEM_API_MONITORING_SCHEMA_REF, SYSTEM_ASSESSMENT_RESULT_SCHEMA_REF, systemsControllers.postApiMonitoring))
-    .defineGet(SYSTEM_PROVIDED_API_RESOURCE_V4, new GetJSONOperation(POST_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getProvidedApi))
-    .definePost(METHOD_SLA_RESOURCE, new JSONOperation(POST_METHOD_SLA_SUMMARY,[], METHOD_SLA_SCHEMA_REF, METHOD_SLA_SCHEMA_REF, systemsControllers.postMethodSLA))
+    .defineGet(SYSTEM_PROVIDED_API_RESOURCE_V4, new GetJSONOperation(GET_SYSTEM_MONITORING_SUMMARY, [SYSTEM_CODE_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getProvidedApi))
+    .definePost(METHOD_SLA_RESOURCE, new JSONOperation(POST_METHOD_SLA_SUMMARY, [], METHOD_SLA_SCHEMA_REF, METHOD_SLA_SCHEMA_REF, systemsControllers.postMethodSLA))
+    .defineGet(SYSTEM_CHANGES_RESOURCE_V4, new GetJSONOperation(GET_SYSTEM_CHANGES_SUMMARY, [SYSTEM_CODE_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getChanges))
+    .defineGet(SYS_CHANGES_DETAILS_RESOURCE_V4, new GetJSONOperation(GET_SYSTEM_CHANGES_SUMMARY, [CHANGE_ID_PARAMETER], arraySchema(SYSTEM_PROVIDED_API_REF), systemsControllers.getChangeDetails))
+
 //#endregion
 
 export default SWAGGER;

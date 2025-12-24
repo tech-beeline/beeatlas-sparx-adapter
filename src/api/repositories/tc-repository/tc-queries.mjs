@@ -102,7 +102,7 @@ FROM cte_tbc tc
 	JOIN cte_sys_package sys ON sys.package_id=tc.cap_package_id
 	LEFT JOIN t_objectproperties goal_to ON goal_to.object_id=tc.object_id AND goal_to.property='goal_to'
 	LEFT JOIN t_objectproperties goal_from ON goal_from.object_id=tc.object_id AND goal_from.property='goal_from'
-WHERE type='ArchiMate_TechnicalCapability'`;
+WHERE type='ArchiMate_TechnicalCapability' AND sys.code IS NOT NULL AND tc.code IS NOT NULL`;
 
 export const SELECT_TC_BY_CODE = `${SELECT_ALL_TEC}
 	AND LOWER(tc.code)=LOWER($1)
@@ -116,3 +116,34 @@ export const SELECT_TC_OBJECT_ID = `SELECT
 FROM t_object
 WHERE LOWER(alias)=LOWER($1) AND stereotype='${ARCHIMATE_TECH_CAPABILITY}';
 `;
+
+export const SELECT_ALL_APP_TC = `WITH RECURSIVE  cte_sys_package AS (
+	SELECT 
+		p.package_id, p.name, o.alias as code
+	FROM t_object o
+		JOIN t_package p ON p.ea_guid=o.ea_guid
+	WHERE o.stereotype='TechCapabilitiesCatalogue'
+	UNION
+	SELECT 
+		p.package_id, p.name, coalesce( o.alias, parent.code)
+	FROM cte_sys_package parent
+		JOIN t_package p ON p.parent_id=parent.package_Id
+		JOIN t_object o ON o.ea_guid=p.ea_guid	
+)
+SELECT
+	p.name AS package,
+	p.code as sys_code,
+	tc.name,
+	tc.alias AS tc_code,
+	tc.note AS description,
+	tc.status,
+	tc.author,
+	tc.version,
+	tc.createdDate as "createdDate",
+	tc.modifiedDate as "modifiedDate",
+	tc.object_id
+FROM cte_sys_package p
+	JOIN t_object tc ON tc.package_id=p.package_id AND tc.stereotype='ArchiMate_TechnicalCapability'
+WHERE LOWER(code)=LOWER($1)`
+
+export const SELECT_ALL_APP_TC_BY_CODE = `${SELECT_ALL_APP_TC} AND LOWER(tc.alias)=LOWER($2)`

@@ -35,7 +35,7 @@ function UsedMethods({ message }) {
         }
     }
     build(message)
-    console.log(Object.values(usedMethods))
+
     return (
         <TreeView defaultCollapseIcon={< KeyboardArrowUp />} defaultExpandIcon={<KeyboardArrowDown />}>
             {Object.values(usedMethods).map(app => <TreeItem label={app.server} nodeId={app.server}>

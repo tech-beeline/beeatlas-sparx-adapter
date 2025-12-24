@@ -1,4 +1,4 @@
-import { API_VERSION, CONTACT, STRUCTURIZR_JSON_CHECK_RESOURCE } from "../../../resources/const.mjs";
+import { API_VERSION, CONTACT, FDM_PRODUCT_RESOURCE, STRUCTURIZR_JSON_CHECK_RESOURCE } from "../../../resources/const.mjs";
 import { StructurizrControllers } from "../../controllers/index.mjs";
 
 const TITLE = "Сервис управления информацией из structirizr";
@@ -32,6 +32,31 @@ export const STRUCTURIZR_JSON_CHECK_SPEC = {
                     {
                         name: "id", in: "path", description: "Идентификатор workspace в structurize on premise", required: true,
                         example: "36932"
+                    }
+                ],
+                responses: {
+                    "200": {
+                        description: "OK",
+                        content: {
+                            "applciation/json": {
+                                schema: {
+                                    $ref: "#/components/schemas/JsonCheckResult"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        [FDM_PRODUCT_RESOURCE]: {
+            get: {
+                summary: "Получение нформации о продукте",
+                tags: [JSON_CHECK_TAG],
+                controller: controllers.getProduct,
+                parameters: [
+                    {
+                        name: "code", in: "path", description: "код продукта", required: true,
+                        example: "fdmshowcaseapp"
                     }
                 ],
                 responses: {

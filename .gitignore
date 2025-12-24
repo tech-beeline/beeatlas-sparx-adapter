@@ -17,3 +17,4 @@ show.ps1
 c4-language-server.log
 dump/rich-esia.json
 .gitignore
+terraform

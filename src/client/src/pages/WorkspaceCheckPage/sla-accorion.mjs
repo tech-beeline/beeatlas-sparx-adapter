@@ -18,7 +18,7 @@ ${apiList.map(api => `  ${api.identifier}: # SLA для "${api.name}"
       get: #http method
         rps: 100 # максмиальная нагрузка на метод GET /endpoint, запросы в секунду
         latency: 1000 # Максимальное время отклика метода GET /endpoint при нормальном профиле нагрузки, микросекунды
-        erorr_rate: 0.1 # Допустимый процент ошибок, %`).join('\n')}
+        error_rate: 0.1 # Допустимый процент ошибок, %`).join('\n')}
 `:null;
 
     return apiList?.length ? <Accordion>

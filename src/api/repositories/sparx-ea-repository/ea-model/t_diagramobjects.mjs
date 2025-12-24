@@ -10,6 +10,11 @@ export class t_diagramobjects {
     sequence;
     objectstyle;
     instance_id;
+    /**
+     * 
+     * @param {t_diagramobjects} obj 
+     * @returns 
+     */
     constructor(obj) {
         if (!obj) return;
         for (const fld in this) {

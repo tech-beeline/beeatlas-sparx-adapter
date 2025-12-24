@@ -1,9 +1,7 @@
 import { NotImplemented } from "../../../utils/errors.mjs";
 import patchArray from "../../../utils/patch-array.mjs";
 import { APIInterface, APIMethod } from "../../model/system.mjs";
-import { InterfacesRepository } from "../../repositories/index.mjs";
-
-const interfacesRepository = new InterfacesRepository();
+import { interfaceRepository } from "../../repositories/index.mjs";
 
 export class InterfacesService {
 
@@ -13,7 +11,7 @@ export class InterfacesService {
      * @returns {Promise<{interface_code,interface_uid, method_name, rps,latency,error_rate}>}
      */
     async updateMethodSLA(sla) {
-        const new_sla = await interfacesRepository.updateMethodSLA({
+        const new_sla = await interfaceRepository.updateMethodSLA({
             interfaceCode: sla.interface_code,
             interfaceUID: sla.interface_uid,
             methodName: sla.method_name,
@@ -25,9 +23,9 @@ export class InterfacesService {
             interface_code: new_sla.interfaceCode,
             interface_uid: new_sla.interfaceUID,
             method_name: new_sla.methodName,
-            rps: new_sla.rps??undefined,
-            latency: new_sla.latency??undefined,
-            error_rate: new_sla.error_rate??undefined
+            rps: new_sla.rps ?? undefined,
+            latency: new_sla.latency ?? undefined,
+            error_rate: new_sla.error_rate ?? undefined
         };
     }
 }

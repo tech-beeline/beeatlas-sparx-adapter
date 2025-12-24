@@ -34,8 +34,8 @@ ${Buffer.concat(chunks).toString()}
             if (body) {
                 req.write(body)
             }
-            req.on('error', (err)=>{
-                console.error( err.message)
+            req.on('error', (err) => {
+                console.error(err.message)
                 reject(err);
             })
 
@@ -64,4 +64,17 @@ export async function postJSON(url, options, body) {
     options.headers["Content-Length"] = Buffer.byteLength(body);
 
     return request(url, options, body).then(buffer => JSON.parse(buffer));
+    /*//body = JSON.stringify(body);
+    options = Object.assign({ method: "POST" }, options);
+    options.headers = Object.assign({}, options.headers)
+    options.headers["Content-Type"] = "application/json"
+    options.headers.Accept = "application/json"
+    options.body = JSON.stringify(body);
+
+    const response = await fetch(url, options)
+    if (response.status !== 200) {
+        throw Error(`HTTP status ${response.status}:${await response.text()} `);
+    }
+    return response.json();
+    */
 }

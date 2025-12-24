@@ -43,6 +43,19 @@ export class CapabilityDTOInternal extends CapabilityDTO {
     get connector_id() { }
 }
 
+export class DomainDTOInternal extends CapabilityDTOInternal{
+    #packages = [];
+    /**
+     *
+     */
+    constructor(src) {
+        super(src);
+    }
+    get packages(){
+        return this.#packages;
+    }
+}
+
 export class OwnerDTO {
     name;
     object_id;

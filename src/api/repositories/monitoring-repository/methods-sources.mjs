@@ -1,5 +1,4 @@
-export const SELECT_METHOD_ALL_SOURCES = `
-WITH RECURSIVE cte_src AS (
+export const SELECT_METHOD_ALL_SOURCES = `WITH RECURSIVE cte_src AS (
 	SELECT
 		t.object_id as target_id,
 		src.value AS api_metric_template
@@ -72,10 +71,11 @@ WITH RECURSIVE cte_src AS (
 			AND c.connector_type='Realisation'
 		LEFT JOIN t_object ch ON ch.object_id=c.end_object_id
 			AND (ch.object_type = 'Interface' OR ch.stereotype='C4_Container')
-			AND ch.status <> 'REMOVED'
+			--AND COALESCE(ch.status,'') <> 'REMOVED'
 		LEFT JOIN cte_src src ON src.target_id=ch.object_id
 ), cte_api AS (
 	SELECT
+		1 as manual,
 		api.name,
 		api.code,
 		api.ea_guid as api_guid,
@@ -86,6 +86,7 @@ WITH RECURSIVE cte_src AS (
 	FROM cte_provided api
 	UNION
 	SELECT
+		0,
 		api.name,
 		api.code,
 		api.uid,
@@ -96,15 +97,39 @@ WITH RECURSIVE cte_src AS (
 	FROM cte_rls api
 )
 SELECT DISTINCT
-	i.app_name, i.name, i.code, i.api_guid, m.name as method, m.ea_guid as operation_guid, i.api_metric_template,
-	latency.value as latency, rps.value as rps, error_rate.value as error_rate
+	i.manual,
+	i.app_name, 
+	i.app_code,
+	i.name, 
+	i.code, 
+	i.api_guid, 
+	protocol.value as protocol,
+	m.name as method, 
+	m.ea_guid as operation_guid, 
+	i.api_metric_template,
+	latency.value as latency, 
+	rps.value as rps, 
+	error_rate.value as error_rate
 FROM cte_api i
 	JOIN t_operation m ON m.object_id=i.object_id
 	LEFT JOIN t_operationtag latency ON latency.elementid=m.operationid AND latency.property='latency'
 	LEFT JOIN t_operationtag rps ON rps.elementid=m.operationid AND rps.property='rps'
-	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=m.operationid AND error_rate.property='error_rate'`;
+	LEFT JOIN t_operationtag error_rate ON error_rate.elementid=m.operationid AND error_rate.property='error_rate'
+	LEFT JOIN t_objectproperties protocol ON protocol.object_id=i.object_id AND protocol.property='protocol'`;
 
-export const SELECT_METHOD_SOURCES = `${SELECT_METHOD_ALL_SOURCES} WHERE i.api_metric_template IS NOT NULL`
+export const SELECT_METHOD_SOURCES = `${SELECT_METHOD_ALL_SOURCES} 
+WHERE i.api_metric_template IS NOT NULL 
+	OR rps.value IS NOT NULL 
+	OR latency.value IS NOT NULL 
+	OR error_rate.value IS NOT NULL
+	OR protocol.value IS NOT NULL
+	`;
+
+export const SELECT_MAPIC_METRIC_TEMPLATE = `SELECT
+	t.value as api_metric_template
+FROM t_object m
+	JOIN t_objectproperties t ON t.object_id=m.object_id AND t.property='api-metric-template'
+WHERE LOWER(m.alias)='mapic'`;
 
 export const SELECT_SOURCES_PROPERIES = `SELECT 
 	gs.name,
@@ -127,7 +152,7 @@ export const SELECT_API_SOURCES = `WITH RECURSIVE cte_src AS (
 	 	c.start_object_id,
 		 o.*
 	FROM t_connector c
-		JOIN t_object o ON o.object_id=c.end_object_id AND o.status<>'REMOVED' 
+		JOIN t_object o ON o.object_id=c.end_object_id AND COALESCE(o.status,'')<>'REMOVED' 
 	WHERE c.connector_type='Realisation'
 )
 SELECT
@@ -173,4 +198,3 @@ SELECT DISTINCT
 		LEFT JOIN cte_src app_s ON app_s.target_id=app.object_id
 WHERE LOWER(app.alias)=LOWER($1)
 	AND app.stereotype='softwareSystem'`;
-

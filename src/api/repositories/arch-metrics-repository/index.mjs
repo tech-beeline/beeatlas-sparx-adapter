@@ -1,6 +1,6 @@
 import fdmStorage from '../fdm-storage.mjs';
 import { PluginAction } from './model.mjs';
-import { INSERT_PUT_SYSTEM_LOG } from './queries.mjs';
+import { INSERT_PUT_SYSTEM_LOG, selectSystemChanges } from './queries.mjs';
 
 const METRIC_QUERIES = {
     SELECT_PLUGIN_METRICS: "SELECT * FROM arch_metrics.plugin_actions",

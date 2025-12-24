@@ -68,7 +68,7 @@ SWAGGER
         new JSONOperation("Обновление описания бизнс-возможностей",
             [CAPABILITY_CODE_PARAMETER],
             CAPABILITY_SCHEMA_REF
-            , CAPABILITY_SCHEMA_REF)
+            , CAPABILITY_SCHEMA_REF, CapabilityControllersInstance.putCapability)
     );
 
 export default SWAGGER;

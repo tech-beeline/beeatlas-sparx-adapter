@@ -210,9 +210,8 @@ class E2EProcessService {
 
     async getProcessBusinessInterctions(code) {
         let rows = await Repository.queryRows(`${QUERIES.E2E_PROCESS_BI_QUERY} where p.ea_guid=$1 order by m.seqno`, [code]);
-        const valid_rows = rows.filter(r => r.seqno);
-        const invalid_rows = rows.filter(r => !valid_rows.some(v => v.ea_guid === r.ea_guid)).map(r => Object.assign(r, { alert: `Не связано с сообщением или MessageEndpoint не является дочерним элементом для диаграммы` }))
-        return [...valid_rows, ...invalid_rows];
+        rows.sort((a, b) => b.recttop - a.recttop);
+        return rows;
     }
 
     async getProcessSummary(code) {
@@ -329,8 +328,8 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             if (m.client && m.server) {
                 m.childDiagram = diagrams.byContainerId[m.server_id];
                 m.childDiagram?.parents.push(m);
-
             }
+
             if (m.server?.object_type === 'MessageEndpoint') {
                 const error_message = `Сообщение связано с Message Endpoint ${m.server.name}`
                 onError(m, error_message)
@@ -358,7 +357,9 @@ where d.ea_guid  = ANY($1)`, [diagram_uids]
             root_messages.push(...CallTreeBuilder.build(m));
         }
 
-        //messages.forEach(m => m.childDiagram = undefined);
+        for (const m of root_messages) {
+            CallTreeBuilder.deduplicateChild(m);
+        }
 
         let applications = {}
         for (const o of Object.values(usedSystems)) {

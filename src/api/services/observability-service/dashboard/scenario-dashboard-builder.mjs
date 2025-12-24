@@ -4,17 +4,26 @@ import { expr } from "../../../../legacy/services/monitoring-templates/panels/pr
 import Sequence from "../../../../legacy/services/monitoring-templates/sequence.mjs";
 import { NotImplemented } from "../../../../utils/errors.mjs";
 import { GrafanaRow } from "./panels/call-tree-row.mjs";
+import { updateTargetsRef } from "./panels/index.mjs";
 import { uriRegex } from "./sources/common.mjs";
 
 const formatTitle = (msg) => `${msg.client_code} - ${msg.server_code}${msg.stereotype ? ` ${msg.stereotype}` : ""}: ${msg.method?.name ?? msg.name}`;
 
-const updateTargetsRef = (panel, id) => {
-    panel.targets.forEach(t => t.panelId = id)
+/**
+ * 
+ * @param {string} str 
+ * @returns 
+ */
+const caseInsensitive = (str) => str.replaceAll(/[a-zA-Z]/g, (s) => `[${s.toLowerCase()}${s.toUpperCase()}]`);
+
+export function uriRegexCaseInsensitive(path) {
+    return path?.split('/')
+        .map(a => a.startsWith('{') && a.endsWith('}') ? `([^\\/]+)` : caseInsensitive(a))
+        .join('\\/');
 }
 
-
 export function formatQuery(template, uri, method, client_code) {
-    const uri_regex = uriRegex(uri);
+    const uri_regex = uriRegexCaseInsensitive(uri);
 
     let variables = {
         REGEX_URI: uri_regex, "REGEX_URI:raw": uri_regex,
@@ -22,7 +31,7 @@ export function formatQuery(template, uri, method, client_code) {
         URI: uri,
         //method: method, 
         METHOD: method,
-        CLIENT_CMDB : client_code
+        CLIENT_CODE: client_code
         //uri_regex: uri_regex, 
     };
 
@@ -86,7 +95,8 @@ export class SecnarioDashboardBuilder {
         const ret = JSON.parse(this.statTemplateJSON);
 
         const apiTemplate = message.source.apiMetricTemplate;
-        if (!apiTemplate) throw Error(`api-metric-template not specified for ${message.method.name}`);
+        if (!apiTemplate)
+            throw Error(`api-metric-template not specified for ${message.method.name}`);
         if (!apiTemplate.panels?.length) throw Error(`No template panel found on ${apiTemplate.title}`);
         const panelTemplate = apiTemplate.panels[0];
 
@@ -97,11 +107,13 @@ export class SecnarioDashboardBuilder {
             if (target) {
                 Object.assign(target, t);
                 if (t.expr) {
-                    target.expr = formatQuery(t.expr, path, method, client_code);
+                    target.expr = formatQuery(t.expr, path, method, message.client_code);
                 }
                 if (t.query) {
-                    target.query = formatQuery(t.query, path, method, client_code)
+                    target.query = formatQuery(t.query, path, method, message.client_code)
                 }
+                if (t.rawSql)
+                    target.rawSql = formatQuery(t.rawSql, path, method, message.client_code);
             }
         }
 
@@ -126,6 +138,10 @@ export class SecnarioDashboardBuilder {
         message.method = message.method ?? { name: message.name, operation_guid: message.operation_guid }
 
         message.source = methodSources[message.method.operation_guid]
+        if (message.stereotype === "via MAPIC") {
+            message.source = methodSources.MAPIC;
+            console.log('MAPIC');
+        }
         /**
          * @type {StatPanel}
          */

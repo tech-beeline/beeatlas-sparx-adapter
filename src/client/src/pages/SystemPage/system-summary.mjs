@@ -1,7 +1,7 @@
 import { ExpandMore, SettingsApplications } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary, Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Link, Paper, Table, TableBody, TableCell, TableContainer, TableRow } from "@mui/material";
 
-export function SystemSummary({ system }) {
+export function SystemSummary({ system, product }) {
     return (
         <Accordion>
             <AccordionSummary component={Paper} expandIcon={<ExpandMore />}><SettingsApplications />
@@ -22,6 +22,10 @@ export function SystemSummary({ system }) {
                                 <TableCell>CMDB мнемоника</TableCell>
                                 <TableCell>{system.code}</TableCell>
                             </TableRow>
+                            {product && <TableRow>
+                                <TableCell>Рабочее простраснтво в structurizr on premises</TableCell>
+                                <TableCell><Link href={product.structurizr_api_url} target="_blank">{product.structurizr_api_url}</Link></TableCell>
+                            </TableRow>}
                             <TableRow>
                                 <TableCell>Статус</TableCell>
                                 <TableCell>{system.status}</TableCell>
@@ -29,10 +33,6 @@ export function SystemSummary({ system }) {
                             <TableRow>
                                 <TableCell>Дата изменения</TableCell>
                                 <TableCell>{system.modifiedDate}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Дашборд продукта</TableCell>
-                                <TableCell><a href={`https://inside-dev.beeline.ru/d/archops-sys-${system.code}`} target="_blank" rel="noreferrer">https://inside-dev.beeline.ru/d/archops-sys-{system.code}</a></TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>

@@ -42,7 +42,15 @@ const COLUMNS_MAP = {
     "API.02": {
         link: "nfr_link",
         ts: "nfr_ts"
-    }
+    },
+    "SEC.01": {
+        link: "idm_link",
+        ts: "idm_ts"
+    },
+    "GIT.01": {
+        link: "git_link",
+        ts: "git_ts"
+    },
 }
 
 const buildUpdateSource = (src) => src ? `${src}='FDM API', ` : "";
@@ -60,7 +68,7 @@ export class PtrArtifactsRepository {
                 ]);
             if (!updateResult) {
                 await eaRepository.queryOne(
-                    `INSERT INTO fdm_ptr_artifacts(cmdb_mnem, dt_update, ${columnsMap.link}, ${columnsMap.ts} ${columnsMap.source ? `, ${columnsMap.source}` : ""}) VALUES($1,NOW(), $2, $3${columnsMap.source ? ', FDM API' : ""})`,
+                    `INSERT INTO fdm_ptr_artifacts(cmdb_mnem, dt_update, ${columnsMap.link}, ${columnsMap.ts} ${columnsMap.source ? `, ${columnsMap.source}` : ""}) VALUES($1,NOW(), $2, $3${columnsMap.source ? ", 'FDM API'" : ""})`,
                     [
                         systemCode, result, time
                     ])

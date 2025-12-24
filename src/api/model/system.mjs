@@ -1,4 +1,5 @@
 import { buildHREF } from "../controllers/controller-decorator.mjs";
+import { REMOVED_STATUS } from "../repositories/systems-repository/const.mjs";
 import { integerProperty, schemasRef, stringProperty } from "../specifications/helpers.mjs";
 import { E2E_LIST_RESOURCE, SYSTEM_LIST_RESOURCE } from "../specifications/paths.mjs";
 
@@ -22,14 +23,24 @@ export class APIMethod {
     rps;
     latency;
     error_rate;
+    /** @type {string} */
+    implements;
+    removed;
 
-    constructor({ name, returnType, description, parameters, notes, ea_guid, operationid, rps, latency, error_rate } = {}) {
+    constructor({
+        name,
+        returnType,
+        description, parameters, notes, ea_guid, operationid, rps, latency, error_rate,
+        removed_date,
+        implements: tcCode } = {}) {
         this.name = name;
         this.returnType = returnType ?? undefined;
         this.description = description ?? notes;
         this.rps = rps ?? undefined;
         this.latency = latency ?? undefined;
         this.error_rate = error_rate ?? undefined;
+        this.implements = tcCode ?? undefined;
+        this.removed = removed_date ?? undefined;
         //this.parameters = parameters ? parameters.map(p => p instanceof APIMethodParameter ? p : new APIMethodParameter(p)) : [];
     }
 }
@@ -38,6 +49,7 @@ const compareMethods = (a, b) => a.name.localeCompare(b.name)
 
 export class APIInterface {
     name;
+    /**@type {string} */
     code;
     version;
     type;
@@ -89,15 +101,22 @@ export class Container {
      * @type {APIInterface[]}
      */
     interfaces;
-    constructor({ name, code, version, tags, interfaces, description, status } = {}) {
+    #container_id;
+    constructor({ name, code, version, tags, interfaces, description, status, container_id } = {}) {
         this.name = name;
         this.code = code;
-        this.version = version;
+        this.version = version || undefined;
         this.tags = tags;
         this.interfaces = interfaces;
-        this.status = status;
+        this.status = status || undefined;
         this.description = description ?? undefined;
+        this.#container_id = container_id;
     }
+    /**
+     * 
+     * @param {*} i 
+     * @returns {APIInterface}
+     */
     addInterface(i) {
         if (!(i instanceof APIInterface)) i = new APIInterface(i)
         if (!this.interfaces) this.interfaces = [];
@@ -106,6 +125,9 @@ export class Container {
     }
     interfaceByCode(code) {
         return this.interfaces?.find(i => i.code === code);
+    }
+    get container_id() {
+        return this.#container_id;
     }
 }
 
@@ -330,8 +352,9 @@ export default class System {
      */
     containers = [];
     links = {};
+    #hasDoubles;
 
-    constructor({ name, code, version, tags, containers, author, description, ea_guid, FQName, packageName, status, modifiedDate } = {}) {
+    constructor({ name, code, version, tags, containers, author, description, ea_guid, FQName, packageName, status, modifiedDate, hasDoubles } = {}) {
         this.name = name;
         this.code = code;
         this.version = version;
@@ -344,6 +367,7 @@ export default class System {
         this.package = packageName;
         this.status = status;
         this.modifiedDate = modifiedDate;
+        this.#hasDoubles = hasDoubles;
         this.links = {
             self: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}`),
             purpose: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}/purpose`),
@@ -351,19 +375,27 @@ export default class System {
             assessments: buildHREF(`${SYSTEM_LIST_RESOURCE}/${encodeURIComponent(code)}/e2e`)
         }
     }
+    hasDoubles() {
+        return this.#hasDoubles;
+    }
     /**
      * 
      * @param {{name: String, code:String, version:String, interfaces: Array<{name, code, version}>}} container 
-     * @returns 
+     * @returns {Container}
      */
     addContainer(container) {
-        if (!(container instanceof Container)) container = new Container(container);
         if (!this.containers) this.containers = [];
-        this.containers.push(container)
+
+        const c = this.containers.find(c => c.code.toLowerCase() === container.code.toLowerCase());
+        if (c) return c;
+
+        if (!(container instanceof Container)) container = new Container(container);
+
+        this.containers.push(container);
         return container;
     }
     containerByCode(code) {
-        return this.containers?.find(c => c.code === code);
+        return this.containers?.find(c => c.code?.toLowerCase() === code?.toLowerCase());
     }
 }
 
@@ -410,3 +442,69 @@ export const SYSTEM_MONITORING_RESULT_SCHEMA = {
     }
 }
 
+export const isContainersEquals = (a, b) =>
+    (a.name || a.container_name) === (b.name || b.container_name)
+    && ((a.description || a.container_description) ?? "") === (b.description ?? "")
+    && (a.status || a.container_status || "") === (b.status ?? "")
+    && (a.version || a.container_version || "") === (b.version ?? "")
+    && ((a.code || a.container_code).toLowerCase()) === b.code.toLowerCase()
+    && (a.author ?? "") === (b.author ?? "");
+
+export const isAPIEquals = (a, b) => (a.name || a.interface_name) === b.name
+    && (a.description || a.interface_description || "") === (b.description ?? "")
+    && (a.version || a.interface_version || "") === (b.version ?? "")
+    && (a.status || a.interface_status || "") === (b.status ?? "")
+    && (a.specification ?? "") === (b.specification ?? "")
+    && (a.implements || a.tcCode || "")?.toLowerCase() === (b.implements?.toLowerCase() ?? "")
+    && (a.protocol ?? "") === (b.protocol ?? "")
+    && (a.code || a.interface_code).toLowerCase() === b.code.toLowerCase();
+
+const codeCompare = (a, b) => a.code.toLowerCase().localeCompare(b.code.toLowerCase());
+const nameCompare = (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+
+export const isMethodEquals = (a, b) =>
+    a.name.toLowerCase() === b.name.toLowerCase() && (a.description ?? "") === (b.description ?? "")
+    && (a.rps?.toString() ?? "") === (b.rps?.toString() ?? "")
+    && (a.latency?.toString() ?? "") === (b.latency?.toString() ?? "")
+    && (a.error_rate?.toString() ?? "") === (b.error_rate?.toString() ?? "")
+    && (a.implements?.toString() ?? "") === (b.implements?.toString() ?? "")
+    && ((a.removed || a.removed_date) ?? "") == ((b.removed || b.removed_date) ?? "");
+/**
+ * 
+ * @param {System} aSystem 
+ * @param {System} bSystem 
+ */
+export const isSystemEquals = (aSystem, bSystem) => {
+    const aContainers = [...aSystem.containers ?? []].sort(codeCompare).filter(c => c.status != REMOVED_STATUS);
+    const bContainers = [...bSystem.containers ?? []].sort(codeCompare).filter(c => c.status != REMOVED_STATUS);
+    if (aContainers.length !== bContainers.length) return false;
+
+    for (let i = 0; i < aContainers.length; i++) {
+
+        if (aContainers[i].code.toLowerCase() !== bContainers[i].code.toLowerCase() || !isContainersEquals(aContainers[i], bContainers[i]))
+            return false;
+
+        const aInterfaces = [...aContainers[i].interfaces ?? []].sort(codeCompare).filter(i => i.status != REMOVED_STATUS);
+        const bInterfaces = [...bContainers[i].interfaces ?? []].sort(codeCompare).filter(i => i.status != REMOVED_STATUS);;
+        if (aInterfaces.length !== bInterfaces.length)
+            return false;
+
+        for (let j = 0; j < aInterfaces.length; j++) {
+            const aApi = aInterfaces[j];
+            const bApi = bInterfaces[j];
+            if (aApi.code?.toLowerCase() !== bApi.code?.toLowerCase() || !isAPIEquals(aApi, bApi))
+                return false;
+
+            const aMethods = [...aApi.methods ?? []].sort(nameCompare).filter(m => !m.removed_date);
+            const bMethods = [...bApi.methods ?? []].sort(nameCompare).filter(m => !m.removed_date);
+            if (aMethods.length !== bMethods.length)
+                return false;
+
+            for (let k = 0; k < aMethods.length; k++) {
+                if (!isMethodEquals(aMethods[k], bMethods[k]))
+                    return false;
+            }
+        }
+    }
+    return true;
+}

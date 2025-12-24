@@ -59,6 +59,11 @@ export class t_object {
     actionflags;
     eventflags;
     docvector;
+    /**
+     * 
+     * @param {t_object} obj 
+     * @returns 
+     */
     constructor(obj) {
         if (!obj) return;
         for (const fld in this) {

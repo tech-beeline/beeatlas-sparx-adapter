@@ -4,8 +4,7 @@ import { ObservabilityService } from "./observability-service/index.mjs";
 import { ScenariosService } from "./scenarios-service/index.mjs";
 import { SystemService } from "./systems-service/index.mjs"
 import { TechnicalCapabiliiesService } from "./tc-service/index.mjs";
-export { GET_ALL_SYSTEMS_HANDLERS } from "./systems-service/get-all-systems.mjs";
-export { CapabilityService } from './capability-service/index.mjs'
+export { CapabilityService, capabilitServiceInstance } from './capability-service/index.mjs'
 export { MonitiringSourcesServices } from './monitiring-sources-service.mjs'
 export { StructurizrService } from './structurizr-service/index.mjs'
 
@@ -35,4 +34,5 @@ export class BoardServices {
     constructor(config) {
         this.sparxRepository = new SparxRepository(config?.sparx);
     }
-}
+};
+

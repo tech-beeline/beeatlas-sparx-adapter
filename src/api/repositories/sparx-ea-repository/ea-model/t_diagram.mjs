@@ -31,6 +31,11 @@ export class t_diagram {
     swimlanes;
     styleex;
 
+    /**
+     * 
+     * @param {t_diagram} obj 
+     * @returns 
+     */
     constructor(obj) {
         if (!obj) return;
         for (const fld in this) {

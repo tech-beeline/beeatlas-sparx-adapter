@@ -1,0 +1,1 @@
+export const BC_PACKAGE_NAME = "BC";

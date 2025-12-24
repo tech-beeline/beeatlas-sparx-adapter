@@ -1,5 +1,6 @@
 import { GlossariesRepository } from "../repositories/index.mjs";
 import { Glossary, Term } from "../model/glossary-model.mjs";
+import { NotImplemented } from "../../utils/errors.mjs";
 
 const glossariesRepository = new GlossariesRepository();
 
@@ -28,6 +29,9 @@ class GlossaryService {
     async getGlossaryTerms(id) {
         const termsData = await glossariesRepository.getGlossaryTerms(id);
         return termsData.map(t => new Term(t))
+    }
+    async getDatabaseServices(){
+        return glossariesRepository.getDatabaseServices();
     }
 }
 

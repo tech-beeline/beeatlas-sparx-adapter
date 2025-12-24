@@ -274,3 +274,175 @@ export const REMOVE_DOUBLES = {
         assessments: "/api/v4/systems/remove-doubles/e2e"
     }
 }
+
+
+export const CONTAINER_WITHOUT_CODE = {
+    name: "remove-doubles",
+    code: "remove-doubles",
+    version: "1.0",
+    author: "Игорь Воронин",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/update-existins-api",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Mordor container",
+            description: "Орда. Родная, злобная, твоя",
+            version: "1.0",
+            status: "Proposed"
+        }
+    ]
+}
+
+export const CONTAINER_NULL_CODE = {
+    name: "remove-doubles",
+    code: "remove-doubles",
+    version: "1.0",
+    author: "Игорь Воронин",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/update-existins-api",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Mordor container",
+            code: null,
+            description: "Орда. Родная, злобная, твоя",
+            version: "1.0",
+            status: "Proposed"
+        }
+    ]
+}
+
+export const CONTAINER_EMPTY_CODE = {
+    name: "remove-doubles",
+    code: "remove-doubles",
+    version: "1.0",
+    author: "Игорь Воронин",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/update-existins-api",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Mordor container",
+            code: "",
+            description: "Орда. Родная, злобная, твоя",
+            version: "1.0",
+            status: "Proposed"
+        }
+    ]
+}
+
+export const INTERFACE_WITHOUT_CODE = {
+    name: "remove-doubles",
+    code: "remove-doubles",
+    version: "1.0",
+    author: "Игорь Воронин",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/update-existins-api",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Mordor container",
+            code: "test.remove-doubles",
+            description: "Орда. Родная, злобная, твоя",
+            version: "1.0",
+            status: "Proposed",
+            interfaces: [
+                {
+                    name: "mordor API",
+                    status: "Proposed",
+                    version: "1.0",
+                    methods: []
+                }
+            ]
+        }
+    ]
+}
+
+export const INTERFACE_NULL_CODE = {
+    name: "remove-doubles",
+    code: "remove-doubles",
+    version: "1.0",
+    author: "Игорь Воронин",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/update-existins-api",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Mordor container",
+            code: "test.remove-doubles",
+            description: "Орда. Родная, злобная, твоя",
+            version: "1.0",
+            status: "Proposed",
+            interfaces: [
+                {
+                    name: "mordor API",
+                    code: null,
+                    status: "Proposed",
+                    version: "1.0",
+                    methods: []
+                }
+            ]
+        }
+    ]
+}
+
+export const INTERFACE_EMPTY_CODE = {
+    name: "remove-doubles",
+    code: "remove-doubles",
+    version: "1.0",
+    author: "Игорь Воронин",
+    FQName: "IT-Landscape Catalog/DEV_TEST/Tests/update-existins-api",
+    status: "Proposed",
+    containers: [
+        {
+            name: "Mordor container",
+            code: "test.remove-doubles",
+            description: "Орда. Родная, злобная, твоя",
+            version: "1.0",
+            status: "Proposed",
+            interfaces: [
+                {
+                    name: "mordor API",
+                    code: "",
+                    status: "Proposed",
+                    version: "1.0",
+                    methods: []
+                }
+            ]
+        }
+    ]
+};
+
+export const ADD_INTERFACE_METHOD = {
+    "name": "add-method",
+    "code": "add-method",
+    "version": "1.0",
+    "author": "Игорь Воронин",
+    "FQName": "IT-Landscape Catalog/DEV_TEST/Tests/update-existins-api",
+    "status": "Proposed",
+    "containers": [
+        {
+            name: "Mordor",
+            code: "mordor.add-method",
+            version : "1.0",
+            status: "Proposed",
+            interfaces: [
+                {
+                    name : "orcs api",
+                    code : "orcs.mordor.add-method",
+                    version: "1.0",
+                    status: "Proposed",
+                    methods: [
+                        {
+                            name : "GET /orcs",
+                            implements : "FDMSHOWCASEAPP.001",
+                            rps: "10"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "links": {
+        "self": "/api/v4/systems/add-method",
+        "purpose": "/api/v4/systems/add-method/purpose",
+        "e2e": "/api/v4/systems/add-method/e2e",
+        "assessments": "/api/v4/systems/add-method/e2e"
+    }
+}

@@ -1,19 +1,22 @@
 import {
     AccountTree,
-    ExpandMore
+    ExpandMore,
+    Launch
 } from "@mui/icons-material";
 import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
     Box,
+    Link,
     Paper,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
-    TableRow
+    TableRow,
+    Typography
 } from "@mui/material";
 
 import { useEffect, useState } from "react";
@@ -23,35 +26,10 @@ import {
     Tabs
 } from "@beeline/design-system-react";
 import { ProvidedApiBox } from "./provider-api.mjs";
+import { CapabilityBox } from "../../../components/index.mjs";
 
 
-function CapabilityBox({ capabilityCode }) {
-    const [capability, setCapability] = useState(null);
 
-
-    useEffect(() => {
-        async function loadCapability() {
-            try {
-                if (!capabilityCode)
-                    return;
-                const req = await fetch(`/api/tech-capabilities/${encodeURIComponent(capabilityCode)}`);
-                if (req.status !== 200) {
-                    throw Error(await req.text());
-                }
-                setCapability(await req.json());
-
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        loadCapability();
-    }, [capabilityCode]);
-
-    return (
-        <Box sx={{ marginLeft: 10 }}> {capability ? capability.name : capabilityCode}
-        </Box>)
-}
 
 function MethodsTable({ methods }) {
     if (!methods || !methods.length) {
@@ -59,15 +37,19 @@ function MethodsTable({ methods }) {
     }
     return <TableContainer component={Paper}>
         <Table size="small" padding="none">
+            <colgroup>
+                <col width="20%" />
+                <col width="20%" />
+            </colgroup>
             <TableHead>
                 <TableRow key="head">
-                    <TableCell >Метод</TableCell><TableCell>RPS</TableCell><TableCell>Latency</TableCell><TableCell>Error Rate</TableCell>
+                    <TableCell >Метод</TableCell><TableCell>Техническая возможность</TableCell><TableCell>RPS</TableCell><TableCell>Latency</TableCell><TableCell>Error Rate</TableCell>
                 </TableRow>
             </TableHead>
             <TableBody>
                 {methods.map((m, i) => (
                     <TableRow hover key={i}>
-                        <TableCell>{m.name}</TableCell><TableCell>{m.rps}</TableCell><TableCell>{m.latency}</TableCell><TableCell>{m.error_rate}</TableCell>
+                        <TableCell>{m.name}</TableCell><TableCell>{m.implements && <CapabilityBox capabilityCode={m.implements} />}</TableCell><TableCell>{m.rps}</TableCell><TableCell>{m.latency}</TableCell><TableCell>{m.error_rate}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>
@@ -80,7 +62,7 @@ function ApiAccorion({ api }) {
     return (
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}><ApiIcon />
-                <Box fontWeight='fontWeightMedium' display='inline'>[{api.code}] {api.name}</Box><CapabilityBox capabilityCode={api.capabilityCode} />
+                <Box fontWeight='fontWeightMedium' display='inline' color={api.status==="REMOVED"?"red":null}> {api.status?`status=${api.status}`:null} [{api.code}] {api.name}</Box><CapabilityBox capabilityCode={api.capabilityCode} />
             </AccordionSummary>
             <AccordionDetails>
                 <Box component={Paper}>
@@ -116,8 +98,7 @@ function ContainerAccordion({ container }) {
     return (
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}><ContainerIcon />
-                <Box fontWeight='fontWeightMedium' display='inline'>[{container.code}] {container.name}
-
+                <Box fontWeight='fontWeightMedium' display='inline' color={container.status==='REMOVED'?"red":null}>{container.status?`status=${container.status}`:null} [{container.code}] {container.name} 
                 </Box>
             </AccordionSummary>
             <AccordionDetails>
@@ -134,16 +115,16 @@ export function SystemContainers({ system }) {
     return (
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}><AccountTree />
-                <Box fontWeight='fontWeightMedium' display='inline'>Контейнеры, интерфейсы и SLA</Box>
+                <Box fontWeight='fontWeightMedium' display='inline'>Контейнеры, интерфейсы и SLA</Box> <Box>&nbsp;<Link href={`${system.code.toLowerCase()}/api`} target="_blank" ><Launch />API</Link></Box>
             </AccordionSummary>
             <AccordionDetails>
                 <Tabs bodyClassName="classForAllTabs">
-                    <Tab label="Старый вариант" key={1}>
+                    <Tab label="Контейнеры в structurizr" key={1}>
                         <Box component={Paper}>
                             {(system.containers ?? []).map((container, i) => <ContainerAccordion key={i} container={container} />)}
                         </Box>
                     </Tab>
-                    <Tab label="Structurizr" key={2}>Здесь будет новая версия</Tab>
+
                     <Tab label="Добавленные вручную" key={3}><ProvidedApiBox app={system} /></Tab>
                 </Tabs>
             </AccordionDetails>
