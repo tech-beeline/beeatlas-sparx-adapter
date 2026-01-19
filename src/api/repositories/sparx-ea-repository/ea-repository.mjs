@@ -394,14 +394,25 @@ export class SparxRepository {
      * @returns {Promise<created_package>}
      */
     async createPackage(pkg) {
+        if (!pkg.ea_guid)
+            pkg.ea_guid = `{${uuid().toUpperCase()}}`
         /**
          * @type {t_package}
          */
         let new_pkg = await this.insert(t_package, pkg);
 
         const obj = await this.createObject({
-            name: new_pkg.name, ea_guid: new_pkg.ea_guid, object_type: 'Package',
-            package_id: pkg.parent_id, author: pkg.author ?? 'FDM API', version: '1.0', pdata1: new_pkg.package_id, status: pkg.status ?? 'Proposed', note: pkg.notes, alias: pkg.alias
+            name: new_pkg.name, 
+            ea_guid: new_pkg.ea_guid, 
+            object_type: 'Package',
+            package_id: pkg.parent_id, 
+            author: pkg.author ?? 'FDM API', 
+            version: '1.0', 
+            pdata1: new_pkg.package_id, 
+            status: pkg.status ?? 'Proposed', 
+            note: pkg.notes, 
+            alias: pkg.alias,
+            stereotype: pkg.stereotype
         });
 
         Object.assign(obj, new_pkg);
@@ -834,7 +845,7 @@ export class SparxRepository {
 
         const relations = await this.queryOne(SELECT_OBJECT_RELATIONS, [object_id]);
         if (!relations) return true;
-        
+
         for (const f in relations) {
             if (f !== 'object_id' && relations[f] != 0)
                 return false;
@@ -843,8 +854,8 @@ export class SparxRepository {
     }
 
     async deleteOperation(operation_id) {
-        if( !operation_id) throw Error(`operation_id is not specified`);
-        
+        if (!operation_id) throw Error(`operation_id is not specified`);
+
         await this.delete(t_operationparams, { operationid: operation_id });
         await this.delete(t_operationtag, { elementid: operation_id });
         await this.delete(t_operation, { operationid: operation_id });

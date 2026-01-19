@@ -1,3 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS mapic;
+
 CREATE TABLE IF NOT EXISTS mapic.products
 (
     cmdb        VARCHAR(255) UNIQUE,                  -- CMDB мнемоника приложения из workspace.dsl

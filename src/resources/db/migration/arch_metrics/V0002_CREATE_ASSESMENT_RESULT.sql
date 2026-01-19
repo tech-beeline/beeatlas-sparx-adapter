@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS arch_metrics.system_assessment_result (
 
 COMMENT ON TABLE arch_metrics.system_assessment_result IS 'Актуальные результаты оценки систем для этапа ПТР';
 
-
 /*
  История оценки систем для этапа ПТР
 */
@@ -28,8 +27,15 @@ CREATE TABLE IF NOT EXISTS arch_metrics.system_assessment_history (
 
 COMMENT ON TABLE arch_metrics.system_assessment_result IS 'История оценки систем для этапа ПТР';
 
-ALTER TABLE arch_metrics.system_assessment_result ADD CONSTRAINT pk_sys_assessment_result PRIMARY KEY (fitness_fn_code,system_code);
-ALTER TABLE arch_metrics.system_assessment_history ADD CONSTRAINT pk_sys_assessment_history PRIMARY KEY (id);
+ALTER TABLE arch_metrics.system_assessment_result 
+	DROP CONSTRAINT IF EXISTS pk_sys_assessment_result;
+ALTER TABLE arch_metrics.system_assessment_result 
+	ADD CONSTRAINT pk_sys_assessment_result PRIMARY KEY (fitness_fn_code,system_code);
+
+ALTER TABLE arch_metrics.system_assessment_history 
+	DROP CONSTRAINT IF EXISTS pk_sys_assessment_history;
+ALTER TABLE arch_metrics.system_assessment_history 
+	ADD CONSTRAINT pk_sys_assessment_history PRIMARY KEY (id);
 
 CREATE OR REPLACE FUNCTION arch_metrics.log_sys_assessment() RETURNS TRIGGER AS $log_sys_assessment$
 BEGIN
@@ -53,7 +59,8 @@ BEGIN
 END;
 $log_sys_assessment$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS sys_assess ON arch_metrics.system_assessment_result;
 CREATE TRIGGER sys_assess
-AFTER INSERT OR UPDATE OR DELETE ON arch_metrics.system_assessment_result
+	AFTER INSERT OR UPDATE OR DELETE ON arch_metrics.system_assessment_result
     FOR EACH ROW EXECUTE FUNCTION arch_metrics.log_sys_assessment();
 

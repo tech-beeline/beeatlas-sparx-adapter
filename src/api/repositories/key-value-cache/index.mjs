@@ -1,4 +1,5 @@
 import { NotImplemented } from "../../../utils/errors.mjs";
+import { initDbPromise } from "../init/index.mjs";
 
 class CacheOptions {
     entity;
@@ -146,6 +147,7 @@ export class KeyValueCache {
 
     async load() {
         try {
+            await initDbPromise;
             console.log(`${(new Date()).toISOString()} Начата загрузка кеша [${this.#entity}]`);
 
             const start_time = performance.now();
