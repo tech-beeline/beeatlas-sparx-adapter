@@ -5,7 +5,6 @@ import TC_METHODS from './technical-capabilities-routes.mjs';
 import DASHBOARD_METHODS from './dashboard-routes.mjs';
 import INTERFACES_ROUTES from './interface-routes.mjs';
 import E2E_PROCESS_ROUTES from './e2e-process-routes.mjs';
-import IA_ROUTES from './interface-agreement-routes.mjs'
 import MONITORING_ROUTES from './monitoring-routes.mjs'
 import TELEMETRY_ROUTES from './telemetry-routes.mjs'
 import DATA_MODEL_ROUTES from './data-model-routes.mjs';
@@ -23,7 +22,6 @@ export const ROUTES = [
     DASHBOARD_METHODS,
     INTERFACES_ROUTES,
     E2E_PROCESS_ROUTES,
-    IA_ROUTES,
     TELEMETRY_ROUTES
 ]
 

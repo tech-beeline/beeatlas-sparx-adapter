@@ -6,21 +6,14 @@ import Repository, {
 import { BusinessInteraction } from '../model/e2e-process.mjs';
 
 import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
-import IARepository from '../../utils/ia.mjs';
+
 import applicationService from './application-service.mjs';
 import CallTreeBuilder, { onError } from './call-tree-builder.mjs';
 import QUERIES from './sql/e2e-process-queries.mjs'
 import { TC_API_QUERY } from './sql/interfaces-queries.mjs';
+import { WEB_EA_URL } from '../../client/src/resources/paths/index.mjs';
 
 
-function safeDecode(url, msg) {
-    try {
-        return decodeURIComponent(url);
-    } catch (error) {
-        console.error(error, msg)
-    }
-    return url;
-}
 class E2EProcessService {
     /**
      * 
@@ -164,8 +157,8 @@ class E2EProcessService {
                         throw Error('Ссылки на ref обьекты не поддерживаются')
                     }
                     if (!parent_message.operation_guid) {
-                        throw Error(`Нельзя корректно подключить диаграмму [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${uid}">${diagram_map[uid].name}</a>]: 
-                        отсутствует ссылка на метод из интерфейса для объекта [<a target="_blank" href="https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${parent_message.server_uid}">${parent_message.server_name ?? 'Unnamed object'}</a>] в сообщении  ${parent_message.message
+                        throw Error(`Нельзя корректно подключить диаграмму [<a target="_blank" href="${WEB_EA_URL}?m=1&o=${uid}">${diagram_map[uid].name}</a>]: 
+                        отсутствует ссылка на метод из интерфейса для объекта [<a target="_blank" href=${WEB_EA_URL}?m=1&o=${parent_message.server_uid}">${parent_message.server_name ?? 'Unnamed object'}</a>] в сообщении  ${parent_message.message
                             }`)
                     }
                     const parent_context = parent_message.parent();

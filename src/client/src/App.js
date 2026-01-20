@@ -23,8 +23,6 @@ import '@beeline/design-tokens/css/iconfont/iconfont.css';
 import '@beeline/design-tokens/css/font-face.css';
 
 
-import { WorkspaceCheckResultPage } from "./pages/WorkspaceCheckPage/index.mjs";
-import { STRUCTURIZR_CHECK_RESULT } from "./const.mjs";
 import { SequencePage } from "./pages/SequencePage/index.mjs";
 import { MethodDoublesPage } from "./pages/MethodDoublesPage/index.mjs";
 import { DigitalArchitectActionsPage } from "./pages/DigitalArchitectActionsPage/index.mjs";
@@ -43,8 +41,6 @@ function App() {
                 <Route path={`e2e/:uid`} element={<E2EProcessPage />} />
                 <Route path={`e2e/:process_uid/bi/:uid`} element={<E2EScenarioDashboardPage />} />
                 <Route path={`e2e/:process_uid/scenario/:uid`} element={<ScenarioPage />} />
-                <Route path="/structurizr/check" element={<WorkspaceCheckPage />} />
-                <Route path={STRUCTURIZR_CHECK_RESULT} element={<WorkspaceCheckResultPage />} />
                 <Route path="/sequence" element={<SequencePage />} />
                 <Route
                     path="/maintenance/dbl"
