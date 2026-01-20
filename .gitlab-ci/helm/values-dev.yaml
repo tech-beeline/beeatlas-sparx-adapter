@@ -1,0 +1,24 @@
+env:
+  DB_EA_URL:                "jdbc:postgresql://yd-fdmdevdb01.nix.vimpelcom.ru:5432/ea_repository"
+  DB_EA_USER:               "vault:eafdmmart/data/dev/ea#username"
+  DB_EA_PASSWORD:           "vault:eafdmmart/data/dev/ea#password"
+  DB_EA_DATABASE:           "ea_repository"
+  IA_GIT_TOKEN:             "vault:eafdmmart/data/dev/ia#token"
+  OPENMETADATA_TOKEN:       "vault:eafdmmart/data/dev/OMD#TOKEN"
+  OPENMETADATA_URL:         "https://open-metadata.prod.dmp.vimpelcom.ru"
+  FDM_URL:                  "jdbc:postgresql://yd-fdmdevdb01.nix.vimpelcom.ru:5432/fdm_db"
+  FDM_USERNAME:             "vault:eafdmmart/data/dev/fdm#username"
+  FDM_PASSWORD:             "vault:eafdmmart/data/dev/fdm#password"
+  GRAFANA_URL:              "https://inside.beeline.ru"
+  GRAFANA_TOKEN:            "vault:eafdmmart/data/dev/grafana#token"
+  GRAFANA_E2E_TEMPLATE_UID: "2mHJmn5Nk"
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+podAnnotations:
+  vault.security.banzaicloud.io/vault-addr: "https://vault-test.vimpelcom.ru/"
+
