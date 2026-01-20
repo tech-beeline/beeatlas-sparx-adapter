@@ -6,21 +6,13 @@ import Repository, {
 import { BusinessInteraction } from '../model/e2e-process.mjs';
 
 import { BadRequest, NotFound, NotImplemented } from '../../utils/errors.mjs';
-import IARepository from '../../utils/ia.mjs';
+
 import applicationService from './application-service.mjs';
 import CallTreeBuilder, { onError } from './call-tree-builder.mjs';
 import QUERIES from './sql/e2e-process-queries.mjs'
 import { TC_API_QUERY } from './sql/interfaces-queries.mjs';
 
 
-function safeDecode(url, msg) {
-    try {
-        return decodeURIComponent(url);
-    } catch (error) {
-        console.error(error, msg)
-    }
-    return url;
-}
 class E2EProcessService {
     /**
      * 
