@@ -1,4 +1,4 @@
-export const GRAFANA_URL = process.env.GRAFANA_URL ?? "https://inside-dev.beeline.ru"
+export const GRAFANA_URL = process.env.GRAFANA_URL;
 export const GRAFANA_TOKEN = process.env.GRAFANA_TOKEN;
 export const GRAFANA_E2E_TEMPLATE_UID = process.env.GRAFANA_E2E_TEMPLATE_UID;
 

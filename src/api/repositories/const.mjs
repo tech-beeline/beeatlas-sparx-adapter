@@ -1,0 +1,1 @@
+export const STRUCTURIZR_URL = process.env.STRUCTURIZR_URL;

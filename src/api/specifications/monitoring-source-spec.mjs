@@ -1,5 +1,6 @@
 import { CONTAINER_SOURCE_RESOURCE, INTERFACE_SOURCE_RESOURCE, SYSTEM_OBJECTS_RESOURCE, SYSTEM_SOURCE_RESOURCE } from "../../resources/const.mjs";
 import monitoringSourcesControllers from "../controllers/monitiring-sources-controllers.mjs";
+import { GRAFANA_URL } from "../resources/grafana/conts.mjs";
 import { GetJSONOperation, JSONOperation, SimpleServiceSpecification, arraySchema, booleanProperty, buildServiceSwagger, dateTimeProperty, numberProperty, schemasRef, stringProperty } from "./helpers.mjs"
 import { SYSTEM_CODE_PARAMETER } from "./system-service-spec/index.mjs";
 
@@ -16,7 +17,7 @@ const OBJECT_API_TEMPLATE_SCHEMA = SWAGGER.defineEntitySchema("GrafanaSource", {
     properties: {
         object_id: numberProperty("Идентификатор обьекта", { example : 165028}),
         apiMetricTemplate: stringProperty("Ссылка на шаблон для получения метрик", {
-            example: "https://inside.beeline.ru/d/hwzG1EcNz/opensearch-template-api-queries?orgId=1"
+            example: `${GRAFANA_URL}/d/hwzG1EcNz/opensearch-template-api-queries?orgId=1`
         })
     }
 });
@@ -26,7 +27,7 @@ const CONTAINER_API_TEMPLATE_SCHEMA = SWAGGER.defineEntitySchema("ContainerApiTm
     properties: {
         container_code: stringProperty("Код контейнера", { example : 'dashboard.FDMSHOWCASEAPP'}),
         apiMetricTemplate: stringProperty("Ссылка на шаблон для получения метрик", {
-            example: "https://inside.beeline.ru/d/hwzG1EcNz/opensearch-template-api-queries?orgId=1"
+            example: `${GRAFANA_URL}/d/hwzG1EcNz/opensearch-template-api-queries?orgId=1`
         })
     }
 });
@@ -36,7 +37,7 @@ const INTERFACE_API_TEMPLATE_SCHEMA = SWAGGER.defineEntitySchema("InterfaceApiTe
     properties: {
         container_code: stringProperty("Код интерфейса", { example : 'business-terms-api.dashboard.FDMSHOWCASEAPP'}),
         apiMetricTemplate: stringProperty("Ссылка на шаблон для получения метрик", {
-            example: "https://inside.beeline.ru/d/hwzG1EcNz/opensearch-template-api-queries?orgId=1"
+            example: `${GRAFANA_URL}/d/hwzG1EcNz/opensearch-template-api-queries?orgId=1`
         })
     }
 });

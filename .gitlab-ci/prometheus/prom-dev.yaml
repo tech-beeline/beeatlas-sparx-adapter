@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    prometheus.io/path: "/metrics" # эндпоинт, где лежат метрики
+    prometheus.io/scheme: "https" # протокол запроса метрик; http — по умолчанию
+    prometheus.io/scrape: "true" # включает под в мониторинг. false — исключает
+    prometheus.io/port: "8080" # порт для сбора метрик
