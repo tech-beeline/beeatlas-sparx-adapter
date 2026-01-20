@@ -12,6 +12,7 @@ env:
   GRAFANA_URL:              "https://inside.beeline.ru"
   GRAFANA_TOKEN:            "vault:eafdmmart/data/prod/grafana#token"
   GRAFANA_E2E_TEMPLATE_UID: "2mHJmn5Nk"
+  OMD_URL:                  "https://open-metadata-stage.prod.dmp.vimpelcom.ru"
 
 ingress:
   annotations:
