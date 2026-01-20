@@ -1,5 +1,6 @@
 import { NotImplemented } from "../../../utils/errors.mjs";
 import { get, getJSON } from "../../../utils/http-request-promise.mjs";
+import { STRUCTURIZR_URL } from "../const.mjs";
 
 
 const DEFAULT_OPTIONS = {
@@ -7,7 +8,7 @@ const DEFAULT_OPTIONS = {
 }
 export class StructurizrRepository {
     url;
-    constructor(url = "https://structurizr.vimpelcom.ru/") {
+    constructor(url = STRUCTURIZR_URL) {
         this.url = url;
     }
     async getWorkspaceJson(workspaceId) {
@@ -16,6 +17,6 @@ export class StructurizrRepository {
 
     async getWorkspaceDSL(workspaceId) {
 
-        return get(`${this.url}share/${workspaceId}/dsl`, DEFAULT_OPTIONS).then(b=>b.toString());
+        return get(`${this.url}share/${workspaceId}/dsl`, DEFAULT_OPTIONS).then(b => b.toString());
     }
 }
