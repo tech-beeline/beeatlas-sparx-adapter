@@ -12,7 +12,10 @@ CREATE TABLE IF NOT EXISTS arch_metrics.PLUGIN_ACTIONS_STAT
     COUNT BIGINT
 );
 
-ALTER TABLE arch_metrics.PLUGIN_ACTIONS_STAT ADD CONSTRAINT PK_PLUGIN_ACTIONS_STAT_KEYS UNIQUE  (VERSION,ACTION,PLUGIN_USER, TEMPLATE_ID, CMDB, ELEMENT_UID);
+ALTER TABLE arch_metrics.PLUGIN_ACTIONS_STAT 
+	DROP CONSTRAINT IF EXISTS PK_PLUGIN_ACTIONS_STAT_KEYS;
+ALTER TABLE arch_metrics.PLUGIN_ACTIONS_STAT 
+	ADD CONSTRAINT PK_PLUGIN_ACTIONS_STAT_KEYS UNIQUE  (VERSION,ACTION,PLUGIN_USER, TEMPLATE_ID, CMDB, ELEMENT_UID);
 
 COMMENT ON TABLE arch_metrics.PLUGIN_ACTIONS_STAT IS 'Агрегированная статистика по действиям VARP плагина';
 COMMENT ON COLUMN arch_metrics.PLUGIN_ACTIONS_STAT.ID IS 'Уникальный идентификатор записи';
@@ -50,49 +53,3 @@ COMMENT ON COLUMN arch_metrics.PLUGIN_ACTIONS_LOG.CMDB IS 'CMDB мнемоник
 COMMENT ON COLUMN arch_metrics.PLUGIN_ACTIONS_LOG.ELEMENT_UID IS 'Идентификатор элемента в workspace, над которым произведено действие';
 COMMENT ON COLUMN arch_metrics.PLUGIN_ACTIONS_LOG.BODY IS 'Полная информация о событии';
 COMMENT ON COLUMN arch_metrics.PLUGIN_ACTIONS_LOG.LOG_DATE IS 'Время события';
-
---migration from plugin_actions
-
-WITH cte_src AS(
-	SELECT 
-		version, 
-		action, 
-		lower(COALESCE(CASE WHEN plugin_user='null' THEN 'unknown' ELSE plugin_user END,'unknown')) as plugin_user, 
-		template_id, 
-		generate_series(1,count) as seq
-	FROM arch_metrics.plugin_actions
-), cte_stat AS (
-	INSERT INTO arch_metrics.plugin_actions_stat(
-		version,
-		action,
-		plugin_user,
-		template_id,
-		count
-	)
-	SELECT version,
-		action,
-		plugin_user,
-		template_id,
-		count(*)
-	FROM cte_src
-	GROUP BY version, action, plugin_user, template_id
-	RETURNING *
-)
-INSERT INTO arch_metrics.plugin_actions_log (
-	stat_id,
-	version,
-	action,
-	plugin_user,
-	template_id
-)
-SELECT 
-	s.id,
-	s.version,
-	s.action,
-	s.plugin_user,
-	s.template_id
-FROM cte_src l
-	JOIN cte_stat s ON s.version=l.version
-		AND s.action=l.action
-		AND COALESCE( s.plugin_user,'')=COALESCE(l.plugin_user,'')
-		AND COALESCE( s.template_id,'')=COALESCE(l.template_id,'');

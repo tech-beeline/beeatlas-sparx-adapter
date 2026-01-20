@@ -1,16 +1,12 @@
 import { bootstrapAPI } from './api/bootstrap.mjs';
+import { initDbPromise } from './api/repositories/init/index.mjs';
 import app from './index.mjs'
 
 process.env.API_PORT = process.env.API_PORT ?? 8080;
 
-
-async function queryOnStart() {
-   
-}
-
-//queryOnStart();
-
 async function start() {
+    await initDbPromise;
+ 
     await bootstrapAPI.init();
 
     let server = app.listen(process.env.API_PORT, () => {
@@ -22,6 +18,8 @@ async function start() {
         server.close();
     })
 }
+
+//onAppStart();
 
 start();
 

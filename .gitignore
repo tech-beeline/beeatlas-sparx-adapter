@@ -6,6 +6,7 @@ dump
 .env.test
 .vscode
 src/archive
+data
 data/tmp
 data/Справочник процессов.xlsx
 dashboard.code-workspace
