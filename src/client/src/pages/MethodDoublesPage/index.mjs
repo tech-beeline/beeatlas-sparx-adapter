@@ -20,6 +20,7 @@ import {
 import { useEffect, useState } from "react";
 import { DoubleRow } from "./components/double-row.mjs";
 import { MethodsDoublesAppBar } from "./components/doubles-bar.mjs";
+import { WEB_EA_URL } from "../../resources/paths/index.mjs";
 
 
 
@@ -38,7 +39,7 @@ function InterfaceRow({ api }) {
                 {api.code}
             </TableCell>
             <TableCell>
-                <Link href={`https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${api.uid}`} target="_blank" rel="noreferer">{api.FQName}</Link>
+                <Link href={`${WEB_EA_URL}?m=1&o=${api.uid}`} target="_blank" rel="noreferer">{api.FQName}</Link>
             </TableCell>
         </TableRow>
         <TableRow>

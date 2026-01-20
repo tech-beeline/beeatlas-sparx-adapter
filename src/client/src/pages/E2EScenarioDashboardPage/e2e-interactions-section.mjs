@@ -3,6 +3,7 @@ import { Accordion, AccordionDetails, AccordionSummary, Box, Collapse, IconButto
 import React, { useState } from 'react';
 import { TreeItem, TreeView } from '@mui/x-tree-view';
 import MessageEditForm from './message-form.mjs';
+import { WEB_EA_URL } from '../../resources/paths/index.mjs';
 
 
 function alertText(txt, color = "red") {
@@ -57,7 +58,7 @@ function Message(props) {
         <TableCell key={`rps-${message.ea_guid}`}>{isNaN(message.rps) ? alertText(NO_DATA_MESSAGE) : alertText(message.rps, rps_color)}</TableCell>
         <TableCell key={`latency-${message.ea_guid}`}>{isNaN(message.latency) ? alertText(NO_DATA_MESSAGE) : alertText(message.latency, latence_color)}</TableCell>
         <TableCell key={`errorRate-${message.ea_guid}`}>{isNaN(message.errorRate) ? alertText(NO_DATA_MESSAGE) : alertText(message.errorRate, error_color)}</TableCell>
-        <TableCell key={`diagram-`}><a target="_blank" href={`https://ms-seaapp001.bee.vimpelcom.ru:83/?m=1&o=${message.d_uid}`}>{message.diagram}</a></TableCell>
+        <TableCell key={`diagram-`}><a target="_blank" href={`${WEB_EA_URL}/?m=1&o=${message.d_uid}`}>{message.diagram}</a></TableCell>
         <TableCell key={`ctx-${message.ea_guid}`}><MessageContexts message={props.message} /></TableCell>
         <TableCell>
             <UsedMethods message={props.message}></UsedMethods>

@@ -1,3 +1,5 @@
+import { WEB_EA_URL } from "../../resources/paths/index.mjs";
+
 export function formatWebEALink(uid) {
-    return `https://ms-seaapp001.bee.vimpelcom.ru:83/?m=1&o=${uid}`;
+    return `${WEB_EA_URL}/?m=1&o=${uid}`;
 }

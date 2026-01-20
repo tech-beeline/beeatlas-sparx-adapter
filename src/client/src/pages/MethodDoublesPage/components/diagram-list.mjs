@@ -2,6 +2,7 @@ import { KeyboardArrowDown, KeyboardArrowUp, Schema } from "@mui/icons-material"
 import { Box, Collapse, IconButton, ListItemIcon, List, ListItem } from "@mui/material";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { WEB_EA_URL } from "../../../resources/paths/index.mjs";
 
 export function DiagramList({ diagrams }) {
     const [open, setOpen] = useState(false);
@@ -14,7 +15,7 @@ export function DiagramList({ diagrams }) {
                 <List>{diagrams.map(d =>
                     <ListItem key={d.uid}>
                         <ListItemIcon><Schema /></ListItemIcon>
-                        <Link href={`https://ms-seaapp001.bee.vimpelcom.ru:83?m=1&o=${d.uid}`} target="_blank" rel="noreferrer">{d.name}</Link>
+                        <Link href={`${WEB_EA_URL}?m=1&o=${d.uid}`} target="_blank" rel="noreferrer">{d.name}</Link>
                     </ListItem>)}
                 </List>
             </Collapse>

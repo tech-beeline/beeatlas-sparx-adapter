@@ -17,7 +17,7 @@ const INTERFACES_AGREEMENT_ROUTES = {
                         "required": true,
                         examples: {
                             'RICH->napi': {
-                                value: 'https://git.vimpelcom.ru/common/architecture/interface-agreement/-/blob/main/RICH/IA/PBE.ATTRACTION/PBE.ATTRACTION-RICH_GET%2520%252F2.0.0%252Fnapi%252Ffac-subscriber.yaml'
+                                value: 'https://example.com'
                             }
                         }
                     }
