@@ -23,4 +23,3 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
 podAnnotations:
   vault.security.banzaicloud.io/vault-addr: "https://vault-test.vimpelcom.ru/"
-
