@@ -169,7 +169,7 @@ export class SparxRepository {
             await client.end();
             return rows;
         } catch (error) {
-            console.trace(`Ошибка при выполнении запроса ${sql?.text ?? sql}: ${error.message}`);
+            console.trace(`Ошибка "${error.message}" при выполнении запроса ${sql?.text ?? sql}`);
             throw Error(`Ошибка при выполнении запроса к базе sparx ea`, { cause: error });
         }
     }
