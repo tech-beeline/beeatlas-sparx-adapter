@@ -1,6 +1,5 @@
 import { GlossariesRepository } from "../repositories/index.mjs";
 import { Glossary, Term } from "../model/glossary-model.mjs";
-import { NotImplemented } from "../../utils/errors.mjs";
 
 const glossariesRepository = new GlossariesRepository();
 

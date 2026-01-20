@@ -1,6 +1,7 @@
 import { getJSON } from "../../../utils/http-request-promise.mjs";
 
-const OMD_URL = process.env.OPENMETADATA_URL ?? `https://open-metadata-stage.prod.dmp.vimpelcom.ru`
+const OMD_URL = process.env.OPENMETADATA_URL;
+
 const GLOSSARY_TERMS_PATH = '/api/v1/glossaryTerms'
 const REFRESH_TIME = process.env.OPENMETADATA_REFRESH_TIME ?? 60 * 60 * 1000;
 const DATABASE_SERVICE_PATH = '/api/v1/services/databaseServices?fields=owners%2Cdomain&limit=3000'

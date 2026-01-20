@@ -3,7 +3,6 @@ import { arraySchema, numberProperty, stringProperty, SwaggerComponents } from "
 
 export const ObservabilityComponents = new SwaggerComponents();
 
-
 export const PUBLISH_APPLICATION_OPIONS_SCHEMA = {
     type: "object",
     properties: {
@@ -15,7 +14,7 @@ export const PUBLISH_APPLICATION_RESULT_SCHEMA = {
     type: "object",
     properties: {
         systemCode: stringProperty("Код приложения", { example: "FDMSHOWCASEAPP" }),
-        dashboardPath: stringProperty("Путь к созданному или обновленному дашборду", { example: "https://inside.beeline.ru/d/<asddddsa>" })
+        dashboardPath: stringProperty("Путь к созданному или обновленному дашборду", { example: "https://example.com/d/<asddddsa>" })
     }
 };
 
