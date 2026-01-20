@@ -23,8 +23,6 @@ import '@beeline/design-tokens/css/iconfont/iconfont.css';
 import '@beeline/design-tokens/css/font-face.css';
 
 
-import { WorkspaceCheckResultPage } from "./pages/WorkspaceCheckPage/index.mjs";
-import { STRUCTURIZR_CHECK_RESULT } from "./const.mjs";
 import { SequencePage } from "./pages/SequencePage/index.mjs";
 import { MethodDoublesPage } from "./pages/MethodDoublesPage/index.mjs";
 import { DigitalArchitectActionsPage } from "./pages/DigitalArchitectActionsPage/index.mjs";
