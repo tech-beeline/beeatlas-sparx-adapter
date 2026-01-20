@@ -1,4 +1,5 @@
 import System, { Container, APIInterface, APIMethod } from "../../../api/model/system.mjs";
+import { FDM_URL } from "../../../client/src/resources/paths/index.mjs";
 
 
 const SIMPLE_SYSTEM = new System({
@@ -9,7 +10,7 @@ const SIMPLE_SYSTEM = new System({
             name: "Контейнер Системы А", code: 'CONTAINER.CMDB_A', version: '1.0', interfaces: [
                 new APIInterface({
                     name: "IMyRestAPI", code: "IMYAPI.CONTAINER.CMDB_A", capabilityCode: 'BC-ХХХХХ', version: '0.0.1',
-                    api_url: "https://dashboard-dev-eafdmmart.apps.yd-m6-kt22.vimpelcom.ru/swagger/capabilities-api.json", methods: [
+                    api_url: `${FDM_URL}/swagger/capabilities-api.json`, methods: [
                         {
                             name: 'GET /api/v1/systems/{code}',
                             description: 'ПОлучение системы по коду',
@@ -34,8 +35,8 @@ const OTHER_SIMPLE_SAMPLE = new System({
             name: "Контейнер Системы B", code: 'CONTAINER.CMDB_B', version: '1.0', interfaces: [
                 new APIInterface({
                     name: "Some interfaces", code: "DCO_SAMPLE.CONTAINER.CMDB_B", capabilityCode: 'BC-ХХХХХ', version: '0.1',
-                    api_url: "https://dashboard-dev-eafdmmart.apps.yd-m6-kt22.vimpelcom.ru/swagger/capabilities-api.json",
-                    protocol:'rest',
+                    api_url: `${FDM_URL}/swagger/capabilities-api.json`,
+                    protocol: 'rest',
                     methods: [
                         {
                             name: 'GET /digital-contract-partners/api/v1/service_requests/{id}',

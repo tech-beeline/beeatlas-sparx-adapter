@@ -9,5 +9,5 @@ export const buildSequenceObsPath = (uid) => `${SEQUENCE_OBSERVABILITY_RESOURCE}
 export const buildScenarioObsPath = (uid) => `${SCENARIO_OBSERVABILITY_RESOURCE}${encodeURIComponent(uid)}`;
 
 export const GRAFANA_URL = "https://inside.beeline.ru";
-
-export const WEB_EA_URL='https://ms-seaapp001.bee.vimpelcom.ru:83'
+export const WEB_EA_URL='https://ms-seaapp001.bee.vimpelcom.ru:83';
+export const FDM_URL = 'https://beeatlas.vimpelcom.ru';

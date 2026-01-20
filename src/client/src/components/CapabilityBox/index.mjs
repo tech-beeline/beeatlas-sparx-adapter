@@ -2,6 +2,7 @@ import { Link } from "@mui/material";
 import { useEffect } from "react";
 import { useState } from "react";
 import { tcService } from "../../resources/services/tc-service.mjs";
+import { FDM_URL } from "../../resources/paths/index.mjs";
 
 export function CapabilityBox({ capabilityCode }) {
     const [capability, setCapability] = useState(null);
@@ -23,6 +24,6 @@ export function CapabilityBox({ capabilityCode }) {
     }, [capabilityCode]);
 
     return (
-        <Link href={`https://beeatlas.vimpelcom.ru/models/search?request=${encodeURIComponent(capabilityCode)}`} target="_blank">{capability ? capability.name : capabilityCode}
+        <Link href={`${FDM_URL}/models/search?request=${encodeURIComponent(capabilityCode)}`} target="_blank">{capability ? capability.name : capabilityCode}
         </Link>)
 }
