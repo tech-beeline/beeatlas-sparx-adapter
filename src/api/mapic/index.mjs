@@ -15,7 +15,8 @@ import fdmStorage from "../repositories/fdm-storage.mjs";
 import { MapicApi, MapicCapability, MapicProduct, MapicPublishedApi } from './model/product.mjs';
 import { MapicLoadRepository } from './repository/index.mjs';
 
-const MAPIC_URL = process.env.MAPIC_URL ?? "https://stage.mapic-dev.vimpelcom.ru"
+const MAPIC_URL = process.env.MAPIC_URL;
+
 const AUTH_RESUORCE = `${MAPIC_URL}/api/v7/token`
 const PRODUCTS_RESUORCE = `${MAPIC_URL}/api/v7/products`
 const CAPABILITY_RESUORCE = (product_id) => `${MAPIC_URL}/api/v7/products/${product_id}/capabilities`;
