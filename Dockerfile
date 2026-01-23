@@ -6,15 +6,7 @@ RUN npm config set registry https://nexus.vimpelcom.ru/repository/npm-all/
 RUN npm config set strict-ssl false
 
 #build react application
-#WORKDIR /usr/src/app/src/client
 
-#COPY ./src/client/package.json  /usr/src/app/src/client
-#COPY ./src/client/package-lock.json  /usr/src/app/src/client
-#COPY ["package.json",  "./"]
-# [ ] Поменять, когда react build починится
-# RUN npm --version
-# RUN node --version
-# COPY ./src/client/deploy /usr/src/app/src/client/build
 WORKDIR /usr/src/app/src/client
 COPY ./src/client/package.json  /usr/src/app/src/client
 COPY ./src/client/package-lock.json  /usr/src/app/src/client
