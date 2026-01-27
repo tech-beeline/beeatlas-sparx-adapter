@@ -169,7 +169,8 @@ export class SparxRepository {
             await client.end();
             return rows;
         } catch (error) {
-            console.trace(`Ошибка "${error.message}" при выполнении запроса ${sql?.text ?? sql}`);
+            console.error(error);
+            console.log( this.config);
             throw Error(`Ошибка при выполнении запроса к базе sparx ea`, { cause: error });
         }
     }
@@ -402,15 +403,15 @@ export class SparxRepository {
         let new_pkg = await this.insert(t_package, pkg);
 
         const obj = await this.createObject({
-            name: new_pkg.name, 
-            ea_guid: new_pkg.ea_guid, 
+            name: new_pkg.name,
+            ea_guid: new_pkg.ea_guid,
             object_type: 'Package',
-            package_id: pkg.parent_id, 
-            author: pkg.author ?? 'FDM API', 
-            version: '1.0', 
-            pdata1: new_pkg.package_id, 
-            status: pkg.status ?? 'Proposed', 
-            note: pkg.notes, 
+            package_id: pkg.parent_id,
+            author: pkg.author ?? 'FDM API',
+            version: '1.0',
+            pdata1: new_pkg.package_id,
+            status: pkg.status ?? 'Proposed',
+            note: pkg.notes,
             alias: pkg.alias,
             stereotype: pkg.stereotype
         });
