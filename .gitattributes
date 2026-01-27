@@ -1,3 +1,4 @@
 .gitlab-ci merge=ours
 src/client/deploy merge=ours
 Dockerfile merge=ours
+opensource.env merge=ours

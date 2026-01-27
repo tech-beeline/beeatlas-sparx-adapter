@@ -1,72 +1,163 @@
-# dashboard
+# Sparx Enterprise Architect adapter
+
+A nodejs application for managing and read sparx enterprise architect repository. This application provides REST API for creating, changing and querying architecture elements from sparx repository based on Postgesql database.
+
+## Features
+
+- **Capaiblity Management**: Create and manage Business and Technical capabilities
+- **System Management**: Create and manage infomation about system containers and interfaces, including SLA. 
+- **Process Scenario Management**: Manage information about E2E process and scenarios
+- **Dashboard management**: Creating grafana dashboard for E2E stage scenarios
+
+## Technology Stack
+
+- **Nodejs**: 22
+- **UI Framework**: React
+- **Database**: Postgres
+- **API Documentation**: Swagger/OpenAPI
+
+## Prerequisites
+
+- Docker and Docker Compose installed
+- Nodejs 22+ (for local development)
 
 
+## Quick Start with Docker Compose
 
-## Getting started
+The easiest way to run the service is using Docker Compose, which will start both the application and Neo4j database:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+```bash
+# Build and start all services
+docker-compose up --build
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+# Or run in detached mode
+docker-compose up -d --build
+```
 
-## Integrate with your tools
+This will start:
+- **Sparx Enterprise Architect Adapter** (ui interface) on `http://localhost:8080`
+- **Postgres SQL DB (Enterprise architect repository)** on `bolt://localhost:5432`
+- **Grafana** (web interface) on `http://localhost:3000`
+- **Prometheus** (web interface) on `http://localhost:9090`
 
-- [?] [Set up project integrations](https://git.vimpelcom.ru/products/eafdmmart/dashboard/-/settings/integrations)
+### Stopping the Services
 
-## Test and Deploy
+```bash
+# Stop services
+docker-compose down
 
-Use the built-in continuous integration in GitLab.
+# Stop and remove volumes (this will delete all data)
+docker-compose down -v
+```
 
-- [?] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [?] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [?] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [?] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [?] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+## API Documentation
 
-***
+Once the service is running, you can access the Swagger API documentation at:
 
-# Editing this README
+```
+http://localhost:8080/swagger-ui/summary
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Or the OpenAPI JSON specification at:
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+```
+http://localhost:8080/swagger-ui/summary/swagger.json
+```
 
-## Name
-Choose a self-explaining name for your project.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## Configuration
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+### Environment Variables
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+The service can be configured using the following environment variables:
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+| Variable | Description | 
+|----------|-------------|
+| `API_PORT` | Api prot for adapter |
+| `DB_EA_USER` | Postgres DB user username |
+| `DB_EA_PASSWORD` | Postgres DB user password |
+| `DB_EA_URL` | Postgres DB address | 
+| `DB_EA_DATABASE` | sparx ea respotiory database |
+| `FDM_USERNAME` | FDM DB username | 
+| `FDM_PASSWORD` | FDM DB user password |
+| `FDM_URL` | FDM DB postgresql server url |
+| `FDM_DATABASE` | FDM DB database name | 
+| `GRAFANA_TOKEN` | Grafana access token (if used service tokjen authorization) | 
+| `GRAFANA_URL` | Grafana address | 
+| `GRAFANA_E2E_TEMPLATE_UID` | Grafana dashboard uid. This uid used as template for creating e2e scenario dashboard | 
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Application Properties
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Key configuration in `src\client\src\resources\paths\index.mjs`:
+
+```
+export const GRAFANA_URL = "Grafana URL (for ui interface)";
+export const WEB_EA_URL='Sparx WEB EA url';
+```
+
+
+## Project Structure
+
+```
+sparx-adapter/
+├── grafana/                        # grafana confuration for docker compose
+├── prometeus/                      # prometheus confuration for docker compose
+├── src/
+│   ├── api/                        # backend service
+│   ├── client/                     # web ui application
+│   ├── legacy/                     # legacy code, waiting for remove
+│   ├── resources/                  # resource and db initialization function
+│   ├── utils/                      # utility functions
+│   └── test/
+├── Dockerfile                      # Production Dockerfile
+├── docker-compose.yml              # Docker Compose configuration
+├── opensource.env                  # default enviroment variable for docker compose
+└── README.md                       # This file
+```
+
+## Troubleshooting
+
+### Service won't start
+
+1. Check if Neo4j is running and accessible:
+```bash
+docker ps | grep neo4j
+```
+
+2. Verify Neo4j connection:
+```bash
+docker exec -it architect-graph-neo4j cypher-shell -u neo4j -p password
+```
+
+3. Check application logs:
+```bash
+docker logs architect-graph-service
+```
+
+### Connection Issues
+
+- Ensure Neo4j is healthy before starting the application
+- Verify environment variables are set correctly
+- Check network connectivity between containers
+
+### Build Issues
+
+- Ensure Docker has enough memory allocated (at least 2GB recommended)
+- Check internet connection for Maven dependency downloads
+- Verify Java version compatibility (Java 17 required)
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For issues and questions, please create an issue in the project repository.
