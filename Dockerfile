@@ -1,11 +1,4 @@
-FROM harbor.vimpelcom.ru/dockerhub/library/node@sha256:0952d404a44c0c1f10423b7f9a7a373427a2fca5704afe2d46fe152524b8a403
-WORKDIR /usr/src/app
-#COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
-RUN npm config set registry https://nexus.vimpelcom.ru/repository/npm-all/
-#RUN npm config set @beeline:registry https://nexus.vimpelcom.ru/repository/npm-all/
-RUN npm config set strict-ssl false
-
-#build react application
+FROM node:lts-alpine3.22
 
 WORKDIR /usr/src/app/src/client
 COPY ./src/client/package.json  /usr/src/app/src/client
@@ -32,7 +25,7 @@ RUN npm remove node_modules && npm cache clean --force && npm install --omit=dev
     npm cache clean --force
 
 COPY . .
-ENV NODE_EXTRA_CA_CERTS=./ca/cert.pem
+
 EXPOSE 8080
 
 CMD ["node", "src/app.mjs"]
