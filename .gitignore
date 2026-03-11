@@ -18,3 +18,7 @@ c4-language-server.log
 dump/rich-esia.json
 .gitignore
 terraform
+docker-compose-local.yaml
+examples/beekeper/put-system.cmd
+examples/beekeper/put-system.json
+
