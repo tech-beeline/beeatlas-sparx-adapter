@@ -118,34 +118,10 @@ sparx-adapter/
 
 ## Troubleshooting
 
-### Service won't start
-
-1. Check if Neo4j is running and accessible:
-```bash
-docker ps | grep neo4j
-```
-
-2. Verify Neo4j connection:
-```bash
-docker exec -it architect-graph-neo4j cypher-shell -u neo4j -p password
-```
-
-3. Check application logs:
-```bash
-docker logs architect-graph-service
-```
-
-### Connection Issues
-
-- Ensure Neo4j is healthy before starting the application
-- Verify environment variables are set correctly
-- Check network connectivity between containers
 
 ### Build Issues
 
-- Ensure Docker has enough memory allocated (at least 2GB recommended)
-- Check internet connection for Maven dependency downloads
-- Verify Java version compatibility (Java 17 required)
+
 
 ## Contributing
 
